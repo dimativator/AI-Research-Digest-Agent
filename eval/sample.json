@@ -1,0 +1,583 @@
+{
+  "schema_version": 1,
+  "source_run_id": "c7b11e4a4d204ff38c017f34c318b59f",
+  "task": "Binary relevance for one fixed researcher profile and paper abstract.",
+  "profile": {
+    "user_id": "dmitrii",
+    "summary": "LLM research focused on optimization, low-rank and memory-efficient training, spectral regularization, parameter-efficient fine-tuning, and an AI research-digest agent.",
+    "topics": [
+      {
+        "name": "Low-rank pretraining and compressibility",
+        "keywords": [
+          "low-rank pretraining",
+          "low-rank factorization",
+          "model compressibility",
+          "effective rank",
+          "singular-value spectrum"
+        ],
+        "source_id": "description",
+        "evidence_quote": "A central question is whether training can make a model easier to compress with low-rank factorization while preserving its quality."
+      },
+      {
+        "name": "Spectral regularization and matrix optimization",
+        "keywords": [
+          "spectral regularization",
+          "spectral weight decay",
+          "nuclear-norm regularization",
+          "proximal methods",
+          "Newton-Schulz approximation"
+        ],
+        "source_id": "description",
+        "evidence_quote": "I am interested in spectral weight decay, nuclear-norm regularization, proximal methods, and Newton-Schulz approximations."
+      },
+      {
+        "name": "Generalization and memorization under label noise",
+        "keywords": [
+          "generalization",
+          "memorization",
+          "label noise",
+          "noisy labels",
+          "neural network training"
+        ],
+        "source_id": "description",
+        "evidence_quote": "Related questions concern generalization and memorization under label noise."
+      },
+      {
+        "name": "Optimization for LoRA and low-rank parameterizations",
+        "keywords": [
+          "LoRA",
+          "low-rank adaptation",
+          "Muon optimizer",
+          "factorized weights",
+          "rebalancing",
+          "convergence analysis"
+        ],
+        "source_id": "description",
+        "evidence_quote": "Another research direction is optimization for LoRA and other low-rank parameterizations."
+      },
+      {
+        "name": "Memory-efficient LLM pretraining",
+        "keywords": [
+          "memory-efficient LLM pretraining",
+          "low-rank gradients",
+          "optimizer-state compression",
+          "GaLore",
+          "Frugal",
+          "FP8 optimizer states"
+        ],
+        "source_id": "description",
+        "evidence_quote": "I also work on memory-efficient LLM pretraining."
+      },
+      {
+        "name": "Training-efficiency tradeoffs at scale",
+        "keywords": [
+          "training memory",
+          "throughput",
+          "communication cost",
+          "model quality",
+          "scaling behavior",
+          "LLM scale"
+        ],
+        "source_id": "description",
+        "evidence_quote": "I am interested in their tradeoffs between model quality, training memory, throughput, and communication cost, including how those tradeoffs change with model scale."
+      },
+      {
+        "name": "AI research digest agents and paper retrieval",
+        "keywords": [
+          "research digest agent",
+          "context management",
+          "structured LLM decisions",
+          "tool orchestration",
+          "paper retrieval",
+          "relevance ranking"
+        ],
+        "source_id": "description",
+        "evidence_quote": "Relevant work includes explicit context management, structured LLM decisions, application-controlled tools, and paper retrieval and relevance ranking using lexical or embedding-based methods."
+      }
+    ],
+    "goals": [
+      "Understand how optimization and regularization affect singular-value spectra and the effective rank of weight matrices.",
+      "Determine whether training can improve low-rank compressibility while preserving model quality.",
+      "Understand the geometry and practical language-model fine-tuning behavior of LoRA and other low-rank updates.",
+      "Evaluate tradeoffs among model quality, memory, throughput, and communication cost across model scales.",
+      "Build an AI research digest agent with a handwritten harness."
+    ],
+    "exclusions": [],
+    "arxiv_categories": [
+      "cs.LG",
+      "cs.CL",
+      "stat.ML",
+      "cs.AI",
+      "cs.IR"
+    ],
+    "open_questions": [],
+    "sources": {
+      "description": "I am an LLM researcher working on optimization and efficient training of neural networks. My current research includes low-rank pretraining, spectral regularization, parameter-efficient fine-tuning, and reducing the memory cost of language-model training.\n\nI study how optimization and regularization affect the singular-value spectra and effective rank of weight matrices. I am interested in spectral weight decay, nuclear-norm regularization, proximal methods, and Newton-Schulz approximations. A central question is whether training can make a model easier to compress with low-rank factorization while preserving its quality. Related questions concern generalization and memorization under label noise.\n\nAnother research direction is optimization for LoRA and other low-rank parameterizations. Relevant topics include Muon-style matrix updates, optimization of factorized weights, rebalancing, spectral constraints, and convergence analysis. I want to understand both the geometry of these updates and their practical behavior when fine-tuning language models.\n\nI also work on memory-efficient LLM pretraining. Relevant methods include low-rank gradient and optimizer-state representations, GaLore, Frugal-style methods, and low-precision optimizer states such as FP8. I am interested in their tradeoffs between model quality, training memory, throughput, and communication cost, including how those tradeoffs change with model scale.\n\nAs a secondary current interest, I am building an AI research digest agent with a handwritten harness. Relevant work includes explicit context management, structured LLM decisions, application-controlled tools, and paper retrieval and relevance ranking using lexical or embedding-based methods.\n\nI have not specified hard topic exclusions for this digest."
+    },
+    "model": null,
+    "schema_version": 1
+  },
+  "date_from": "2026-10-20",
+  "date_to": "2026-10-24",
+  "categories": [
+    "cs.LG",
+    "cs.CL",
+    "stat.ML",
+    "cs.AI",
+    "cs.IR"
+  ],
+  "annotation": "Single-person manual labels; rationale is the annotator's judgment, not model output.",
+  "tasks": [
+    {
+      "paper_id": "2610.30280",
+      "version": 1,
+      "title": "A Quadratic Lens on Muon's Polar Update: Benefits, Pitfalls, and the Role of Newton-Schulz",
+      "abstract": "Muon updates matrix-valued parameters along approximately orthogonalized directions and often trains large language models faster than AdamW, yet it remains unclear when and why orthogonalization helps. We study PolarGD, the orthogonalized update at the core of Muon, on matrix quadratics, where optimizers can be analyzed in closed form, and compare update directions under line search to remove the effect of learning-rate tuning. Orthogonalization pays off when the gradient is far from low rank and its largest singular directions see high curvature. PolarGD reaches the minimizer in one step whenever the rows of the error are orthogonal with equal norms, for any Hessian, whereas gradient descent needs all Hessian eigenvalues to be equal; and unlike sign descent, PolarGD is unaffected by rotations of the problem. Over many steps, PolarGD acts as gradient descent preconditioned by the current iterate, so its speed is governed by the conditioning of the iterate rather than of the Hessian. This explains fast regimes as well as a slow one, caused by tiny singular values of the iterate, in which PolarGD is much slower than gradient descent. Finally, the few Newton-Schulz iterations used in Muon treat these tiny singular values as gradient descent does, so fewer iterations can converge faster than exact orthogonalization; in a transformer trained with Muon, about a quarter of the singular values of the attention matrices fall in this regime.",
+      "authors": [
+        "Egor Shulgin",
+        "Sam Laing",
+        "Antonio Orvieto",
+        "Peter Richtárik"
+      ],
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-10-21T18:01:04Z",
+      "updated": "2026-10-21T18:01:04Z",
+      "task_id": "2610.30280",
+      "relevant": true,
+      "rationale": "Directly studies Muon and Newton-Schulz optimization."
+    },
+    {
+      "paper_id": "2610.28975",
+      "version": 1,
+      "title": "How Does Orthogonalization Adapt to the Neural Network Hessian Structure? A Gradient Self Outer-Product Analysis at Initialization",
+      "abstract": "Muon orthogonalizes a weight matrix's momentum before each step, and on neural networks this simple preconditioner beats AdamW in a wide range of tasks. Existing analyses explain Muon within general optimization frameworks or on a few specific models, and many of them view orthogonalization as a preconditioner. Since the Hessian is the optimal preconditioner under a quadratic approximation of the loss, these works leave a basic question open: what makes orthogonalization suited to the Hessian of a neural network? Prior work shows that the layer-wise Hessian of a neural network is row-block diagonally dominant, and Muon's implicit preconditioner, the Kronecker product $(\\mathbf{V}\\mathbf{V}^\\top)^{1/2}\\otimes\\mathbf{I}$ with $\\mathbf{V}$ the momentum, has the same row-block structure exactly when $\\mathbf{V}\\mathbf{V}^\\top$ is diagonally dominant. Diagonal dominance of $\\mathbf{V}\\mathbf{V}^\\top$ has been observed in language models, but why a neural network produces it has not been explained. This work provides a quantitative asymptotic theory for neural networks at initialization, and points out the intuition that the overparameterization of the weight matrices drives the diagonal dominance. We analyze $\\mathbb{E}[\\mathbf{G}\\mathbf{G}^\\top]$, which equals $\\mathbb{E}[\\mathbf{V}\\mathbf{V}^\\top]$ at initialization, in four canonical models: symmetric matrix factorization, deep linear networks, two-layer ReLU networks, and single-layer linear attention. In each case the diagonal entries outgrow the off-diagonal ones at explicit rates as the hidden dimensions grow; for the query, key and value weights of attention the off-diagonal vanishes altogether. Simulations of the four models and experiments on language models at initialization confirm the predicted scaling.",
+      "authors": [
+        "Shenyang Deng",
+        "Garvit Goyal",
+        "Tianyu Pang",
+        "Shuhua Yu",
+        "Yaoqing Yang"
+      ],
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-10-20T22:48:42Z",
+      "updated": "2026-10-20T22:48:42Z",
+      "task_id": "2610.28975",
+      "relevant": true,
+      "rationale": "Analyzes orthogonalization for neural-network optimization."
+    },
+    {
+      "paper_id": "2610.28176",
+      "version": 1,
+      "title": "Temporal Evidence-Parameter Co-Alignment for LLM Reasoning over Temporal Knowledge Graphs",
+      "abstract": "Large Language Models (LLMs) often struggle with temporally grounded reasoning because their static parametric memory is misaligned with the dynamic evolution of real-world knowledge. Although RAG and Parameter-Efficient Fine-Tuning (PEFT) provide practical ways to enhance LLMs, they remain insufficient for temporal reasoning. Existing retrieval methods typically prioritize semantic relevance while overlooking temporal validity, event order, and evolutionary dependencies, resulting in evidence that is relevant in isolation but temporally fragmented. Meanwhile, conventional PEFT methods usually employ fixed and input-agnostic low-rank updates, making it difficult to capture time-dependent entity semantics and relation drift. To address these limitations, we propose Temporal Evidence-Parameter Co-Alignment (TEPCA), a framework for LLM reasoning over TKGs. TEPCA aligns LLM reasoning with temporal knowledge at both the evidence and parameter levels. At the evidence level, it introduces time-constrained Dynamic Relevance-Guided Path (DRGP) pruning to preserve globally coherent temporal paths, together with Mutual-Information (MI)-based pruning to retain query-informative local facts under temporal constraints. At the parameter level, it integrates Dynamic-Gated LoRA (DG-LoRA), a timestamp-conditioned low-rank adaptation mechanism that dynamically modulates the effective adaptation subspace according to temporal context. This design enables LLMs to better capture fine-grained entity evolution and time-dependent relation semantics while preserving parameter efficiency. Experimental results on two TKG benchmarks demonstrate that TEPCA achieves state-of-the-art performance. Additional evaluations of DG-LoRA on eight commonsense QA datasets further verify its general input-adaptive capacity, scalability across LLM backbones, and interpretability.",
+      "authors": [
+        "Jiapu Wang"
+      ],
+      "categories": [
+        "cs.CL",
+        "cs.AI"
+      ],
+      "published": "2026-10-20T13:16:17Z",
+      "updated": "2026-10-20T13:16:17Z",
+      "task_id": "2610.28176",
+      "relevant": false,
+      "rationale": "Focuses on temporal knowledge-graph reasoning."
+    },
+    {
+      "paper_id": "2610.30436",
+      "version": 1,
+      "title": "Secure Agentic AI and Multimodal Intelligence in 6G Communication Systems",
+      "abstract": "Sixth-generation (6G) communication systems are expected to support immersive, intent-driven, and latency-critical services through tight integration of multimodal intelligence, edge computing, and autonomous network control. In this setting, agentic AI systems can reason over heterogeneous inputs, use tools and network functions, coordinate across distributed entities, and adapt to dynamic environments. These capabilities make agentic multimodal intelligence promising for 6G applications such as semantic communications, digital twins, and zero-touch network management, but they also introduce security and privacy risks that extend beyond conventional AI and network security models. Vulnerabilities can propagate across multimodal data pipelines, memory, tools, communication interfaces, and inter-agent coordination loops. We survey multimodal intelligence and agentic AI for 6G cross-layered communication systems from the perspectives of privacy and security. We present a 6G-oriented system view spanning perception, memory, tool use, and multi-agent orchestration; analyze threat models and attack surfaces across sensing, cognition, action, memory, and communication layers; organize existing attacks into a structured taxonomy; and review mitigation strategies including prompt and memory defenses, inter-agent trust mechanisms, secure orchestration, and privacy-preserving learning. We conclude by outlining open research directions for trustworthy multimodal multi-agent 6G systems.",
+      "authors": [
+        "Satyam Gaba",
+        "Devanshu Motwani",
+        "Siva Sai",
+        "Vineet Suri",
+        "Vikas Ranjan",
+        "Vinay Chamola"
+      ],
+      "categories": [
+        "cs.AI",
+        "eess.SP"
+      ],
+      "published": "2026-10-21T20:47:14Z",
+      "updated": "2026-10-21T20:47:14Z",
+      "task_id": "2610.30436",
+      "relevant": false,
+      "rationale": "Focuses on secure agentic systems for 6G networks."
+    },
+    {
+      "paper_id": "2610.27444",
+      "version": 1,
+      "title": "LoRASpace: A Pool-Wide Shared Substrate for Static and Dynamic Multi-LoRA Composition",
+      "abstract": "Low-rank adaptation (LoRA) attaches small low-rank matrices to a frozen backbone, and public repositories host many LoRAs per backbone, each for a different concept or task. Combining several LoRAs in one generation forces a trade-off. Merging their weights into one update needs a single forward pass, but LoRAs trained for different concepts interfere and quality drops. Running each LoRA in its own forward pass (composite) preserves quality, but inference time grows linearly with the number of active LoRAs. We study a property of LoRA pools overlooked by prior multi-LoRA work. In real LoRA pools, the stacked low-rank factors need far fewer directions than their summed ranks. Using singular value decomposition, we find the minimal subspace that keeps 99% of the factor energy. On three diffusion pools, only 46% to 57% of the summed LoRA ranks is needed, and the subspace grows sub-linearly with pool size. A 48-LoRA sub-pool of LoRA-Hub on FLAN-T5 tasks shows comparable overlap (62%), while the diversity-curated LoRA-Retriever benchmark sits near the no-overlap baseline (96%), so pool composition rather than modality predicts where compression is large. We build on this overlap with LoRASpace, a training-free method that computes the subspace once per pool and reuses it in two inference modes, a static mode at merge cost and a dynamic mode for input-dependent routing. On the diffusion pools, static LoRASpace matches composite quality at merge cost, and dynamic LoRASpace is more than 6x faster than composite with six active LoRAs on a 17-LoRA pool, mainly because it runs one backbone pass instead of six. In an ablation, static variants at the same rank match LoRASpace, so the quality gain does not depend on the pool-wide basis. On the near-orthogonal LoRA-Retriever benchmark, compression is small and gains come from coupling with external retrieval.",
+      "authors": [
+        "Thamirawaran Sathiyalogeswaran",
+        "Navindu De Silva",
+        "Chamikara Siriwardane",
+        "W. K. Alwis",
+        "Jason Mars",
+        "Udaya Sampath K. Perera Miriya Thanthrige",
+        "Ranga Rodrigo"
+      ],
+      "categories": [
+        "cs.CV",
+        "cs.LG"
+      ],
+      "published": "2026-10-20T00:46:19Z",
+      "updated": "2026-10-20T00:46:19Z",
+      "task_id": "2610.27444",
+      "relevant": true,
+      "rationale": "Studies low-rank adaptation composition and efficiency."
+    },
+    {
+      "paper_id": "2610.31069",
+      "version": 1,
+      "title": "Federated Differentially Private Optimization via Low-Rank Preconditioning",
+      "abstract": "We consider differentially private (DP) optimization in the federated setting, where a DP estimate of the feature covariance matrix serves as a Hessian approximation for generalized linear models. Existing central DP methods for covariance estimation have communication cost that grows quadratically in the data dimension, while existing baselines with linear communication cost are only locally private and degrade as the number of clients increases. As a remedy, we propose a federated DP-PCA framework that achieves linear communication cost while providing central DP guarantees under secure aggregation. It consists of a DP rank selection step, a DP power method, and a noisy release of the covariance projected onto the selected low-dimensional subspace. We give error bounds for this covariance estimate and for the resulting low-communication preconditioned DP gradient descent. Empirically, our proposed DP optimization method matches a centralized baseline with quadratic communication cost at a fraction of the communication.",
+      "authors": [
+        "Antti Koskela",
+        "Tejas Kulkarni",
+        "Elias Raninen"
+      ],
+      "categories": [
+        "cs.LG",
+        "cs.CR"
+      ],
+      "published": "2026-10-22T10:48:06Z",
+      "updated": "2026-10-22T10:48:06Z",
+      "task_id": "2610.31069",
+      "relevant": false,
+      "rationale": "Focuses on federated differential privacy, not the profile's LLM methods."
+    },
+    {
+      "paper_id": "2610.31656",
+      "version": 1,
+      "title": "METTA: Memory-Enhanced Test-Time Adaptation for Meta-Reinforcement Learning",
+      "abstract": "Meta-reinforcement learning aims to train agents that adapt quickly to unseen tasks from limited interaction, but this requires representing task evidence over long interaction histories. Classical recurrent agents compress experience into hidden states, while transformer-based agents retrieve from past trajectories at quadratic memory and computation cost. In this work, we propose Memory-Enhanced Test-Time Adaptation (METTA) for meta-reinforcement learning. It decomposes the fast adaptation phase into two temporal scales: a causal neural memory performs fine-grained within-episode adaptation with linear sequence complexity, while compact episode-level summaries support long-range cross-episode task inference without attending over the full interaction history. Moreover, equipping agents with neural memory provides sufficient expressive capacity and test-time training capability, enabling effective adaptation to unseen held-out tasks and task families at meta-test time. On unseen held-out Meta-World ML10/45 test environments, METTA achieves a success rate over $50\\%$ while maintaining a low training budget and short wall-clock time. On long-context sparse-reward PointMaze tasks, it outperforms transformer-based baselines by exhibiting more structured exploration behavior. These results show that METTA provides an efficient path toward more adaptive and scalable long-context meta-RL.",
+      "authors": [
+        "Ali Najar",
+        "Hosein Hasani",
+        "Amir Kooshan Fattah",
+        "Yasamin Rajabi",
+        "Mahdieh Soleymani Baghshah"
+      ],
+      "categories": [
+        "cs.LG",
+        "cs.AI"
+      ],
+      "published": "2026-10-22T17:58:27Z",
+      "updated": "2026-10-22T17:58:27Z",
+      "task_id": "2610.31656",
+      "relevant": false,
+      "rationale": "Studies meta-reinforcement learning rather than LLM training."
+    },
+    {
+      "paper_id": "2610.30646",
+      "version": 1,
+      "title": "One-shot federated unsupervised domain adaptation with Smoothed Knowledge Distillation and teacher refinement",
+      "abstract": "Federated unsupervised domain adaptation (FUDA) addresses the challenge of adapting models to an unlabeled target domain using decentralized source domains while preserving data privacy. However, existing FUDA methods typically require multiple communication rounds, rely on complex aggregation strategies, and often struggle with noisy pseudo labels and inconsistent source knowledge. To address these challenges, we propose SKD-ETR, a novel one-shot FUDA framework that combines Smoothed Knowledge Distillation (SKD) and Exponential moving average-based Teacher Refinement (ETR). SKD trains a student model on the target domain using smoothed soft pseudo labels generated by the ensemble of source models. This reduces overconfidence, mitigates noise, and improves robustness. ETR further refines each source model by interpolating its parameters toward the student via exponential moving average (EMA), thereby transferring target-domain knowledge back to the teachers. This bidirectional refinement enhances pseudo-label quality and student generalization without additional communication overhead. SKD-ETR eliminates complex aggregation by initializing the student model randomly and performing a single-round distillation process. Extensive experiments on OfficeHome, Office-Caltech, and DomainNet demonstrate that SKD-ETR achieves competitive performance while being communication- and computation-efficient, and robust under noisy supervision. The code for this paper is available at https://github.com/A-Abedi/SKD_ETR.",
+      "authors": [
+        "Ali Abedi",
+        "Q. M. Jonathan Wu",
+        "Ning Zhang",
+        "Farhad Pourpanah"
+      ],
+      "categories": [
+        "cs.CV",
+        "cs.AI"
+      ],
+      "published": "2026-10-22T03:06:22Z",
+      "updated": "2026-10-22T03:06:22Z",
+      "task_id": "2610.30646",
+      "relevant": false,
+      "rationale": "Focuses on federated domain adaptation."
+    },
+    {
+      "paper_id": "2610.27674",
+      "version": 2,
+      "title": "Hybrid Momentum Methods for Optimizing Deep Learning Models",
+      "abstract": "Momentum is central to stochastic optimization in deep learning, including the training of large language models. Classical momentum methods typically rely on a fast exponential moving average (EMA) scheme, which discounts past gradients on a fixed timescale and may underweight older gradients that remain informative. This creates a trade-off between retaining long-term history and adapting to recent changes. We introduce Hybrid Momentum (HyM), which combines a linearly weighted average of past gradients with a geometrically discounted fast momentum. The former assigns weights proportional to the gradients' iteration indices and retains a growing span of history, while the latter emphasizes recent gradients. This hybrid construction is modular and can be combined with adaptive preconditioning and other update transformations. In particular, we propose HyMUON, which applies Newton--Schulz orthogonalization to the hybrid direction. Illustrative examples and controlled experiments demonstrate the benefits of combining gradient information across these two timescales. Across image classification, machine translation, and language modeling, HyM and HyMUON match or improve upon strong baselines. HyMUON improves over Muon on IWSLT14, and in both the 100k- and 600k-step GPT-2 124M OpenWebText regimes. For LLaMA-1.3B pretraining on C4, HyMUON achieves a final validation loss of 2.777, compared with 2.903 for Muon.",
+      "authors": [
+        "Haifeng Xu",
+        "Yijin Ren",
+        "Chenyu Zhou",
+        "Qi Deng",
+        "Dongdong Ge",
+        "Yinyu Ye"
+      ],
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-10-20T05:39:58Z",
+      "updated": "2026-10-21T09:25:17Z",
+      "task_id": "2610.27674",
+      "relevant": true,
+      "rationale": "Evaluates momentum and Muon-style optimization for language models."
+    },
+    {
+      "paper_id": "2610.29134",
+      "version": 1,
+      "title": "NormTune: Norm-Guided Parameter-Efficient Fine-Tuning for Reasoning-Intensive Tasks",
+      "abstract": "Full fine-tuning has achieved remarkable success on reasoning-intensive tasks, but it often requires substantial GPU resource consumption. Parameter-efficient fine-tuning (PEFT) provides a promising alternative for reducing this cost, yet we observe a substantial performance gap on reasoning-intensive tasks. In this paper, we present three key observations showing that this gap is closely associated with norm-related under-adaptation, where PEFT produces markedly smaller weight-update norms than full fine-tuning. Based on these observations, we propose Norm-Guided Parameter-Efficient Fine-Tuning (NormTune), a simple yet effective strategy that adaptively strengthens insufficiently updated layers according to their weight-update norms. Extensive experiments show that NormTune consistently enhances multiple PEFT methods across challenging reasoning benchmarks. Specifically, when trained on S1K-1.1, integrating NormTune into rank-8 LoRA, Bone, and MoRA yields substantial average accuracy improvements of 24.24\\%, 11.33\\%, and 16.21\\% , respectively, across AIME 2024, MATH 500, GPQA, and AIME 2025. Moreover, NormTune-enhanced rank-256 LoRA, Bone, and MoRA achieve performance comparable to S1 full fine-tuning, with respective average gains of 2.17\\%, 0.93\\%, and 3.00\\% over this baseline.",
+      "authors": [
+        "Zhangming Li",
+        "Qinghao Hu",
+        "Weifan Guan",
+        "Yifan Zhang",
+        "Peisong Wang",
+        "Jian Cheng"
+      ],
+      "categories": [
+        "cs.AI"
+      ],
+      "published": "2026-10-21T03:14:09Z",
+      "updated": "2026-10-21T03:14:09Z",
+      "task_id": "2610.29134",
+      "relevant": true,
+      "rationale": "Studies PEFT optimization and reasoning-task performance."
+    },
+    {
+      "paper_id": "2610.27747",
+      "version": 1,
+      "title": "Constant Step Sizes for Muon-Type Spectral Optimizers on Strongly Convex Quadratics",
+      "abstract": "Muon and related optimizers update a weight matrix with a spectrally transformed gradient. In this work, we study such spectral optimizers with a constant step size on strongly convex matrix quadratics, which isolate the effect of the update from the confounds of nonconvexity, noise, and step size schedules. We analyze an update using two quantities: the gain, which is the factor by which it amplifies the gradient along each singular direction, and the length, which is the norm of the update. These two quantities place the popular spectral updates in three regimes with different behavior: (i) with a bounded gain, the iterates behave like preconditioned gradient descent and converge for step sizes set by the largest curvature; (ii) with an unbounded gain but a vanishing length, they still converge, with the admissible step sizes set by the total curvature instead; and (iii) with a non-vanishing length, they do not converge for almost every initialization. Interestingly, the practical variants of Muon fall in all three regimes, depending only on how the update is normalized and scaled and not on the polynomial that approximates the polar factor. Experiments validate these findings.",
+      "authors": [
+        "Pratik Jawanpuria",
+        "Bhabatosh Garai",
+        "Bamdev Mishra"
+      ],
+      "categories": [
+        "cs.LG",
+        "math.OC"
+      ],
+      "published": "2026-10-20T07:07:10Z",
+      "updated": "2026-10-20T07:07:10Z",
+      "task_id": "2610.27747",
+      "relevant": true,
+      "rationale": "Directly analyzes Muon-type spectral optimizers."
+    },
+    {
+      "paper_id": "2610.29357",
+      "version": 1,
+      "title": "Memory-Centric Continual Learning for AI Agents",
+      "abstract": "Autonomous agents powered by foundation models can reason, plan, and use tools, but their fixed weights and context limits hinder sustained learning from experience over long-term deployment. While external memory systems attempt to bridge this gap, they mostly act as passive retrieval caches, evaluated primarily by whether they can recall stored facts or past interactions. Whether memory can drive genuine continual learning remains an open question. In this paper, we introduce Memory-Centric Continual Learning (MCCL), arguing that memory should be judged by whether it improves future actions, not merely what it retrieves. MCCL has three main parts. First, a three-axis taxonomy organizes memory by where state is stored (substrates), what form it takes (assets), and how it is managed (policies). This defines a two-loop lifecycle that updates memory state in an inner loop while refining management policies in an outer loop based on task feedback. Second, an evaluation protocol measures retention under interference, adaptation to change, and task transfer to isolate genuine behavioral gains from simple context expansion. Third, a memory scaling framework models how agent performance scales with experience, storage capacity, and compute budgets across non-parametric and parametric memory. Together, these components reframe agent memory from passive lookup to continuous learning, offering a principled route toward self-improving autonomous agents.",
+      "authors": [
+        "Dongfang Li",
+        "Zhuoen Chen",
+        "Bonian Jia",
+        "Zixuan Liu",
+        "Zhengxuan Lu",
+        "Can Deng",
+        "Yukun Shi",
+        "Yuhang Meng",
+        "Xin Zhang",
+        "Jiahe Huang",
+        "Fuhao Li",
+        "Junmai Wang",
+        "Shunyao Wen",
+        "Jingjun Sun",
+        "Jiaxu Tian",
+        "Jiangling Zhang",
+        "Zihan Wang",
+        "Liangyou Li",
+        "Yitong Yao",
+        "Shuangyong Song",
+        "Beilun Wang",
+        "Pengxu Wei",
+        "Hanlin Xu",
+        "Chang Liu",
+        "Yongxiang Li",
+        "Baotian Hu",
+        "Xiangyang Ji",
+        "Min Zhang"
+      ],
+      "categories": [
+        "cs.CL",
+        "cs.AI"
+      ],
+      "published": "2026-10-21T07:49:42Z",
+      "updated": "2026-10-21T07:49:42Z",
+      "task_id": "2610.29357",
+      "relevant": true,
+      "rationale": "Studies agent memory and behavioral evaluation, a stated project interest."
+    },
+    {
+      "paper_id": "2610.31633",
+      "version": 1,
+      "title": "BeNice! Closing Looping's Inference-Memory Gap via KV-Sharing",
+      "abstract": "Looped architectures scale quality while keeping parameter count fixed by repeatedly passing activations through the same block of layers. During inference, each recurrence generates independent KV-caches, causing memory to grow linearly. To address this challenge, prior work has proposed KV-sharing (i.e., sharing KV-caches across depth), finding that, in some cases, the KV-cache of the final recurrence can be shared with the earlier recurrences without quality loss, a property we denote as KV-shareability. However, the mechanisms underlying KV-shareability remain poorly understood, with even identically trained looped architectures not consistently exhibiting it. In this paper, we study how KV-shareability can be enabled in looped models. We propose a two-stage method: in the first stage, we use stochastic depth during pretraining, which induces contractive residual dynamics that drive representations toward a common limit across recurrences. In the second stage, we propose BeNice!, a post-training method that broadcasts the final recurrence's KV-cache into the first recurrence, training it to produce compatible residuals while preserving the original model's quality. As a result, BeNice! enables KV-shareability while matching standard finetuning's unshared validation perplexity. Using BeNice!, we show that KV-sharing is complementary to alternative KV-compression methods, composing with memory-efficient sequence mixers (e.g., multi-latent attention, Kimi delta attention) and low-precision KV-cache quantization (e.g., fp8, mxfp8, nvfp4). Finally, in simulated low-memory, long-context inference, KV-sharing improves cache hit rates by up to 31.4%, increases throughput by up to 23.6%, and reduces p90 time-to-first-token by up to 83.6%.",
+      "authors": [
+        "Hayden Prairie",
+        "Jacob M. Ryan",
+        "Taylor Berg-Kirkpatrick",
+        "Daniel Y. Fu"
+      ],
+      "categories": [
+        "cs.LG"
+      ],
+      "published": "2026-10-22T17:49:44Z",
+      "updated": "2026-10-22T17:49:44Z",
+      "task_id": "2610.31633",
+      "relevant": true,
+      "rationale": "Measures memory and inference efficiency for looped language models."
+    },
+    {
+      "paper_id": "2610.31098",
+      "version": 1,
+      "title": "RIFT: KV Cache Compression for Draft Models with Complementary Compressibility Training",
+      "abstract": "Speculative decoding is a popular decode acceleration method. As such, it is particularly relevant to long-output generation, which requires an increasingly large KV cache. KV cache compression offers a way to constrain costs in long-context drafting. However, compression methods that focus on prefill information can lose relevance as the output length grows. We term this phenomenon decode staleness and show that it degrades draft model accuracy under selection-based KV cache compression. We introduce RIFT, a family of selection-based KV cache compression strategies that balance prefill information and recent generated tokens. We show that refreshing the KV cache selection during token generation significantly improves the drafter's quality at the cost of additional decode latency. To alleviate the refresh costs, we propose an adaptive KV refresh strategy that reduces the number of score calculations while retaining the drafter's quality. We further demonstrate how a compressibility-driven drafter training phase, based on sparse attention masks, can improve the drafter's quality under a compressed KV cache. Combined with compressibility training, RIFT enables Qwen3.5-4B, drafting for Qwen3.5-122B, to retain over 98% of its full-cache acceptance length on 32K-token inputs, 4K-token outputs, and an 8K-token KV cache budget.",
+      "authors": [
+        "Dor Tsur",
+        "Maor Ashkenazi",
+        "Maximilian Golub",
+        "Peter Hicks",
+        "Yaniv Galron",
+        "Talor Abramovich",
+        "Yoav Miron",
+        "Tiyasa Mitra",
+        "Bita Darvish Rouhani",
+        "Ran Zilberstein"
+      ],
+      "categories": [
+        "cs.CL"
+      ],
+      "published": "2026-10-22T11:12:23Z",
+      "updated": "2026-10-22T11:12:23Z",
+      "task_id": "2610.31098",
+      "relevant": false,
+      "rationale": "Focuses on inference KV-cache compression rather than training methods."
+    },
+    {
+      "paper_id": "2610.29424",
+      "version": 1,
+      "title": "A KAN-based Non-linear Factorization for Embedding Layer Compression",
+      "abstract": "Among existing embedding compression approaches, low-rank factorization provides a simple and mathematically principled solution by approximating the embedding matrix with a reduced-rank decomposition. However, its practical effectiveness is often limited, as the resulting linear bottleneck constrains representational capacity. To overcome these limitations, we propose an enhanced factorization scheme that increases expressive power by introducing learnable non-linear projections within the compressed embedding layer. Our method is inspired by the Kolmogorov Arnold Networks (KAN) paradigm, which replaces fixed linear transformations with learnable univariate functions. Despite promising results in other domains, applications of KANs in NLP remain scarce and have so far been largely limited to final or task specific layers, rather than core representational components such as embedding layers. We evaluate the proposed approach by integrating the compressed embedding layer into the Skip-gram framework and comparing it against a standard low-rank baseline under matched parameter budgets on the Word Analogy and Semantic Similarity benchmarks. We further introduce an effective initialization strategy from a pre-trained, uncompressed embedding layer. The behavior of the model is analyzed both immediately after initialization and after a brief post-initialization refinement phase, considering training with the standard Skip-gram objective as well as variants augmented with distillation from the original embedding layer. Overall, our results show that augmenting low-rank factorization with learnable non-linear projections effectively mitigates the limitations of linear bottlenecks, yielding more faithful compressed embeddings under fixed dimensionality and suggesting a promising direction for embedding layer compression beyond purely linear methods.",
+      "authors": [
+        "Oliver Giudice",
+        "Anna Russo Russo"
+      ],
+      "categories": [
+        "cs.CL"
+      ],
+      "published": "2026-10-21T08:49:06Z",
+      "updated": "2026-10-21T08:49:06Z",
+      "task_id": "2610.29424",
+      "relevant": false,
+      "rationale": "Compresses Skip-gram embeddings, outside the profile's LLM focus."
+    },
+    {
+      "paper_id": "2610.30344",
+      "version": 1,
+      "title": "AQL-Lite: Enabling Efficient Knowledge Acquisition for Arabic LLMs via Data-Centric Continual Pretraining",
+      "abstract": "Training Arabic large language models faces challenges from noisy web data, dialectal variation, and the high cost of continual pretraining (CPT). We introduce AQL-Lite (AQL: Arabic Quality Language), a time- and resource-efficient framework for adapting a multilingual LLM to Modern Standard Arabic (MSA). AQL-Lite couples a quality-first curation pipeline (structural cleaning, heuristic and model-based filtering, MSA selection, and deduplication) with a partial-parameter CPT recipe that trains RS-LoRA adapters across the network together with the last eight transformer blocks and the embedding matrix, under layer-wise learning rates. At a matched 1B-token budget, CPT on AQL-curated data raises a four-benchmark Arabic mean by 3.51 points over CPT on raw web text, which yields no gain over the base model. In a controlled 5B-token comparison, AQL-Lite recovers 94% of the gain of full-parameter CPT (mean 73.19 vs. 73.58) in 52% of the wall-clock time and outperforms adapter-only baselines on every benchmark, and a component ablation shows that adapters, unfrozen blocks, and embedding training each contribute. Scaled to 40B MSA tokens and instruction-tuned on one million examples, the resulting 12B model scores 75.3 on the seven-benchmark Open Arabic LLM Leaderboard v2 (OALL v2) suite. These results suggest that partial-parameter CPT on a carefully curated corpus is a practical route to efficient MSA adaptation.",
+      "authors": [
+        "Houssam Eddine Boukhalfa",
+        "Mourad Bouache",
+        "Mourad Dahmane"
+      ],
+      "categories": [
+        "cs.CL",
+        "cs.LG"
+      ],
+      "published": "2026-10-21T19:04:28Z",
+      "updated": "2026-10-21T19:04:28Z",
+      "task_id": "2610.30344",
+      "relevant": true,
+      "rationale": "Evaluates RS-LoRA and efficient continual pretraining for LLMs."
+    },
+    {
+      "paper_id": "2610.28500",
+      "version": 1,
+      "title": "BitMTP: When Multi-Token Prediction Meets Low-Bit Large Language Models",
+      "abstract": "For efficient deployment of large language models (LLMs), methods of ultra-low-bit backbones reduce weight storage, memory traffic, and linear-layer execution cost, while multi-token prediction (MTP) methods reduce sequential decoding steps by predicting multiple future tokens in parallel. Although complementary, the direct combination of these methods cannot accelerate decoding at comparable quality: masked drafting lacks intermediate token input supplied in next-token training, while wider computation and causal key-value (KV) updates can offset the savings from fewer steps. To address these challenges, we propose BitMTP, an algorithm-system co-design framework for efficient MTP on ultra-low-bit LLM backbones. A joint next-token prediction and MTP objective equips a single model with both autoregressive (AR) generation and block-causal drafting. Confidence-only decoding, speculative-only decoding, and hybrid decoding provide different quality-throughput operating points without using separate draft and verifier models. Accepted-prefix alignment keeps the committed prefix, materialized causal KV boundary, and CUDA Graph replay state consistent for continued generation. BitMTP uses this contract to select width-specialized low-bit execution and reuse captured graphs over shared KV storage. On NVIDIA H20, BitMTP with hybrid decoding achieves five-task mean speedups of 2.2x on BitNet b1.58-2B and 2.1-2.4x on 1.7B-4B Bonsai models at comparable task quality. On RTX 3090 and Jetson Orin, it further achieves up to 2.0x in five-task mean throughput and 3.3x on MBPP+, respectively. These results demonstrate that BitMTP accelerates ultra-low-bit LLM generation across backbones, model sizes, and GPU types. The source code is released at https://github.com/PolyU-VCLab/BitMTP",
+      "authors": [
+        "Ning Zhang",
+        "Shihao Wang",
+        "Jinrui Zhang",
+        "Chaodong Xiao",
+        "Lei Zhang"
+      ],
+      "categories": [
+        "cs.CL",
+        "cs.AI",
+        "cs.DC",
+        "cs.LG"
+      ],
+      "published": "2026-10-20T16:42:17Z",
+      "updated": "2026-10-20T16:42:17Z",
+      "task_id": "2610.28500",
+      "relevant": false,
+      "rationale": "Focuses on low-bit decoding systems rather than the profile's methods."
+    },
+    {
+      "paper_id": "2610.27835",
+      "version": 1,
+      "title": "From Generic to Dedicated: A Novel Optimizer for Online Continual Learning",
+      "abstract": "Online Continual Learning (OCL) requires models to learn from non-stationary data streams under a strict single-pass constraint, making them highly susceptible to catastrophic forgetting. While existing studies have explored various strategies from data, architecture, and optimization perspectives, the optimizer often directly uses generic approaches such as SGD and AdamW. In this work, we reveal a new link between optimization dynamics and OCL needs by recasting Polyak-Ruppert averaging as the engine of \"plasticity\" and Primal averaging as the anchor of \"stability\". This inspires our novel optimizer, SPIN (Stability-Plasticity INterpolation), which explicitly decouples plasticity and stability by interpolating between a fast-moving \"plasticity\" sequence and an adaptive \"stability\" sequence. We theoretically demonstrate that SPIN implicitly employs an inverse Hessian approximation, providing crucial Tikhonov regularization to damp noisy, single-sample Hessian estimates and mitigate forgetting. More importantly, SPIN can be seamlessly integrated into existing OCL methods by taking resulted gradients as input and replacing standard optimizers. Extensive experiments show that using SPIN instead of standard optimizers yields consistent and significant performance gains across multiple OCL approaches, including the challenging rehearsal-free setting and under strict memory constraints.",
+      "authors": [
+        "Yongyi Wu",
+        "Zheng Wang",
+        "Sen Lin"
+      ],
+      "categories": [
+        "cs.LG",
+        "cs.CV"
+      ],
+      "published": "2026-10-20T08:24:56Z",
+      "updated": "2026-10-20T08:24:56Z",
+      "task_id": "2610.27835",
+      "relevant": false,
+      "rationale": "Focuses on online continual learning, not the profile's target methods."
+    },
+    {
+      "paper_id": "2610.29396",
+      "version": 1,
+      "title": "Progressive Permutation Alignment with Temperature-Controlled Spectral Sharpening",
+      "abstract": "In implicit neural representations (INRs), 3D signals are encoded directly in network weights, making stable weight-space operations essential. However, permutation symmetry causes independently trained yet functionally equivalent models to appear distant in weight space, often inducing large loss barriers under linear interpolation. Existing neuron alignment methods either commit early to discrete matches and become trapped in inconsistent local optima or rely on computationally expensive gradient optimization over continuous relaxations, both of which are unreliable in challenging cases such as NeRF. We adopt progressive alignment, a layer-wise strategy that follows inter-layer dependencies from input to output. At each layer, a correlation matrix is estimated and aligned with a discrete anchor obtained by the Hungarian algorithm, after which temperature-controlled spectral annealing gradually sharpens the correlation structure toward a permutation matrix. This update is deterministic and lightweight, avoiding the inner-loop gradient optimization required by continuous relaxation methods. A final refinement stage further optimizes the network layer-by-layer via weight matching, starting from the aligned solution. Experiments on MLPs, CNNs, and Neural Radiance Fields (NeRFs) show that the proposed method reliably recovers neuron correspondences and achieves stable alignment across architectures. In practical experiments aligning independently trained NeRF models, our method reduces the loss barriers under weight interpolation compared with existing approaches.",
+      "authors": [
+        "Yuta Horioka",
+        "Naoya Chiba",
+        "Yuki Uranishi"
+      ],
+      "categories": [
+        "cs.LG",
+        "cs.CV"
+      ],
+      "published": "2026-10-21T08:26:46Z",
+      "updated": "2026-10-21T08:26:46Z",
+      "task_id": "2610.29396",
+      "relevant": false,
+      "rationale": "Studies neuron alignment for implicit neural representations."
+    },
+    {
+      "paper_id": "2610.30421",
+      "version": 1,
+      "title": "High-Value Training Data from Noisy, Diverse Sources",
+      "abstract": "Training state-of-the-art models increasingly requires learning from large, heterogeneous datasets whose examples vary in quality, domain relevance, and source of supervision. Dataweighting---assigning different weights to training examples---offers a general way to control how such data influences training, but learning effective weights at scale remains challenging. We develop a scalable approach to learning dataweights: given a small, high-quality target dataset, we use metagradients through the training process to efficiently optimize training-example weights directly for performance on the target domain. To scale beyond a fixed dataset and model, we learn parametric weighting rules that generalize to new and streaming examples and transfer from smaller models to substantially larger ones. We study reward modeling as a prototypical application, where preference data may be noisy, adversarial, synthetic, or mismatched with the target domain. Learned dataweights improve held-out performance, automatically adapt reward models to specialized domains, and allow mixtures of human and synthetic supervision to outperform either source alone.",
+      "authors": [
+        "Hedi Driss",
+        "Evan Frick",
+        "Anastasios N. Angelopoulos",
+        "Cho-Jui Hsieh",
+        "Yejin Huh",
+        "Tijana Zrnic",
+        "Andrew Ilyas"
+      ],
+      "categories": [
+        "stat.ML",
+        "cs.AI",
+        "cs.LG"
+      ],
+      "published": "2026-10-21T20:32:43Z",
+      "updated": "2026-10-21T20:32:43Z",
+      "task_id": "2610.30421",
+      "relevant": false,
+      "rationale": "Focuses on reward-model data weighting rather than the profile's core topics."
+    }
+  ]
+}

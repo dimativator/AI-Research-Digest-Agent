@@ -1,0 +1,41 @@
+{
+    "source": "controlled deterministic unit-test reproduction",
+    "source_test": "tests/test_digest_pipeline.py::AgentTests.test_unknown_tool_and_unscreened_id_are_rejected_then_corrected",
+    "trace_kind": "test fixture, not a live model run",
+    "events": [
+        {
+            "type": "invalid_action",
+            "decision": {
+                "action": "shell",
+                "paper_id": "",
+                "reason": "Collect enough evidence for the digest.",
+                "question": "",
+                "query": "",
+                "limit": 10,
+                "selections": [],
+                "limitations": []
+            },
+            "error": "Unknown tool/action"
+        },
+        {
+            "type": "invalid_action",
+            "decision": {
+                "action": "inspect_paper",
+                "paper_id": "../../etc/passwd",
+                "reason": "Collect enough evidence for the digest.",
+                "question": "Which experiment compares agent benchmarks?",
+                "query": "",
+                "limit": 10,
+                "selections": [],
+                "limitations": []
+            },
+            "error": "Tools can access only screened candidate IDs"
+        }
+    ],
+    "annotation": {
+        "problem": "The mocked model first requested an unsupported action, then tried to inspect an ID outside the screened candidate set.",
+        "root_cause": "Invalid model decisions; enforcement is correctly performed by the protocol validator before any tool executes.",
+        "outcome": "Both decisions are rejected, no inspection is performed, and the test supplies a valid finish decision afterward.",
+        "m3_test": "Replay each decision against the same screened-ID set and assert rejection plus zero tool calls."
+    }
+}

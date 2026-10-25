@@ -690,15 +690,15 @@ class AgentTests(unittest.TestCase):
         agent, result = self.run_agent(FakeLLM(policy))
         self.assertEqual(result["status"], "completed")
         self.assertEqual(self.arxiv.inspect_calls, [])
+        invalid_events = [
+            event
+            for event in self.store.events(agent.run_id)
+            if event["type"] == "invalid_action"
+        ]
+        self.assertEqual(len(invalid_events), 2)
+        self.assertEqual(invalid_events[0]["decision"]["action"], "shell")
         self.assertEqual(
-            len(
-                [
-                    x
-                    for x in self.store.events(agent.run_id)
-                    if x["type"] == "invalid_action"
-                ]
-            ),
-            2,
+            invalid_events[1]["decision"]["paper_id"], "../../etc/passwd"
         )
 
     def test_fabricated_final_evidence_is_rejected(self):

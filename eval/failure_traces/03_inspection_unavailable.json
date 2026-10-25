@@ -1,0 +1,62 @@
+{
+    "source": "controlled deterministic unit-test reproduction",
+    "source_test": "tests/test_digest_pipeline.py::AgentTests.test_inspection_failure_is_an_observation_not_a_fake_full_text",
+    "trace_kind": "test fixture, not a live model run",
+    "events": [
+        {
+            "type": "action",
+            "decision": {
+                "action": "inspect_paper",
+                "paper_id": "2610.00001",
+                "reason": "Collect enough evidence for the digest.",
+                "question": "Which experiment compares agent benchmarks?",
+                "query": "",
+                "limit": 10,
+                "selections": [],
+                "limitations": []
+            }
+        },
+        {
+            "type": "observation",
+            "action": "inspect_paper",
+            "result": {
+                "status": "unavailable",
+                "text": "",
+                "reason": "404",
+                "question": "Which experiment compares agent benchmarks?",
+                "passages": []
+            }
+        },
+        {
+            "type": "action",
+            "decision": {
+                "action": "finish",
+                "paper_id": "",
+                "reason": "Collect enough evidence for the digest.",
+                "question": "",
+                "query": "",
+                "limit": 10,
+                "selections": [
+                    {
+                        "paper_id": "2610.00001",
+                        "summary": "The paper evaluates LLM agents.",
+                        "relevance": "It concerns agent evaluation.",
+                        "evidence": [
+                            {
+                                "source": "abstract",
+                                "quote": "We evaluate LLM agents"
+                            }
+                        ]
+                    }
+                ],
+                "limitations": []
+            }
+        }
+    ],
+    "annotation": {
+        "problem": "The full-text endpoint returns HTTP 404 during an otherwise normal inspection.",
+        "root_cause": "External source availability, not an agent protocol failure.",
+        "outcome": "The failure is retained as an unavailable observation; the agent completes using abstract evidence and discloses the limitation.",
+        "m3_test": "Freeze the prefix through the unavailable observation and assert the next decision does not claim full-text support."
+    }
+}

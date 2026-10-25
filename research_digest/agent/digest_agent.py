@@ -939,7 +939,7 @@ class DigestAgent:
         try:
             validate_decision(decision, self.state["screened"])
         except ValueError as error:
-            self._record_invalid_action(error)
+            self._record_invalid_action(error, decision)
             return None
 
         self.state["pending"] = decision
@@ -971,14 +971,19 @@ class DigestAgent:
                 }
             )
         except ValueError as error:
-            self._record_invalid_action(error)
+            self._record_invalid_action(error, decision)
 
         return None
 
-    def _record_invalid_action(self, error: ValueError) -> None:
+    def _record_invalid_action(
+        self, error: ValueError, decision: dict[str, Any] | None = None
+    ) -> None:
         self.state["last_error"] = str(error)
         self.state["pending"] = None
-        self._persist_run({"type": "invalid_action", "error": str(error)})
+        event = {"type": "invalid_action", "error": str(error)}
+        if decision is not None:
+            event["decision"] = decision
+        self._persist_run(event)
 
     def _complete_run(
         self, status: str, papers: list[dict[str, Any]], limitations: list[str]

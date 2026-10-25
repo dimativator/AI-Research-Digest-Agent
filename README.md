@@ -4,6 +4,8 @@ A Python research digest agent with a handwritten ReAct harness. It retrieves ar
 
 The thinking step uses Codex CLI through a small OpenAI-style Python adapter. Python owns retrieval, tools, validation, budgets, and SQLite state. No OpenAI Python SDK or API key is required for the thinking step. Codex authentication and service access are still required.
 
+Milestone 2 evaluation, results, and annotated failure traces: [reports/M2.md](reports/M2.md).
+
 ## Quick start
 
 Run commands from the repository root.
