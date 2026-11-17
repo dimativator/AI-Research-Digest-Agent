@@ -1,0 +1,112 @@
+{
+  "runs": [
+    {
+      "repetition": 1,
+      "tool_calls_by_name": {},
+      "calls_by_purpose": {
+        "screen_papers": 3,
+        "debate_precision": 1,
+        "debate_coverage": 1,
+        "debate_editor": 1
+      },
+      "reconsiderations": 0,
+      "initial_disagreements": 4,
+      "not_interesting_selected": [
+        {
+          "paper_id": "2610.30344",
+          "title": "AQL-Lite: Enabling Efficient Knowledge Acquisition for Arabic LLMs via Data-Centric Continual Pretraining"
+        }
+      ],
+      "max_context_chars": 80931,
+      "finish_reason": "Selected the closest matches to the stated priorities, with room for label-noise generalization and research-agent design. The disagreements were resolved by including AQL-Lite for its reported quality\u2013time comparison, while omitting HyMUON as less directly tied to low-rank training, RIFT because it concerns inference KV caches, and Flat-RLVR because it targets reasoning diversity. Unresolved uncertainty that could change the selection includes results hidden by truncated abstracts, unverified experimental details, and whether stronger memory-efficient pretraining papers exist outside the supplied candidates. No further retrieval is permitted in this response.",
+      "decision_trace_lines": [
+        24
+      ]
+    },
+    {
+      "repetition": 2,
+      "tool_calls_by_name": {
+        "search_candidates": 2,
+        "get_candidate_overview": 1,
+        "inspect_paper": 1
+      },
+      "calls_by_purpose": {
+        "screen_papers": 5,
+        "debate_precision": 1,
+        "debate_coverage": 1,
+        "debate_editor": 5
+      },
+      "reconsiderations": 0,
+      "initial_disagreements": 6,
+      "not_interesting_selected": [
+        {
+          "paper_id": "2610.30344",
+          "title": "AQL-Lite: Enabling Efficient Knowledge Acquisition for Arabic LLMs via Data-Centric Continual Pretraining"
+        }
+      ],
+      "max_context_chars": 143360,
+      "finish_reason": "Selected direct matches to low-rank compression, spectral regularization, LoRA optimization, LLM training tradeoffs, and agent harness design. The reviewers\u2019 disagreements were resolved by prioritizing these stated goals over older generalization background and papers about unrelated forms of compression or optimization. Unresolved uncertainties that could change the selection include truncated abstracts, unverified implementations, and the absence of peak-GPU-memory measurements for most methods; no further evidence is available in the supplied context.",
+      "decision_trace_lines": [
+        24,
+        32,
+        36,
+        44,
+        48
+      ]
+    },
+    {
+      "repetition": 3,
+      "tool_calls_by_name": {
+        "search_candidates": 2,
+        "inspect_paper": 2
+      },
+      "calls_by_purpose": {
+        "screen_papers": 4,
+        "debate_precision": 1,
+        "debate_coverage": 1,
+        "debate_editor": 5
+      },
+      "reconsiderations": 0,
+      "initial_disagreements": 8,
+      "not_interesting_selected": [
+        {
+          "paper_id": "2610.30344",
+          "title": "AQL-Lite: Enabling Efficient Knowledge Acquisition for Arabic LLMs via Data-Centric Continual Pretraining"
+        }
+      ],
+      "max_context_chars": 160413,
+      "finish_reason": "The 10 selections prioritize direct matches to spectral regularization, low-rank compression, LoRA optimization, and LLM training tradeoffs. On reviewer disagreements, AQL-Lite is included because inspection confirms a controlled quality\u2013time comparison, despite its Arabic-data focus; HyMUON is included for the explicitly stated Newton\u2013Schulz interest. SAM, KV-cache compression, and broader scheduling papers are less targeted. Unresolved uncertainties that could change the selection include peak training memory for AQL-Lite and full results for several truncated abstracts. No further retrieval is available under the instruction to use only supplied context.",
+      "decision_trace_lines": [
+        24,
+        32,
+        36,
+        40,
+        44
+      ]
+    }
+  ],
+  "mean_ndcg_at_10": 0.9326867770514815,
+  "mean_latency_seconds": 204.0617617086779,
+  "total_input_tokens": 630662,
+  "total_output_tokens": 25766,
+  "e5_top10_baseline": {
+    "ndcg_at_10": 0.968189605900524,
+    "selected_labels": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      0.5
+    ],
+    "interesting": 9,
+    "potentially_interesting": 1,
+    "not_interesting": 0
+  },
+  "agent2_mean_ndcg_at_10": 0.8515340132500505,
+  "fixture_capture_seconds": 0.8167452500201762
+}

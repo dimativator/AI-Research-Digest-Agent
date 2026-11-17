@@ -1,0 +1,714 @@
+{
+  "pipeline_version": "react-v2",
+  "profile": {
+    "user_id": "dmitrii",
+    "summary": "LLM research focused on optimization, low-rank and memory-efficient training, spectral regularization, parameter-efficient fine-tuning, and an AI research-digest agent.",
+    "topics": [
+      {
+        "name": "Low-rank pretraining and compressibility",
+        "keywords": [
+          "low-rank pretraining",
+          "low-rank factorization",
+          "model compressibility",
+          "effective rank",
+          "singular-value spectrum"
+        ],
+        "source_id": "description",
+        "evidence_quote": "A central question is whether training can make a model easier to compress with low-rank factorization while preserving its quality."
+      },
+      {
+        "name": "Spectral regularization and matrix optimization",
+        "keywords": [
+          "spectral regularization",
+          "spectral weight decay",
+          "nuclear-norm regularization",
+          "proximal methods",
+          "Newton-Schulz approximation"
+        ],
+        "source_id": "description",
+        "evidence_quote": "I am interested in spectral weight decay, nuclear-norm regularization, proximal methods, and Newton-Schulz approximations."
+      },
+      {
+        "name": "Generalization and memorization under label noise",
+        "keywords": [
+          "generalization",
+          "memorization",
+          "label noise",
+          "noisy labels",
+          "neural network training"
+        ],
+        "source_id": "description",
+        "evidence_quote": "Related questions concern generalization and memorization under label noise."
+      },
+      {
+        "name": "Optimization for LoRA and low-rank parameterizations",
+        "keywords": [
+          "LoRA",
+          "low-rank adaptation",
+          "Muon optimizer",
+          "factorized weights",
+          "rebalancing",
+          "convergence analysis"
+        ],
+        "source_id": "description",
+        "evidence_quote": "Another research direction is optimization for LoRA and other low-rank parameterizations."
+      },
+      {
+        "name": "Memory-efficient LLM pretraining",
+        "keywords": [
+          "memory-efficient LLM pretraining",
+          "low-rank gradients",
+          "optimizer-state compression",
+          "GaLore",
+          "Frugal",
+          "FP8 optimizer states"
+        ],
+        "source_id": "description",
+        "evidence_quote": "I also work on memory-efficient LLM pretraining."
+      },
+      {
+        "name": "Training-efficiency tradeoffs at scale",
+        "keywords": [
+          "training memory",
+          "throughput",
+          "communication cost",
+          "model quality",
+          "scaling behavior",
+          "LLM scale"
+        ],
+        "source_id": "description",
+        "evidence_quote": "I am interested in their tradeoffs between model quality, training memory, throughput, and communication cost, including how those tradeoffs change with model scale."
+      },
+      {
+        "name": "AI research digest agents and paper retrieval",
+        "keywords": [
+          "research digest agent",
+          "context management",
+          "structured LLM decisions",
+          "tool orchestration",
+          "paper retrieval",
+          "relevance ranking"
+        ],
+        "source_id": "description",
+        "evidence_quote": "Relevant work includes explicit context management, structured LLM decisions, application-controlled tools, and paper retrieval and relevance ranking using lexical or embedding-based methods."
+      }
+    ],
+    "goals": [
+      "Understand how optimization and regularization affect singular-value spectra and the effective rank of weight matrices.",
+      "Determine whether training can improve low-rank compressibility while preserving model quality.",
+      "Understand the geometry and practical language-model fine-tuning behavior of LoRA and other low-rank updates.",
+      "Evaluate tradeoffs among model quality, memory, throughput, and communication cost across model scales.",
+      "Build an AI research digest agent with a handwritten harness."
+    ],
+    "exclusions": [],
+    "arxiv_categories": [
+      "cs.LG",
+      "cs.CL",
+      "stat.ML",
+      "cs.AI",
+      "cs.IR"
+    ],
+    "open_questions": [],
+    "sources": {
+      "description": "I am an LLM researcher working on optimization and efficient training of neural networks. My current research includes low-rank pretraining, spectral regularization, parameter-efficient fine-tuning, and reducing the memory cost of language-model training.\n\nI study how optimization and regularization affect the singular-value spectra and effective rank of weight matrices. I am interested in spectral weight decay, nuclear-norm regularization, proximal methods, and Newton-Schulz approximations. A central question is whether training can make a model easier to compress with low-rank factorization while preserving its quality. Related questions concern generalization and memorization under label noise.\n\nAnother research direction is optimization for LoRA and other low-rank parameterizations. Relevant topics include Muon-style matrix updates, optimization of factorized weights, rebalancing, spectral constraints, and convergence analysis. I want to understand both the geometry of these updates and their practical behavior when fine-tuning language models.\n\nI also work on memory-efficient LLM pretraining. Relevant methods include low-rank gradient and optimizer-state representations, GaLore, Frugal-style methods, and low-precision optimizer states such as FP8. I am interested in their tradeoffs between model quality, training memory, throughput, and communication cost, including how those tradeoffs change with model scale.\n\nAs a secondary current interest, I am building an AI research digest agent with a handwritten harness. Relevant work includes explicit context management, structured LLM decisions, application-controlled tools, and paper retrieval and relevance ranking using lexical or embedding-based methods.\n\nI have not specified hard topic exclusions for this digest."
+    },
+    "model": null,
+    "schema_version": 1
+  },
+  "config": {
+    "categories": [
+      "cs.AI",
+      "cs.CG",
+      "cs.CL",
+      "cs.CR",
+      "cs.CV",
+      "cs.DB",
+      "cs.DC",
+      "cs.DS",
+      "cs.GR",
+      "cs.HC",
+      "cs.IR",
+      "cs.LG",
+      "cs.LO",
+      "cs.MA",
+      "cs.NE",
+      "cs.NI",
+      "cs.RO",
+      "cs.SD",
+      "cs.SE",
+      "eess.AS",
+      "eess.IV",
+      "eess.SP",
+      "eess.SY",
+      "math.AP",
+      "math.OC",
+      "math.PR",
+      "nlin.CD",
+      "q-bio.NC",
+      "stat.ML"
+    ],
+    "date_from": "2018-02-27",
+    "date_to": "2026-10-22",
+    "model": "gpt-5.6-luna",
+    "shortlist_size": 30,
+    "batch_size": 10,
+    "expansion_size": 10,
+    "max_candidates": 100,
+    "digest_size": 5,
+    "max_steps": null,
+    "max_llm_calls": null,
+    "max_inspections": null,
+    "max_expansions": null,
+    "page_size": 100,
+    "refresh_metadata": false,
+    "max_context_chars": null,
+    "new_only": false,
+    "x_enabled": false,
+    "variant": "react"
+  },
+  "phase": "react",
+  "screened": {
+    "2610.11730": {
+      "paper_id": "2610.11730",
+      "label": "relevant",
+      "reason": "Directly studies spectral weight decay, nuclear-norm/proximal optimization, effective rank, compression, and label-noise robustness.",
+      "evidence_quote": "spectral weight decay lowers effective rank and improves SVD-LLM compression"
+    },
+    "2609.40127": {
+      "paper_id": "2609.40127",
+      "label": "relevant",
+      "reason": "Directly addresses low-rank factorization, learned compression, rank allocation, and memory/quality tradeoffs in LLMs.",
+      "evidence_quote": "Low-rank weight factorization reduces both while keeping the matrices dense"
+    },
+    "2608.14492": {
+      "paper_id": "2608.14492",
+      "label": "relevant",
+      "reason": "Directly studies Muon optimization for LoRA and low-rank parameterizations, including ReLoRA pretraining.",
+      "evidence_quote": "approximating the solution to a relaxed Muon objective in the low-rank setting"
+    },
+    "2608.31036": {
+      "paper_id": "2608.31036",
+      "label": "relevant",
+      "reason": "Studies optimization stability and convergence improvements for LoRA across pretraining, fine-tuning, and reinforcement learning.",
+      "evidence_quote": "we introduce Normalized Low-Rank Adaptation (NoRA)"
+    },
+    "2010.01412": {
+      "paper_id": "2010.01412",
+      "label": "relevant",
+      "reason": "Directly concerns optimization, generalization, and robustness to label noise in neural networks.",
+      "evidence_quote": "SAM natively provides robustness to label noise"
+    },
+    "2510.05491": {
+      "paper_id": "2510.05491",
+      "label": "relevant",
+      "reason": "Studies Muon optimization, distributed implementation, scalability, training efficiency, and memory at LLM scale.",
+      "evidence_quote": "develop an efficient distributed implementation under the FSDP2 framework"
+    },
+    "2610.29357": {
+      "paper_id": "2610.29357",
+      "label": "uncertain",
+      "reason": "Relevant to agent memory and continual learning, but it does not specifically address research-digest agents, paper retrieval, or relevance ranking.",
+      "evidence_quote": "memory should be judged by whether it improves future actions"
+    },
+    "2610.30646": {
+      "paper_id": "2610.30646",
+      "label": "irrelevant",
+      "reason": "Focuses on federated unsupervised domain adaptation and knowledge distillation, without a substantive connection to the listed research interests.",
+      "evidence_quote": "One-shot federated unsupervised domain adaptation"
+    },
+    "2610.28500": {
+      "paper_id": "2610.28500",
+      "label": "uncertain",
+      "reason": "Studies LLM efficiency and throughput, but focuses on low-bit inference and decoding rather than training memory, optimization, or low-rank methods.",
+      "evidence_quote": "efficient MTP on ultra-low-bit LLM backbones"
+    },
+    "2610.31098": {
+      "paper_id": "2610.31098",
+      "label": "uncertain",
+      "reason": "Addresses LLM memory efficiency and compressibility-driven training, but concerns KV-cache compression for inference rather than weight spectra or low-rank training.",
+      "evidence_quote": "compressibility-driven drafter training phase"
+    },
+    "2610.30344": {
+      "paper_id": "2610.30344",
+      "label": "relevant",
+      "reason": "Studies efficient partial-parameter continual pretraining with RS-LoRA and reports quality, wall-clock, and parameter-efficiency tradeoffs.",
+      "evidence_quote": "trains RS-LoRA adapters across the network together with the last eight transformer blocks"
+    },
+    "2610.27674": {
+      "paper_id": "2610.27674",
+      "label": "relevant",
+      "reason": "Directly addresses optimization for LLM pretraining, Muon, and Newton--Schulz orthogonalization.",
+      "evidence_quote": "we propose HyMUON, which applies Newton--Schulz orthogonalization to the hybrid direction"
+    },
+    "2610.08975": {
+      "paper_id": "2610.08975",
+      "label": "relevant",
+      "reason": "Analyzes Muon optimization, batch-size effects, gradient noise, curvature, and optimizer performance in language-model pretraining.",
+      "evidence_quote": "the best optimizer for language model pretraining changes with batch size"
+    },
+    "2610.29326": {
+      "paper_id": "2610.29326",
+      "label": "relevant",
+      "reason": "Directly concerns an agentic relevance filter, embedding retrieval, and reducing downstream LLM evaluation cost.",
+      "evidence_quote": "a lightweight first-stage relevance filter developed for Parlant 4.0"
+    },
+    "2610.29298": {
+      "paper_id": "2610.29298",
+      "label": "irrelevant",
+      "reason": "Focuses on long-tail item memorization in generative recommendation systems rather than the user's LLM optimization, low-rank training, or research-digest-agent goals.",
+      "evidence_quote": "Generative recommenders Forget the Long Tail"
+    },
+    "2610.30478": {
+      "paper_id": "2610.30478",
+      "label": "uncertain",
+      "reason": "Studies LoRA policies and external versus parameterized memory, but in embodied-agent control rather than LLM training or research-digest agents.",
+      "evidence_quote": "we distil LoRA student policies"
+    },
+    "2610.30933": {
+      "paper_id": "2610.30933",
+      "label": "uncertain",
+      "reason": "Studies policy optimization for long-horizon LLM agents and error recovery, which is adjacent to agent research but not specifically digest-agent retrieval or low-rank optimization.",
+      "evidence_quote": "Reflection-Guided Policy Optimization for Long-Horizon LLM Agents"
+    },
+    "2610.28851": {
+      "paper_id": "2610.28851",
+      "label": "irrelevant",
+      "reason": "Addresses differentiable low-fidelity optimization models for power, gas, and pooling applications, not neural-network optimization or LLMs.",
+      "evidence_quote": "We propose a self-supervised framework that parameterizes LF optimization models directly from HF feedback."
+    },
+    "2610.25858": {
+      "paper_id": "2610.25858",
+      "label": "relevant",
+      "reason": "Directly studies self-evolving agents, prompts, memory, skills, retrieval, and harness modification for continual learning, matching the research-digest-agent direction.",
+      "evidence_quote": "they adapt by rewriting their own harness, such as prompts, memory, and skills"
+    },
+    "2610.27952": {
+      "paper_id": "2610.27952",
+      "label": "irrelevant",
+      "reason": "Focuses on federated split-computing personalization for mobile inference, without a direct connection to LLM training, low-rank optimization, or research-digest agents.",
+      "evidence_quote": "Unsupervised Head Network Personalization for Split Computing via Federated Learning"
+    },
+    "2610.29720": {
+      "paper_id": "2610.29720",
+      "label": "irrelevant",
+      "reason": "Focuses on spiking speech recognition architecture and modeled compute/memory cost, without addressing the user's low-rank, spectral, optimization, or LLM-training interests.",
+      "evidence_quote": "Our biologically grounded architecture combines competitive ASR with favorable modeled compute and memory cost."
+    },
+    "2610.29192": {
+      "paper_id": "2610.29192",
+      "label": "relevant",
+      "reason": "Studies optimization dynamics, convergence, curvature scaling, and sharpness-aware regularization, aligning with the user's interest in optimization and regularization.",
+      "evidence_quote": "we propose Curvature-Scaled SAM (CS-SAM), which scales both the perturbation and the descent step by suitable curvature upper bounds"
+    },
+    "2610.31305": {
+      "paper_id": "2610.31305",
+      "label": "uncertain",
+      "reason": "Investigates continuous semantic compression and compact latent representations in language models, but does not study low-rank factorization, effective rank, or training-memory compression.",
+      "evidence_quote": "learn compact, predictive latent representations"
+    },
+    "2610.29577": {
+      "paper_id": "2610.29577",
+      "label": "uncertain",
+      "reason": "Uses spectral radius and curvature to characterize stability in multi-agent learning, but concerns performative prediction rather than neural-network weight spectra or optimization for LLMs.",
+      "evidence_quote": "The threshold occurs when the spectral radius of this matrix crosses one."
+    },
+    "2610.30825": {
+      "paper_id": "2610.30825",
+      "label": "irrelevant",
+      "reason": "Focuses on personalized cross-domain recommendation and semantic transfer, with no substantive connection to the user's specified optimization, low-rank, memory-efficient training, or research-agent goals.",
+      "evidence_quote": "we propose BGAFlow, a personalized framework that combines state-adaptive semantic evolution with user-specific transfer control."
+    },
+    "2609.37725": {
+      "paper_id": "2609.37725",
+      "label": "relevant",
+      "reason": "Directly addresses context management, multi-agent contexts, tool-like file manipulation, and efficiency of LLM agents, matching the user's AI research digest agent interests.",
+      "evidence_quote": "language models that natively manage their own context"
+    },
+    "2610.28945": {
+      "paper_id": "2610.28945",
+      "label": "uncertain",
+      "reason": "Studies self-improving LLM agents and experience-based predictive control, which is adjacent to agent research but does not specifically address paper retrieval, relevance ranking, or research-digest orchestration.",
+      "evidence_quote": "A dual-branch experience memory enables self-improvement"
+    },
+    "2610.27628": {
+      "paper_id": "2610.27628",
+      "label": "irrelevant",
+      "reason": "Focuses on recurrent state tracking and length generalization, without addressing low-rank methods, spectral regularization, memory-efficient pretraining, or research-digest agents.",
+      "evidence_quote": "Progress-Aligned Recurrence (PAR), which trains the prediction at iteration $k$ to match the state after the first $k$ operations"
+    },
+    "2610.29189": {
+      "paper_id": "2610.29189",
+      "label": "relevant",
+      "reason": "Reviews interactive reasoning-search systems, retrieval, controller design, grounding, and quality-cost tradeoffs, directly matching paper retrieval and research-digest agent interests.",
+      "evidence_quote": "tightly coupling step-by-step reasoning with interactive search"
+    },
+    "2610.31642": {
+      "paper_id": "2610.31642",
+      "label": "uncertain",
+      "reason": "Analyzes numerical behavior of softmax and cross-entropy, memorization, weight decay, Adam, and distillation, providing potentially relevant training-dynamics insights but not specifically addressing label noise, low-rank methods, or spectral optimization.",
+      "evidence_quote": "shows that after memorization, logit growth is bounded by an equilibrium between weight decay and Adam's $ε$ hyperparameter"
+    }
+  },
+  "admitted_ids": [
+    "2610.11730",
+    "2609.40127",
+    "2608.14492",
+    "2608.31036",
+    "2010.01412",
+    "2510.05491",
+    "2610.29357",
+    "2610.30646",
+    "2610.28500",
+    "2610.31098",
+    "2610.30344",
+    "2610.27674",
+    "2610.08975",
+    "2610.29326",
+    "2610.29298",
+    "2610.30478",
+    "2610.30933",
+    "2610.28851",
+    "2610.25858",
+    "2610.27952",
+    "2610.29720",
+    "2610.29192",
+    "2610.31305",
+    "2610.29577",
+    "2610.30825",
+    "2609.37725",
+    "2610.28945",
+    "2610.27628",
+    "2610.29189",
+    "2610.31642"
+  ],
+  "observations": {
+    "inspect:2610.11730": {
+      "status": "ok",
+      "question": "What matched baselines, experimental controls, and measured results are reported for effective rank, SVD-LLM compression, validation loss, GPU inference speedup, and robustness under label noise?",
+      "source": "https://arxiv.org/html/2610.11730v1",
+      "passages": [
+        {
+          "chunk_id": "chunk-0001",
+          "section": "Article",
+          "text": "BRAIn Lab Spectral Weight Decay: Inducing Low-Rank Structure in Neural Network Weights Dmitrii Andriianov 1 , Andrey Veprikov 1,2 , Aleksandr Beznosikov 1,3 1 Basic Research of Artificial Intelligence Laboratory (BRAIn Lab) 2 SB AI Lab 3 Innopolis University Standard weight decay treats each weight matrix as a vector and ignores its spectral structure. We introduce spectral weight decay, a post-step decoupled nuclear-norm update that applies additive rather than multiplicative spectral shrinkage. We connect the update to approximate proximal descent and show that its sensitivity to update order can exceed that of conventional ℓ 2 \\ell_{2} weight decay near rank deficiency. Across LLaMA models with 124 124 M to 500 500 M parameters, spectral weight decay lowers effective rank and improves SVD-LLM compression at matched validation loss. At 500 500 M and a 4 % 4\\% distortion budget, it reaches 1.89 × 1.89\\times compression and 1.18 × 1.18\\times GPU inference speedup, compared with 1.14 × 1.14\\times and 1.01 × 1.01\\times after standard weight decay. Under fixed-horizon training with 60 % 60\\% label noise, it also improves final mean clean-test accuracy over matched ℓ 2 \\ell_{2} regularization by up to 17.8 17.8 points on MNIST and 4.6 4.6 points across four BERT-base tasks. Code is available at https://github.com/brain-lab-research/SpectralWD .",
+          "source": "https://arxiv.org/html/2610.11730v1",
+          "offset": 0,
+          "score": 22.04267637902338
+        },
+        {
+          "chunk_id": "chunk-0003",
+          "section": "1 Introduction",
+          "text": "To make the regularizer matrix-aware, we begin with the proximal interpretation of decoupled weight decay. To first order, its update is a proximal gradient step for the squared Frobenius penalty [ Parikh and Boyd, 2014 ; Zhuang et al., 2022 ] . We replace this penalty with the nuclear norm, a convex surrogate for rank whose proximal operator soft-thresholds singular values [ Recht et al., 2010 ; Cai et al., 2010 ] . This construction is the matrix analogue of replacing ridge shrinkage with coefficient selection by the lasso [ Hoerl and Kennard, 1970 ; Tibshirani, 1996 ] . Given the loss-only optimizer direction Δ \\Delta , let Z = W ( k ) − η ​ Δ = U Z ​ Σ Z ​ V Z ⊤ Z=W^{(k)}-\\eta\\Delta=U_{Z}\\Sigma_{Z}V_{Z}^{\\top} . Spectral weight decay applies the post-step correction W ( k + 1 ) = Z − η ​ λ ​ U Z ​ V Z ⊤ , W^{(k+1)}=Z-\\eta\\lambda U_{Z}V_{Z}^{\\top}, (1) where η \\eta is the learning rate and λ \\lambda the regularization coefficient. This correction acts additively in the singular basis of Z Z , whereas conventional weight decay scales the spectrum uniformly. SLORR-Nuc also approximates the nuclear-norm polar factor [ González-Martínez and Liu, 2026 ] . Its decoupled extension would use the pre-step correction Z − η ​ λ ​ U W ​ V W ⊤ Z-\\eta\\lambda U_{W}V_{W}^{\\top} for W ( k ) = U W ​ Σ W ​ V W ⊤ W^{(k)}=U_{W}\\Sigma_{W}V_{W}^{\\top} , rather than ( 1 ).",
+          "source": "https://arxiv.org/html/2610.11730v1",
+          "offset": 0,
+          "score": 1.112353008828388
+        },
+        {
+          "chunk_id": "chunk-0004",
+          "section": "1 Introduction",
+          "text": "The additive shrinkage acts more strongly on smaller singular values and concentrates the spectrum. The resulting low-effective-rank weights admit efficient truncated SVD compression. Replacing a dense m × n m\\times n matrix with rank- r r factors reduces its parameter count and multiplication cost from m ​ n mn to r ⁡ ( m + n ) r(m+n) . This factorization lowers storage and inference memory and can reduce latency when the retained rank is sufficiently small. Beyond compression, we test whether the same low-rank bias limits memorization under label noise. We evaluate spectral weight decay in LLaMA [ Touvron et al., 2023 ] pretraining, post-training compression, and fixed-horizon noisy-label classification. Across models with 124 124 M to 500 500 M parameters, it lowers effective rank [ Roy and Vetterli, 2007 ] and improves compression and inference speed at matched validation loss. At 500 500 M and a 4 % 4\\% distortion budget, it reaches 1.89 × 1.89\\times compression and a 1.18 × 1.18\\times GPU inference speedup. At 60 % 60\\% label noise, mean clean-test accuracy gains over matched ℓ 2 \\ell_{2} regularization reach 17.78 17.78 points on MNIST and 4.59 4.59 points on four BERT-base tasks.",
+          "source": "https://arxiv.org/html/2610.11730v1",
+          "offset": 0,
+          "score": 25.32696103192616
+        },
+        {
+          "chunk_id": "chunk-0005",
+          "section": "Contributions",
+          "text": "• We formulate spectral weight decay as decoupled nuclear-norm regularization, derive its additive singular-value shrinkage, and connect the update to approximate proximal descent. • Across LLaMA models with 124 124 M to 500 500 M parameters, spectral weight decay improves low-rank compression and inference speed over standard weight decay at matched validation loss. It also outperforms Cuttlefish and Prehab in matched compression comparisons. • On image and text classification tasks, spectral weight decay improves fixed-horizon robustness to label noise over matched ℓ 2 \\ell_{2} regularization.",
+          "source": "https://arxiv.org/html/2610.11730v1",
+          "offset": 0,
+          "score": 17.874870710921996
+        },
+        {
+          "chunk_id": "chunk-0011",
+          "section": "3.1 Effective rank and why it matters",
+          "text": "Figure 1 : Validation loss (left) and mean effective rank of the weight matrices (right) during training of a 257 257 M-parameter LLaMA on FineWeb-Edu with Adam and spectral weight decay. We measure spectral concentration with the entropy-based effective rank [ Roy and Vetterli, 2007 ] . For singular values σ 1 ≥ ⋯ ≥ σ r \\sigma_{1}\\geq\\dots\\geq\\sigma_{r} and p i = σ i / ∑ j σ j p_{i}=\\sigma_{i}/\\sum_{j}\\sigma_{j} , it is erank ( W ) = exp ( H ( p ) ) = exp ( − ∑ i p i log p i ) . \\operatorname{erank}(W)=\\exp\\big(H(p)\\big)=\\exp\\!\\Big(-\\sum_{i}p_{i}\\log p_{i}\\Big). (2) Effective rank ranges from 1 1 for a rank-one matrix to r = min ⁡ ( m , n ) r=\\min(m,n) for a flat spectrum and decreases as the spectrum becomes more concentrated. We report a weighted mean across weight matrices, with weights min ⁡ ( m l , n l ) \\min(m_{l},n_{l}) , excluding token embeddings and the output head. Figure 1 shows validation loss and mean effective rank during training of a 257 257 M-parameter LLaMA [ Touvron et al., 2023 ] on FineWeb-Edu [ Penedo et al., 2024 ] with Adam and spectral weight decay. Appendix B.1 summarizes the pretraining configurations. Larger λ \\lambda lowers effective rank, with a corresponding validation-loss trade-off. At the end of training, λ = 0.7 \\lambda=0.7 reduces mean effective rank by a factor of 2.17 2.17 relative to λ = 0 \\lambda=0 , with a 1.10 % 1.10\\% increase in validation loss.",
+          "source": "https://arxiv.org/html/2610.11730v1",
+          "offset": 0,
+          "score": 6.119170715350479
+        },
+        {
+          "chunk_id": "chunk-0012",
+          "section": "3.1 Effective rank and why it matters",
+          "text": "We use effective rank instead of stable rank, ‖ W ‖ F 2 / ‖ W ‖ 2 2 \\|W\\|_{F}^{2}/\\|W\\|_{2}^{2} , because it predicts a practical compression threshold. Truncating to ⌈ erank ⁡ ( W ) ⌉ \\lceil\\operatorname{erank}(W)\\rceil preserves model quality, while lower ranks degrade it sharply (Figure 2 , right). Stable rank can remain near one when a single singular value dominates many active directions, so it does not capture this threshold. Figure 2 : Effective-rank profiles and compression of the λ = 1 \\lambda=1 model. Left: effective rank as a percentage of full rank, grouped by layer type. Middle: the same ratio across transformer blocks. Right: validation loss after truncated SVD and SVD-LLM at different retained ranks. The vertical line marks the mean effective rank. Figure 3 : Compression and inference frontiers under validation-loss distortion budgets. Top: maximum compression rate relative to the best dense checkpoint at each scale. Bottom: maximum inference speedup.",
+          "source": "https://arxiv.org/html/2610.11730v1",
+          "offset": 0,
+          "score": 19.924365641086357
+        }
+      ],
+      "text": "BRAIn Lab Spectral Weight Decay: Inducing Low-Rank Structure in Neural Network Weights Dmitrii Andriianov 1 , Andrey Veprikov 1,2 , Aleksandr Beznosikov 1,3 1 Basic Research of Artificial Intelligence Laboratory (BRAIn Lab) 2 SB AI Lab 3 Innopolis University Standard weight decay treats each weight matrix as a vector and ignores its spectral structure. We introduce spectral weight decay, a post-step decoupled nuclear-norm update that applies additive rather than multiplicative spectral shrinkage. We connect the update to approximate proximal descent and show that its sensitivity to update order can exceed that of conventional ℓ 2 \\ell_{2} weight decay near rank deficiency. Across LLaMA models with 124 124 M to 500 500 M parameters, spectral weight decay lowers effective rank and improves SVD-LLM compression at matched validation loss. At 500 500 M and a 4 % 4\\% distortion budget, it reaches 1.89 × 1.89\\times compression and 1.18 × 1.18\\times GPU inference speedup, compared with 1.14 × 1.14\\times and 1.01 × 1.01\\times after standard weight decay. Under fixed-horizon training with 60 % 60\\% label noise, it also improves final mean clean-test accuracy over matched ℓ 2 \\ell_{2} regularization by up to 17.8 17.8 points on MNIST and 4.6 4.6 points across four BERT-base tasks. Code is available at https://github.com/brain-lab-research/SpectralWD .\n\nTo make the regularizer matrix-aware, we begin with the proximal interpretation of decoupled weight decay. To first order, its update is a proximal gradient step for the squared Frobenius penalty [ Parikh and Boyd, 2014 ; Zhuang et al., 2022 ] . We replace this penalty with the nuclear norm, a convex surrogate for rank whose proximal operator soft-thresholds singular values [ Recht et al., 2010 ; Cai et al., 2010 ] . This construction is the matrix analogue of replacing ridge shrinkage with coefficient selection by the lasso [ Hoerl and Kennard, 1970 ; Tibshirani, 1996 ] . Given the loss-only optimizer direction Δ \\Delta , let Z = W ( k ) − η ​ Δ = U Z ​ Σ Z ​ V Z ⊤ Z=W^{(k)}-\\eta\\Delta=U_{Z}\\Sigma_{Z}V_{Z}^{\\top} . Spectral weight decay applies the post-step correction W ( k + 1 ) = Z − η ​ λ ​ U Z ​ V Z ⊤ , W^{(k+1)}=Z-\\eta\\lambda U_{Z}V_{Z}^{\\top}, (1) where η \\eta is the learning rate and λ \\lambda the regularization coefficient. This correction acts additively in the singular basis of Z Z , whereas conventional weight decay scales the spectrum uniformly. SLORR-Nuc also approximates the nuclear-norm polar factor [ González-Martínez and Liu, 2026 ] . Its decoupled extension would use the pre-step correction Z − η ​ λ ​ U W ​ V W ⊤ Z-\\eta\\lambda U_{W}V_{W}^{\\top} for W ( k ) = U W ​ Σ W ​ V W ⊤ W^{(k)}=U_{W}\\Sigma_{W}V_{W}^{\\top} , rather than ( 1 ).\n\nThe additive shrinkage acts more strongly on smaller singular values and concentrates the spectrum. The resulting low-effective-rank weights admit efficient truncated SVD compression. Replacing a dense m × n m\\times n matrix with rank- r r factors reduces its parameter count and multiplication cost from m ​ n mn to r ⁡ ( m + n ) r(m+n) . This factorization lowers storage and inference memory and can reduce latency when the retained rank is sufficiently small. Beyond compression, we test whether the same low-rank bias limits memorization under label noise. We evaluate spectral weight decay in LLaMA [ Touvron et al., 2023 ] pretraining, post-training compression, and fixed-horizon noisy-label classification. Across models with 124 124 M to 500 500 M parameters, it lowers effective rank [ Roy and Vetterli, 2007 ] and improves compression and inference speed at matched validation loss. At 500 500 M and a 4 % 4\\% distortion budget, it reaches 1.89 × 1.89\\times compression and a 1.18 × 1.18\\times GPU inference speedup. At 60 % 60\\% label noise, mean clean-test accuracy gains over matched ℓ 2 \\ell_{2} regularization reach 17.78 17.78 points on MNIST and 4.59 4.59 points on four BERT-base tasks.\n\n• We formulate spectral weight decay as decoupled nuclear-norm regularization, derive its additive singular-value shrinkage, and connect the update to approximate proximal descent. • Across LLaMA models with 124 124 M to 500 500 M parameters, spectral weight decay improves low-rank compression and inference speed over standard weight decay at matched validation loss. It also outperforms Cuttlefish and Prehab in matched compression comparisons. • On image and text classification tasks, spectral weight decay improves fixed-horizon robustness to label noise over matched ℓ 2 \\ell_{2} regularization.\n\nFigure 1 : Validation loss (left) and mean effective rank of the weight matrices (right) during training of a 257 257 M-parameter LLaMA on FineWeb-Edu with Adam and spectral weight decay. We measure spectral concentration with the entropy-based effective rank [ Roy and Vetterli, 2007 ] . For singular values σ 1 ≥ ⋯ ≥ σ r \\sigma_{1}\\geq\\dots\\geq\\sigma_{r} and p i = σ i / ∑ j σ j p_{i}=\\sigma_{i}/\\sum_{j}\\sigma_{j} , it is erank ( W ) = exp ( H ( p ) ) = exp ( − ∑ i p i log p i ) . \\operatorname{erank}(W)=\\exp\\big(H(p)\\big)=\\exp\\!\\Big(-\\sum_{i}p_{i}\\log p_{i}\\Big). (2) Effective rank ranges from 1 1 for a rank-one matrix to r = min ⁡ ( m , n ) r=\\min(m,n) for a flat spectrum and decreases as the spectrum becomes more concentrated. We report a weighted mean across weight matrices, with weights min ⁡ ( m l , n l ) \\min(m_{l},n_{l}) , excluding token embeddings and the output head. Figure 1 shows validation loss and mean effective rank during training of a 257 257 M-parameter LLaMA [ Touvron et al., 2023 ] on FineWeb-Edu [ Penedo et al., 2024 ] with Adam and spectral weight decay. Appendix B.1 summarizes the pretraining configurations. Larger λ \\lambda lowers effective rank, with a corresponding validation-loss trade-off. At the end of training, λ = 0.7 \\lambda=0.7 reduces mean effective rank by a factor of 2.17 2.17 relative to λ = 0 \\lambda=0 , with a 1.10 % 1.10\\% increase in validation loss.\n\nWe use effective rank instead of stable rank, ‖ W ‖ F 2 / ‖ W ‖ 2 2 \\|W\\|_{F}^{2}/\\|W\\|_{2}^{2} , because it predicts a practical compression threshold. Truncating to ⌈ erank ⁡ ( W ) ⌉ \\lceil\\operatorname{erank}(W)\\rceil preserves model quality, while lower ranks degrade it sharply (Figure 2 , right). Stable rank can remain near one when a single singular value dominates many active directions, so it does not capture this threshold. Figure 2 : Effective-rank profiles and compression of the λ = 1 \\lambda=1 model. Left: effective rank as a percentage of full rank, grouped by layer type. Middle: the same ratio across transformer blocks. Right: validation loss after truncated SVD and SVD-LLM at different retained ranks. The vertical line marks the mean effective rank. Figure 3 : Compression and inference frontiers under validation-loss distortion budgets. Top: maximum compression rate relative to the best dense checkpoint at each scale. Bottom: maximum inference speedup.",
+      "truncated": true,
+      "available_chars": 68851,
+      "note": "Retrieved passages, not an answer. Missing matches do not establish that the paper lacks the requested experiment. Extracted HTML text; equations and table formatting may be imperfect. No PDF extraction was attempted.",
+      "questions": [
+        "What matched baselines, experimental controls, and measured results are reported for effective rank, SVD-LLM compression, validation loss, GPU inference speedup, and robustness under label noise?"
+      ]
+    }
+  },
+  "x_collector": "arc-v2",
+  "pending": {
+    "action": "finish",
+    "paper_id": "",
+    "reason": "The shortlist is sufficiently supported by direct inspection for Spectral Weight Decay and abstracts for complementary optimization, low-rank adaptation, and research-agent papers. Unresolved uncertainty remains about detailed baselines, compute costs, and reproducibility for the papers not inspected, which could affect their ordering.",
+    "question": "",
+    "query": "",
+    "limit": 10,
+    "selections": [
+      {
+        "paper_id": "2610.11730",
+        "summary": "Introduces decoupled nuclear-norm spectral weight decay to concentrate singular values and induce low-effective-rank weights. Across 124M–500M-parameter LLaMA models, it improves compression and inference speed at matched validation loss, and improves clean-test accuracy under 60% label noise.",
+        "relevance": "Direct match for spectral regularization, effective rank, low-rank compressibility, SVD compression, and memorization under label noise.",
+        "evidence": [
+          {
+            "source": "inspection",
+            "quote": "At 500M and a 4% distortion budget, it reaches 1.89× compression and a 1.18× GPU inference speedup, compared with 1.14× and 1.01× after standard weight decay."
+          },
+          {
+            "source": "inspection",
+            "quote": "At the end of training, λ = 0.7 reduces mean effective rank by a factor of 2.17 relative to λ = 0, with a 1.10% increase in validation loss."
+          }
+        ]
+      },
+      {
+        "paper_id": "2608.14492",
+        "summary": "Presents sMuon, an efficient approximation to the Muon objective for low-rank adapters using linearization and least squares, with matmul-only implementation. It reports moderate improvements across supervised fine-tuning and a ReLoRA pretraining experiment.",
+        "relevance": "Directly addresses optimization for LoRA, low-rank parameterizations, Muon, and ReLoRA pretraining.",
+        "evidence": [
+          {
+            "source": "abstract",
+            "quote": "Our method, sMuon (small Muon), performs favourably across SFT and a ReLoRA pretraining experiment."
+          },
+          {
+            "source": "abstract",
+            "quote": "we find overall that using Muon for low-rank fine-tuning provides moderate performance improvements."
+          }
+        ]
+      },
+      {
+        "paper_id": "2608.31036",
+        "summary": "Introduces NoRA, which normalizes LoRA down-projection matrices during training or only at initialization. The method is evaluated across pretraining, supervised fine-tuning, and reinforcement learning, where it reportedly improves convergence, stability, performance, and catastrophic-forgetting behavior without extra trainable parameters or inference computation.",
+        "relevance": "Strong fit for the geometry and optimization dynamics of LoRA and other low-rank updates.",
+        "evidence": [
+          {
+            "source": "abstract",
+            "quote": "Because LoRA initializes the up-projection to zero, its early optimization dynamics are largely governed by the down-projection."
+          },
+          {
+            "source": "abstract",
+            "quote": "Across pretraining, supervised finetuning, and reinforcement learning, NoRA consistently accelerates convergence, improves performance and training stability, and mitigates catastrophic forgetting."
+          }
+        ]
+      },
+      {
+        "paper_id": "2510.05491",
+        "summary": "Proposes NorMuon, combining Muon's orthogonalization with neuron-wise adaptive normalization and an efficient distributed FSDP2 implementation. It targets non-uniform neuron update norms and practical scalability in LLM training.",
+        "relevance": "Relevant to Muon optimization, conditioning, distributed training, and efficiency at language-model scale.",
+        "evidence": [
+          {
+            "source": "abstract",
+            "quote": "NorMuon addresses this imbalance by maintaining second-order momentum statistics for each neuron and applying row-wise normalization after orthogonalization."
+          },
+          {
+            "source": "abstract",
+            "quote": "To enable practical deployment at scale, we develop an efficient distributed implementation under the FSDP2 framework."
+          }
+        ]
+      },
+      {
+        "paper_id": "2609.37725",
+        "summary": "Introduces Context Language Models that treat context as a file the model can update, extending the approach to multi-agent contexts. The abstract reports improved accuracy and reduced FLOPs over context-management baselines, as well as gains from natural-language steering and skill optimization.",
+        "relevance": "Directly supports the user's goal of building an AI research-digest agent with explicit context management and tool-like context operations.",
+        "evidence": [
+          {
+            "source": "abstract",
+            "quote": "We introduce Context Language Models (CLMs), language models that natively manage their own context."
+          },
+          {
+            "source": "abstract",
+            "quote": "This allows the model to learn what is most important to maintain in context, and naturally extends to multi-agent systems where multiple agent contexts coexist as files."
+          }
+        ]
+      }
+    ],
+    "limitations": [
+      "Only Spectral Weight Decay received full-text inspection. The remaining selections rely on abstracts, some of which are truncated or provide limited baseline and compute details.",
+      "Code availability and reproducibility were not independently checked.",
+      "X analysis was disabled, so no attention or popularity signal is included."
+    ]
+  },
+  "screen_target": 30,
+  "llm_calls": 5,
+  "steps": 2,
+  "inspections": 1,
+  "expansions": 0,
+  "fetched_count": 100,
+  "candidate_count": 100,
+  "llm_usage": [
+    {
+      "model": "gpt-5.6-luna",
+      "status": "completed",
+      "input_tokens": 9355,
+      "output_tokens": 857,
+      "latency_seconds": 19.606655625000712,
+      "estimated_api_cost_usd": 0.0028993999999999995
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "status": "completed",
+      "input_tokens": 9429,
+      "output_tokens": 917,
+      "latency_seconds": 20.468801625000197,
+      "estimated_api_cost_usd": 0.0029861999999999996
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "status": "completed",
+      "input_tokens": 9494,
+      "output_tokens": 860,
+      "latency_seconds": 19.853435666009318,
+      "estimated_api_cost_usd": 0.0029308000000000003
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "status": "completed",
+      "input_tokens": 18804,
+      "output_tokens": 165,
+      "latency_seconds": 6.729671833003522,
+      "estimated_api_cost_usd": 0.0039588
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "status": "completed",
+      "input_tokens": 27532,
+      "output_tokens": 1084,
+      "latency_seconds": 23.168829125002958,
+      "estimated_api_cost_usd": 0.006807200000000001
+    }
+  ],
+  "tool_calls": 1,
+  "inspection_queries": {
+    "2610.11730:6a370314a5b3dc3b6cc6edf49ba064480755336e55a05a55d59b11a2ea2ed22d": {
+      "status": "ok",
+      "question": "What matched baselines, experimental controls, and measured results are reported for effective rank, SVD-LLM compression, validation loss, GPU inference speedup, and robustness under label noise?",
+      "source": "https://arxiv.org/html/2610.11730v1",
+      "passages": [
+        {
+          "chunk_id": "chunk-0001",
+          "section": "Article",
+          "text": "BRAIn Lab Spectral Weight Decay: Inducing Low-Rank Structure in Neural Network Weights Dmitrii Andriianov 1 , Andrey Veprikov 1,2 , Aleksandr Beznosikov 1,3 1 Basic Research of Artificial Intelligence Laboratory (BRAIn Lab) 2 SB AI Lab 3 Innopolis University Standard weight decay treats each weight matrix as a vector and ignores its spectral structure. We introduce spectral weight decay, a post-step decoupled nuclear-norm update that applies additive rather than multiplicative spectral shrinkage. We connect the update to approximate proximal descent and show that its sensitivity to update order can exceed that of conventional ℓ 2 \\ell_{2} weight decay near rank deficiency. Across LLaMA models with 124 124 M to 500 500 M parameters, spectral weight decay lowers effective rank and improves SVD-LLM compression at matched validation loss. At 500 500 M and a 4 % 4\\% distortion budget, it reaches 1.89 × 1.89\\times compression and 1.18 × 1.18\\times GPU inference speedup, compared with 1.14 × 1.14\\times and 1.01 × 1.01\\times after standard weight decay. Under fixed-horizon training with 60 % 60\\% label noise, it also improves final mean clean-test accuracy over matched ℓ 2 \\ell_{2} regularization by up to 17.8 17.8 points on MNIST and 4.6 4.6 points across four BERT-base tasks. Code is available at https://github.com/brain-lab-research/SpectralWD .",
+          "source": "https://arxiv.org/html/2610.11730v1",
+          "offset": 0,
+          "score": 22.04267637902338
+        },
+        {
+          "chunk_id": "chunk-0003",
+          "section": "1 Introduction",
+          "text": "To make the regularizer matrix-aware, we begin with the proximal interpretation of decoupled weight decay. To first order, its update is a proximal gradient step for the squared Frobenius penalty [ Parikh and Boyd, 2014 ; Zhuang et al., 2022 ] . We replace this penalty with the nuclear norm, a convex surrogate for rank whose proximal operator soft-thresholds singular values [ Recht et al., 2010 ; Cai et al., 2010 ] . This construction is the matrix analogue of replacing ridge shrinkage with coefficient selection by the lasso [ Hoerl and Kennard, 1970 ; Tibshirani, 1996 ] . Given the loss-only optimizer direction Δ \\Delta , let Z = W ( k ) − η ​ Δ = U Z ​ Σ Z ​ V Z ⊤ Z=W^{(k)}-\\eta\\Delta=U_{Z}\\Sigma_{Z}V_{Z}^{\\top} . Spectral weight decay applies the post-step correction W ( k + 1 ) = Z − η ​ λ ​ U Z ​ V Z ⊤ , W^{(k+1)}=Z-\\eta\\lambda U_{Z}V_{Z}^{\\top}, (1) where η \\eta is the learning rate and λ \\lambda the regularization coefficient. This correction acts additively in the singular basis of Z Z , whereas conventional weight decay scales the spectrum uniformly. SLORR-Nuc also approximates the nuclear-norm polar factor [ González-Martínez and Liu, 2026 ] . Its decoupled extension would use the pre-step correction Z − η ​ λ ​ U W ​ V W ⊤ Z-\\eta\\lambda U_{W}V_{W}^{\\top} for W ( k ) = U W ​ Σ W ​ V W ⊤ W^{(k)}=U_{W}\\Sigma_{W}V_{W}^{\\top} , rather than ( 1 ).",
+          "source": "https://arxiv.org/html/2610.11730v1",
+          "offset": 0,
+          "score": 1.112353008828388
+        },
+        {
+          "chunk_id": "chunk-0004",
+          "section": "1 Introduction",
+          "text": "The additive shrinkage acts more strongly on smaller singular values and concentrates the spectrum. The resulting low-effective-rank weights admit efficient truncated SVD compression. Replacing a dense m × n m\\times n matrix with rank- r r factors reduces its parameter count and multiplication cost from m ​ n mn to r ⁡ ( m + n ) r(m+n) . This factorization lowers storage and inference memory and can reduce latency when the retained rank is sufficiently small. Beyond compression, we test whether the same low-rank bias limits memorization under label noise. We evaluate spectral weight decay in LLaMA [ Touvron et al., 2023 ] pretraining, post-training compression, and fixed-horizon noisy-label classification. Across models with 124 124 M to 500 500 M parameters, it lowers effective rank [ Roy and Vetterli, 2007 ] and improves compression and inference speed at matched validation loss. At 500 500 M and a 4 % 4\\% distortion budget, it reaches 1.89 × 1.89\\times compression and a 1.18 × 1.18\\times GPU inference speedup. At 60 % 60\\% label noise, mean clean-test accuracy gains over matched ℓ 2 \\ell_{2} regularization reach 17.78 17.78 points on MNIST and 4.59 4.59 points on four BERT-base tasks.",
+          "source": "https://arxiv.org/html/2610.11730v1",
+          "offset": 0,
+          "score": 25.32696103192616
+        },
+        {
+          "chunk_id": "chunk-0005",
+          "section": "Contributions",
+          "text": "• We formulate spectral weight decay as decoupled nuclear-norm regularization, derive its additive singular-value shrinkage, and connect the update to approximate proximal descent. • Across LLaMA models with 124 124 M to 500 500 M parameters, spectral weight decay improves low-rank compression and inference speed over standard weight decay at matched validation loss. It also outperforms Cuttlefish and Prehab in matched compression comparisons. • On image and text classification tasks, spectral weight decay improves fixed-horizon robustness to label noise over matched ℓ 2 \\ell_{2} regularization.",
+          "source": "https://arxiv.org/html/2610.11730v1",
+          "offset": 0,
+          "score": 17.874870710921996
+        },
+        {
+          "chunk_id": "chunk-0011",
+          "section": "3.1 Effective rank and why it matters",
+          "text": "Figure 1 : Validation loss (left) and mean effective rank of the weight matrices (right) during training of a 257 257 M-parameter LLaMA on FineWeb-Edu with Adam and spectral weight decay. We measure spectral concentration with the entropy-based effective rank [ Roy and Vetterli, 2007 ] . For singular values σ 1 ≥ ⋯ ≥ σ r \\sigma_{1}\\geq\\dots\\geq\\sigma_{r} and p i = σ i / ∑ j σ j p_{i}=\\sigma_{i}/\\sum_{j}\\sigma_{j} , it is erank ( W ) = exp ( H ( p ) ) = exp ( − ∑ i p i log p i ) . \\operatorname{erank}(W)=\\exp\\big(H(p)\\big)=\\exp\\!\\Big(-\\sum_{i}p_{i}\\log p_{i}\\Big). (2) Effective rank ranges from 1 1 for a rank-one matrix to r = min ⁡ ( m , n ) r=\\min(m,n) for a flat spectrum and decreases as the spectrum becomes more concentrated. We report a weighted mean across weight matrices, with weights min ⁡ ( m l , n l ) \\min(m_{l},n_{l}) , excluding token embeddings and the output head. Figure 1 shows validation loss and mean effective rank during training of a 257 257 M-parameter LLaMA [ Touvron et al., 2023 ] on FineWeb-Edu [ Penedo et al., 2024 ] with Adam and spectral weight decay. Appendix B.1 summarizes the pretraining configurations. Larger λ \\lambda lowers effective rank, with a corresponding validation-loss trade-off. At the end of training, λ = 0.7 \\lambda=0.7 reduces mean effective rank by a factor of 2.17 2.17 relative to λ = 0 \\lambda=0 , with a 1.10 % 1.10\\% increase in validation loss.",
+          "source": "https://arxiv.org/html/2610.11730v1",
+          "offset": 0,
+          "score": 6.119170715350479
+        },
+        {
+          "chunk_id": "chunk-0012",
+          "section": "3.1 Effective rank and why it matters",
+          "text": "We use effective rank instead of stable rank, ‖ W ‖ F 2 / ‖ W ‖ 2 2 \\|W\\|_{F}^{2}/\\|W\\|_{2}^{2} , because it predicts a practical compression threshold. Truncating to ⌈ erank ⁡ ( W ) ⌉ \\lceil\\operatorname{erank}(W)\\rceil preserves model quality, while lower ranks degrade it sharply (Figure 2 , right). Stable rank can remain near one when a single singular value dominates many active directions, so it does not capture this threshold. Figure 2 : Effective-rank profiles and compression of the λ = 1 \\lambda=1 model. Left: effective rank as a percentage of full rank, grouped by layer type. Middle: the same ratio across transformer blocks. Right: validation loss after truncated SVD and SVD-LLM at different retained ranks. The vertical line marks the mean effective rank. Figure 3 : Compression and inference frontiers under validation-loss distortion budgets. Top: maximum compression rate relative to the best dense checkpoint at each scale. Bottom: maximum inference speedup.",
+          "source": "https://arxiv.org/html/2610.11730v1",
+          "offset": 0,
+          "score": 19.924365641086357
+        }
+      ],
+      "text": "BRAIn Lab Spectral Weight Decay: Inducing Low-Rank Structure in Neural Network Weights Dmitrii Andriianov 1 , Andrey Veprikov 1,2 , Aleksandr Beznosikov 1,3 1 Basic Research of Artificial Intelligence Laboratory (BRAIn Lab) 2 SB AI Lab 3 Innopolis University Standard weight decay treats each weight matrix as a vector and ignores its spectral structure. We introduce spectral weight decay, a post-step decoupled nuclear-norm update that applies additive rather than multiplicative spectral shrinkage. We connect the update to approximate proximal descent and show that its sensitivity to update order can exceed that of conventional ℓ 2 \\ell_{2} weight decay near rank deficiency. Across LLaMA models with 124 124 M to 500 500 M parameters, spectral weight decay lowers effective rank and improves SVD-LLM compression at matched validation loss. At 500 500 M and a 4 % 4\\% distortion budget, it reaches 1.89 × 1.89\\times compression and 1.18 × 1.18\\times GPU inference speedup, compared with 1.14 × 1.14\\times and 1.01 × 1.01\\times after standard weight decay. Under fixed-horizon training with 60 % 60\\% label noise, it also improves final mean clean-test accuracy over matched ℓ 2 \\ell_{2} regularization by up to 17.8 17.8 points on MNIST and 4.6 4.6 points across four BERT-base tasks. Code is available at https://github.com/brain-lab-research/SpectralWD .\n\nTo make the regularizer matrix-aware, we begin with the proximal interpretation of decoupled weight decay. To first order, its update is a proximal gradient step for the squared Frobenius penalty [ Parikh and Boyd, 2014 ; Zhuang et al., 2022 ] . We replace this penalty with the nuclear norm, a convex surrogate for rank whose proximal operator soft-thresholds singular values [ Recht et al., 2010 ; Cai et al., 2010 ] . This construction is the matrix analogue of replacing ridge shrinkage with coefficient selection by the lasso [ Hoerl and Kennard, 1970 ; Tibshirani, 1996 ] . Given the loss-only optimizer direction Δ \\Delta , let Z = W ( k ) − η ​ Δ = U Z ​ Σ Z ​ V Z ⊤ Z=W^{(k)}-\\eta\\Delta=U_{Z}\\Sigma_{Z}V_{Z}^{\\top} . Spectral weight decay applies the post-step correction W ( k + 1 ) = Z − η ​ λ ​ U Z ​ V Z ⊤ , W^{(k+1)}=Z-\\eta\\lambda U_{Z}V_{Z}^{\\top}, (1) where η \\eta is the learning rate and λ \\lambda the regularization coefficient. This correction acts additively in the singular basis of Z Z , whereas conventional weight decay scales the spectrum uniformly. SLORR-Nuc also approximates the nuclear-norm polar factor [ González-Martínez and Liu, 2026 ] . Its decoupled extension would use the pre-step correction Z − η ​ λ ​ U W ​ V W ⊤ Z-\\eta\\lambda U_{W}V_{W}^{\\top} for W ( k ) = U W ​ Σ W ​ V W ⊤ W^{(k)}=U_{W}\\Sigma_{W}V_{W}^{\\top} , rather than ( 1 ).\n\nThe additive shrinkage acts more strongly on smaller singular values and concentrates the spectrum. The resulting low-effective-rank weights admit efficient truncated SVD compression. Replacing a dense m × n m\\times n matrix with rank- r r factors reduces its parameter count and multiplication cost from m ​ n mn to r ⁡ ( m + n ) r(m+n) . This factorization lowers storage and inference memory and can reduce latency when the retained rank is sufficiently small. Beyond compression, we test whether the same low-rank bias limits memorization under label noise. We evaluate spectral weight decay in LLaMA [ Touvron et al., 2023 ] pretraining, post-training compression, and fixed-horizon noisy-label classification. Across models with 124 124 M to 500 500 M parameters, it lowers effective rank [ Roy and Vetterli, 2007 ] and improves compression and inference speed at matched validation loss. At 500 500 M and a 4 % 4\\% distortion budget, it reaches 1.89 × 1.89\\times compression and a 1.18 × 1.18\\times GPU inference speedup. At 60 % 60\\% label noise, mean clean-test accuracy gains over matched ℓ 2 \\ell_{2} regularization reach 17.78 17.78 points on MNIST and 4.59 4.59 points on four BERT-base tasks.\n\n• We formulate spectral weight decay as decoupled nuclear-norm regularization, derive its additive singular-value shrinkage, and connect the update to approximate proximal descent. • Across LLaMA models with 124 124 M to 500 500 M parameters, spectral weight decay improves low-rank compression and inference speed over standard weight decay at matched validation loss. It also outperforms Cuttlefish and Prehab in matched compression comparisons. • On image and text classification tasks, spectral weight decay improves fixed-horizon robustness to label noise over matched ℓ 2 \\ell_{2} regularization.\n\nFigure 1 : Validation loss (left) and mean effective rank of the weight matrices (right) during training of a 257 257 M-parameter LLaMA on FineWeb-Edu with Adam and spectral weight decay. We measure spectral concentration with the entropy-based effective rank [ Roy and Vetterli, 2007 ] . For singular values σ 1 ≥ ⋯ ≥ σ r \\sigma_{1}\\geq\\dots\\geq\\sigma_{r} and p i = σ i / ∑ j σ j p_{i}=\\sigma_{i}/\\sum_{j}\\sigma_{j} , it is erank ( W ) = exp ( H ( p ) ) = exp ( − ∑ i p i log p i ) . \\operatorname{erank}(W)=\\exp\\big(H(p)\\big)=\\exp\\!\\Big(-\\sum_{i}p_{i}\\log p_{i}\\Big). (2) Effective rank ranges from 1 1 for a rank-one matrix to r = min ⁡ ( m , n ) r=\\min(m,n) for a flat spectrum and decreases as the spectrum becomes more concentrated. We report a weighted mean across weight matrices, with weights min ⁡ ( m l , n l ) \\min(m_{l},n_{l}) , excluding token embeddings and the output head. Figure 1 shows validation loss and mean effective rank during training of a 257 257 M-parameter LLaMA [ Touvron et al., 2023 ] on FineWeb-Edu [ Penedo et al., 2024 ] with Adam and spectral weight decay. Appendix B.1 summarizes the pretraining configurations. Larger λ \\lambda lowers effective rank, with a corresponding validation-loss trade-off. At the end of training, λ = 0.7 \\lambda=0.7 reduces mean effective rank by a factor of 2.17 2.17 relative to λ = 0 \\lambda=0 , with a 1.10 % 1.10\\% increase in validation loss.\n\nWe use effective rank instead of stable rank, ‖ W ‖ F 2 / ‖ W ‖ 2 2 \\|W\\|_{F}^{2}/\\|W\\|_{2}^{2} , because it predicts a practical compression threshold. Truncating to ⌈ erank ⁡ ( W ) ⌉ \\lceil\\operatorname{erank}(W)\\rceil preserves model quality, while lower ranks degrade it sharply (Figure 2 , right). Stable rank can remain near one when a single singular value dominates many active directions, so it does not capture this threshold. Figure 2 : Effective-rank profiles and compression of the λ = 1 \\lambda=1 model. Left: effective rank as a percentage of full rank, grouped by layer type. Middle: the same ratio across transformer blocks. Right: validation loss after truncated SVD and SVD-LLM at different retained ranks. The vertical line marks the mean effective rank. Figure 3 : Compression and inference frontiers under validation-loss distortion budgets. Top: maximum compression rate relative to the best dense checkpoint at each scale. Bottom: maximum inference speedup.",
+      "truncated": true,
+      "available_chars": 68851,
+      "note": "Retrieved passages, not an answer. Missing matches do not establish that the paper lacks the requested experiment. Extracted HTML text; equations and table formatting may be imperfect. No PDF extraction was attempted."
+    }
+  },
+  "tool_latency_seconds": 0.010588874996756203,
+  "last_observation": {
+    "action": "inspect_paper",
+    "result": {
+      "status": "ok",
+      "question": "What matched baselines, experimental controls, and measured results are reported for effective rank, SVD-LLM compression, validation loss, GPU inference speedup, and robustness under label noise?",
+      "source": "https://arxiv.org/html/2610.11730v1",
+      "passages": [
+        {
+          "chunk_id": "chunk-0001",
+          "section": "Article",
+          "text": "BRAIn Lab Spectral Weight Decay: Inducing Low-Rank Structure in Neural Network Weights Dmitrii Andriianov 1 , Andrey Veprikov 1,2 , Aleksandr Beznosikov 1,3 1 Basic Research of Artificial Intelligence Laboratory (BRAIn Lab) 2 SB AI Lab 3 Innopolis University Standard weight decay treats each weight matrix as a vector and ignores its spectral structure. We introduce spectral weight decay, a post-step decoupled nuclear-norm update that applies additive rather than multiplicative spectral shrinkage. We connect the update to approximate proximal descent and show that its sensitivity to update order can exceed that of conventional ℓ 2 \\ell_{2} weight decay near rank deficiency. Across LLaMA models with 124 124 M to 500 500 M parameters, spectral weight decay lowers effective rank and improves SVD-LLM compression at matched validation loss. At 500 500 M and a 4 % 4\\% distortion budget, it reaches 1.89 × 1.89\\times compression and 1.18 × 1.18\\times GPU inference speedup, compared with 1.14 × 1.14\\times and 1.01 × 1.01\\times after standard weight decay. Under fixed-horizon training with 60 % 60\\% label noise, it also improves final mean clean-test accuracy over matched ℓ 2 \\ell_{2} regularization by up to 17.8 17.8 points on MNIST and 4.6 4.6 points across four BERT-base tasks. Code is available at https://github.com/brain-lab-research/SpectralWD .",
+          "source": "https://arxiv.org/html/2610.11730v1",
+          "offset": 0,
+          "score": 22.04267637902338
+        },
+        {
+          "chunk_id": "chunk-0003",
+          "section": "1 Introduction",
+          "text": "To make the regularizer matrix-aware, we begin with the proximal interpretation of decoupled weight decay. To first order, its update is a proximal gradient step for the squared Frobenius penalty [ Parikh and Boyd, 2014 ; Zhuang et al., 2022 ] . We replace this penalty with the nuclear norm, a convex surrogate for rank whose proximal operator soft-thresholds singular values [ Recht et al., 2010 ; Cai et al., 2010 ] . This construction is the matrix analogue of replacing ridge shrinkage with coefficient selection by the lasso [ Hoerl and Kennard, 1970 ; Tibshirani, 1996 ] . Given the loss-only optimizer direction Δ \\Delta , let Z = W ( k ) − η ​ Δ = U Z ​ Σ Z ​ V Z ⊤ Z=W^{(k)}-\\eta\\Delta=U_{Z}\\Sigma_{Z}V_{Z}^{\\top} . Spectral weight decay applies the post-step correction W ( k + 1 ) = Z − η ​ λ ​ U Z ​ V Z ⊤ , W^{(k+1)}=Z-\\eta\\lambda U_{Z}V_{Z}^{\\top}, (1) where η \\eta is the learning rate and λ \\lambda the regularization coefficient. This correction acts additively in the singular basis of Z Z , whereas conventional weight decay scales the spectrum uniformly. SLORR-Nuc also approximates the nuclear-norm polar factor [ González-Martínez and Liu, 2026 ] . Its decoupled extension would use the pre-step correction Z − η ​ λ ​ U W ​ V W ⊤ Z-\\eta\\lambda U_{W}V_{W}^{\\top} for W ( k ) = U W ​ Σ W ​ V W ⊤ W^{(k)}=U_{W}\\Sigma_{W}V_{W}^{\\top} , rather than ( 1 ).",
+          "source": "https://arxiv.org/html/2610.11730v1",
+          "offset": 0,
+          "score": 1.112353008828388
+        },
+        {
+          "chunk_id": "chunk-0004",
+          "section": "1 Introduction",
+          "text": "The additive shrinkage acts more strongly on smaller singular values and concentrates the spectrum. The resulting low-effective-rank weights admit efficient truncated SVD compression. Replacing a dense m × n m\\times n matrix with rank- r r factors reduces its parameter count and multiplication cost from m ​ n mn to r ⁡ ( m + n ) r(m+n) . This factorization lowers storage and inference memory and can reduce latency when the retained rank is sufficiently small. Beyond compression, we test whether the same low-rank bias limits memorization under label noise. We evaluate spectral weight decay in LLaMA [ Touvron et al., 2023 ] pretraining, post-training compression, and fixed-horizon noisy-label classification. Across models with 124 124 M to 500 500 M parameters, it lowers effective rank [ Roy and Vetterli, 2007 ] and improves compression and inference speed at matched validation loss. At 500 500 M and a 4 % 4\\% distortion budget, it reaches 1.89 × 1.89\\times compression and a 1.18 × 1.18\\times GPU inference speedup. At 60 % 60\\% label noise, mean clean-test accuracy gains over matched ℓ 2 \\ell_{2} regularization reach 17.78 17.78 points on MNIST and 4.59 4.59 points on four BERT-base tasks.",
+          "source": "https://arxiv.org/html/2610.11730v1",
+          "offset": 0,
+          "score": 25.32696103192616
+        },
+        {
+          "chunk_id": "chunk-0005",
+          "section": "Contributions",
+          "text": "• We formulate spectral weight decay as decoupled nuclear-norm regularization, derive its additive singular-value shrinkage, and connect the update to approximate proximal descent. • Across LLaMA models with 124 124 M to 500 500 M parameters, spectral weight decay improves low-rank compression and inference speed over standard weight decay at matched validation loss. It also outperforms Cuttlefish and Prehab in matched compression comparisons. • On image and text classification tasks, spectral weight decay improves fixed-horizon robustness to label noise over matched ℓ 2 \\ell_{2} regularization.",
+          "source": "https://arxiv.org/html/2610.11730v1",
+          "offset": 0,
+          "score": 17.874870710921996
+        },
+        {
+          "chunk_id": "chunk-0011",
+          "section": "3.1 Effective rank and why it matters",
+          "text": "Figure 1 : Validation loss (left) and mean effective rank of the weight matrices (right) during training of a 257 257 M-parameter LLaMA on FineWeb-Edu with Adam and spectral weight decay. We measure spectral concentration with the entropy-based effective rank [ Roy and Vetterli, 2007 ] . For singular values σ 1 ≥ ⋯ ≥ σ r \\sigma_{1}\\geq\\dots\\geq\\sigma_{r} and p i = σ i / ∑ j σ j p_{i}=\\sigma_{i}/\\sum_{j}\\sigma_{j} , it is erank ( W ) = exp ( H ( p ) ) = exp ( − ∑ i p i log p i ) . \\operatorname{erank}(W)=\\exp\\big(H(p)\\big)=\\exp\\!\\Big(-\\sum_{i}p_{i}\\log p_{i}\\Big). (2) Effective rank ranges from 1 1 for a rank-one matrix to r = min ⁡ ( m , n ) r=\\min(m,n) for a flat spectrum and decreases as the spectrum becomes more concentrated. We report a weighted mean across weight matrices, with weights min ⁡ ( m l , n l ) \\min(m_{l},n_{l}) , excluding token embeddings and the output head. Figure 1 shows validation loss and mean effective rank during training of a 257 257 M-parameter LLaMA [ Touvron et al., 2023 ] on FineWeb-Edu [ Penedo et al., 2024 ] with Adam and spectral weight decay. Appendix B.1 summarizes the pretraining configurations. Larger λ \\lambda lowers effective rank, with a corresponding validation-loss trade-off. At the end of training, λ = 0.7 \\lambda=0.7 reduces mean effective rank by a factor of 2.17 2.17 relative to λ = 0 \\lambda=0 , with a 1.10 % 1.10\\% increase in validation loss.",
+          "source": "https://arxiv.org/html/2610.11730v1",
+          "offset": 0,
+          "score": 6.119170715350479
+        },
+        {
+          "chunk_id": "chunk-0012",
+          "section": "3.1 Effective rank and why it matters",
+          "text": "We use effective rank instead of stable rank, ‖ W ‖ F 2 / ‖ W ‖ 2 2 \\|W\\|_{F}^{2}/\\|W\\|_{2}^{2} , because it predicts a practical compression threshold. Truncating to ⌈ erank ⁡ ( W ) ⌉ \\lceil\\operatorname{erank}(W)\\rceil preserves model quality, while lower ranks degrade it sharply (Figure 2 , right). Stable rank can remain near one when a single singular value dominates many active directions, so it does not capture this threshold. Figure 2 : Effective-rank profiles and compression of the λ = 1 \\lambda=1 model. Left: effective rank as a percentage of full rank, grouped by layer type. Middle: the same ratio across transformer blocks. Right: validation loss after truncated SVD and SVD-LLM at different retained ranks. The vertical line marks the mean effective rank. Figure 3 : Compression and inference frontiers under validation-loss distortion budgets. Top: maximum compression rate relative to the best dense checkpoint at each scale. Bottom: maximum inference speedup.",
+          "source": "https://arxiv.org/html/2610.11730v1",
+          "offset": 0,
+          "score": 19.924365641086357
+        }
+      ],
+      "text": "BRAIn Lab Spectral Weight Decay: Inducing Low-Rank Structure in Neural Network Weights Dmitrii Andriianov 1 , Andrey Veprikov 1,2 , Aleksandr Beznosikov 1,3 1 Basic Research of Artificial Intelligence Laboratory (BRAIn Lab) 2 SB AI Lab 3 Innopolis University Standard weight decay treats each weight matrix as a vector and ignores its spectral structure. We introduce spectral weight decay, a post-step decoupled nuclear-norm update that applies additive rather than multiplicative spectral shrinkage. We connect the update to approximate proximal descent and show that its sensitivity to update order can exceed that of conventional ℓ 2 \\ell_{2} weight decay near rank deficiency. Across LLaMA models with 124 124 M to 500 500 M parameters, spectral weight decay lowers effective rank and improves SVD-LLM compression at matched validation loss. At 500 500 M and a 4 % 4\\% distortion budget, it reaches 1.89 × 1.89\\times compression and 1.18 × 1.18\\times GPU inference speedup, compared with 1.14 × 1.14\\times and 1.01 × 1.01\\times after standard weight decay. Under fixed-horizon training with 60 % 60\\% label noise, it also improves final mean clean-test accuracy over matched ℓ 2 \\ell_{2} regularization by up to 17.8 17.8 points on MNIST and 4.6 4.6 points across four BERT-base tasks. Code is available at https://github.com/brain-lab-research/SpectralWD .\n\nTo make the regularizer matrix-aware, we begin with the proximal interpretation of decoupled weight decay. To first order, its update is a proximal gradient step for the squared Frobenius penalty [ Parikh and Boyd, 2014 ; Zhuang et al., 2022 ] . We replace this penalty with the nuclear norm, a convex surrogate for rank whose proximal operator soft-thresholds singular values [ Recht et al., 2010 ; Cai et al., 2010 ] . This construction is the matrix analogue of replacing ridge shrinkage with coefficient selection by the lasso [ Hoerl and Kennard, 1970 ; Tibshirani, 1996 ] . Given the loss-only optimizer direction Δ \\Delta , let Z = W ( k ) − η ​ Δ = U Z ​ Σ Z ​ V Z ⊤ Z=W^{(k)}-\\eta\\Delta=U_{Z}\\Sigma_{Z}V_{Z}^{\\top} . Spectral weight decay applies the post-step correction W ( k + 1 ) = Z − η ​ λ ​ U Z ​ V Z ⊤ , W^{(k+1)}=Z-\\eta\\lambda U_{Z}V_{Z}^{\\top}, (1) where η \\eta is the learning rate and λ \\lambda the regularization coefficient. This correction acts additively in the singular basis of Z Z , whereas conventional weight decay scales the spectrum uniformly. SLORR-Nuc also approximates the nuclear-norm polar factor [ González-Martínez and Liu, 2026 ] . Its decoupled extension would use the pre-step correction Z − η ​ λ ​ U W ​ V W ⊤ Z-\\eta\\lambda U_{W}V_{W}^{\\top} for W ( k ) = U W ​ Σ W ​ V W ⊤ W^{(k)}=U_{W}\\Sigma_{W}V_{W}^{\\top} , rather than ( 1 ).\n\nThe additive shrinkage acts more strongly on smaller singular values and concentrates the spectrum. The resulting low-effective-rank weights admit efficient truncated SVD compression. Replacing a dense m × n m\\times n matrix with rank- r r factors reduces its parameter count and multiplication cost from m ​ n mn to r ⁡ ( m + n ) r(m+n) . This factorization lowers storage and inference memory and can reduce latency when the retained rank is sufficiently small. Beyond compression, we test whether the same low-rank bias limits memorization under label noise. We evaluate spectral weight decay in LLaMA [ Touvron et al., 2023 ] pretraining, post-training compression, and fixed-horizon noisy-label classification. Across models with 124 124 M to 500 500 M parameters, it lowers effective rank [ Roy and Vetterli, 2007 ] and improves compression and inference speed at matched validation loss. At 500 500 M and a 4 % 4\\% distortion budget, it reaches 1.89 × 1.89\\times compression and a 1.18 × 1.18\\times GPU inference speedup. At 60 % 60\\% label noise, mean clean-test accuracy gains over matched ℓ 2 \\ell_{2} regularization reach 17.78 17.78 points on MNIST and 4.59 4.59 points on four BERT-base tasks.\n\n• We formulate spectral weight decay as decoupled nuclear-norm regularization, derive its additive singular-value shrinkage, and connect the update to approximate proximal descent. • Across LLaMA models with 124 124 M to 500 500 M parameters, spectral weight decay improves low-rank compression and inference speed over standard weight decay at matched validation loss. It also outperforms Cuttlefish and Prehab in matched compression comparisons. • On image and text classification tasks, spectral weight decay improves fixed-horizon robustness to label noise over matched ℓ 2 \\ell_{2} regularization.\n\nFigure 1 : Validation loss (left) and mean effective rank of the weight matrices (right) during training of a 257 257 M-parameter LLaMA on FineWeb-Edu with Adam and spectral weight decay. We measure spectral concentration with the entropy-based effective rank [ Roy and Vetterli, 2007 ] . For singular values σ 1 ≥ ⋯ ≥ σ r \\sigma_{1}\\geq\\dots\\geq\\sigma_{r} and p i = σ i / ∑ j σ j p_{i}=\\sigma_{i}/\\sum_{j}\\sigma_{j} , it is erank ( W ) = exp ( H ( p ) ) = exp ( − ∑ i p i log p i ) . \\operatorname{erank}(W)=\\exp\\big(H(p)\\big)=\\exp\\!\\Big(-\\sum_{i}p_{i}\\log p_{i}\\Big). (2) Effective rank ranges from 1 1 for a rank-one matrix to r = min ⁡ ( m , n ) r=\\min(m,n) for a flat spectrum and decreases as the spectrum becomes more concentrated. We report a weighted mean across weight matrices, with weights min ⁡ ( m l , n l ) \\min(m_{l},n_{l}) , excluding token embeddings and the output head. Figure 1 shows validation loss and mean effective rank during training of a 257 257 M-parameter LLaMA [ Touvron et al., 2023 ] on FineWeb-Edu [ Penedo et al., 2024 ] with Adam and spectral weight decay. Appendix B.1 summarizes the pretraining configurations. Larger λ \\lambda lowers effective rank, with a corresponding validation-loss trade-off. At the end of training, λ = 0.7 \\lambda=0.7 reduces mean effective rank by a factor of 2.17 2.17 relative to λ = 0 \\lambda=0 , with a 1.10 % 1.10\\% increase in validation loss.\n\nWe use effective rank instead of stable rank, ‖ W ‖ F 2 / ‖ W ‖ 2 2 \\|W\\|_{F}^{2}/\\|W\\|_{2}^{2} , because it predicts a practical compression threshold. Truncating to ⌈ erank ⁡ ( W ) ⌉ \\lceil\\operatorname{erank}(W)\\rceil preserves model quality, while lower ranks degrade it sharply (Figure 2 , right). Stable rank can remain near one when a single singular value dominates many active directions, so it does not capture this threshold. Figure 2 : Effective-rank profiles and compression of the λ = 1 \\lambda=1 model. Left: effective rank as a percentage of full rank, grouped by layer type. Middle: the same ratio across transformer blocks. Right: validation loss after truncated SVD and SVD-LLM at different retained ranks. The vertical line marks the mean effective rank. Figure 3 : Compression and inference frontiers under validation-loss distortion budgets. Top: maximum compression rate relative to the best dense checkpoint at each scale. Bottom: maximum inference speedup.",
+      "truncated": true,
+      "available_chars": 68851,
+      "note": "Retrieved passages, not an answer. Missing matches do not establish that the paper lacks the requested experiment. Extracted HTML text; equations and table formatting may be imperfect. No PDF extraction was attempted."
+    }
+  },
+  "last_error": null
+}

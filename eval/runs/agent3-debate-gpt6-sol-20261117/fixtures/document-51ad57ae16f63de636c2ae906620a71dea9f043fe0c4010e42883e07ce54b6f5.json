@@ -1,0 +1,1410 @@
+{
+  "status": "ok",
+  "source": "https://arxiv.org/html/2610.30344v1",
+  "extractor_version": "article-v1",
+  "chunks": [
+    {
+      "chunk_id": "chunk-0001",
+      "section": "AQL-Lite: Enabling Efficient Knowledge Acquisition for Arabic LLMs via Data-Centric Continual Pretraining",
+      "text": "Houssam Eddine Boukhalfa † † thanks: Core contributor. Affiliation: National School of Artificial Intelligence (ENSIA), Algiers, Algeria Email: houssam-eddine.boukhalfa@ensia.edu.dz Mourad Bouache Affiliation: Nojoom AI Email: bouache@nojoom.ai Mourad Dahmane Affiliation: Nojoom AI Email: mdahmane@gmail.com",
+      "source": "https://arxiv.org/html/2610.30344v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0002",
+      "section": "Abstract",
+      "text": "Training Arabic large language models faces challenges from noisy web data, dialectal variation, and the high cost of continual pretraining (CPT). We introduce AQL-Lite (AQL: Arabic Quality Language ), a time- and resource-efficient framework for adapting a multilingual LLM to Modern Standard Arabic (MSA). AQL-Lite couples a quality-first curation pipeline (structural cleaning, heuristic and model-based filtering, MSA selection, and deduplication) with a partial-parameter CPT recipe that trains RS-LoRA adapters across the network together with the last eight transformer blocks and the embedding matrix, under layer-wise learning rates. At a matched 1B-token budget, CPT on AQL-curated data raises a four-benchmark Arabic mean by 3.51 points over CPT on raw web text, which yields no gain over the base model. In a controlled 5B-token comparison, AQL-Lite recovers 94% of the gain of full-parameter CPT (mean 73.19 vs. 73.58) in 52% of the wall-clock time and outperforms adapter-only baselines on every benchmark, and a component ablation shows that adapters, unfrozen blocks, and embedding training each contribute. Scaled to 40B MSA tokens and instruction-tuned on one million examples, the resulting 12B model scores 75.3 on the seven-benchmark Open Arabic LLM Leaderboard v2 (OALL v2) suite.",
+      "source": "https://arxiv.org/html/2610.30344v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0003",
+      "section": "1 Introduction",
+      "text": "Large language models (LLMs) have significantly advanced natural language processing, yet Arabic remains comparatively under-served despite its wide use and linguistic diversity. This gap is driven not only by model architecture, but also by two practical bottlenecks: data quality and training cost . Arabic web corpora contain large amounts of noisy, duplicated, templated, and low-signal text, while also reflecting variation across Modern Standard Arabic (MSA), dialects, code-switching, and inconsistent orthography. As a result, scaling raw Arabic tokens alone is insufficient for building strong Arabic LLMs. Recent Arabic LLMs such as Jais and ALLaM show that strong Arabic performance requires careful preprocessing, filtering, deduplication, and distribution control Sengupta et al. (2023) ; Bari et al. (2024) . At the same time, continual pretraining (CPT) remains costly, especially when updating all model parameters. Parameter-efficient methods such as LoRA reduce this cost Hu et al. (2022) , but adapter-only CPT may under-update the representations that a new language distribution requires Biderman et al. (2024) ; Pezeshkpour and Hruschka (2025) . This motivates our central question: can we approximate the benefits of full Arabic CPT while substantially reducing training time and compute?",
+      "source": "https://arxiv.org/html/2610.30344v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0004",
+      "section": "1 Introduction",
+      "text": "We introduce AQL-Lite (AQL: Arabic Quality Language ), a data-centric framework for efficiently adapting a strong multilingual checkpoint to MSA. AQL-Lite first builds a high-quality corpus through a five-stage pipeline: structural cleaning, heuristic filtering, MSA/dialect control, model-based quality and safety scoring, and exact/near deduplication. It then performs partial-parameter CPT: RS-LoRA adapters on all linear layers, full-rank updates to the last eight transformer blocks and the embedding matrix, and layer-wise learning rates. This design sits between adapter-only CPT, which is efficient but limited, and full-parameter CPT, which is effective but computationally expensive. We evaluate AQL-Lite in three controlled settings. First, at a matched 1B-token budget, we vary only the training data (raw, heuristically filtered, or fully curated) to measure the effect of curation. Second, at 5B tokens, we compare the recipe against full CPT, LoRA-only, and RS-LoRA on identical data and hardware, and ablate its components. Third, we scale the recipe to 40B MSA tokens, instruction-tune the result, and evaluate the 12B model before and after instruction tuning on the seven-benchmark OALL v2 suite El Filali et al. (2025) .",
+      "source": "https://arxiv.org/html/2610.30344v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0005",
+      "section": "Contributions.",
+      "text": "Our contributions are: • Arabic quality-first data pipeline. We introduce the AQL pipeline, a five-stage MSA corpus curation pipeline combining structural cleaning, heuristic filtering, MSA/dialect control, model-based quality and safety scoring, and exact/near deduplication, and show at a matched token budget that the curated data adds 3.51 points over raw web text. • Partial-parameter CPT. We propose AQL-Lite, a CPT recipe that combines RS-LoRA, selective upper-block unfreezing, embedding training, and layer-wise learning rates to approximate full-CPT gains at lower cost, and ablate its components. • Empirical evaluation for MSA adaptation. We compare AQL-Lite against full and adapter-only CPT in a controlled 5B-token setting, then evaluate the final 12B model on the OALL v2 suite, separating the contributions of CPT and instruction tuning.",
+      "source": "https://arxiv.org/html/2610.30344v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0006",
+      "section": "Arabic LLMs.",
+      "text": "Recent Arabic-centric LLMs show that strong Arabic capability is feasible, but also highlight persistent bottlenecks around data curation, dialect balance, and safety. Jais emphasizes Arabic preprocessing, deduplication, and bilingual training to mitigate Arabic data scarcity Sengupta et al. (2023) . ALLaM reports strict language-ID filtering, spam/URL filtering, and exact deduplication, while noting challenges related to fuzzy deduplication, toxic content, and social bias in internet-scale corpora Bari et al. (2024) . Broader surveys further document the rapid development of Arabic LLMs and the need for reliable Arabic evaluation practices Mashaabi et al. (2024) . Closest to our setting, AceGPT continually pretrains an English-centric base model on Arabic before localized instruction tuning Huang et al. (2024) , and SambaLingo studies how to adapt English-centric LLMs to new languages, including Arabic, through continual pretraining with vocabulary extension Csaki et al. (2024) . Unlike these works, we adapt a multilingual base model and focus on reducing the cost of the continual-pretraining stage itself.",
+      "source": "https://arxiv.org/html/2610.30344v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0007",
+      "section": "Data quality, filtering, and deduplication.",
+      "text": "A growing body of work shows that data quality substantially improves knowledge acquisition per token, often rivaling gains from model scaling. Large-scale filtering, repetition removal, and deduplication are now standard in strong pretraining pipelines Rae et al. (2021) ; Penedo et al. (2023) . These findings are especially relevant for Arabic, where raw web tokens are abundant but effective tokens are reduced by boilerplate, templated pages, SEO spam, duplication, orthographic variation, and dialect/code-switching effects. For Arabic specifically, the 101 Billion Arabic Words dataset applies cleaning, normalization, and deduplication to Common Crawl Aloui et al. (2024) , and FineWeb2 adapts language identification, filtering, and deduplication to more than 1,000 languages, ablating each step with small-model training runs Penedo et al. (2025) . AQL adds explicit MSA/dialect control, a learned multi-category safety scorer, and per-document audit logs to this line of work.",
+      "source": "https://arxiv.org/html/2610.30344v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0008",
+      "section": "Continual pretraining and parameter-efficient adaptation.",
+      "text": "Continual or domain-adaptive pretraining adapts a general checkpoint to a new distribution and can improve in-domain performance without training from scratch Gururangan et al. (2020) . However, full-weight CPT is costly at LLM scale. Parameter-efficient fine-tuning methods such as LoRA reduce adaptation cost by learning low-rank updates Hu et al. (2022) , but adapter-only CPT can under-update representations needed for robust knowledge acquisition. Recent work studies LoRA variants and their stability, including rank-stabilized scaling Kalajdzievski (2023) , retention and forgetting behavior Biderman et al. (2024) , and broader PEFT trade-offs Mao et al. (2025) . Most directly related, Pezeshkpour and Hruschka (2025) analyze how far LoRA-based continual pretraining can support domain-specific knowledge acquisition. The individual ingredients of our recipe have precedents: LongLoRA shows that training the embedding and normalization layers alongside LoRA is important when adapting to a new context-length regime Chen et al. (2024) , and discriminative fine-tuning assigns different learning rates to different layers Howard and Ruder (2018) . Our contribution is to combine these with selective upper-block unfreezing for language-adaptive continual pretraining and to measure the resulting cost–quality trade-off against full CPT.",
+      "source": "https://arxiv.org/html/2610.30344v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0009",
+      "section": "Arabic evaluation and safety benchmarks.",
+      "text": "Arabic LLMs are commonly evaluated using exam-style QA, multiple-choice knowledge benchmarks, and safety/trust stress tests. Representative benchmarks include AlGhafa Almazrouei et al. (2023) , ArabicMMLU Koto et al. (2024) , Arabic EXAMS Hardalov et al. (2020) , and AraTrust Alghamdi et al. (2025) . The Open Arabic LLM Leaderboard v2 combines these with MadinahQA, ALRAGE, and ArbMMLU-HT into a seven-benchmark suite El Filali et al. (2025) , and HELM Arabic re-implements the same suite within the HELM framework Liang et al. (2023) ; Mai et al. (2025) .",
+      "source": "https://arxiv.org/html/2610.30344v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0010",
+      "section": "3.1 AQL Data Pipeline",
+      "text": "Arabic web-scale text is abundant but highly heterogeneous: boilerplate, templated pages, SEO spam, aggressive duplication, and inconsistent orthography reduce the fraction of effective training tokens. AQL Pipeline is a quality-first pipeline that converts noisy Arabic web text into a curated corpus suitable for continual pretraining (CPT). We start from 885B raw Arabic tokens and filter to a 215B -token high-quality corpus. Table 1 summarizes token retention.",
+      "source": "https://arxiv.org/html/2610.30344v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0011",
+      "section": "Design goals.",
+      "text": "AQL is optimized for (i) token efficiency (maximize downstream gains per token), (ii) distribution control (explicitly manage MSA vs. dialect and code-switching), (iii) auditability (store per-stage reasons/scores), and (iv) safety-by-construction (filter risky content before CPT).",
+      "source": "https://arxiv.org/html/2610.30344v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0012",
+      "section": "3.1.1 Data model and streaming execution",
+      "text": "AQL operates on sharded JSONL where each record contains: {doc_id, url, timestamp, source, raw_text, meta} . Each stage appends derived fields (e.g., clean_text , features , msa_prob , quality_score , safety_scores , dedup_cluster ) and a structured filter_log capturing pass/fail reasons. The pipeline is implemented in a streaming manner to avoid materializing full corpora in memory: each stage reads shards, emits filtered shards, and writes lightweight counters for token accounting and ablations.",
+      "source": "https://arxiv.org/html/2610.30344v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0013",
+      "section": "Stage 1: Structural Cleaning and Arabic Normalization.",
+      "text": "Stage 1 removes structural noise that inflates token counts without adding linguistic signal, producing clean_text : Markup stripping: remove HTML tags, script/style blocks, and embedded navigation fragments when detectable. Boilerplate cleanup: drop repeated headers/footers, cookie banners, and templated lists using simple repetition heuristics. Unicode and whitespace: normalize Unicode, remove control characters, collapse whitespace/newlines, and standardize punctuation spacing. Arabic orthography normalization: remove tatweel, and normalize common punctuation variants. This stage also extracts and preserves metadata (URL/domain, language-id hints if available) to support domain-level dedup and analysis. Figure 1: AQL Pipeline overview. The AQL pipeline progressively refines raw web text via structural cleaning, heuristic filtering, dialect control, model-based quality/safety scoring, and exact+near deduplication. Stage Tokens (B) Retention Raw crawl 885 100.0% Stages 1–2 (structural + heuristic quality) 325 36.7% Stage 3 (MSA selection) 275 31.1% Stages 4–5 (model-based + dedup) 215 24.3% Table 1: Token accounting through the AQL pipeline.",
+      "source": "https://arxiv.org/html/2610.30344v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0014",
+      "section": "Stage 2: Heuristic Quality Filtering with Feature Computation.",
+      "text": "Stage 2 computes lightweight document-level features on clean_text (Stage 1 output) and removes clearly low-signal pages using predefined thresholds (decided before training and logged for reproducibility), following the general principle that large-scale web corpora benefit substantially from systematic filtering and de-dup–aware quality controls Penedo et al. (2024) ; Rae et al. (2021) . The intent is to eliminate common Arabic web failure modes that inflate token counts without adding learning signal, including spam/SEO artifacts, boilerplate-heavy templates, digit/symbol-heavy noise, and low-diversity repetitive text. Concretely, we enforce basic length and layout constraints (min/max tokens or characters, and mean line length), compute script/noise ratios (Arabic character ratio, digit ratio, punctuation ratio, and symbol ratio), and quantify repetition and diversity (maximum repeated-character runs, within-document repeated token n n -gram fraction, and lexical diversity proxies such as unique-token ratio). We also include simple lexical/template indicators , such as stopword-ratio bounds, a template score based on near-identical lines or list-like patterns, and a banned-keyword trigger that flags documents containing terms from a small curated blacklist of high-risk/low-signal keywords; this blacklist is treated as a deterministic rule and is versioned and logged like other thresholds. Both the stopword list and the blacklist were built by the authors. For auditability, every rejected document is assigned a primary rejection reason (e.g., low_arabic_ratio , repetition , template , banned_keyword ), and we store the computed features and the final decision, enabling debugging and corpus analysis.",
+      "source": "https://arxiv.org/html/2610.30344v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0015",
+      "section": "Stage 2: Heuristic Quality Filtering with Feature Computation.",
+      "text": "Rule (on clean_text ) Threshold Min / max tokens per document 50 / 100,000 50\\,/\\,100{,}000 Arabic character ratio † ≥ 0.70 \\geq 0.70 Digit + punct. + symbol ratio ≤ 0.30 \\leq 0.30 Max repeated-character run ≤ 10 \\leq 10 Repeated token 4-gram fraction ≤ 0.40 \\leq 0.40 Unique-token ratio ≥ 0.30 \\geq 0.30 Stopword ratio [ 0.15 , 0.45 ] [0.15,\\,0.45] Banned keyword present drop Table 2: Stage 2 heuristic rules. Thresholds were fixed before any training run. † This rule also removes technical and code-switched MSA with many Latin-script tokens (see Limitations).",
+      "source": "https://arxiv.org/html/2610.30344v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0016",
+      "section": "Stage 3: MSA vs. Dialect Classification.",
+      "text": "Arabic performance depends strongly on dialect balance and code-switching. Stage 3 assigns each document an MSA probability p ⁡ ( MSA ∣ d ) p(\\mathrm{MSA}\\mid d) using a MARBERTv2 classifier Abdul-Mageed et al. (2021) fine-tuned on 70K manually annotated samples ( Section A.1 ) and applied to all Stage 2 survivors. We apply a 100% MSA policy : only documents accepted as MSA by the classifier are retained, which keeps 84.6% of Stage 2 tokens (275B of 325B) and makes the curated 215B-token corpus MSA-only.",
+      "source": "https://arxiv.org/html/2610.30344v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0017",
+      "section": "Stage 4: Model-Based Quality & Safety Scoring.",
+      "text": "Stage 4 applies a learned multi-task scorer to each candidate document to estimate both content quality and safety risk . Concretely, we use a Gemma 3 4B Gemma Team et al. (2025) model fine-tuned on 100K labeled samples to produce a 7-dimensional score vector for each document d d : score ( d ) = ( q , s tox , s sex , s viol , OPEN s harm , s hate , s ext ) ∈ [ 0 , 1 ] 7 , \\mathrm{score}(d)=\\big(q,\\ s_{\\text{tox}},\\ s_{\\text{sex}},\\ s_{\\text{viol}},\\\\ s_{\\text{harm}},\\ s_{\\text{hate}},\\ s_{\\text{ext}}\\big)\\in[0,1]^{7}, where q q is a continuous quality score (higher is better), and s ⋅ s_{\\cdot} are category-wise risk scores (higher indicates a higher likelihood of unsafe content in that category). We retain documents that are high quality while keeping risk scores below thresholds : keep ( d ) = 𝟙 [ q ≥ τ q ∧ ∀ k ∈ 𝒦 : s k ≤ τ s ( k ) ] , \\text{keep}(d)=\\mathbb{1}\\big[q\\geq\\tau_{q}\\,\\wedge\\,\\forall k\\in\\mathcal{K}:\\ s_{k}\\leq\\tau_{s}(k)\\big], with a quality threshold τ q \\tau_{q} , per-category safety thresholds τ s ​ ( k ) \\tau_{s}(k) , and 𝒦 = { tox , sex , viol , harm , hate , ext } \\mathcal{K}=\\{\\text{tox},\\text{sex},\\text{viol},\\text{harm},\\text{hate},\\text{ext}\\} . Threshold values are listed in Table 9 .",
+      "source": "https://arxiv.org/html/2610.30344v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0018",
+      "section": "Stage 5: Exact + Near-Duplicate Removal.",
+      "text": "Duplication is pervasive in Arabic web data (mirrors, reposts, scraped news, and templated pages), which wastes CPT steps and reduces effective diversity. AQL therefore applies deduplication after the strongest filtering stages so that similarity is computed over cleaner candidates and the dedup policy preserves informative variety. For exact dedup , we compute a deterministic hash over a normalized representation of clean_text (collapsed whitespace and standardized punctuation) and remove duplicates using a persistent hash index. For near-duplicate dedup , we use a standard MinHash+LSH pipeline: documents are shingled into n n -grams, mapped to MinHash signatures, and bucketed via locality-sensitive hashing to identify near-copies above a Jaccard threshold τ d ​ u ​ p \\tau_{dup} . Within each near-duplicate cluster, we keep a single representative according to a deterministic policy based on the Stage 4 quality score, content length, and timestamp, and drop the rest. We log cluster sizes, removal rates, and representative-selection statistics to quantify how much token reduction is attributable to duplication and to support auditability.",
+      "source": "https://arxiv.org/html/2610.30344v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0019",
+      "section": "Final corpus format.",
+      "text": "The final corpus is stored as shuffled, length-bucketed JSONL shards for efficient training. Each record includes text plus minimal metadata (e.g., doc_id , source/domain, msa_prob , Stage 4 quality/safety scores, and dedup cluster ids) to support mixture control and reproducible token accounting. Algorithm 1 summarizes the full pipeline. Algorithm 1 AQL pipeline: a streaming filtering pass followed by global deduplication. 1: Input: raw shards { S k } \\{S_{k}\\} ; Output: curated shards { S k ′ } \\{S^{\\prime}_{k}\\} 2: 𝒞 ← ∅ \\mathcal{C}\\leftarrow\\emptyset {pool shared by all shards} 3: for each document d d in each shard S k S_{k} do 4: x ← Clean ( d . raw ) x\\leftarrow\\mathrm{Clean}(d.\\mathrm{raw}) ; f ← Features ⁡ ( x ) f\\leftarrow\\mathrm{Features}(x) 5: if not HeuristicPass ⁡ ( f ) \\mathrm{HeuristicPass}(f) then 6: continue {Stage 2, log reason} 7: end if 8: if not MSAPass ⁡ ( p ⁡ ( MSA ∣ x ) ) \\mathrm{MSAPass}(p(\\mathrm{MSA}\\mid x)) then 9: continue {Stage 3} 10: end if 11: ( q , s ) ← Scorer ⁡ ( x ) (q,s)\\leftarrow\\mathrm{Scorer}(x) 12: if not keep ⁡ ( q , s ) \\mathrm{keep}(q,s) then 13: continue {Stage 4} 14: end if 15: add d d to 𝒞 \\mathcal{C} with x , f , q , s x,f,q,s 16: end for 17: 𝒞 ← NearDedup ⁡ ( ExactDedup ⁡ ( 𝒞 ) ) \\mathcal{C}\\leftarrow\\mathrm{NearDedup}(\\mathrm{ExactDedup}(\\mathcal{C})) {Stage 5} 18: write 𝒞 \\mathcal{C} as shuffled shards { S k ′ } \\{S^{\\prime}_{k}\\} with audit metadata",
+      "source": "https://arxiv.org/html/2610.30344v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0020",
+      "section": "3.2 AQL-Lite: Partial-Parameter Continual Pretraining",
+      "text": "The AQL pipeline produces a high-quality MSA corpus, but continual pretraining (CPT) with full-weight updates remains expensive at 12B scale. AQL-Lite approximates full CPT with a partial-parameter recipe that updates low-rank adapters everywhere and full-rank weights only where they are expected to matter most.",
+      "source": "https://arxiv.org/html/2610.30344v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0021",
+      "section": "What we did end-to-end.",
+      "text": "Our training follows four phases: (1) controlled CPT experiments that vary only the data at a matched 1B-token budget and only the training recipe at a matched 5B-token budget; (2) the main CPT scale-up on 40B tokens sampled from the MSA-only AQL corpus; (3) supervised instruction tuning on 1M examples ( 800K core instruction-following + 200K safety/alignment); and (4) deployment with a lightweight safety classifier that screens unsafe user inputs before they reach the model. All large-scale training is executed on 8 × \\times A100 80GB GPUs.",
+      "source": "https://arxiv.org/html/2610.30344v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0022",
+      "section": "3.2.1 Training objective",
+      "text": "Let θ 0 \\theta_{0} be a pretrained base checkpoint. CPT adapts θ 0 \\theta_{0} to a target distribution 𝒟 \\mathcal{D} (here: AQL-curated MSA text) by minimizing next-token prediction loss: min θ ⁡ 𝔼 x ∼ 𝒟 ​ [ ℒ NTP ​ ( x , θ ) ] . \\min_{\\theta}\\;\\mathbb{E}_{x\\sim\\mathcal{D}}\\Big[\\mathcal{L}_{\\text{NTP}}(x;\\theta)\\Big]. (1) Full CPT updates all parameters θ \\theta , which is costly, while adapter-only CPT can under-update the representations a new language distribution requires. AQL-Lite balances the two by training LoRA adapters across the network and unfreezing only the last 8 transformer blocks , together with the token embedding matrix. Within the unfrozen blocks, layer-wise learning rates assign larger steps to later layers; the blocks below them are updated only through low-rank adapters. This lets high-level representations adapt aggressively while lower-level linguistic features change little.",
+      "source": "https://arxiv.org/html/2610.30344v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0023",
+      "section": "3.2.2 Partial-parameter CPT",
+      "text": "In a single CPT run, AQL-Lite jointly trains (i) RS-LoRA adapters on all linear projections (query, key, value, output, gate, up, and down), (ii) all weights of the last 8 transformer blocks , and (iii) the token embedding matrix . We regulate adaptation with differentiated learning rates : separate rates for adapters and embeddings, and a layer-wise schedule within the unfrozen blocks that gives larger updates to later blocks.",
+      "source": "https://arxiv.org/html/2610.30344v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0024",
+      "section": "Trainable parameter partition.",
+      "text": "Let the base model parameters be θ \\theta , adapter parameters be ϕ \\phi , token embeddings be E E , and the number of transformer blocks be L L ( L = 48 L=48 for Gemma 3 12B). We unfreeze the last N = 8 N=8 blocks, with index set 𝒰 = { L − 7 , … , L } , \\mathcal{U}=\\{L-7,\\,\\dots,\\,L\\}, (2) and partition base parameters as θ = θ frozen ∪ θ 𝒰 , θ 𝒰 = { θ ℓ : ℓ ∈ 𝒰 } . \\theta=\\theta_{\\text{frozen}}\\cup\\theta_{\\mathcal{U}},\\qquad\\theta_{\\mathcal{U}}=\\{\\theta_{\\ell}:\\ell\\in\\mathcal{U}\\}. (3) AQL-Lite trains the set Θ train = { ϕ , θ 𝒰 , E } . \\Theta_{\\text{train}}=\\{\\phi,\\ \\theta_{\\mathcal{U}},\\ E\\}. (4) The 8 unfrozen blocks contain 1.79B parameters and the embedding matrix, which Gemma 3 ties to the LM head and which we count once, 1.01B; together they are 2.80B, or 23.8% of the 11.77B-parameter language model. RS-LoRA adapters on all seven projections of all 48 blocks add 4.09M parameters per unit of rank, so the total is 2.80 ​ B + r × 4.09 ​ M 2.80\\text{B}+r\\times 4.09\\text{M} , where r r is the adapter rank. Even at a large rank such as r = 256 r=256 the adapters add about 1.05B parameters, so the trainable share stays below one third of the model; Table 10 lists the full-rank groups.",
+      "source": "https://arxiv.org/html/2610.30344v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0025",
+      "section": "Objective.",
+      "text": "We optimize the standard next-token prediction (NTP) loss over sequences x ∼ 𝒟 x\\sim\\mathcal{D} : min ϕ , θ 𝒰 , E 𝔼 x ∼ 𝒟 ​ [ ℒ NTP ​ ( x , θ frozen , θ 𝒰 , ϕ , E ) ] . \\min_{\\phi,\\theta_{\\mathcal{U}},E}\\ \\ \\mathbb{E}_{x\\sim\\mathcal{D}}\\Big[\\mathcal{L}_{\\text{NTP}}\\big(x;\\theta_{\\text{frozen}},\\theta_{\\mathcal{U}},\\phi,E\\big)\\Big]. (5)",
+      "source": "https://arxiv.org/html/2610.30344v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0026",
+      "section": "RS-LoRA adapters (stable low-rank updates).",
+      "text": "For a base linear projection W ∈ ℝ d out × d in W\\in\\mathbb{R}^{d_{\\text{out}}\\times d_{\\text{in}}} , LoRA adds a low-rank update W ′ = W + Δ ​ W W^{\\prime}=W+\\Delta W with Δ ​ W = γ r ​ A ​ B \\Delta W=\\gamma_{r}\\,AB , where A ∈ ℝ d out × r A\\in\\mathbb{R}^{d_{\\text{out}}\\times r} , B ∈ ℝ r × d in B\\in\\mathbb{R}^{r\\times d_{\\text{in}}} , and r ≪ min ⁡ ( d out , d in ) r\\ll\\min(d_{\\text{out}},d_{\\text{in}}) . Standard LoRA uses γ r = α / r \\gamma_{r}=\\alpha/r ; RS-LoRA Kalajdzievski (2023) uses γ r = α r , \\gamma_{r}=\\frac{\\alpha}{\\sqrt{r}}, (6) which keeps the scale of the update stable as the rank grows and improves CPT stability.",
+      "source": "https://arxiv.org/html/2610.30344v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0027",
+      "section": "Selective unfreezing (fractional full-rank updates).",
+      "text": "Unlike full CPT (updates all θ \\theta ) or adapter-only CPT (updates only ϕ \\phi ), AQL-Lite additionally updates full-rank base weights in the upper blocks only: θ ℓ ​ is ​ { trainable , ℓ ∈ 𝒰 , frozen , ℓ ∉ 𝒰 . \\theta_{\\ell}\\ \\text{is}\\ \\begin{cases}\\text{trainable},&\\ell\\in\\mathcal{U},\\\\ \\text{frozen},&\\ell\\notin\\mathcal{U}.\\end{cases} (7) This targets the blocks where high-level semantic abstractions are thought to form, while keeping lower-level lexical and syntactic processing stable.",
+      "source": "https://arxiv.org/html/2610.30344v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0028",
+      "section": "Differentiated (layer-wise) learning rates.",
+      "text": "We use separate optimizer parameter groups for the adapters ( η ϕ \\eta_{\\phi} ), the embeddings ( η E \\eta_{E} ), and each unfrozen block ℓ ∈ 𝒰 \\ell\\in\\mathcal{U} ( η ℓ \\eta_{\\ell} ). For the unfrozen blocks we use a monotone schedule that gives larger steps to later layers, following discriminative fine-tuning Howard and Ruder (2018) : η ℓ = η top ⋅ γ ( L − ℓ ) , ℓ ∈ 𝒰 , γ ∈ ( 0 , 1 ) . \\eta_{\\ell}=\\eta_{\\text{top}}\\cdot\\gamma^{(L-\\ell)},\\qquad\\ell\\in\\mathcal{U},\\ \\ \\gamma\\in(0,1). (8)",
+      "source": "https://arxiv.org/html/2610.30344v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0029",
+      "section": "Update rule.",
+      "text": "Let 𝒢 ∈ { ϕ , E , θ ℓ ​ ( ℓ ∈ 𝒰 ) } \\mathcal{G}\\in\\{\\phi,\\ E,\\ \\theta_{\\ell}(\\ell\\in\\mathcal{U})\\} denote a parameter group with learning rate η 𝒢 \\eta_{\\mathcal{G}} . Each group is updated by the optimizer with its own rate; schematically, 𝒢 ← 𝒢 − η 𝒢 ​ Δ 𝒢 , \\mathcal{G}\\leftarrow\\mathcal{G}-\\eta_{\\mathcal{G}}\\ \\Delta_{\\mathcal{G}}, (9) where Δ 𝒢 \\Delta_{\\mathcal{G}} is the optimizer’s update direction for 𝒢 \\mathcal{G} .",
+      "source": "https://arxiv.org/html/2610.30344v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0030",
+      "section": "Embedding training.",
+      "text": "We unfreeze the embedding matrix E E and train it with its own learning rate η E \\eta_{E} . This adapts the representations of existing subwords to MSA text; the tokenizer is not extended. In our runs η E = 3 × 10 − 4 \\eta_{E}=3\\times 10^{-4} , larger than η top = 10 − 4 \\eta_{\\text{top}}=10^{-4} .",
+      "source": "https://arxiv.org/html/2610.30344v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0031",
+      "section": "Design rationale.",
+      "text": "Full-rank updates to the upper blocks and embeddings allow larger representational changes than low-rank adapters alone, while adapters in the frozen blocks provide a cheap path for the rest of the network to adjust. Section 4.1.2 tests each component.",
+      "source": "https://arxiv.org/html/2610.30344v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0032",
+      "section": "4.1 Continual Pretraining",
+      "text": "We run controlled CPT experiments and one scale-up, all with the recipe of Section 3.2 : • Experiment 1 (5B tokens, recipe comparison): AQL-Lite against full CPT and adapter-only CPT on the same 5B-token subset, testing whether the recipe recovers most of the full-CPT gain at lower cost. • Ablations ( Section 4.1.2 ): a data ablation at a matched 1B-token budget, varying only the training data, and a component ablation at 5B tokens , varying only the recipe. • Experiment 2 (40B tokens, scale-up): the same recipe on 40B tokens of the MSA-only AQL corpus, followed by instruction tuning. Figure 2: AQL-Lite phases. We validate the recipe in a 5B-token controlled CPT setting, then scale CPT to 40B tokens (100% MSA), followed by 1M-example instruction tuning and deployment-time safety filtering.",
+      "source": "https://arxiv.org/html/2610.30344v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0033",
+      "section": "Objective.",
+      "text": "We test whether partial-parameter CPT can recover most of the gains of full CPT while substantially reducing compute. To isolate the effect of the training recipe, all methods are trained on the same fixed 5B-token subset and evaluated with the same protocol.",
+      "source": "https://arxiv.org/html/2610.30344v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0034",
+      "section": "Data and setup.",
+      "text": "The 5B-token subset is 96% MSA text sampled from the AQL corpus, plus 2% code and 2% math data drawn from outside the AQL corpus. All runs use identical normalization and tokenization, identical hardware ( 8 × \\times A100 80GB ), and the same configuration: sequences packed into 4096-token blocks, gradient accumulation 16, bfloat16 precision, gradient clipping 1.0, and DeepSpeed ZeRO-2 Rasley et al. (2020) . Table 10 summarizes the configuration.",
+      "source": "https://arxiv.org/html/2610.30344v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0035",
+      "section": "Methods.",
+      "text": "We compare five settings: Gemma 3 12B PT Gemma Team et al. (2025) with no CPT, Full CPT with all parameters trainable, LoRA-only with adapter-only updates, RS-LoRA with rank-stabilized adapter-only updates, and AQL-Lite . AQL-Lite combines RS-LoRA on all linear layers, full-rank updates to the last eight blocks (2.80B parameters together with the embeddings), embedding training, and layer-wise learning rates with η ϕ = 2 × 10 − 4 \\eta_{\\phi}{=}2\\times 10^{-4} , η top = 10 − 4 \\eta_{\\text{top}}{=}10^{-4} , γ = 0.7 \\gamma{=}0.7 , and η E = 3 × 10 − 4 \\eta_{E}{=}3\\times 10^{-4} .",
+      "source": "https://arxiv.org/html/2610.30344v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0036",
+      "section": "Evaluation.",
+      "text": "We evaluate all checkpoints on four Arabic benchmarks: ArabicMMLU Koto et al. (2024) , AlGhafa Almazrouei et al. (2023) , AraTrust Alghamdi et al. (2025) , and Arabic EXAMS Hardalov et al. (2020) , and report the macro-average as Mean. All checkpoints in Tables 3 – 5 are evaluated with the same protocol; these scores come from a separate evaluation of CPT checkpoints and should not be compared directly with Table 6 . Method Time ArabicMMLU AlGhafa AraTrust Arabic EXAMS Mean Gemma 3 12B PT – 65.56 60.68 87.01 54.38 66.91 Full CPT 121h 68.92 77.33 89.22 58.85 73.58 LoRA-only 17h 66.43 71.11 87.75 55.68 70.24 RS-LoRA 24h 66.57 72.81 88.27 55.87 70.88 AQL-Lite (ours) 63h 68.26 78.00 89.15 57.36 73.19 Table 3: Controlled CPT experiment on 5B tokens. All methods use the same data, hardware, and evaluation protocol. Scores are in percentage points; Mean is the macro-average across the four benchmarks. Time is wall-clock time on 8 × \\times A100 80GB. Figure 3: Mean score on four Arabic benchmarks against wall-clock CPT time for the 5B-token runs of Table 3 .",
+      "source": "https://arxiv.org/html/2610.30344v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0037",
+      "section": "Results and analysis.",
+      "text": "Table 3 shows that AQL-Lite reaches a mean of 73.19 , compared with 73.58 for Full CPT and 66.91 for the base model. It thus recovers 94% of the full-CPT gain (6.28 of 6.67 points) while reducing wall-clock training time from 121h to 63h (52%). It outperforms LoRA-only and RS-LoRA on all four benchmarks. AQL-Lite is ahead of Full CPT on AlGhafa (78.00 vs. 77.33) and behind it on AraTrust (89.15 vs. 89.22); both margins are small, and we do not read them as differences between the methods. All rows are single training runs. Figure 3 plots score against training time. Wall-clock time alone does not isolate where the savings come from: in every method, adapters in all blocks (and, for AQL-Lite, the trainable embeddings) require gradients to flow through the whole network, so the savings come from fewer weight gradients and smaller optimizer state rather than from a shorter backward pass.",
+      "source": "https://arxiv.org/html/2610.30344v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0038",
+      "section": "4.1.2 Ablations",
+      "text": "Data (1B tok.) ArMMLU AlGhafa AraTr. EXAMS Mean Base (no CPT) 65.56 60.68 87.01 54.38 66.91 Raw crawl 65.37 59.32 88.06 54.46 66.80 Stages 1–2 65.61 62.77 88.12 53.28 67.45 Stages 1–5 (AQL) 66.39 69.84 88.83 56.17 70.31 Table 4: Data ablation: CPT on 1B tokens of each data condition with an identical training recipe; only the data changes. ArMMLU = ArabicMMLU, AraTr. = AraTrust, EXAMS = Arabic EXAMS. Figure 4: Data ablation: change over the base model after CPT on 1B tokens of each data condition (values from Table 4 ).",
+      "source": "https://arxiv.org/html/2610.30344v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0039",
+      "section": "Does curation matter?",
+      "text": "Table 4 varies only the training data at a matched 1B-token budget. CPT on raw crawled Arabic leaves the mean unchanged (66.80 vs. 66.91 for the base model). Structural cleaning and heuristic filtering (Stages 1–2) add 0.65 points, and the full pipeline adds a further 2.86, for a total of +3.51 over raw text at the same budget ( Figure 4 ). Most of the gain comes from AlGhafa (+10.52 over raw), with smaller gains on Arabic EXAMS (+1.71), ArabicMMLU (+1.02), and AraTrust (+0.77). The mean increases at each stage, but not every benchmark does: Arabic EXAMS drops slightly after Stages 1–2. Because the last row applies MSA selection, model-based filtering, and deduplication together, this experiment does not separate their contributions. Config. (5B tok.) ArMMLU AlGhafa AraTr. EXAMS Mean RS-LoRA only 66.57 72.81 88.27 55.87 70.88 Unfreeze last 8 only 64.74 63.84 88.42 54.85 67.96 RS-LoRA + emb. 67.28 75.23 88.12 55.43 71.52 RS-LoRA + unfreeze 66.89 74.91 88.84 56.26 71.73 AQL-Lite (full) 68.26 78.00 89.15 57.36 73.19 Full CPT 68.92 77.33 89.22 58.85 73.58 Table 5: Component ablation on the 5B-token subset of Table 3 . “Unfreeze” trains all weights of the last eight blocks; “emb.” trains the embedding matrix. Full CPT is shown for reference.",
+      "source": "https://arxiv.org/html/2610.30344v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0040",
+      "section": "Which components matter?",
+      "text": "Table 5 adds the components of AQL-Lite one at a time. Unfreezing the last eight blocks without adapters is the weakest configuration (67.96), 2.92 points below RS-LoRA alone, so the network-wide low-rank path matters more than full-rank updates confined to the top blocks. Adding embedding training (+0.64) or the unfrozen upper blocks (+0.85) to RS-LoRA each helps, and the full recipe gains 2.31 points over RS-LoRA, more than the sum of the two individual gains (1.49). The full recipe also adds layer-wise learning rates, which are not ablated separately, so the remaining 0.82 points may reflect an interaction between components, the learning-rate schedule, or both. We also did not tune the number of unfrozen blocks; a sweep over N ∈ { 4 , 8 , 12 } N\\in\\{4,8,12\\} is left to future work.",
+      "source": "https://arxiv.org/html/2610.30344v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0041",
+      "section": "Objective and data policy.",
+      "text": "Experiment 2 applies the same recipe to 40B tokens sampled from the MSA-only AQL corpus. The 40B budget is chosen to adapt an already capable multilingual checkpoint, not for compute-optimal pretraining, and we make no claim about the optimal token budget. The MSA-only setting reduces dialectal variance and targets the formal Arabic emphasized by our benchmark suite; MSA–dialect mixtures are left to future work.",
+      "source": "https://arxiv.org/html/2610.30344v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0042",
+      "section": "Training configuration.",
+      "text": "We keep the configuration of Experiment 1 ( Table 10 ) and scale the token budget. The resulting CPT checkpoint is then instruction-tuned to obtain AQL-Lite 12B (instruct) .",
+      "source": "https://arxiv.org/html/2610.30344v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0043",
+      "section": "4.2 Alignment",
+      "text": "We convert the 40B-token CPT checkpoint into the final assistant model using supervised instruction tuning (SFT) on 1M Arabic instruction examples: 800K core instruction-following examples and 200K safety/alignment examples, mixed 80/20. The loss is cross-entropy computed only on assistant response tokens, following standard instruction-tuning practice Chung et al. (2024) . The data covers factual QA, summarization, extraction, rewriting, translation, classification, constrained generation, structured outputs, and multi-turn dialogue.",
+      "source": "https://arxiv.org/html/2610.30344v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0044",
+      "section": "Data provenance.",
+      "text": "The data was built from Nojoom AI’s production Arabic assistant: the prompts are human-written questions drawn from its usage logs, and the responses were crafted on the same platform.",
+      "source": "https://arxiv.org/html/2610.30344v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0045",
+      "section": "Inference-time safety classifier.",
+      "text": "At deployment time, we add a lightweight safety classifier as an inference-time guardrail. It screens unsafe user requests before they reach AQL-Lite 12B (instruct), enabling refusal or safe redirection without retraining the LLM.",
+      "source": "https://arxiv.org/html/2610.30344v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0046",
+      "section": "5.1 Benchmarks and protocol",
+      "text": "We evaluate on the seven benchmarks of the Open Arabic LLM Leaderboard v2 (OALL v2) El Filali et al. (2025) : AlGhafa Almazrouei et al. (2023) , ArabicMMLU Koto et al. (2024) , Arabic EXAMS Hardalov et al. (2020) , MadinahQA Koto et al. (2024) , AraTrust Alghamdi et al. (2025) , ALRAGE El Filali et al. (2025) , and ArbMMLU-HT Sengupta et al. (2023) . We evaluate our own checkpoints with the OALL v2 evaluation suite. For reference, Table 6 also lists scores of other models on the same seven benchmarks as reported by the HELM Arabic leaderboard Mai et al. (2025) ; we did not run these models. HELM Arabic uses its own protocol (zero-shot generation with Arabic option letters, at most 1,000 instances per subset), so comparisons between our rows and the leaderboard rows are indicative rather than exact. Model Mean AlGhafa ArabicMMLU Arabic EXAMS MadinahQA AraTrust ALRAGE ArbMMLU-HT Reported by the HELM Arabic leaderboard Gemini 2.5 Flash 81.7 78.0 81.6 63.2 85.0 93.9 89.5 80.6 GPT-5.1 (2025-11-13) 80.9 79.1 80.3 63.1 80.4 94.1 90.9 78.4 Qwen3 235B A22B Instruct 78.6 77.3 76.9 59.0 77.7 91.7 89.0 78.3 Llama 4 Scout Instruct 74.6 77.5 73.4 60.0 72.5 89.1 81.1 68.6 ALLaM-7B-Instruct-preview 69.9 70.0 69.4 55.0 68.7 83.7 85.2 57.1 Jais-adapted-70B-chat 66.3 72.9 63.9 53.1 60.5 85.4 71.3 57.1 Gemma 3 12B base (evaluated by us with OALL v2) AQL-Lite-12B (CPT only, before SFT) 74.8 77.5 74.6 58.8 75.2 89.2 74.1 73.9 AQL-Lite-12B (after SFT) 75.3 78.2 75.0 59.2 75.7 89.7 74.8 74.3",
+      "source": "https://arxiv.org/html/2610.30344v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0047",
+      "section": "5.1 Benchmarks and protocol",
+      "text": "Table 6: Head-to-head comparison on the seven OALL v2 benchmarks, in percentage points (higher is better; Mean is the macro-average). The bottom block shares the Gemma 3 12B base and was evaluated by us with OALL v2. The top block is taken from the HELM Arabic leaderboard, which uses a different protocol, so cross-block comparisons are indicative only. Best value per column in bold.",
+      "source": "https://arxiv.org/html/2610.30344v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0048",
+      "section": "5.2 Results",
+      "text": "With the protocol caveat above, AQL-Lite-12B’s mean (75.3) lies between those reported for Qwen3 235B (78.6) and Llama 4 Scout (74.6), and above ALLaM-7B (69.9) and Jais-adapted-70B (66.3). It is close to the best reported AlGhafa score (78.2 vs. 79.1 for GPT-5.1) and comparatively weakest on ALRAGE (74.8), the only open-ended, passage-grounded task in the suite.",
+      "source": "https://arxiv.org/html/2610.30344v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0049",
+      "section": "CPT versus instruction tuning.",
+      "text": "AQL-Lite-12B already scores 74.8 before SFT; instruction tuning adds 0.5 points to the mean and between 0.4 and 0.7 points on each benchmark. On this suite, the model’s performance is therefore largely in place after CPT, and SFT mainly contributes instruction-following and safety behaviour that these benchmarks do not measure directly.",
+      "source": "https://arxiv.org/html/2610.30344v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0050",
+      "section": "6 Discussion",
+      "text": "Our results suggest that efficient MSA adaptation depends on the interaction between corpus quality , distribution control , and where model updates are applied . AQL-Lite couples a quality-first data pipeline with a CPT recipe that updates both low-rank adapters and selected full-rank parameters.",
+      "source": "https://arxiv.org/html/2610.30344v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0051",
+      "section": "Curation, not corpus size.",
+      "text": "The pipeline keeps 24.3% of raw tokens, but the size of that reduction does not by itself show that the removed text was less useful. The controlled comparison does: at a matched 1B-token budget, raw web text leaves the base model unchanged while curated text adds 3.51 points ( Table 4 ). For the MSA-centred benchmarks we use, effective token quality matters more than raw token volume.",
+      "source": "https://arxiv.org/html/2610.30344v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0052",
+      "section": "Partial-parameter CPT as a practical middle ground.",
+      "text": "Adapter-only CPT is efficient but limited, while full CPT is effective but costly. AQL-Lite recovers 94% of the full-CPT gain in 52% of the wall-clock time. The component ablation indicates that the network-wide low-rank path is necessary, since full-rank updates confined to the top blocks perform worst, and that full-rank upper-block and embedding updates add to it.",
+      "source": "https://arxiv.org/html/2610.30344v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0053",
+      "section": "Knowledge acquisition or re-alignment?",
+      "text": "Gemma 3 is a multilingual model that already handles Arabic, and our benchmarks cannot separate genuinely new knowledge from better use of knowledge the base model already has. The data ablation shows that curated text contributes more than raw text at the same budget, but it does not resolve this question. A from-scratch study on a smaller model (1B–4B parameters) would test the corpus outside the adaptation setting.",
+      "source": "https://arxiv.org/html/2610.30344v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0054",
+      "section": "Safety as a layered design.",
+      "text": "AQL-Lite treats safety as a pipeline-level property rather than a single alignment step. Risk is reduced upstream through model-based corpus filtering, during SFT through a dedicated safety/alignment subset, and at inference time through a lightweight safety classifier. This layered design is especially relevant for Arabic deployments, where cultural, religious, regional, and political sensitivities can make unsafe or inappropriate outputs more harmful. We report AraTrust for the model alone and do not measure the contribution of each layer separately.",
+      "source": "https://arxiv.org/html/2610.30344v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0055",
+      "section": "Future work.",
+      "text": "AQL-Lite-12B is the first model in the AQL family. Future work will study controlled MSA–dialect mixtures selected with the Stage 3 classifier, sweep the number of unfrozen blocks, run a from-scratch study on a smaller model, scale token budgets, improve morphology-aware filtering, and extend evaluation to dialect robustness, bias analysis, and deployment-oriented safety auditing.",
+      "source": "https://arxiv.org/html/2610.30344v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0056",
+      "section": "Limitations",
+      "text": "AQL-Lite remains an efficiency–performance trade-off rather than a full replacement for full-weight continual pretraining: in the controlled 5B-token experiment it recovers 94% of the full-CPT gain but does not match Full CPT on every benchmark. The main 40B-token scale-up uses a 100% MSA policy, which strengthens standardized Arabic performance but underrepresents dialectal Arabic, code-switching, and region-specific language use; the model should not be assumed to handle dialects well. Several choices are not fully ablated. The number of unfrozen blocks ( N = 8 N=8 ) was not tuned, the layer-wise learning-rate schedule is not ablated separately from the other components, and the data ablation applies Stages 3–5 jointly. All results come from single training runs, so differences below about one point should not be over-interpreted. We have not yet measured n n -gram overlap between our training data and the benchmarks, or the effect of CPT on English capabilities; both are planned for a future version. We also did not run full CPT at 40B tokens, so the efficiency comparison with full CPT is validated only at the 5B-token scale. Our efficiency comparison counts CPT wall-clock time only; it excludes the cost of running the Stage 3 and Stage 4 classifiers over the corpus and the cost of instruction tuning. As discussed in Section 6 , our benchmarks also cannot distinguish new knowledge from re-alignment of knowledge the base model already has.",
+      "source": "https://arxiv.org/html/2610.30344v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0057",
+      "section": "Limitations",
+      "text": "Our evaluation is based on automatic benchmarks and a head-to-head comparison in which the comparison rows are taken from a public leaderboard that uses a different evaluation protocol, rather than re-run by us. The MSA classifier’s 99.96% accuracy is measured in-domain; such a high value may partly reflect annotation artifacts or near-duplicates shared between the training and validation splits, and an out-of-domain check on dialect identification data such as MADAR Bouamor et al. (2018) or NADI Abdul-Mageed et al. (2020) is needed to confirm it. The Stage 2 requirement of at least 70% Arabic characters likely removes technical and code-switched MSA, such as programming tutorials and scientific text with Latin-script terms, which may limit the model on technical and coding prompts. The evaluation may also not capture all dimensions of Arabic instruction-following, dialect robustness, factual reliability, or deployment safety. Finally, despite corpus filtering, safety instruction tuning, and an inference-time safety classifier, the model may still hallucinate, reflect biases from web data, or fail under adversarial prompting, especially in high-stakes domains.",
+      "source": "https://arxiv.org/html/2610.30344v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0058",
+      "section": "Ethics Statement",
+      "text": "AQL-Lite is intended to support Arabic language technology for education, information access, writing assistance, and Arabic-centric retrieval-augmented applications. Because Arabic NLP systems operate in culturally, religiously, and politically sensitive contexts, model errors or biased outputs may cause harm. Relevant risks include misinformation, cultural or religious insensitivity, dialect marginalization caused by MSA-centred training, and unsafe responses to adversarial prompts.",
+      "source": "https://arxiv.org/html/2610.30344v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0059",
+      "section": "Instruction data.",
+      "text": "The instruction-tuning data was built from Nojoom AI’s production Arabic assistant: the prompts come from its usage logs and the responses were crafted on the same platform. Because the prompts were written by real users, their use for training depends on user consent and on removing personal information, so this version does not release the instruction-tuning data.",
+      "source": "https://arxiv.org/html/2610.30344v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0060",
+      "section": "Mitigations.",
+      "text": "We mitigate these risks through layered safeguards: upstream corpus filtering with model-based quality and safety scoring, safety-focused instruction tuning, and a deployment-time safety classifier that screens user inputs before they reach the model. However, these safeguards do not eliminate all risks. We therefore recommend that AQL-Lite not be used as the sole decision-maker in high-stakes settings such as medical, legal, financial, or civic decision-making. Any release should include clear usage guidelines, staged access when appropriate, monitoring for misuse, and continued auditing for bias, toxicity, dialect coverage, and culturally sensitive failure cases.",
+      "source": "https://arxiv.org/html/2610.30344v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0061",
+      "section": "References",
+      "text": "Abdul-Mageed et al. (2021) Muhammad Abdul-Mageed, AbdelRahim Elmadany, and El Moatez Billah Nagoudi. 2021. ARBERT & MARBERT: Deep bidirectional transformers for Arabic . In Proceedings of the 59th Annual Meeting of the Association for Computational Linguistics and the 11th International Joint Conference on Natural Language Processing (Volume 1: Long Papers) . Association for Computational Linguistics. Abdul-Mageed et al. (2020) Muhammad Abdul-Mageed, Chiyu Zhang, Houda Bouamor, and Nizar Habash. 2020. NADI 2020: The first nuanced Arabic dialect identification shared task . In Proceedings of the Fifth Arabic Natural Language Processing Workshop . Association for Computational Linguistics. Alghamdi et al. (2025) Emad A. Alghamdi, Reem Masoud, Deema Alnuhait, Afnan Y. Alomairi, Ahmed Ashraf, and Mohamed Zaytoon. 2025. AraTrust: An evaluation of trustworthiness for LLMs in Arabic . In Proceedings of the 31st International Conference on Computational Linguistics (COLING 2025) , pages 8664–8679. Association for Computational Linguistics. Almazrouei et al. (2023) Ebtesam Almazrouei, Ruxandra Cojocaru, Michele Baldo, Quentin Malartic, Hamza Alobeidli, Daniele Mazzotta, Guilherme Penedo, Giulia Campesan, Mugariya Farooq, Maitha Alhammadi, Julien Launay, and Badreddine Noune. 2023. AlGhafa evaluation benchmark for Arabic language models . In Proceedings of ArabicNLP 2023 , pages 244–275. Association for Computational Linguistics. Aloui et al. (2024) Manel Aloui, Hasna Chouikhi, Ghaith Chaabane, Haithem Kchaou, and Chehir Dhaouadi. 2024. 101 billion Arabic words dataset . Preprint , arXiv:2405.01590.",
+      "source": "https://arxiv.org/html/2610.30344v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0062",
+      "section": "References",
+      "text": "Bari et al. (2024) M. Saiful Bari, Yazeed Alnumay, Norah A. Alzahrani, Nouf M. Alotaibi, Hisham A. Alyahya, Sultan AlRashed, Faisal A. Mirza, Shaykhah Z. Alsubaie, Hassan A. Alahmed, Ghadah Alabduljabbar, et al. 2024. ALLaM: Large language models for Arabic and English . Preprint , arXiv:2407.15390. Biderman et al. (2024) Dan Biderman, Jacob Portes, Jose Javier Gonzalez Ortiz, Mansheej Paul, Philip Greengard, Connor Jennings, Daniel King, Sam Havens, Vitaliy Chiley, Jonathan Frankle, et al. 2024. LoRA learns less and forgets less . Preprint , arXiv:2405.09673. Bouamor et al. (2018) Houda Bouamor, Nizar Habash, Mohammad Salameh, Wajdi Zaghouani, Owen Rambow, Dana Abdulrahim, Ossama Obeid, Salam Khalifa, Fadhl Eryani, Alexander Erdmann, and Kemal Oflazer. 2018. The MADAR Arabic dialect corpus and lexicon . In Proceedings of the Eleventh International Conference on Language Resources and Evaluation (LREC 2018) . European Language Resources Association (ELRA). Chen et al. (2024) Yukang Chen, Shengju Qian, Haotian Tang, Xin Lai, Zhijian Liu, Song Han, and Jiaya Jia. 2024. LongLoRA: Efficient fine-tuning of long-context large language models . In International Conference on Learning Representations (ICLR) . Chung et al. (2024) Hyung Won Chung, Le Hou, Shayne Longpre, Barret Zoph, Yi Tay, William Fedus, Yunxuan Li, Xuezhi Wang, Mostafa Dehghani, Siddhartha Brahma, et al. 2024. Scaling instruction-finetuned language models. Journal of Machine Learning Research , 25(70):1–53.",
+      "source": "https://arxiv.org/html/2610.30344v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0063",
+      "section": "References",
+      "text": "Csaki et al. (2024) Zoltan Csaki, Bo Li, Jonathan Lingjie Li, Qiantong Xu, Pian Pawakapan, Leon Zhang, Yun Du, Hengyu Zhao, Changran Hu, and Urmish Thakker. 2024. SambaLingo: Teaching large language models new languages . In Proceedings of the Fourth Workshop on Multilingual Representation Learning (MRL 2024) , pages 1–21. Association for Computational Linguistics. El Filali et al. (2025) Ali El Filali, Manel Aloui, Tarique Husaain, Ahmed Alzubaidi, Basma El Amel Boussaha, Ruxandra Cojocaru, Clémentine Fourrier, Nathan Habib, and Hakim Hacid. 2025. The Open Arabic LLM leaderboard 2. Hugging Face blog, https://huggingface.co/blog/leaderboard-arabic-v2 . 10 February 2025. Gemma Team et al. (2025) Gemma Team, Aishwarya Kamath, Johan Ferret, Shreya Pathak, Nino Vieillard, Ramona Merhej, Sarah Perrin, Tatiana Matejovicova, Alexandre Ramé, Morgane Rivière, et al. 2025. Gemma 3 technical report . Preprint , arXiv:2503.19786. Gururangan et al. (2020) Suchin Gururangan, Ana Marasović, Swabha Swayamdipta, Kyle Lo, Iz Beltagy, Doug Downey, and Noah A. Smith. 2020. Don’t stop pretraining: Adapt language models to domains and tasks . In Proceedings of the 58th Annual Meeting of the Association for Computational Linguistics , pages 8342–8360. Association for Computational Linguistics. Hardalov et al. (2020) Momchil Hardalov, Todor Mihaylov, Dimitrina Zlatkova, Yoan Dinkov, Ivan Koychev, and Preslav Nakov. 2020. EXAMS: A multi-subject high school examinations dataset for cross-lingual and multilingual question answering . In Proceedings of the 2020 Conference on Empirical Methods in Natural Language Processing (EMNLP) , pages 5427–5444. Association for Computational Linguistics.",
+      "source": "https://arxiv.org/html/2610.30344v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0064",
+      "section": "References",
+      "text": "Howard and Ruder (2018) Jeremy Howard and Sebastian Ruder. 2018. Universal language model fine-tuning for text classification . In Proceedings of the 56th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) , pages 328–339. Association for Computational Linguistics. Hu et al. (2022) Edward J. Hu, Yelong Shen, Phillip Wallis, Zeyuan Allen-Zhu, Yuanzhi Li, Shean Wang, Lu Wang, and Weizhu Chen. 2022. LoRA: Low-rank adaptation of large language models . In International Conference on Learning Representations (ICLR) . Huang et al. (2024) Huang Huang, Fei Yu, Jianqing Zhu, Xuening Sun, Hao Cheng, Dingjie Song, Zhihong Chen, Mosen Alharthi, Bang An, Juncai He, Ziche Liu, Junying Chen, Jianquan Li, Benyou Wang, Lian Zhang, Ruoyu Sun, Xiang Wan, Haizhou Li, and Jinchao Xu. 2024. AceGPT, localizing large language models in Arabic . In Proceedings of the 2024 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies (Volume 1: Long Papers) , pages 8139–8163. Association for Computational Linguistics. Kalajdzievski (2023) Damjan Kalajdzievski. 2023. A rank stabilization scaling factor for fine-tuning with LoRA . Preprint , arXiv:2312.03732. Koto et al. (2024) Fajri Koto, Haonan Li, Sara Shatnawi, Jad Doughman, Abdelrahman Sadallah, Aisha Alraeesi, Khalid Almubarak, Zaid Alyafeai, Neha Sengupta, Shady Shehata, Nizar Habash, Preslav Nakov, and Timothy Baldwin. 2024. ArabicMMLU: Assessing massive multitask language understanding in Arabic . In Findings of the Association for Computational Linguistics: ACL 2024 , pages 5622–5640. Association for Computational Linguistics.",
+      "source": "https://arxiv.org/html/2610.30344v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0065",
+      "section": "References",
+      "text": "Liang et al. (2023) Percy Liang, Rishi Bommasani, Tony Lee, Dimitris Tsipras, Dilara Soylu, Michihiro Yasunaga, Yian Zhang, Deepak Narayanan, Yuhuai Wu, Ananya Kumar, et al. 2023. Holistic evaluation of language models . Transactions on Machine Learning Research . Mai et al. (2025) Yifan Mai, Rida Taleb, and Ahmed Elhagry. 2025. HELM Arabic. Stanford CRFM blog post and leaderboard, https://crfm.stanford.edu/helm/arabic/latest/ . Blog post of 18 December 2025; leaderboard as of 2026. Mao et al. (2025) Yuren Mao, Yuhang Ge, Yijiang Fan, Wenyi Xu, Yu Mi, Zhonghao Hu, and Yunjun Gao. 2025. A survey on LoRA of large language models. Frontiers of Computer Science , 19(7):197605. Mashaabi et al. (2024) Malak Mashaabi, Shahad Al-Khalifa, and Hend Al-Khalifa. 2024. A survey of large language models for Arabic language and its dialects . Preprint , arXiv:2410.20238. Penedo et al. (2024) Guilherme Penedo, Hynek Kydlíček, Loubna Ben Allal, Anton Lozhkov, Margaret Mitchell, Colin Raffel, Leandro von Werra, and Thomas Wolf. 2024. The FineWeb datasets: Decanting the web for the finest text data at scale . In Advances in Neural Information Processing Systems 37 (NeurIPS 2024), Datasets and Benchmarks Track . Penedo et al. (2025) Guilherme Penedo, Hynek Kydlíček, Vinko Sabolčec, Bettina Messmer, Negar Foroutan, Amir Hossein Kargaran, Colin Raffel, Martin Jaggi, Leandro von Werra, and Thomas Wolf. 2025. FineWeb2: One pipeline to scale them all – adapting pre-training data processing to every language . Preprint , arXiv:2506.20920.",
+      "source": "https://arxiv.org/html/2610.30344v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0066",
+      "section": "References",
+      "text": "Penedo et al. (2023) Guilherme Penedo, Quentin Malartic, Daniel Hesslow, Ruxandra Cojocaru, Hamza Alobeidli, Alessandro Cappelli, Baptiste Pannier, Ebtesam Almazrouei, and Julien Launay. 2023. The RefinedWeb dataset for Falcon LLM: Outperforming curated corpora with web data only . In Advances in Neural Information Processing Systems 36 (NeurIPS 2023), Datasets and Benchmarks Track . Pezeshkpour and Hruschka (2025) Pouya Pezeshkpour and Estevam Hruschka. 2025. Learning beyond the surface: How far can continual pre-training with LoRA enhance LLMs’ domain-specific insight learning? Preprint , arXiv:2501.17840. Rae et al. (2021) Jack W. Rae, Sebastian Borgeaud, Trevor Cai, Katie Millican, Jordan Hoffmann, Francis Song, John Aslanides, Sarah Henderson, Roman Ring, Susannah Young, et al. 2021. Scaling language models: Methods, analysis & insights from training Gopher . Preprint , arXiv:2112.11446. Rasley et al. (2020) Jeff Rasley, Samyam Rajbhandari, Olatunji Ruwase, and Yuxiong He. 2020. DeepSpeed: System optimizations enable training deep learning models with over 100 billion parameters . In Proceedings of the 26th ACM SIGKDD International Conference on Knowledge Discovery & Data Mining , pages 3505–3506. ACM. Sengupta et al. (2023) Neha Sengupta, Sunil Kumar Sahu, Bokang Jia, Satheesh Katipomu, Haonan Li, Fajri Koto, William Marshall, Gurpreet Gosal, Cynthia Liu, Zhiming Chen, et al. 2023. Jais and jais-chat: Arabic-centric foundation and instruction-tuned open generative large language models . Preprint , arXiv:2308.16149.",
+      "source": "https://arxiv.org/html/2610.30344v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0067",
+      "section": "A.1 Stage 3: MSA vs. Dialect Classifier",
+      "text": "Stage 3 enforces distribution control by predicting whether a document is Modern Standard Arabic (MSA) or dialectal. This enables the 100% MSA policy used here and, in future work, controlled MSA/dialect mixtures.",
+      "source": "https://arxiv.org/html/2610.30344v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0068",
+      "section": "Model and training.",
+      "text": "We fine-tune a MARBERTv2 encoder Abdul-Mageed et al. (2021) with a classification head on 70K labeled samples.",
+      "source": "https://arxiv.org/html/2610.30344v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0069",
+      "section": "Inference policy.",
+      "text": "Given a document d d , the classifier outputs p ⁡ ( MSA ∣ d ) p(\\mathrm{MSA}\\mid d) , and documents accepted as MSA are kept. This retains 84.6% of Stage 2 tokens (275B of 325B).",
+      "source": "https://arxiv.org/html/2610.30344v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0070",
+      "section": "Validation performance.",
+      "text": "Table 7 reports in-domain validation metrics. They measure agreement with our annotations on held-out samples from the same distribution, not general MSA/dialect identification ability. Because near-perfect in-domain scores can also arise from annotation artifacts or near-duplicate leakage across splits, we treat them as an upper bound; an out-of-domain evaluation on MADAR Bouamor et al. (2018) or NADI Abdul-Mageed et al. (2020) is left to future work. Metric Value Eval loss 0.00346 Accuracy 0.99964 Macro-F1 0.99963 Macro-Precision 0.99956 Macro-Recall 0.99970 Table 7: MSA vs. dialect classifier, in-domain validation metrics (final epoch).",
+      "source": "https://arxiv.org/html/2610.30344v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0071",
+      "section": "A.2 Stage 4: Quality & Safety Scorer",
+      "text": "Stage 4 uses a learned multi-task scorer that outputs a continuous quality score and category-wise safety risk scores. We fine-tune a Gemma 3 4B backbone with a lightweight multi-head prediction layer: one regression head for quality and six classification heads for safety categories (toxicity, sexual, violence, harm, hate, extremism). Writing q ^ \\hat{q} for the predicted quality and s k s_{k} for the predicted risk in category k k , we optimize a weighted multi-task objective: ℒ = λ q ⋅ MSE ⁡ ( q , q ^ ) + ∑ k ∈ 𝒦 λ k ⋅ BCE ⁡ ( y k , s k ) , \\mathcal{L}=\\lambda_{q}\\cdot\\mathrm{MSE}(q,\\hat{q})+\\sum_{k\\in\\mathcal{K}}\\lambda_{k}\\cdot\\mathrm{BCE}(y_{k},s_{k}), (10) where y k y_{k} is the binary label for category k k and the weights λ \\lambda are tuned to mitigate class imbalance and stabilize training.",
+      "source": "https://arxiv.org/html/2610.30344v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0072",
+      "section": "Validation performance.",
+      "text": "Table 8 reports held-out validation metrics. Metric Value Notes Eval loss 0.0834 Multi-task objective Quality MSE 0.00523 Lower is better Toxicity Acc / F1 0.958 / 0.958 Binary head Sexual Acc / F1 0.994 / 0.975 Binary head Violence Acc / F1 0.984 / 0.969 Binary head Harm Acc / F1 0.940 / 0.857 Most ambiguous Hate Acc / F1 0.976 / 0.939 Binary head Extremism Acc / F1 0.988 / 0.956 Binary head Safety Micro-F1 0.973 All safety labels Table 8: Stage 4 scorer validation metrics (final epoch). Quality is evaluated with MSE; safety categories report accuracy and F1.",
+      "source": "https://arxiv.org/html/2610.30344v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0073",
+      "section": "Qualitative sanity checks.",
+      "text": "We run short, controlled checks to ensure that clearly unsafe inputs yield high risk scores while unrelated categories remain low. To avoid reproducing harmful text, we report aggregate metrics only.",
+      "source": "https://arxiv.org/html/2610.30344v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0074",
+      "section": "Score thresholds.",
+      "text": "Stage 4 keeps a document if q ≥ τ q q\\geq\\tau_{q} and s k ≤ τ s ​ ( k ) s_{k}\\leq\\tau_{s}(k) for every category k k . Table 9 lists the thresholds. Rule Condition Threshold Quality q ≥ τ q q\\geq\\tau_{q} 0.7 Toxicity s tox ≤ τ s ​ ( tox ) s_{\\text{tox}}\\leq\\tau_{s}(\\text{tox}) 0.5 Hate s hate ≤ τ s ​ ( hate ) s_{\\text{hate}}\\leq\\tau_{s}(\\text{hate}) 0.5 Harm s harm ≤ τ s ​ ( harm ) s_{\\text{harm}}\\leq\\tau_{s}(\\text{harm}) 0.4 Sexual s sex ≤ τ s ​ ( sex ) s_{\\text{sex}}\\leq\\tau_{s}(\\text{sex}) 0.5 Violence s viol ≤ τ s ​ ( viol ) s_{\\text{viol}}\\leq\\tau_{s}(\\text{viol}) 0.5 Extremism s ext ≤ τ s ​ ( ext ) s_{\\text{ext}}\\leq\\tau_{s}(\\text{ext}) 0.5 Table 9: Stage 4 filtering thresholds.",
+      "source": "https://arxiv.org/html/2610.30344v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0075",
+      "section": "A.3 Stage 5: Deduplication",
+      "text": "Stage 5 reduces memorization risk and improves effective data diversity with two-level deduplication : (i) exact deduplication by hashing normalized text, and (ii) near-duplicate removal with shingling and MinHash/LSH.",
+      "source": "https://arxiv.org/html/2610.30344v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0076",
+      "section": "Exact deduplication.",
+      "text": "We compute a stable hash over the Stage 1-normalized text and remove repeated items using a global index.",
+      "source": "https://arxiv.org/html/2610.30344v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0077",
+      "section": "Near-duplicate deduplication.",
+      "text": "We represent each document as a set of shingles, approximate Jaccard similarity with MinHash signatures, and use LSH buckets to find candidate duplicates. Pairs with similarity above τ d ​ u ​ p \\tau_{dup} are merged, keeping one representative per cluster; see Section 3.1 .",
+      "source": "https://arxiv.org/html/2610.30344v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0078",
+      "section": "Appendix B Training Configuration",
+      "text": "Setting Value Shared by all 5B-token runs Sequence length 4096 (packed) Precision bfloat16 Gradient clipping 1.0 Gradient accumulation 16 Parallelism DeepSpeed ZeRO-2 Hardware 8 × \\times A100 80GB AQL-Lite Adapters RS-LoRA, all linear layers Unfrozen blocks last 8 of 48 (1.79B) Embeddings (tied LM head) trained (1.01B) η ϕ \\eta_{\\phi} (adapters) 2 × 10 − 4 2\\times 10^{-4} η top \\eta_{\\text{top}} (top block) 10 − 4 10^{-4} γ \\gamma (layer-wise decay) 0.7 η E \\eta_{E} (embeddings) 3 × 10 − 4 3\\times 10^{-4} Wall-clock time, 5B tokens Full CPT / LoRA-only 121h / 17h RS-LoRA / AQL-Lite 24h / 63h Table 10: Training configuration of the 5B-token runs in Table 3 . The 40B-token run uses the AQL-Lite settings.",
+      "source": "https://arxiv.org/html/2610.30344v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0079",
+      "section": "Appendix C Human Evaluation Figures",
+      "text": "Figures 7 , 7 and 5 show per-domain results of the pairwise human evaluation. Figure 5: Evolution of Elo ratings over the course of the pairwise comparisons. Figure 6: Per-domain Elo scores in the human evaluation (10 two-turn prompts per domain, 3 annotators). Figure 7: Outcomes of AQL-Lite-12B’s pairwise comparisons (win, tie, loss, both bad) in each domain.",
+      "source": "https://arxiv.org/html/2610.30344v1",
+      "offset": 0
+    }
+  ],
+  "links": [
+    {
+      "href": "mailto:houssam-eddine.boukhalfa@ensia.edu.dz",
+      "text": "houssam-eddine.boukhalfa@ensia.edu.dz",
+      "section": "AQL-Lite: Enabling Efficient Knowledge Acquisition for Arabic LLMs via Data-Centric Continual Pretraining",
+      "context": "Houssam Eddine Boukhalfa † † thanks: Core contributor. Affiliation: National School of Artificial Intelligence (ENSIA), Algiers, Algeria Email: houssam-eddine.boukhalfa@ensia.edu.dz",
+      "url": "mailto:houssam-eddine.boukhalfa@ensia.edu.dz"
+    },
+    {
+      "href": "mailto:bouache@nojoom.ai",
+      "text": "bouache@nojoom.ai",
+      "section": "AQL-Lite: Enabling Efficient Knowledge Acquisition for Arabic LLMs via Data-Centric Continual Pretraining",
+      "context": "Houssam Eddine Boukhalfa † † thanks: Core contributor. Affiliation: National School of Artificial Intelligence (ENSIA), Algiers, Algeria Email: houssam-eddine.boukhalfa@ensia.edu.dz Mourad Bouache Affiliation: Nojoom AI Email: bouache@nojoom.ai",
+      "url": "mailto:bouache@nojoom.ai"
+    },
+    {
+      "href": "mailto:mdahmane@gmail.com",
+      "text": "mdahmane@gmail.com",
+      "section": "AQL-Lite: Enabling Efficient Knowledge Acquisition for Arabic LLMs via Data-Centric Continual Pretraining",
+      "context": "Houssam Eddine Boukhalfa † † thanks: Core contributor. Affiliation: National School of Artificial Intelligence (ENSIA), Algiers, Algeria Email: houssam-eddine.boukhalfa@ensia.edu.dz Mourad Bouache Affiliation: Nojoom AI Email: bouache@nojoom.ai Mourad Dahmane Affiliation: Nojoom AI Email: mdahmane@gmail.com",
+      "url": "mailto:mdahmane@gmail.com"
+    },
+    {
+      "href": "#bib.bib31",
+      "text": "Sengupta et al. (2023)",
+      "section": "1 Introduction",
+      "context": "Recent Arabic LLMs such as Jais and ALLaM show that strong Arabic performance requires careful preprocessing, filtering, deduplication, and distribution control Sengupta et al. (2023)",
+      "url": "https://arxiv.org/html/2610.30344v1#bib.bib31"
+    },
+    {
+      "href": "#bib.bib6",
+      "text": "Bari et al. (2024)",
+      "section": "1 Introduction",
+      "context": "Recent Arabic LLMs such as Jais and ALLaM show that strong Arabic performance requires careful preprocessing, filtering, deduplication, and distribution control Sengupta et al. (2023) ; Bari et al. (2024)",
+      "url": "https://arxiv.org/html/2610.30344v1#bib.bib6"
+    },
+    {
+      "href": "#bib.bib17",
+      "text": "Hu et al. (2022)",
+      "section": "1 Introduction",
+      "context": "Recent Arabic LLMs such as Jais and ALLaM show that strong Arabic performance requires careful preprocessing, filtering, deduplication, and distribution control Sengupta et al. (2023) ; Bari et al. (2024) . At the same time, continual pretraining (CPT) remains costly, especially when updating all model parameters. Parameter-efficient methods such as LoRA reduce this cost Hu et al. (2022)",
+      "url": "https://arxiv.org/html/2610.30344v1#bib.bib17"
+    },
+    {
+      "href": "#bib.bib7",
+      "text": "Biderman et al. (2024)",
+      "section": "1 Introduction",
+      "context": "Recent Arabic LLMs such as Jais and ALLaM show that strong Arabic performance requires careful preprocessing, filtering, deduplication, and distribution control Sengupta et al. (2023) ; Bari et al. (2024) . At the same time, continual pretraining (CPT) remains costly, especially when updating all model parameters. Parameter-efficient methods such as LoRA reduce this cost Hu et al. (2022) , but adapter-only CPT may under-update the representations that a new language distribution requires Biderman et al. (2024)",
+      "url": "https://arxiv.org/html/2610.30344v1#bib.bib7"
+    },
+    {
+      "href": "#bib.bib28",
+      "text": "Pezeshkpour and Hruschka (2025)",
+      "section": "1 Introduction",
+      "context": "Recent Arabic LLMs such as Jais and ALLaM show that strong Arabic performance requires careful preprocessing, filtering, deduplication, and distribution control Sengupta et al. (2023) ; Bari et al. (2024) . At the same time, continual pretraining (CPT) remains costly, especially when updating all model parameters. Parameter-efficient methods such as LoRA reduce this cost Hu et al. (2022) , but adapter-only CPT may under-update the representations that a new language distribution requires Biderman et al. (2024) ; Pezeshkpour and Hruschka (2025)",
+      "url": "https://arxiv.org/html/2610.30344v1#bib.bib28"
+    },
+    {
+      "href": "#bib.bib12",
+      "text": "El Filali et al. (2025)",
+      "section": "1 Introduction",
+      "context": "We evaluate AQL-Lite in three controlled settings. First, at a matched 1B-token budget, we vary only the training data (raw, heuristically filtered, or fully curated) to measure the effect of curation. Second, at 5B tokens, we compare the recipe against full CPT, LoRA-only, and RS-LoRA on identical data and hardware, and ablate its components. Third, we scale the recipe to 40B MSA tokens, instruction-tune the result, and evaluate the 12B model before and after instruction tuning on the seven-benchmark OALL v2 suite El Filali et al. (2025)",
+      "url": "https://arxiv.org/html/2610.30344v1#bib.bib12"
+    },
+    {
+      "href": "#bib.bib31",
+      "text": "Sengupta et al. (2023)",
+      "section": "Arabic LLMs.",
+      "context": "Recent Arabic-centric LLMs show that strong Arabic capability is feasible, but also highlight persistent bottlenecks around data curation, dialect balance, and safety. Jais emphasizes Arabic preprocessing, deduplication, and bilingual training to mitigate Arabic data scarcity Sengupta et al. (2023)",
+      "url": "https://arxiv.org/html/2610.30344v1#bib.bib31"
+    },
+    {
+      "href": "#bib.bib6",
+      "text": "Bari et al. (2024)",
+      "section": "Arabic LLMs.",
+      "context": "Recent Arabic-centric LLMs show that strong Arabic capability is feasible, but also highlight persistent bottlenecks around data curation, dialect balance, and safety. Jais emphasizes Arabic preprocessing, deduplication, and bilingual training to mitigate Arabic data scarcity Sengupta et al. (2023) . ALLaM reports strict language-ID filtering, spam/URL filtering, and exact deduplication, while noting challenges related to fuzzy deduplication, toxic content, and social bias in internet-scale corpora Bari et al. (2024)",
+      "url": "https://arxiv.org/html/2610.30344v1#bib.bib6"
+    },
+    {
+      "href": "#bib.bib24",
+      "text": "Mashaabi et al. (2024)",
+      "section": "Arabic LLMs.",
+      "context": "le, but also highlight persistent bottlenecks around data curation, dialect balance, and safety. Jais emphasizes Arabic preprocessing, deduplication, and bilingual training to mitigate Arabic data scarcity Sengupta et al. (2023) . ALLaM reports strict language-ID filtering, spam/URL filtering, and exact deduplication, while noting challenges related to fuzzy deduplication, toxic content, and social bias in internet-scale corpora Bari et al. (2024) . Broader surveys further document the rapid development of Arabic LLMs and the need for reliable Arabic evaluation practices Mashaabi et al. (2024)",
+      "url": "https://arxiv.org/html/2610.30344v1#bib.bib24"
+    },
+    {
+      "href": "#bib.bib18",
+      "text": "Huang et al. (2024)",
+      "section": "Arabic LLMs.",
+      "context": "nd bilingual training to mitigate Arabic data scarcity Sengupta et al. (2023) . ALLaM reports strict language-ID filtering, spam/URL filtering, and exact deduplication, while noting challenges related to fuzzy deduplication, toxic content, and social bias in internet-scale corpora Bari et al. (2024) . Broader surveys further document the rapid development of Arabic LLMs and the need for reliable Arabic evaluation practices Mashaabi et al. (2024) . Closest to our setting, AceGPT continually pretrains an English-centric base model on Arabic before localized instruction tuning Huang et al. (2024)",
+      "url": "https://arxiv.org/html/2610.30344v1#bib.bib18"
+    },
+    {
+      "href": "#bib.bib11",
+      "text": "Csaki et al. (2024)",
+      "section": "Arabic LLMs.",
+      "context": "ile noting challenges related to fuzzy deduplication, toxic content, and social bias in internet-scale corpora Bari et al. (2024) . Broader surveys further document the rapid development of Arabic LLMs and the need for reliable Arabic evaluation practices Mashaabi et al. (2024) . Closest to our setting, AceGPT continually pretrains an English-centric base model on Arabic before localized instruction tuning Huang et al. (2024) , and SambaLingo studies how to adapt English-centric LLMs to new languages, including Arabic, through continual pretraining with vocabulary extension Csaki et al. (2024)",
+      "url": "https://arxiv.org/html/2610.30344v1#bib.bib11"
+    },
+    {
+      "href": "#bib.bib29",
+      "text": "Rae et al. (2021)",
+      "section": "Data quality, filtering, and deduplication.",
+      "context": "A growing body of work shows that data quality substantially improves knowledge acquisition per token, often rivaling gains from model scaling. Large-scale filtering, repetition removal, and deduplication are now standard in strong pretraining pipelines Rae et al. (2021)",
+      "url": "https://arxiv.org/html/2610.30344v1#bib.bib29"
+    },
+    {
+      "href": "#bib.bib27",
+      "text": "Penedo et al. (2023)",
+      "section": "Data quality, filtering, and deduplication.",
+      "context": "A growing body of work shows that data quality substantially improves knowledge acquisition per token, often rivaling gains from model scaling. Large-scale filtering, repetition removal, and deduplication are now standard in strong pretraining pipelines Rae et al. (2021) ; Penedo et al. (2023)",
+      "url": "https://arxiv.org/html/2610.30344v1#bib.bib27"
+    },
+    {
+      "href": "#bib.bib5",
+      "text": "Aloui et al. (2024)",
+      "section": "Data quality, filtering, and deduplication.",
+      "context": " acquisition per token, often rivaling gains from model scaling. Large-scale filtering, repetition removal, and deduplication are now standard in strong pretraining pipelines Rae et al. (2021) ; Penedo et al. (2023) . These findings are especially relevant for Arabic, where raw web tokens are abundant but effective tokens are reduced by boilerplate, templated pages, SEO spam, duplication, orthographic variation, and dialect/code-switching effects. For Arabic specifically, the 101 Billion Arabic Words dataset applies cleaning, normalization, and deduplication to Common Crawl Aloui et al. (2024)",
+      "url": "https://arxiv.org/html/2610.30344v1#bib.bib5"
+    },
+    {
+      "href": "#bib.bib26",
+      "text": "Penedo et al. (2025)",
+      "section": "Data quality, filtering, and deduplication.",
+      "context": "e et al. (2021) ; Penedo et al. (2023) . These findings are especially relevant for Arabic, where raw web tokens are abundant but effective tokens are reduced by boilerplate, templated pages, SEO spam, duplication, orthographic variation, and dialect/code-switching effects. For Arabic specifically, the 101 Billion Arabic Words dataset applies cleaning, normalization, and deduplication to Common Crawl Aloui et al. (2024) , and FineWeb2 adapts language identification, filtering, and deduplication to more than 1,000 languages, ablating each step with small-model training runs Penedo et al. (2025)",
+      "url": "https://arxiv.org/html/2610.30344v1#bib.bib26"
+    },
+    {
+      "href": "#bib.bib14",
+      "text": "Gururangan et al. (2020)",
+      "section": "Continual pretraining and parameter-efficient adaptation.",
+      "context": "Continual or domain-adaptive pretraining adapts a general checkpoint to a new distribution and can improve in-domain performance without training from scratch Gururangan et al. (2020)",
+      "url": "https://arxiv.org/html/2610.30344v1#bib.bib14"
+    },
+    {
+      "href": "#bib.bib17",
+      "text": "Hu et al. (2022)",
+      "section": "Continual pretraining and parameter-efficient adaptation.",
+      "context": "Continual or domain-adaptive pretraining adapts a general checkpoint to a new distribution and can improve in-domain performance without training from scratch Gururangan et al. (2020) . However, full-weight CPT is costly at LLM scale. Parameter-efficient fine-tuning methods such as LoRA reduce adaptation cost by learning low-rank updates Hu et al. (2022)",
+      "url": "https://arxiv.org/html/2610.30344v1#bib.bib17"
+    },
+    {
+      "href": "#bib.bib19",
+      "text": "Kalajdzievski (2023)",
+      "section": "Continual pretraining and parameter-efficient adaptation.",
+      "context": "Continual or domain-adaptive pretraining adapts a general checkpoint to a new distribution and can improve in-domain performance without training from scratch Gururangan et al. (2020) . However, full-weight CPT is costly at LLM scale. Parameter-efficient fine-tuning methods such as LoRA reduce adaptation cost by learning low-rank updates Hu et al. (2022) , but adapter-only CPT can under-update representations needed for robust knowledge acquisition. Recent work studies LoRA variants and their stability, including rank-stabilized scaling Kalajdzievski (2023)",
+      "url": "https://arxiv.org/html/2610.30344v1#bib.bib19"
+    },
+    {
+      "href": "#bib.bib7",
+      "text": "Biderman et al. (2024)",
+      "section": "Continual pretraining and parameter-efficient adaptation.",
+      "context": "aptive pretraining adapts a general checkpoint to a new distribution and can improve in-domain performance without training from scratch Gururangan et al. (2020) . However, full-weight CPT is costly at LLM scale. Parameter-efficient fine-tuning methods such as LoRA reduce adaptation cost by learning low-rank updates Hu et al. (2022) , but adapter-only CPT can under-update representations needed for robust knowledge acquisition. Recent work studies LoRA variants and their stability, including rank-stabilized scaling Kalajdzievski (2023) , retention and forgetting behavior Biderman et al. (2024)",
+      "url": "https://arxiv.org/html/2610.30344v1#bib.bib7"
+    },
+    {
+      "href": "#bib.bib23",
+      "text": "Mao et al. (2025)",
+      "section": "Continual pretraining and parameter-efficient adaptation.",
+      "context": "o a new distribution and can improve in-domain performance without training from scratch Gururangan et al. (2020) . However, full-weight CPT is costly at LLM scale. Parameter-efficient fine-tuning methods such as LoRA reduce adaptation cost by learning low-rank updates Hu et al. (2022) , but adapter-only CPT can under-update representations needed for robust knowledge acquisition. Recent work studies LoRA variants and their stability, including rank-stabilized scaling Kalajdzievski (2023) , retention and forgetting behavior Biderman et al. (2024) , and broader PEFT trade-offs Mao et al. (2025)",
+      "url": "https://arxiv.org/html/2610.30344v1#bib.bib23"
+    },
+    {
+      "href": "#bib.bib28",
+      "text": "Pezeshkpour and Hruschka (2025)",
+      "section": "Continual pretraining and parameter-efficient adaptation.",
+      "context": "e without training from scratch Gururangan et al. (2020) . However, full-weight CPT is costly at LLM scale. Parameter-efficient fine-tuning methods such as LoRA reduce adaptation cost by learning low-rank updates Hu et al. (2022) , but adapter-only CPT can under-update representations needed for robust knowledge acquisition. Recent work studies LoRA variants and their stability, including rank-stabilized scaling Kalajdzievski (2023) , retention and forgetting behavior Biderman et al. (2024) , and broader PEFT trade-offs Mao et al. (2025) . Most directly related, Pezeshkpour and Hruschka (2025)",
+      "url": "https://arxiv.org/html/2610.30344v1#bib.bib28"
+    },
+    {
+      "href": "#bib.bib9",
+      "text": "Chen et al. (2024)",
+      "section": "Continual pretraining and parameter-efficient adaptation.",
+      "context": "isition. Recent work studies LoRA variants and their stability, including rank-stabilized scaling Kalajdzievski (2023) , retention and forgetting behavior Biderman et al. (2024) , and broader PEFT trade-offs Mao et al. (2025) . Most directly related, Pezeshkpour and Hruschka (2025) analyze how far LoRA-based continual pretraining can support domain-specific knowledge acquisition. The individual ingredients of our recipe have precedents: LongLoRA shows that training the embedding and normalization layers alongside LoRA is important when adapting to a new context-length regime Chen et al. (2024)",
+      "url": "https://arxiv.org/html/2610.30344v1#bib.bib9"
+    },
+    {
+      "href": "#bib.bib16",
+      "text": "Howard and Ruder (2018)",
+      "section": "Continual pretraining and parameter-efficient adaptation.",
+      "context": "i (2023) , retention and forgetting behavior Biderman et al. (2024) , and broader PEFT trade-offs Mao et al. (2025) . Most directly related, Pezeshkpour and Hruschka (2025) analyze how far LoRA-based continual pretraining can support domain-specific knowledge acquisition. The individual ingredients of our recipe have precedents: LongLoRA shows that training the embedding and normalization layers alongside LoRA is important when adapting to a new context-length regime Chen et al. (2024) , and discriminative fine-tuning assigns different learning rates to different layers Howard and Ruder (2018)",
+      "url": "https://arxiv.org/html/2610.30344v1#bib.bib16"
+    },
+    {
+      "href": "#bib.bib4",
+      "text": "Almazrouei et al. (2023)",
+      "section": "Arabic evaluation and safety benchmarks.",
+      "context": "Arabic LLMs are commonly evaluated using exam-style QA, multiple-choice knowledge benchmarks, and safety/trust stress tests. Representative benchmarks include AlGhafa Almazrouei et al. (2023)",
+      "url": "https://arxiv.org/html/2610.30344v1#bib.bib4"
+    },
+    {
+      "href": "#bib.bib20",
+      "text": "Koto et al. (2024)",
+      "section": "Arabic evaluation and safety benchmarks.",
+      "context": "Arabic LLMs are commonly evaluated using exam-style QA, multiple-choice knowledge benchmarks, and safety/trust stress tests. Representative benchmarks include AlGhafa Almazrouei et al. (2023) , ArabicMMLU Koto et al. (2024)",
+      "url": "https://arxiv.org/html/2610.30344v1#bib.bib20"
+    },
+    {
+      "href": "#bib.bib15",
+      "text": "Hardalov et al. (2020)",
+      "section": "Arabic evaluation and safety benchmarks.",
+      "context": "Arabic LLMs are commonly evaluated using exam-style QA, multiple-choice knowledge benchmarks, and safety/trust stress tests. Representative benchmarks include AlGhafa Almazrouei et al. (2023) , ArabicMMLU Koto et al. (2024) , Arabic EXAMS Hardalov et al. (2020)",
+      "url": "https://arxiv.org/html/2610.30344v1#bib.bib15"
+    },
+    {
+      "href": "#bib.bib3",
+      "text": "Alghamdi et al. (2025)",
+      "section": "Arabic evaluation and safety benchmarks.",
+      "context": "Arabic LLMs are commonly evaluated using exam-style QA, multiple-choice knowledge benchmarks, and safety/trust stress tests. Representative benchmarks include AlGhafa Almazrouei et al. (2023) , ArabicMMLU Koto et al. (2024) , Arabic EXAMS Hardalov et al. (2020) , and AraTrust Alghamdi et al. (2025)",
+      "url": "https://arxiv.org/html/2610.30344v1#bib.bib3"
+    },
+    {
+      "href": "#bib.bib12",
+      "text": "El Filali et al. (2025)",
+      "section": "Arabic evaluation and safety benchmarks.",
+      "context": "Arabic LLMs are commonly evaluated using exam-style QA, multiple-choice knowledge benchmarks, and safety/trust stress tests. Representative benchmarks include AlGhafa Almazrouei et al. (2023) , ArabicMMLU Koto et al. (2024) , Arabic EXAMS Hardalov et al. (2020) , and AraTrust Alghamdi et al. (2025) . The Open Arabic LLM Leaderboard v2 combines these with MadinahQA, ALRAGE, and ArbMMLU-HT into a seven-benchmark suite El Filali et al. (2025)",
+      "url": "https://arxiv.org/html/2610.30344v1#bib.bib12"
+    },
+    {
+      "href": "#bib.bib21",
+      "text": "Liang et al. (2023)",
+      "section": "Arabic evaluation and safety benchmarks.",
+      "context": "Arabic LLMs are commonly evaluated using exam-style QA, multiple-choice knowledge benchmarks, and safety/trust stress tests. Representative benchmarks include AlGhafa Almazrouei et al. (2023) , ArabicMMLU Koto et al. (2024) , Arabic EXAMS Hardalov et al. (2020) , and AraTrust Alghamdi et al. (2025) . The Open Arabic LLM Leaderboard v2 combines these with MadinahQA, ALRAGE, and ArbMMLU-HT into a seven-benchmark suite El Filali et al. (2025) , and HELM Arabic re-implements the same suite within the HELM framework Liang et al. (2023)",
+      "url": "https://arxiv.org/html/2610.30344v1#bib.bib21"
+    },
+    {
+      "href": "#bib.bib22",
+      "text": "Mai et al. (2025)",
+      "section": "Arabic evaluation and safety benchmarks.",
+      "context": "Arabic LLMs are commonly evaluated using exam-style QA, multiple-choice knowledge benchmarks, and safety/trust stress tests. Representative benchmarks include AlGhafa Almazrouei et al. (2023) , ArabicMMLU Koto et al. (2024) , Arabic EXAMS Hardalov et al. (2020) , and AraTrust Alghamdi et al. (2025) . The Open Arabic LLM Leaderboard v2 combines these with MadinahQA, ALRAGE, and ArbMMLU-HT into a seven-benchmark suite El Filali et al. (2025) , and HELM Arabic re-implements the same suite within the HELM framework Liang et al. (2023) ; Mai et al. (2025)",
+      "url": "https://arxiv.org/html/2610.30344v1#bib.bib22"
+    },
+    {
+      "href": "#S3.T1",
+      "text": "Table   1",
+      "section": "3.1 AQL Data Pipeline",
+      "context": "Arabic web-scale text is abundant but highly heterogeneous: boilerplate, templated pages, SEO spam, aggressive duplication, and inconsistent orthography reduce the fraction of effective training tokens. AQL Pipeline is a quality-first pipeline that converts noisy Arabic web text into a curated corpus suitable for continual pretraining (CPT). We start from 885B raw Arabic tokens and filter to a 215B -token high-quality corpus. Table 1",
+      "url": "https://arxiv.org/html/2610.30344v1#S3.T1"
+    },
+    {
+      "href": "#bib.bib25",
+      "text": "Penedo et al. (2024)",
+      "section": "Stage 2: Heuristic Quality Filtering with Feature Computation.",
+      "context": "Stage 2 computes lightweight document-level features on clean_text (Stage 1 output) and removes clearly low-signal pages using predefined thresholds (decided before training and logged for reproducibility), following the general principle that large-scale web corpora benefit substantially from systematic filtering and de-dup–aware quality controls Penedo et al. (2024)",
+      "url": "https://arxiv.org/html/2610.30344v1#bib.bib25"
+    },
+    {
+      "href": "#bib.bib29",
+      "text": "Rae et al. (2021)",
+      "section": "Stage 2: Heuristic Quality Filtering with Feature Computation.",
+      "context": "Stage 2 computes lightweight document-level features on clean_text (Stage 1 output) and removes clearly low-signal pages using predefined thresholds (decided before training and logged for reproducibility), following the general principle that large-scale web corpora benefit substantially from systematic filtering and de-dup–aware quality controls Penedo et al. (2024) ; Rae et al. (2021)",
+      "url": "https://arxiv.org/html/2610.30344v1#bib.bib29"
+    },
+    {
+      "href": "#bib.bib1",
+      "text": "Abdul-Mageed et al. (2021)",
+      "section": "Stage 3: MSA vs. Dialect Classification.",
+      "context": "Arabic performance depends strongly on dialect balance and code-switching. Stage 3 assigns each document an MSA probability p ⁡ ( MSA ∣ d ) p(\\mathrm{MSA}\\mid d) using a MARBERTv2 classifier Abdul-Mageed et al. (2021)",
+      "url": "https://arxiv.org/html/2610.30344v1#bib.bib1"
+    },
+    {
+      "href": "#A1.SS1",
+      "text": "Section   A.1",
+      "section": "Stage 3: MSA vs. Dialect Classification.",
+      "context": "Arabic performance depends strongly on dialect balance and code-switching. Stage 3 assigns each document an MSA probability p ⁡ ( MSA ∣ d ) p(\\mathrm{MSA}\\mid d) using a MARBERTv2 classifier Abdul-Mageed et al. (2021) fine-tuned on 70K manually annotated samples ( Section A.1",
+      "url": "https://arxiv.org/html/2610.30344v1#A1.SS1"
+    },
+    {
+      "href": "#bib.bib13",
+      "text": "Gemma Team et al. (2025)",
+      "section": "Stage 4: Model-Based Quality & Safety Scoring.",
+      "context": "Stage 4 applies a learned multi-task scorer to each candidate document to estimate both content quality and safety risk . Concretely, we use a Gemma 3 4B Gemma Team et al. (2025)",
+      "url": "https://arxiv.org/html/2610.30344v1#bib.bib13"
+    },
+    {
+      "href": "#A1.T9",
+      "text": "Table   9",
+      "section": "Stage 4: Model-Based Quality & Safety Scoring.",
+      "context": "with a quality threshold τ q \\tau_{q} , per-category safety thresholds τ s ​ ( k ) \\tau_{s}(k) , and 𝒦 = { tox , sex , viol , harm , hate , ext } \\mathcal{K}=\\{\\text{tox},\\text{sex},\\text{viol},\\text{harm},\\text{hate},\\text{ext}\\} . Threshold values are listed in Table 9",
+      "url": "https://arxiv.org/html/2610.30344v1#A1.T9"
+    },
+    {
+      "href": "#alg1",
+      "text": "Algorithm   1",
+      "section": "Final corpus format.",
+      "context": "The final corpus is stored as shuffled, length-bucketed JSONL shards for efficient training. Each record includes text plus minimal metadata (e.g., doc_id , source/domain, msa_prob , Stage 4 quality/safety scores, and dedup cluster ids) to support mixture control and reproducible token accounting. Algorithm 1",
+      "url": "https://arxiv.org/html/2610.30344v1#alg1"
+    },
+    {
+      "href": "#A2.T10",
+      "text": "Table   10",
+      "section": "Trainable parameter partition.",
+      "context": "The 8 unfrozen blocks contain 1.79B parameters and the embedding matrix, which Gemma 3 ties to the LM head and which we count once, 1.01B; together they are 2.80B, or 23.8% of the 11.77B-parameter language model. RS-LoRA adapters on all seven projections of all 48 blocks add 4.09M parameters per unit of rank, so the total is 2.80 ​ B + r × 4.09 ​ M 2.80\\text{B}+r\\times 4.09\\text{M} , where r r is the adapter rank. Even at a large rank such as r = 256 r=256 the adapters add about 1.05B parameters, so the trainable share stays below one third of the model; Table 10",
+      "url": "https://arxiv.org/html/2610.30344v1#A2.T10"
+    },
+    {
+      "href": "#bib.bib19",
+      "text": "Kalajdzievski (2023)",
+      "section": "RS-LoRA adapters (stable low-rank updates).",
+      "context": "For a base linear projection W ∈ ℝ d out × d in W\\in\\mathbb{R}^{d_{\\text{out}}\\times d_{\\text{in}}} , LoRA adds a low-rank update W ′ = W + Δ ​ W W^{\\prime}=W+\\Delta W with Δ ​ W = γ r ​ A ​ B \\Delta W=\\gamma_{r}\\,AB , where A ∈ ℝ d out × r A\\in\\mathbb{R}^{d_{\\text{out}}\\times r} , B ∈ ℝ r × d in B\\in\\mathbb{R}^{r\\times d_{\\text{in}}} , and r ≪ min ⁡ ( d out , d in ) r\\ll\\min(d_{\\text{out}},d_{\\text{in}}) . Standard LoRA uses γ r = α / r \\gamma_{r}=\\alpha/r ; RS-LoRA Kalajdzievski (2023)",
+      "url": "https://arxiv.org/html/2610.30344v1#bib.bib19"
+    },
+    {
+      "href": "#bib.bib16",
+      "text": "Howard and Ruder (2018)",
+      "section": "Differentiated (layer-wise) learning rates.",
+      "context": "We use separate optimizer parameter groups for the adapters ( η ϕ \\eta_{\\phi} ), the embeddings ( η E \\eta_{E} ), and each unfrozen block ℓ ∈ 𝒰 \\ell\\in\\mathcal{U} ( η ℓ \\eta_{\\ell} ). For the unfrozen blocks we use a monotone schedule that gives larger steps to later layers, following discriminative fine-tuning Howard and Ruder (2018)",
+      "url": "https://arxiv.org/html/2610.30344v1#bib.bib16"
+    },
+    {
+      "href": "#S4.SS1.SSS2",
+      "text": "Section   4.1.2",
+      "section": "Design rationale.",
+      "context": "Full-rank updates to the upper blocks and embeddings allow larger representational changes than low-rank adapters alone, while adapters in the frozen blocks provide a cheap path for the rest of the network to adjust. Section 4.1.2",
+      "url": "https://arxiv.org/html/2610.30344v1#S4.SS1.SSS2"
+    },
+    {
+      "href": "#S3.SS2",
+      "text": "Section   3.2",
+      "section": "4.1 Continual Pretraining",
+      "context": "We run controlled CPT experiments and one scale-up, all with the recipe of Section 3.2",
+      "url": "https://arxiv.org/html/2610.30344v1#S3.SS2"
+    },
+    {
+      "href": "#S4.SS1.SSS2",
+      "text": "Section   4.1.2",
+      "section": "4.1 Continual Pretraining",
+      "context": "• Ablations ( Section 4.1.2",
+      "url": "https://arxiv.org/html/2610.30344v1#S4.SS1.SSS2"
+    },
+    {
+      "href": "#bib.bib30",
+      "text": "Rasley et al. (2020)",
+      "section": "Data and setup.",
+      "context": "The 5B-token subset is 96% MSA text sampled from the AQL corpus, plus 2% code and 2% math data drawn from outside the AQL corpus. All runs use identical normalization and tokenization, identical hardware ( 8 × \\times A100 80GB ), and the same configuration: sequences packed into 4096-token blocks, gradient accumulation 16, bfloat16 precision, gradient clipping 1.0, and DeepSpeed ZeRO-2 Rasley et al. (2020)",
+      "url": "https://arxiv.org/html/2610.30344v1#bib.bib30"
+    },
+    {
+      "href": "#A2.T10",
+      "text": "Table   10",
+      "section": "Data and setup.",
+      "context": "The 5B-token subset is 96% MSA text sampled from the AQL corpus, plus 2% code and 2% math data drawn from outside the AQL corpus. All runs use identical normalization and tokenization, identical hardware ( 8 × \\times A100 80GB ), and the same configuration: sequences packed into 4096-token blocks, gradient accumulation 16, bfloat16 precision, gradient clipping 1.0, and DeepSpeed ZeRO-2 Rasley et al. (2020) . Table 10",
+      "url": "https://arxiv.org/html/2610.30344v1#A2.T10"
+    },
+    {
+      "href": "#bib.bib13",
+      "text": "Gemma Team et al. (2025)",
+      "section": "Methods.",
+      "context": "We compare five settings: Gemma 3 12B PT Gemma Team et al. (2025)",
+      "url": "https://arxiv.org/html/2610.30344v1#bib.bib13"
+    },
+    {
+      "href": "#bib.bib20",
+      "text": "Koto et al. (2024)",
+      "section": "Evaluation.",
+      "context": "We evaluate all checkpoints on four Arabic benchmarks: ArabicMMLU Koto et al. (2024)",
+      "url": "https://arxiv.org/html/2610.30344v1#bib.bib20"
+    },
+    {
+      "href": "#bib.bib4",
+      "text": "Almazrouei et al. (2023)",
+      "section": "Evaluation.",
+      "context": "We evaluate all checkpoints on four Arabic benchmarks: ArabicMMLU Koto et al. (2024) , AlGhafa Almazrouei et al. (2023)",
+      "url": "https://arxiv.org/html/2610.30344v1#bib.bib4"
+    },
+    {
+      "href": "#bib.bib3",
+      "text": "Alghamdi et al. (2025)",
+      "section": "Evaluation.",
+      "context": "We evaluate all checkpoints on four Arabic benchmarks: ArabicMMLU Koto et al. (2024) , AlGhafa Almazrouei et al. (2023) , AraTrust Alghamdi et al. (2025)",
+      "url": "https://arxiv.org/html/2610.30344v1#bib.bib3"
+    },
+    {
+      "href": "#bib.bib15",
+      "text": "Hardalov et al. (2020)",
+      "section": "Evaluation.",
+      "context": "We evaluate all checkpoints on four Arabic benchmarks: ArabicMMLU Koto et al. (2024) , AlGhafa Almazrouei et al. (2023) , AraTrust Alghamdi et al. (2025) , and Arabic EXAMS Hardalov et al. (2020)",
+      "url": "https://arxiv.org/html/2610.30344v1#bib.bib15"
+    },
+    {
+      "href": "#S4.T3",
+      "text": "3",
+      "section": "Evaluation.",
+      "context": "We evaluate all checkpoints on four Arabic benchmarks: ArabicMMLU Koto et al. (2024) , AlGhafa Almazrouei et al. (2023) , AraTrust Alghamdi et al. (2025) , and Arabic EXAMS Hardalov et al. (2020) , and report the macro-average as Mean. All checkpoints in Tables 3",
+      "url": "https://arxiv.org/html/2610.30344v1#S4.T3"
+    },
+    {
+      "href": "#S4.T5",
+      "text": "5",
+      "section": "Evaluation.",
+      "context": "We evaluate all checkpoints on four Arabic benchmarks: ArabicMMLU Koto et al. (2024) , AlGhafa Almazrouei et al. (2023) , AraTrust Alghamdi et al. (2025) , and Arabic EXAMS Hardalov et al. (2020) , and report the macro-average as Mean. All checkpoints in Tables 3 – 5",
+      "url": "https://arxiv.org/html/2610.30344v1#S4.T5"
+    },
+    {
+      "href": "#S5.T6",
+      "text": "Table   6",
+      "section": "Evaluation.",
+      "context": "We evaluate all checkpoints on four Arabic benchmarks: ArabicMMLU Koto et al. (2024) , AlGhafa Almazrouei et al. (2023) , AraTrust Alghamdi et al. (2025) , and Arabic EXAMS Hardalov et al. (2020) , and report the macro-average as Mean. All checkpoints in Tables 3 – 5 are evaluated with the same protocol; these scores come from a separate evaluation of CPT checkpoints and should not be compared directly with Table 6",
+      "url": "https://arxiv.org/html/2610.30344v1#S5.T6"
+    },
+    {
+      "href": "#S4.T3",
+      "text": "Table   3",
+      "section": "Evaluation.",
+      "context": "Figure 3: Mean score on four Arabic benchmarks against wall-clock CPT time for the 5B-token runs of Table 3",
+      "url": "https://arxiv.org/html/2610.30344v1#S4.T3"
+    },
+    {
+      "href": "#S4.T3",
+      "text": "3",
+      "section": "Results and analysis.",
+      "context": "Table 3",
+      "url": "https://arxiv.org/html/2610.30344v1#S4.T3"
+    },
+    {
+      "href": "#S4.F3",
+      "text": "Figure   3",
+      "section": "Results and analysis.",
+      "context": "Table 3 shows that AQL-Lite reaches a mean of 73.19 , compared with 73.58 for Full CPT and 66.91 for the base model. It thus recovers 94% of the full-CPT gain (6.28 of 6.67 points) while reducing wall-clock training time from 121h to 63h (52%). It outperforms LoRA-only and RS-LoRA on all four benchmarks. AQL-Lite is ahead of Full CPT on AlGhafa (78.00 vs. 77.33) and behind it on AraTrust (89.15 vs. 89.22); both margins are small, and we do not read them as differences between the methods. All rows are single training runs. Figure 3",
+      "url": "https://arxiv.org/html/2610.30344v1#S4.F3"
+    },
+    {
+      "href": "#S4.T4",
+      "text": "Table   4",
+      "section": "4.1.2 Ablations",
+      "context": "Figure 4: Data ablation: change over the base model after CPT on 1B tokens of each data condition (values from Table 4",
+      "url": "https://arxiv.org/html/2610.30344v1#S4.T4"
+    },
+    {
+      "href": "#S4.T4",
+      "text": "Table   4",
+      "section": "Does curation matter?",
+      "context": "Table 4",
+      "url": "https://arxiv.org/html/2610.30344v1#S4.T4"
+    },
+    {
+      "href": "#S4.F4",
+      "text": "Figure   4",
+      "section": "Does curation matter?",
+      "context": "Table 4 varies only the training data at a matched 1B-token budget. CPT on raw crawled Arabic leaves the mean unchanged (66.80 vs. 66.91 for the base model). Structural cleaning and heuristic filtering (Stages 1–2) add 0.65 points, and the full pipeline adds a further 2.86, for a total of +3.51 over raw text at the same budget ( Figure 4",
+      "url": "https://arxiv.org/html/2610.30344v1#S4.F4"
+    },
+    {
+      "href": "#S4.T3",
+      "text": "Table   3",
+      "section": "Does curation matter?",
+      "context": "Table 5: Component ablation on the 5B-token subset of Table 3",
+      "url": "https://arxiv.org/html/2610.30344v1#S4.T3"
+    },
+    {
+      "href": "#S4.T5",
+      "text": "Table   5",
+      "section": "Which components matter?",
+      "context": "Table 5",
+      "url": "https://arxiv.org/html/2610.30344v1#S4.T5"
+    },
+    {
+      "href": "#A2.T10",
+      "text": "Table   10",
+      "section": "Training configuration.",
+      "context": "We keep the configuration of Experiment 1 ( Table 10",
+      "url": "https://arxiv.org/html/2610.30344v1#A2.T10"
+    },
+    {
+      "href": "#bib.bib10",
+      "text": "Chung et al. (2024)",
+      "section": "4.2 Alignment",
+      "context": "We convert the 40B-token CPT checkpoint into the final assistant model using supervised instruction tuning (SFT) on 1M Arabic instruction examples: 800K core instruction-following examples and 200K safety/alignment examples, mixed 80/20. The loss is cross-entropy computed only on assistant response tokens, following standard instruction-tuning practice Chung et al. (2024)",
+      "url": "https://arxiv.org/html/2610.30344v1#bib.bib10"
+    },
+    {
+      "href": "#bib.bib12",
+      "text": "El Filali et al. (2025)",
+      "section": "5.1 Benchmarks and protocol",
+      "context": "We evaluate on the seven benchmarks of the Open Arabic LLM Leaderboard v2 (OALL v2) El Filali et al. (2025)",
+      "url": "https://arxiv.org/html/2610.30344v1#bib.bib12"
+    },
+    {
+      "href": "#bib.bib4",
+      "text": "Almazrouei et al. (2023)",
+      "section": "5.1 Benchmarks and protocol",
+      "context": "We evaluate on the seven benchmarks of the Open Arabic LLM Leaderboard v2 (OALL v2) El Filali et al. (2025) : AlGhafa Almazrouei et al. (2023)",
+      "url": "https://arxiv.org/html/2610.30344v1#bib.bib4"
+    },
+    {
+      "href": "#bib.bib20",
+      "text": "Koto et al. (2024)",
+      "section": "5.1 Benchmarks and protocol",
+      "context": "We evaluate on the seven benchmarks of the Open Arabic LLM Leaderboard v2 (OALL v2) El Filali et al. (2025) : AlGhafa Almazrouei et al. (2023) , ArabicMMLU Koto et al. (2024)",
+      "url": "https://arxiv.org/html/2610.30344v1#bib.bib20"
+    },
+    {
+      "href": "#bib.bib15",
+      "text": "Hardalov et al. (2020)",
+      "section": "5.1 Benchmarks and protocol",
+      "context": "We evaluate on the seven benchmarks of the Open Arabic LLM Leaderboard v2 (OALL v2) El Filali et al. (2025) : AlGhafa Almazrouei et al. (2023) , ArabicMMLU Koto et al. (2024) , Arabic EXAMS Hardalov et al. (2020)",
+      "url": "https://arxiv.org/html/2610.30344v1#bib.bib15"
+    },
+    {
+      "href": "#bib.bib20",
+      "text": "Koto et al. (2024)",
+      "section": "5.1 Benchmarks and protocol",
+      "context": "We evaluate on the seven benchmarks of the Open Arabic LLM Leaderboard v2 (OALL v2) El Filali et al. (2025) : AlGhafa Almazrouei et al. (2023) , ArabicMMLU Koto et al. (2024) , Arabic EXAMS Hardalov et al. (2020) , MadinahQA Koto et al. (2024)",
+      "url": "https://arxiv.org/html/2610.30344v1#bib.bib20"
+    },
+    {
+      "href": "#bib.bib3",
+      "text": "Alghamdi et al. (2025)",
+      "section": "5.1 Benchmarks and protocol",
+      "context": "We evaluate on the seven benchmarks of the Open Arabic LLM Leaderboard v2 (OALL v2) El Filali et al. (2025) : AlGhafa Almazrouei et al. (2023) , ArabicMMLU Koto et al. (2024) , Arabic EXAMS Hardalov et al. (2020) , MadinahQA Koto et al. (2024) , AraTrust Alghamdi et al. (2025)",
+      "url": "https://arxiv.org/html/2610.30344v1#bib.bib3"
+    },
+    {
+      "href": "#bib.bib12",
+      "text": "El Filali et al. (2025)",
+      "section": "5.1 Benchmarks and protocol",
+      "context": "We evaluate on the seven benchmarks of the Open Arabic LLM Leaderboard v2 (OALL v2) El Filali et al. (2025) : AlGhafa Almazrouei et al. (2023) , ArabicMMLU Koto et al. (2024) , Arabic EXAMS Hardalov et al. (2020) , MadinahQA Koto et al. (2024) , AraTrust Alghamdi et al. (2025) , ALRAGE El Filali et al. (2025)",
+      "url": "https://arxiv.org/html/2610.30344v1#bib.bib12"
+    },
+    {
+      "href": "#bib.bib31",
+      "text": "Sengupta et al. (2023)",
+      "section": "5.1 Benchmarks and protocol",
+      "context": "We evaluate on the seven benchmarks of the Open Arabic LLM Leaderboard v2 (OALL v2) El Filali et al. (2025) : AlGhafa Almazrouei et al. (2023) , ArabicMMLU Koto et al. (2024) , Arabic EXAMS Hardalov et al. (2020) , MadinahQA Koto et al. (2024) , AraTrust Alghamdi et al. (2025) , ALRAGE El Filali et al. (2025) , and ArbMMLU-HT Sengupta et al. (2023)",
+      "url": "https://arxiv.org/html/2610.30344v1#bib.bib31"
+    },
+    {
+      "href": "#S5.T6",
+      "text": "Table   6",
+      "section": "5.1 Benchmarks and protocol",
+      "context": "We evaluate on the seven benchmarks of the Open Arabic LLM Leaderboard v2 (OALL v2) El Filali et al. (2025) : AlGhafa Almazrouei et al. (2023) , ArabicMMLU Koto et al. (2024) , Arabic EXAMS Hardalov et al. (2020) , MadinahQA Koto et al. (2024) , AraTrust Alghamdi et al. (2025) , ALRAGE El Filali et al. (2025) , and ArbMMLU-HT Sengupta et al. (2023) . We evaluate our own checkpoints with the OALL v2 evaluation suite. For reference, Table 6",
+      "url": "https://arxiv.org/html/2610.30344v1#S5.T6"
+    },
+    {
+      "href": "#bib.bib22",
+      "text": "Mai et al. (2025)",
+      "section": "5.1 Benchmarks and protocol",
+      "context": "We evaluate on the seven benchmarks of the Open Arabic LLM Leaderboard v2 (OALL v2) El Filali et al. (2025) : AlGhafa Almazrouei et al. (2023) , ArabicMMLU Koto et al. (2024) , Arabic EXAMS Hardalov et al. (2020) , MadinahQA Koto et al. (2024) , AraTrust Alghamdi et al. (2025) , ALRAGE El Filali et al. (2025) , and ArbMMLU-HT Sengupta et al. (2023) . We evaluate our own checkpoints with the OALL v2 evaluation suite. For reference, Table 6 also lists scores of other models on the same seven benchmarks as reported by the HELM Arabic leaderboard Mai et al. (2025)",
+      "url": "https://arxiv.org/html/2610.30344v1#bib.bib22"
+    },
+    {
+      "href": "#S4.T4",
+      "text": "Table   4",
+      "section": "Curation, not corpus size.",
+      "context": "The pipeline keeps 24.3% of raw tokens, but the size of that reduction does not by itself show that the removed text was less useful. The controlled comparison does: at a matched 1B-token budget, raw web text leaves the base model unchanged while curated text adds 3.51 points ( Table 4",
+      "url": "https://arxiv.org/html/2610.30344v1#S4.T4"
+    },
+    {
+      "href": "#S6",
+      "text": "Section   6",
+      "section": "Limitations",
+      "context": "om single training runs, so differences below about one point should not be over-interpreted. We have not yet measured n n -gram overlap between our training data and the benchmarks, or the effect of CPT on English capabilities; both are planned for a future version. We also did not run full CPT at 40B tokens, so the efficiency comparison with full CPT is validated only at the 5B-token scale. Our efficiency comparison counts CPT wall-clock time only; it excludes the cost of running the Stage 3 and Stage 4 classifiers over the corpus and the cost of instruction tuning. As discussed in Section 6",
+      "url": "https://arxiv.org/html/2610.30344v1#S6"
+    },
+    {
+      "href": "#bib.bib8",
+      "text": "Bouamor et al. (2018)",
+      "section": "Limitations",
+      "context": "Our evaluation is based on automatic benchmarks and a head-to-head comparison in which the comparison rows are taken from a public leaderboard that uses a different evaluation protocol, rather than re-run by us. The MSA classifier’s 99.96% accuracy is measured in-domain; such a high value may partly reflect annotation artifacts or near-duplicates shared between the training and validation splits, and an out-of-domain check on dialect identification data such as MADAR Bouamor et al. (2018)",
+      "url": "https://arxiv.org/html/2610.30344v1#bib.bib8"
+    },
+    {
+      "href": "#bib.bib2",
+      "text": "Abdul-Mageed et al. (2020)",
+      "section": "Limitations",
+      "context": "Our evaluation is based on automatic benchmarks and a head-to-head comparison in which the comparison rows are taken from a public leaderboard that uses a different evaluation protocol, rather than re-run by us. The MSA classifier’s 99.96% accuracy is measured in-domain; such a high value may partly reflect annotation artifacts or near-duplicates shared between the training and validation splits, and an out-of-domain check on dialect identification data such as MADAR Bouamor et al. (2018) or NADI Abdul-Mageed et al. (2020)",
+      "url": "https://arxiv.org/html/2610.30344v1#bib.bib2"
+    },
+    {
+      "href": "https://doi.org/10.18653/v1/2021.acl-long.551",
+      "text": "ARBERT &\nMARBERT: Deep bidirectional transformers for Arabic",
+      "section": "References",
+      "context": "Abdul-Mageed et al. (2021) Muhammad Abdul-Mageed, AbdelRahim Elmadany, and El Moatez Billah Nagoudi. 2021. ARBERT & MARBERT: Deep bidirectional transformers for Arabic",
+      "url": "https://doi.org/10.18653/v1/2021.acl-long.551"
+    },
+    {
+      "href": "https://aclanthology.org/2020.wanlp-1.9/",
+      "text": "NADI 2020: The\nfirst nuanced Arabic dialect identification shared task",
+      "section": "References",
+      "context": "Abdul-Mageed et al. (2020) Muhammad Abdul-Mageed, Chiyu Zhang, Houda Bouamor, and Nizar Habash. 2020. NADI 2020: The first nuanced Arabic dialect identification shared task",
+      "url": "https://aclanthology.org/2020.wanlp-1.9/"
+    },
+    {
+      "href": "https://aclanthology.org/2025.coling-main.579/",
+      "text": "AraTrust:\nAn evaluation of trustworthiness for LLMs in Arabic",
+      "section": "References",
+      "context": "Alghamdi et al. (2025) Emad A. Alghamdi, Reem Masoud, Deema Alnuhait, Afnan Y. Alomairi, Ahmed Ashraf, and Mohamed Zaytoon. 2025. AraTrust: An evaluation of trustworthiness for LLMs in Arabic",
+      "url": "https://aclanthology.org/2025.coling-main.579/"
+    },
+    {
+      "href": "https://doi.org/10.18653/v1/2023.arabicnlp-1.21",
+      "text": "AlGhafa\nevaluation benchmark for Arabic language models",
+      "section": "References",
+      "context": "Almazrouei et al. (2023) Ebtesam Almazrouei, Ruxandra Cojocaru, Michele Baldo, Quentin Malartic, Hamza Alobeidli, Daniele Mazzotta, Guilherme Penedo, Giulia Campesan, Mugariya Farooq, Maitha Alhammadi, Julien Launay, and Badreddine Noune. 2023. AlGhafa evaluation benchmark for Arabic language models",
+      "url": "https://doi.org/10.18653/v1/2023.arabicnlp-1.21"
+    },
+    {
+      "href": "https://arxiv.org/abs/2405.01590",
+      "text": "101 billion Arabic words\ndataset",
+      "section": "References",
+      "context": "Aloui et al. (2024) Manel Aloui, Hasna Chouikhi, Ghaith Chaabane, Haithem Kchaou, and Chehir Dhaouadi. 2024. 101 billion Arabic words dataset",
+      "url": "https://arxiv.org/abs/2405.01590"
+    },
+    {
+      "href": "https://arxiv.org/abs/2407.15390",
+      "text": "ALLaM: Large language\nmodels for Arabic and English",
+      "section": "References",
+      "context": "Bari et al. (2024) M. Saiful Bari, Yazeed Alnumay, Norah A. Alzahrani, Nouf M. Alotaibi, Hisham A. Alyahya, Sultan AlRashed, Faisal A. Mirza, Shaykhah Z. Alsubaie, Hassan A. Alahmed, Ghadah Alabduljabbar, et al. 2024. ALLaM: Large language models for Arabic and English",
+      "url": "https://arxiv.org/abs/2407.15390"
+    },
+    {
+      "href": "https://arxiv.org/abs/2405.09673",
+      "text": "LoRA learns less and\nforgets less",
+      "section": "References",
+      "context": "Biderman et al. (2024) Dan Biderman, Jacob Portes, Jose Javier Gonzalez Ortiz, Mansheej Paul, Philip Greengard, Connor Jennings, Daniel King, Sam Havens, Vitaliy Chiley, Jonathan Frankle, et al. 2024. LoRA learns less and forgets less",
+      "url": "https://arxiv.org/abs/2405.09673"
+    },
+    {
+      "href": "https://aclanthology.org/L18-1535/",
+      "text": "The MADAR Arabic\ndialect corpus and lexicon",
+      "section": "References",
+      "context": "Bouamor et al. (2018) Houda Bouamor, Nizar Habash, Mohammad Salameh, Wajdi Zaghouani, Owen Rambow, Dana Abdulrahim, Ossama Obeid, Salam Khalifa, Fadhl Eryani, Alexander Erdmann, and Kemal Oflazer. 2018. The MADAR Arabic dialect corpus and lexicon",
+      "url": "https://aclanthology.org/L18-1535/"
+    },
+    {
+      "href": "https://arxiv.org/abs/2309.12307",
+      "text": "LongLoRA: Efficient\nfine-tuning of long-context large language models",
+      "section": "References",
+      "context": "Chen et al. (2024) Yukang Chen, Shengju Qian, Haotian Tang, Xin Lai, Zhijian Liu, Song Han, and Jiaya Jia. 2024. LongLoRA: Efficient fine-tuning of long-context large language models",
+      "url": "https://arxiv.org/abs/2309.12307"
+    },
+    {
+      "href": "https://doi.org/10.18653/v1/2024.mrl-1.1",
+      "text": "SambaLingo:\nTeaching large language models new languages",
+      "section": "References",
+      "context": "Csaki et al. (2024) Zoltan Csaki, Bo Li, Jonathan Lingjie Li, Qiantong Xu, Pian Pawakapan, Leon Zhang, Yun Du, Hengyu Zhao, Changran Hu, and Urmish Thakker. 2024. SambaLingo: Teaching large language models new languages",
+      "url": "https://doi.org/10.18653/v1/2024.mrl-1.1"
+    },
+    {
+      "href": "https://huggingface.co/blog/leaderboard-arabic-v2",
+      "text": "https://huggingface.co/blog/leaderboard-arabic-v2",
+      "section": "References",
+      "context": "El Filali et al. (2025) Ali El Filali, Manel Aloui, Tarique Husaain, Ahmed Alzubaidi, Basma El Amel Boussaha, Ruxandra Cojocaru, Clémentine Fourrier, Nathan Habib, and Hakim Hacid. 2025. The Open Arabic LLM leaderboard 2. Hugging Face blog, https://huggingface.co/blog/leaderboard-arabic-v2",
+      "url": "https://huggingface.co/blog/leaderboard-arabic-v2"
+    },
+    {
+      "href": "https://arxiv.org/abs/2503.19786",
+      "text": "Gemma 3 technical report",
+      "section": "References",
+      "context": "Gemma Team et al. (2025) Gemma Team, Aishwarya Kamath, Johan Ferret, Shreya Pathak, Nino Vieillard, Ramona Merhej, Sarah Perrin, Tatiana Matejovicova, Alexandre Ramé, Morgane Rivière, et al. 2025. Gemma 3 technical report",
+      "url": "https://arxiv.org/abs/2503.19786"
+    },
+    {
+      "href": "https://doi.org/10.18653/v1/2020.acl-main.740",
+      "text": "Don’t stop\npretraining: Adapt language models to domains and tasks",
+      "section": "References",
+      "context": "Gururangan et al. (2020) Suchin Gururangan, Ana Marasović, Swabha Swayamdipta, Kyle Lo, Iz Beltagy, Doug Downey, and Noah A. Smith. 2020. Don’t stop pretraining: Adapt language models to domains and tasks",
+      "url": "https://doi.org/10.18653/v1/2020.acl-main.740"
+    },
+    {
+      "href": "https://doi.org/10.18653/v1/2020.emnlp-main.438",
+      "text": "EXAMS: A\nmulti-subject high school examinations dataset for cross-lingual and\nmultilingual question answering",
+      "section": "References",
+      "context": "Hardalov et al. (2020) Momchil Hardalov, Todor Mihaylov, Dimitrina Zlatkova, Yoan Dinkov, Ivan Koychev, and Preslav Nakov. 2020. EXAMS: A multi-subject high school examinations dataset for cross-lingual and multilingual question answering",
+      "url": "https://doi.org/10.18653/v1/2020.emnlp-main.438"
+    },
+    {
+      "href": "https://doi.org/10.18653/v1/P18-1031",
+      "text": "Universal language\nmodel fine-tuning for text classification",
+      "section": "References",
+      "context": "Howard and Ruder (2018) Jeremy Howard and Sebastian Ruder. 2018. Universal language model fine-tuning for text classification",
+      "url": "https://doi.org/10.18653/v1/P18-1031"
+    },
+    {
+      "href": "https://arxiv.org/abs/2106.09685",
+      "text": "LoRA: Low-rank adaptation\nof large language models",
+      "section": "References",
+      "context": "Hu et al. (2022) Edward J. Hu, Yelong Shen, Phillip Wallis, Zeyuan Allen-Zhu, Yuanzhi Li, Shean Wang, Lu Wang, and Weizhu Chen. 2022. LoRA: Low-rank adaptation of large language models",
+      "url": "https://arxiv.org/abs/2106.09685"
+    },
+    {
+      "href": "https://doi.org/10.18653/v1/2024.naacl-long.450",
+      "text": "AceGPT,\nlocalizing large language models in Arabic",
+      "section": "References",
+      "context": "Huang et al. (2024) Huang Huang, Fei Yu, Jianqing Zhu, Xuening Sun, Hao Cheng, Dingjie Song, Zhihong Chen, Mosen Alharthi, Bang An, Juncai He, Ziche Liu, Junying Chen, Jianquan Li, Benyou Wang, Lian Zhang, Ruoyu Sun, Xiang Wan, Haizhou Li, and Jinchao Xu. 2024. AceGPT, localizing large language models in Arabic",
+      "url": "https://doi.org/10.18653/v1/2024.naacl-long.450"
+    },
+    {
+      "href": "https://arxiv.org/abs/2312.03732",
+      "text": "A rank stabilization\nscaling factor for fine-tuning with LoRA",
+      "section": "References",
+      "context": "Kalajdzievski (2023) Damjan Kalajdzievski. 2023. A rank stabilization scaling factor for fine-tuning with LoRA",
+      "url": "https://arxiv.org/abs/2312.03732"
+    },
+    {
+      "href": "https://doi.org/10.18653/v1/2024.findings-acl.334",
+      "text": "ArabicMMLU: Assessing massive multitask language understanding in\nArabic",
+      "section": "References",
+      "context": "Koto et al. (2024) Fajri Koto, Haonan Li, Sara Shatnawi, Jad Doughman, Abdelrahman Sadallah, Aisha Alraeesi, Khalid Almubarak, Zaid Alyafeai, Neha Sengupta, Shady Shehata, Nizar Habash, Preslav Nakov, and Timothy Baldwin. 2024. ArabicMMLU: Assessing massive multitask language understanding in Arabic",
+      "url": "https://doi.org/10.18653/v1/2024.findings-acl.334"
+    },
+    {
+      "href": "https://arxiv.org/abs/2211.09110",
+      "text": "Holistic evaluation of\nlanguage models",
+      "section": "References",
+      "context": "Liang et al. (2023) Percy Liang, Rishi Bommasani, Tony Lee, Dimitris Tsipras, Dilara Soylu, Michihiro Yasunaga, Yian Zhang, Deepak Narayanan, Yuhuai Wu, Ananya Kumar, et al. 2023. Holistic evaluation of language models",
+      "url": "https://arxiv.org/abs/2211.09110"
+    },
+    {
+      "href": "https://crfm.stanford.edu/helm/arabic/latest/",
+      "text": "https://crfm.stanford.edu/helm/arabic/latest/",
+      "section": "References",
+      "context": "Mai et al. (2025) Yifan Mai, Rida Taleb, and Ahmed Elhagry. 2025. HELM Arabic. Stanford CRFM blog post and leaderboard, https://crfm.stanford.edu/helm/arabic/latest/",
+      "url": "https://crfm.stanford.edu/helm/arabic/latest/"
+    },
+    {
+      "href": "https://arxiv.org/abs/2410.20238",
+      "text": "A survey of large language\nmodels for Arabic language and its dialects",
+      "section": "References",
+      "context": "Mashaabi et al. (2024) Malak Mashaabi, Shahad Al-Khalifa, and Hend Al-Khalifa. 2024. A survey of large language models for Arabic language and its dialects",
+      "url": "https://arxiv.org/abs/2410.20238"
+    },
+    {
+      "href": "https://arxiv.org/abs/2406.17557",
+      "text": "The FineWeb datasets:\nDecanting the web for the finest text data at scale",
+      "section": "References",
+      "context": "Penedo et al. (2024) Guilherme Penedo, Hynek Kydlíček, Loubna Ben Allal, Anton Lozhkov, Margaret Mitchell, Colin Raffel, Leandro von Werra, and Thomas Wolf. 2024. The FineWeb datasets: Decanting the web for the finest text data at scale",
+      "url": "https://arxiv.org/abs/2406.17557"
+    },
+    {
+      "href": "https://arxiv.org/abs/2506.20920",
+      "text": "FineWeb2: One pipeline to\nscale them all – adapting pre-training data processing to every language",
+      "section": "References",
+      "context": "Penedo et al. (2025) Guilherme Penedo, Hynek Kydlíček, Vinko Sabolčec, Bettina Messmer, Negar Foroutan, Amir Hossein Kargaran, Colin Raffel, Martin Jaggi, Leandro von Werra, and Thomas Wolf. 2025. FineWeb2: One pipeline to scale them all – adapting pre-training data processing to every language",
+      "url": "https://arxiv.org/abs/2506.20920"
+    },
+    {
+      "href": "https://arxiv.org/abs/2306.01116",
+      "text": "The RefinedWeb dataset\nfor Falcon LLM: Outperforming curated corpora with web data only",
+      "section": "References",
+      "context": "Penedo et al. (2023) Guilherme Penedo, Quentin Malartic, Daniel Hesslow, Ruxandra Cojocaru, Hamza Alobeidli, Alessandro Cappelli, Baptiste Pannier, Ebtesam Almazrouei, and Julien Launay. 2023. The RefinedWeb dataset for Falcon LLM: Outperforming curated corpora with web data only",
+      "url": "https://arxiv.org/abs/2306.01116"
+    },
+    {
+      "href": "https://arxiv.org/abs/2501.17840",
+      "text": "Learning beyond the\nsurface: How far can continual pre-training with LoRA enhance LLMs’\ndomain-specific insight learning?",
+      "section": "References",
+      "context": "Pezeshkpour and Hruschka (2025) Pouya Pezeshkpour and Estevam Hruschka. 2025. Learning beyond the surface: How far can continual pre-training with LoRA enhance LLMs’ domain-specific insight learning?",
+      "url": "https://arxiv.org/abs/2501.17840"
+    },
+    {
+      "href": "https://arxiv.org/abs/2112.11446",
+      "text": "Scaling language models:\nMethods, analysis & insights from training Gopher",
+      "section": "References",
+      "context": "Rae et al. (2021) Jack W. Rae, Sebastian Borgeaud, Trevor Cai, Katie Millican, Jordan Hoffmann, Francis Song, John Aslanides, Sarah Henderson, Roman Ring, Susannah Young, et al. 2021. Scaling language models: Methods, analysis & insights from training Gopher",
+      "url": "https://arxiv.org/abs/2112.11446"
+    },
+    {
+      "href": "https://doi.org/10.1145/3394486.3406703",
+      "text": "DeepSpeed: System\noptimizations enable training deep learning models with over 100 billion\nparameters",
+      "section": "References",
+      "context": "Rasley et al. (2020) Jeff Rasley, Samyam Rajbhandari, Olatunji Ruwase, and Yuxiong He. 2020. DeepSpeed: System optimizations enable training deep learning models with over 100 billion parameters",
+      "url": "https://doi.org/10.1145/3394486.3406703"
+    },
+    {
+      "href": "https://arxiv.org/abs/2308.16149",
+      "text": "Jais and jais-chat:\nArabic-centric foundation and instruction-tuned open generative large\nlanguage models",
+      "section": "References",
+      "context": "Sengupta et al. (2023) Neha Sengupta, Sunil Kumar Sahu, Bokang Jia, Satheesh Katipomu, Haonan Li, Fajri Koto, William Marshall, Gurpreet Gosal, Cynthia Liu, Zhiming Chen, et al. 2023. Jais and jais-chat: Arabic-centric foundation and instruction-tuned open generative large language models",
+      "url": "https://arxiv.org/abs/2308.16149"
+    },
+    {
+      "href": "#bib.bib1",
+      "text": "Abdul-Mageed et al. (2021)",
+      "section": "Model and training.",
+      "context": "We fine-tune a MARBERTv2 encoder Abdul-Mageed et al. (2021)",
+      "url": "https://arxiv.org/html/2610.30344v1#bib.bib1"
+    },
+    {
+      "href": "#A1.T7",
+      "text": "Table   7",
+      "section": "Validation performance.",
+      "context": "Table 7",
+      "url": "https://arxiv.org/html/2610.30344v1#A1.T7"
+    },
+    {
+      "href": "#bib.bib8",
+      "text": "Bouamor et al. (2018)",
+      "section": "Validation performance.",
+      "context": "Table 7 reports in-domain validation metrics. They measure agreement with our annotations on held-out samples from the same distribution, not general MSA/dialect identification ability. Because near-perfect in-domain scores can also arise from annotation artifacts or near-duplicate leakage across splits, we treat them as an upper bound; an out-of-domain evaluation on MADAR Bouamor et al. (2018)",
+      "url": "https://arxiv.org/html/2610.30344v1#bib.bib8"
+    },
+    {
+      "href": "#bib.bib2",
+      "text": "Abdul-Mageed et al. (2020)",
+      "section": "Validation performance.",
+      "context": "Table 7 reports in-domain validation metrics. They measure agreement with our annotations on held-out samples from the same distribution, not general MSA/dialect identification ability. Because near-perfect in-domain scores can also arise from annotation artifacts or near-duplicate leakage across splits, we treat them as an upper bound; an out-of-domain evaluation on MADAR Bouamor et al. (2018) or NADI Abdul-Mageed et al. (2020)",
+      "url": "https://arxiv.org/html/2610.30344v1#bib.bib2"
+    },
+    {
+      "href": "#A1.T8",
+      "text": "Table   8",
+      "section": "Validation performance.",
+      "context": "Table 8",
+      "url": "https://arxiv.org/html/2610.30344v1#A1.T8"
+    },
+    {
+      "href": "#A1.T9",
+      "text": "Table   9",
+      "section": "Score thresholds.",
+      "context": "Stage 4 keeps a document if q ≥ τ q q\\geq\\tau_{q} and s k ≤ τ s ​ ( k ) s_{k}\\leq\\tau_{s}(k) for every category k k . Table 9",
+      "url": "https://arxiv.org/html/2610.30344v1#A1.T9"
+    },
+    {
+      "href": "#S3.SS1",
+      "text": "Section   3.1",
+      "section": "Near-duplicate deduplication.",
+      "context": "We represent each document as a set of shingles, approximate Jaccard similarity with MinHash signatures, and use LSH buckets to find candidate duplicates. Pairs with similarity above τ d ​ u ​ p \\tau_{dup} are merged, keeping one representative per cluster; see Section 3.1",
+      "url": "https://arxiv.org/html/2610.30344v1#S3.SS1"
+    },
+    {
+      "href": "#S4.T3",
+      "text": "Table   3",
+      "section": "Appendix B Training Configuration",
+      "context": "Table 10: Training configuration of the 5B-token runs in Table 3",
+      "url": "https://arxiv.org/html/2610.30344v1#S4.T3"
+    },
+    {
+      "href": "#A3.F7",
+      "text": "Figures   7",
+      "section": "Appendix C Human Evaluation Figures",
+      "context": "Figures 7",
+      "url": "https://arxiv.org/html/2610.30344v1#A3.F7"
+    },
+    {
+      "href": "#A3.F7",
+      "text": "7",
+      "section": "Appendix C Human Evaluation Figures",
+      "context": "Figures 7 , 7",
+      "url": "https://arxiv.org/html/2610.30344v1#A3.F7"
+    },
+    {
+      "href": "#A3.F5",
+      "text": "5",
+      "section": "Appendix C Human Evaluation Figures",
+      "context": "Figures 7 , 7 and 5",
+      "url": "https://arxiv.org/html/2610.30344v1#A3.F5"
+    }
+  ],
+  "note": "Extracted HTML text; equations and table formatting may be imperfect. No PDF extraction was attempted."
+}

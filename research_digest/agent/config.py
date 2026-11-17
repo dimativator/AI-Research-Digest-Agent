@@ -49,8 +49,12 @@ class DigestConfig:
     max_context_chars: int | None = 160_000
     new_only: bool = False
     x_enabled: bool = True
+    variant: str = "react"
 
     def __post_init__(self) -> None:
+        if self.variant == "selection-critic":
+            object.__setattr__(self, "x_enabled", False)
+
         for name in UNLIMITED_LIMIT_FIELDS:
             value = getattr(self, name)
 
@@ -59,6 +63,8 @@ class DigestConfig:
 
     def validate(self) -> None:
         categories(self.categories)
+        if self.variant not in {"react", "react-explore", "selection-critic", "debate"}:
+            raise ValueError("Unknown agent variant")
 
         if type(self.new_only) is not bool:
             raise ValueError("new_only must be a boolean")

@@ -1,0 +1,422 @@
+{
+  "run_id": "36c391ccbf8a4c85b587d3d44adffb19",
+  "status": "completed",
+  "user_id": "dmitrii",
+  "profile_fingerprint": "a2480e0075ad9cdf236d40e30f74f9bfd87a08dd948530b42e6b57e4a123bfc0",
+  "pipeline_version": "react-v2",
+  "categories": [
+    "cs.LG",
+    "cs.CL",
+    "stat.ML",
+    "cs.AI",
+    "cs.IR"
+  ],
+  "date_from": "2026-11-03",
+  "date_to": "2026-11-16",
+  "papers": [
+    {
+      "paper_id": "2611.06598",
+      "summary": "Defines behavioral rate as the serialized adapter size needed to retain a specified share of held-out fine-tuning gain. Reports that LoRA compressibility varies across frozen base models and that data-measured correction spectra rank rates within a base model.",
+      "relevance": "Directly addresses whether low-rank compression preserves acquired behavior, rather than merely reconstructing weights.",
+      "evidence": [
+        {
+          "source": "abstract",
+          "quote": "the smallest serialized size of a compressed adapter that, once reloaded into the frozen base model, retains a fixed fraction of its held-out fine-tuning gain"
+        },
+        {
+          "source": "abstract",
+          "quote": "fine-tuning compressibility is a property of the dataset--receiver pair rather than of the dataset alone"
+        }
+      ],
+      "title": "The Behavioral Rate of Fine-Tuning: Compression as a Measure of Useful Information",
+      "url": "https://arxiv.org/abs/2611.06598v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.17191",
+      "summary": "Proposes an SVD-free Rényi-2 effective-rank regularizer for LoRA. In reported mixed-domain sweeps, it improves mean Wiki perplexity against unpenalized LoRA at tested ranks of at least 16.",
+      "relevance": "Direct match for spectral regularization, effective rank, and language-model fine-tuning. Cross-method comparisons are not parameter-count matched.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "our main method adds a simple, stable, differentiable, and SVD-free Rényi-2 effective-rank regularizer to the language-modeling loss."
+        },
+        {
+          "source": "inspection",
+          "quote": "Comparisons across adapter parameterizations are based on each method’s published or default hyperparameters and are not parameter-count matched"
+        }
+      ],
+      "title": "Maximizing Capacity Utilization of LoRA Adapters for Mitigating the Learning-Forgetting Trade-off",
+      "url": "https://arxiv.org/abs/2611.17191v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.05022",
+      "summary": "Analyzes matrix-factorization dynamics under finite-depth Newton-Schulz updates and shows that the number of steps can change early rank selection and bypass a gradient-flow stationary point.",
+      "relevance": "Directly connects Muon-style approximation depth to rank formation during optimization.",
+      "evidence": [
+        {
+          "source": "abstract",
+          "quote": "the number of Newton-Schulz steps can change the rank selected during the early stages of training"
+        }
+      ],
+      "title": "Finite Spectral Depth Controls Gaussian Entrance Rank and Avoidance of the First Gradient-Flow Saddle",
+      "url": "https://arxiv.org/abs/2611.05022v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.08414",
+      "summary": "Tracks LoRA update spectra and subspaces in supervised fine-tuning and reinforcement learning, reporting different spectral concentration and rotation dynamics.",
+      "relevance": "Direct evidence on how training regimes affect singular-value spectra and low-rank update geometry.",
+      "evidence": [
+        {
+          "source": "abstract",
+          "quote": "RL concentrates the spectrum at every learning rate, while SFT expands it at moderate learning rates"
+        },
+        {
+          "source": "abstract",
+          "quote": "RL rotates the singular subspaces much faster than SFT at small learning rates"
+        }
+      ],
+      "title": "Spectral and Subspace Dynamics of LoRA in Supervised Fine-Tuning and Reinforcement Learning",
+      "url": "https://arxiv.org/abs/2611.08414v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.07349",
+      "summary": "Characterizes the normal space inaccessible to standard LoRA factor gradients and uses its singular directions to motivate rank expansion.",
+      "relevance": "Direct match for LoRA optimization geometry and adaptive rank selection.",
+      "evidence": [
+        {
+          "source": "abstract",
+          "quote": "their unobservable subspace coincides with the normal space of the low-rank manifold"
+        },
+        {
+          "source": "abstract",
+          "quote": "leading normal singular directions yield the locally optimal rank expansion"
+        }
+      ],
+      "title": "From What Is Used to What Is Missing: Rethinking Dynamic Rank in LoRA",
+      "url": "https://arxiv.org/abs/2611.07349v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.11752",
+      "summary": "Distinguishes stable rank from fixed-energy rank in language-model updates and reports measurements of OLMo-2-7B spectra and post-training step directions.",
+      "relevance": "Clarifies which rank statistic is informative when judging update compressibility.",
+      "evidence": [
+        {
+          "source": "abstract",
+          "quote": "three proximal policy optimization (PPO) attention updates have stable ranks of 9.6-18.3 but require 532-1,222 singular components to capture 80% of their energy"
+        }
+      ],
+      "title": "Spectral Rank and Step-Direction Dynamics in Language-Model Post-Training",
+      "url": "https://arxiv.org/abs/2611.11752v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.08924",
+      "summary": "ResQAdam retains a BF16 momentum and uses low-rank Adam coordinates plus a residual sign update for quantization-aware training. In the reported hardware comparison, optimizer-state memory falls by 71.3%–73.2%, total peak memory by 15.3%–19.5%, and throughput by 0.6%–1.4% versus AdamW.",
+      "relevance": "Strong measured quality, memory, and throughput evidence for low-rank optimizer-state compression, specifically in QAT.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "Total Peak Memory (GB) 33.33 / 28.24 ( ↓ \\downarrow 15.3%) 43.93 / 37.19 ( ↓ \\downarrow 15.3%) 99.14 / 79.77 ( ↓ \\downarrow 19.5%) Throughput (# token/s) 29.36k / 28.94k ( ↓ \\downarrow 1.4%) 18.31k / 18.19k ( ↓ \\downarrow 0.6%) 9.64k / 9.56k ( ↓ \\downarrow 0.8%)"
+        },
+        {
+          "source": "inspection",
+          "quote": "All experiments utilize the Basic QAT framework with a W4A4G128 quantization configuration and a context length of 4096."
+        }
+      ],
+      "title": "ResQAdam: Residual-Preserving Adaptive Optimization for Memory-Efficient Quantization Aware Training",
+      "url": "https://arxiv.org/abs/2611.08924v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.13306",
+      "summary": "HiLo synchronizes distributed LoRA post-training through compressed gradients and optimizer replay; its Spar compressor combines spectral truncation, adaptive rank allocation, and error feedback.",
+      "relevance": "Connects training rank to communication cost and learning quality in a distributed setting.",
+      "evidence": [
+        {
+          "source": "abstract",
+          "quote": "decouple training rank from communication cost"
+        },
+        {
+          "source": "abstract",
+          "quote": "maintains learning quality close to full synchronization while transmitting as little as 1.6% of the adapter bytes"
+        }
+      ],
+      "title": "Train High, Ship Low: Efficient LoRA Synchronization for Distributed On-Policy Post-Training",
+      "url": "https://arxiv.org/abs/2611.13306v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.04323",
+      "summary": "FP4Quant compresses communication in model-parallel LLM training. Its abstract reports up to 1.56× end-to-end throughput improvement over BF16 on H100 with Qwen-7B, while noting a quality tradeoff.",
+      "relevance": "Covers the profile’s communication, throughput, and model-quality tradeoffs beyond low-rank methods.",
+      "evidence": [
+        {
+          "source": "abstract",
+          "quote": "Experiments on NVIDIA H100 GPUs with Qwen-7B demonstrate up to 1.56$\\times$ end-to-end throughput improvement over BF16, revealing a trade-off between throughput and model quality."
+        }
+      ],
+      "title": "FP4Quant: Efficient 4-Bit Communication Compression for Model-Parallel LLM Training",
+      "url": "https://arxiv.org/abs/2611.04323v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.13331",
+      "summary": "Analyzes frozen-factor federated LoRA as a rank-dependent stochastic approximation to full fine-tuning and proposes periodically resampling the frozen factor.",
+      "relevance": "Relevant to rank-dependent LoRA convergence and communication, though its federated setting may not transfer to ordinary fine-tuning.",
+      "evidence": [
+        {
+          "source": "abstract",
+          "quote": "the adaptation rank $r$ directly governs the signal-to-noise ratio (SNR) of the perturbed gradients"
+        },
+        {
+          "source": "abstract",
+          "quote": "reduces both computational and uplink communication overheads by 50\\%"
+        }
+      ],
+      "title": "Stochastic Projections and Rank-Aware Learning Rates for Federated LoRA",
+      "url": "https://arxiv.org/abs/2611.13331v2",
+      "version": 2,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.04239",
+      "summary": "LIRA reallocates LoRA ranks using estimated local loss perturbations from recent factor movements under a second-order approximation.",
+      "relevance": "Offers a loss-based alternative to geometric rank expansion for low-rank adaptation.",
+      "evidence": [
+        {
+          "source": "abstract",
+          "quote": "LIRA scores each layer by the estimated magnitude of the local loss perturbation associated with its recent LoRA-factor movements under a second-order approximation"
+        }
+      ],
+      "title": "LIRA: A More Interpretable Dynamic Loss-Informed Rank Allocation for Low-Rank Adaptation",
+      "url": "https://arxiv.org/abs/2611.04239v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.04462",
+      "summary": "SaMA proposes a Kronecker-product-based PEFT parameterization intended to reduce LoRA’s optimization invariances and achieve higher effective rank per parameter budget.",
+      "relevance": "Directly addresses optimization geometry and rank capacity in low-rank alternatives.",
+      "evidence": [
+        {
+          "source": "abstract",
+          "quote": "its invariance manifold induces flat directions in the loss landscape, creating an optimization bottleneck for adaptive optimizers"
+        },
+        {
+          "source": "abstract",
+          "quote": "its effective rank scales only linearly with the parameter budget"
+        }
+      ],
+      "title": "SaMA: Morpho Adaptation via Asymmetric Expansion of Kronecker Product",
+      "url": "https://arxiv.org/abs/2611.04462v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.08082",
+      "summary": "DictLLM compresses pretrained LLM weights using SVD-derived shared dictionaries, sparse layer coefficients, refinement, and quantization without further training.",
+      "relevance": "A post-training weight-compression comparator for the goal of preserving quality under low-rank factorization; it does not test training for compressibility.",
+      "evidence": [
+        {
+          "source": "abstract",
+          "quote": "directly obtained from a pre-trained model without further training"
+        },
+        {
+          "source": "abstract",
+          "quote": "shared dictionaries via singular value decomposition (SVD) of input-scaled weight matrices"
+        }
+      ],
+      "title": "DictLLM: Post-training Compression of Large Language Model with Dictionary Kernels",
+      "url": "https://arxiv.org/abs/2611.08082v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.13276",
+      "summary": "Studies how pretraining, noisy-label supervised fine-tuning, and reinforcement learning interact in an analytical multistage model, with a reported OLMo-2 1B observation.",
+      "relevance": "Covers the explicitly stated secondary interests in noisy supervision and compute allocation, although most analysis uses a simplified model.",
+      "evidence": [
+        {
+          "source": "abstract",
+          "quote": "Better pretraining also reduces sensitivity to noisy supervision."
+        },
+        {
+          "source": "abstract",
+          "quote": "SFT initialization shortens the initial RL plateau induced by sparse rewards, an effect we also observe in OLMo-2 1B on GSM8K."
+        }
+      ],
+      "title": "An Analytical Model of Compute-limited Multistage Training Pipelines",
+      "url": "https://arxiv.org/abs/2611.13276v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.04797",
+      "summary": "MobileSpec proposes forward-only on-device LLM specialization by training block-spectral coordinates of pretrained weights, motivated by the reported geometry of RLVR updates.",
+      "relevance": "Links spectral weight parameterization to memory-constrained adaptation, though not to pretraining.",
+      "evidence": [
+        {
+          "source": "abstract",
+          "quote": "backpropagation is prohibitive in memory"
+        },
+        {
+          "source": "abstract",
+          "quote": "training only the block-spectral coordinates of pretrained weights"
+        }
+      ],
+      "title": "Training Specialist LLMs on Your Phone: Forward-Only Optimization via Block-Spectral Coordinates",
+      "url": "https://arxiv.org/abs/2611.04797v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    }
+  ],
+  "x_feature": null,
+  "limitations": [
+    "Most selected findings are supported only by abstracts; comparative controls and detailed costs remain unverified except where inspection passages are cited.",
+    "ResQAdam’s reported peak-memory and throughput comparison is for specified QAT settings on one H200, not general LLM pretraining.",
+    "The supplied corpus contains no comparably supported research-digest-agent selection.",
+    "Code availability and reproducibility were not verified; X analysis was disabled.",
+    "inspect:2611.08924: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2611.17191: only question-relevant HTML passages were inspected, not the whole paper."
+  ],
+  "stats": {
+    "fetched_count": 4655,
+    "candidate_count": 4655,
+    "llm_calls": 9,
+    "steps": 6,
+    "inspections": 2,
+    "expansions": 1,
+    "screened": 36,
+    "usage": {
+      "recorded_calls": 9,
+      "llm_latency_seconds": 194.90980791699258,
+      "input_tokens": 207735,
+      "output_tokens": 8079,
+      "estimated_api_cost_usd": null,
+      "calls_without_usage": 0,
+      "cost_note": "API-equivalent estimate using standard GPT-5.6-Luna rates checked 2026-11-17: $0.20/M input, $1.20/M output; above 272K input, $0.40/M and $1.80/M. Assumes all input is uncached; excludes cache writes and external tools. Not actual Codex subscription billing. Unknown usage/model yields null cost.",
+      "price_source": "https://developers.openai.com/api/docs/models/gpt-5.6-luna"
+    },
+    "tool_calls": 3,
+    "tool_latency_seconds": 10.773113125003874
+  }
+}

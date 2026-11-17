@@ -54,6 +54,12 @@ def _parse_arguments() -> argparse.Namespace:
     )
     parser.add_argument("--model", default=None)
     parser.add_argument(
+        "--variant",
+        choices=("react", "react-explore", "selection-critic", "debate"),
+        default="react",
+        help="react-explore is Agent 2. debate is Agent 3 with independent reviewers and an editor tool loop. Selection-critic uses abstracts only and disables X analysis.",
+    )
+    parser.add_argument(
         "--db",
         type=Path,
         default=Path(__file__).resolve().parents[2] / "data" / "digest.sqlite3",
@@ -116,6 +122,8 @@ def _parse_arguments() -> argparse.Namespace:
             if field_name in UNLIMITED_LIMIT_FIELDS
             else "Must be positive."
         )
+        if name == "digest-size":
+            help_text = "Exact number of papers to select. Use -1 for unlimited."
         parser.add_argument("--" + name, type=int, default=default, help=help_text)
 
     args = parser.parse_args()
@@ -198,7 +206,8 @@ def main() -> int:
             run_id = agent.start(profile, config)
 
         print(
-            f"Run ID: {run_id}. Progress and trace are saved in {args.db}",
+            f"Run ID: {run_id}. Progress and trace are saved in {args.db}\n"
+            f"Readable log: {store.path.parent / 'traces' / run_id / 'activity.log'}",
             file=sys.stderr,
             flush=True,
         )

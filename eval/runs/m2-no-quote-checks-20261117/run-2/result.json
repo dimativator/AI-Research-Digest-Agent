@@ -1,0 +1,226 @@
+{
+  "run_id": "a9544791d96d433a9e78a228091ef38f",
+  "status": "completed",
+  "user_id": "dmitrii",
+  "profile_fingerprint": "a2480e0075ad9cdf236d40e30f74f9bfd87a08dd948530b42e6b57e4a123bfc0",
+  "pipeline_version": "react-v2",
+  "categories": [
+    "cs.AI",
+    "cs.CG",
+    "cs.CL",
+    "cs.CR",
+    "cs.CV",
+    "cs.DB",
+    "cs.DC",
+    "cs.DS",
+    "cs.GR",
+    "cs.HC",
+    "cs.IR",
+    "cs.LG",
+    "cs.LO",
+    "cs.MA",
+    "cs.NE",
+    "cs.NI",
+    "cs.RO",
+    "cs.SD",
+    "cs.SE",
+    "eess.AS",
+    "eess.IV",
+    "eess.SP",
+    "eess.SY",
+    "math.AP",
+    "math.OC",
+    "math.PR",
+    "nlin.CD",
+    "q-bio.NC",
+    "stat.ML"
+  ],
+  "date_from": "2018-02-27",
+  "date_to": "2026-10-22",
+  "papers": [
+    {
+      "paper_id": "2610.11730",
+      "summary": "Spectral Weight Decay применяет decoupled nuclear-norm update вместо обычного равномерного weight decay. Метод снижает effective rank, улучшает SVD-компрессию и устойчивость к label noise.",
+      "relevance": "Наиболее прямое совпадение с интересами к spectral regularization, effective rank, compressibility и memorization under label noise.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "The additive shrinkage acts more strongly on smaller singular values and concentrates the spectrum."
+        },
+        {
+          "source": "inspection",
+          "quote": "At 500 M and a 4% distortion budget, it reaches 1.89× compression and a 1.18× GPU inference speedup."
+        },
+        {
+          "source": "inspection",
+          "quote": "At 60% label noise, mean clean-test accuracy gains over matched ℓ2 regularization reach 17.78 points on MNIST and 4.59 points on four BERT-base tasks."
+        }
+      ],
+      "title": "Spectral Weight Decay: Inducing Low-Rank Structure in Neural Network Weights",
+      "url": "https://arxiv.org/abs/2610.11730v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2608.14492",
+      "summary": "sMuon аппроксимирует Muon в низкоранговом пространстве LoRA с использованием matmul-only реализации. В SFT метод сравнивается с AdamW, per-factor Muon, LoRA-Muon и Riemannion, а в ReLoRA достигает наименьшего validation loss вместе с Riemannion.",
+      "relevance": "Прямо относится к оптимизации LoRA, геометрии low-rank updates, Muon и компромиссам качества и вычислительных затрат.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "By relying entirely on matrix multiplications, we are able to avoid the overhead from QR and SVD."
+        },
+        {
+          "source": "inspection",
+          "quote": "In the ReLoRA pretraining setting, we illustrate that Muon LoRA methods are generally stronger than AdamW LoRA."
+        },
+        {
+          "source": "inspection",
+          "quote": "Specifically we find that our method attains the lowest final validation loss, tying with Riemannion, but being ∼30% faster."
+        },
+        {
+          "source": "inspection",
+          "quote": "sMuon (ours) 8.7 (0.62%) ... 20 (1.4%)"
+        }
+      ],
+      "title": "Approximate Muon with low-rank adapters",
+      "url": "https://arxiv.org/abs/2608.14492v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2608.31036",
+      "summary": "NoRA нормализует down-projection LoRA вдоль rank dimension. Доступны два режима: постоянная нормализация во время обучения и NoRA-init с нормализацией только при инициализации. Эксперименты охватывают pretraining, SFT и RLVR.",
+      "relevance": "Сильно соответствует интересам к стабильности и геометрии LoRA, convergence и parameter-efficient fine-tuning без дополнительных параметров или inference overhead.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "NoRA continuously normalizes the down-projection matrix A along the low-rank dimension r throughout training."
+        },
+        {
+          "source": "inspection",
+          "quote": "NoRA-init normalizes A only once at initialization and subsequently optimizes it without constraints during training."
+        },
+        {
+          "source": "inspection",
+          "quote": "These benefits require neither additional trainable parameters nor inference-time computation."
+        },
+        {
+          "source": "inspection",
+          "quote": "We conduct experiments across pretraining, supervised finetuning, and reinforcement learning."
+        }
+      ],
+      "title": "Normalized Low-Rank Adaptation",
+      "url": "https://arxiv.org/abs/2608.31036v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2609.37725",
+      "summary": "Context Language Models позволяют модели самостоятельно управлять контекстом, представляя его как файл, который модель может обновлять. Работа сообщает улучшения accuracy и снижение FLOPs на задачах context management и multi-agent systems.",
+      "relevance": "Наиболее близкая работа к цели построения research-digest agent с explicit context management и application-controlled orchestration.",
+      "evidence": [
+        {
+          "source": "abstract",
+          "quote": "We introduce Context Language Models (CLMs), language models that natively manage their own context."
+        },
+        {
+          "source": "abstract",
+          "quote": "We implement this by treating the context as a file and allowing the model to make unrestricted updates to this file."
+        },
+        {
+          "source": "abstract",
+          "quote": "11.4% higher accuracy with 21.5% fewer FLOPs on BrowseComp-Plus"
+        }
+      ],
+      "title": "Context Language Models",
+      "url": "https://arxiv.org/abs/2609.37725v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.29189",
+      "summary": "Это обзор reasoning-search систем, организующий их по retrieval coupling, controller design, knowledge source и grounding strictness. Он рассматривает циклы планирования, поиска, интеграции, проверки и остановки.",
+      "relevance": "Полезен непосредственно для архитектуры digest agent, особенно для paper retrieval, verification, relevance ranking и stopping policy.",
+      "evidence": [
+        {
+          "source": "abstract",
+          "quote": "Recent work addresses these limitations by tightly coupling step-by-step reasoning with interactive search, treating retrieval as an action within an iterative agentic loop rather than a one-shot preprocessing step."
+        },
+        {
+          "source": "abstract",
+          "quote": "We analyze these systems through four architectural axes: retrieval coupling, controller design, knowledge source, and grounding strictness."
+        }
+      ],
+      "title": "Reasoning-Search-Augmented LLMs: An Operational Taxonomy, Benchmark Analysis and Controlled Evidence Synthesis",
+      "url": "https://arxiv.org/abs/2610.29189v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    }
+  ],
+  "x_feature": null,
+  "limitations": [
+    "X-анализ отключён, поэтому attention не учитывалось.",
+    "Репозитории и практическая воспроизводимость выбранных работ не проверялись.",
+    "Для некоторых abstract доступен только усечённый текст, а inspection retrieval не доказывает отсутствие не найденных экспериментов.",
+    "inspect:2610.11730: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2608.14492: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2608.31036: only question-relevant HTML passages were inspected, not the whole paper."
+  ],
+  "stats": {
+    "fetched_count": 100,
+    "candidate_count": 100,
+    "llm_calls": 7,
+    "steps": 4,
+    "inspections": 3,
+    "expansions": 0,
+    "screened": 30,
+    "usage": {
+      "recorded_calls": 7,
+      "llm_latency_seconds": 115.54749470601382,
+      "input_tokens": 154092,
+      "output_tokens": 4435,
+      "estimated_api_cost_usd": 0.0361404,
+      "calls_without_usage": 0,
+      "cost_note": "API-equivalent estimate using standard GPT-5.6-Luna rates checked 2026-11-17: $0.20/M input, $1.20/M output; above 272K input, $0.40/M and $1.80/M. Assumes all input is uncached; excludes cache writes and external tools. Not actual Codex subscription billing. Unknown usage/model yields null cost.",
+      "price_source": "https://developers.openai.com/api/docs/models/gpt-5.6-luna"
+    },
+    "tool_calls": 3,
+    "tool_latency_seconds": 0.03448329099046532
+  }
+}

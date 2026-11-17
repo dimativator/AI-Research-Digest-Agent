@@ -1,0 +1,1606 @@
+{
+  "status": "ok",
+  "source": "https://arxiv.org/html/2610.11730v1",
+  "extractor_version": "article-v1",
+  "chunks": [
+    {
+      "chunk_id": "chunk-0001",
+      "section": "Article",
+      "text": "BRAIn Lab Spectral Weight Decay: Inducing Low-Rank Structure in Neural Network Weights Dmitrii Andriianov 1 , Andrey Veprikov 1,2 , Aleksandr Beznosikov 1,3 1 Basic Research of Artificial Intelligence Laboratory (BRAIn Lab) 2 SB AI Lab 3 Innopolis University Standard weight decay treats each weight matrix as a vector and ignores its spectral structure. We introduce spectral weight decay, a post-step decoupled nuclear-norm update that applies additive rather than multiplicative spectral shrinkage. We connect the update to approximate proximal descent and show that its sensitivity to update order can exceed that of conventional ℓ 2 \\ell_{2} weight decay near rank deficiency. Across LLaMA models with 124 124 M to 500 500 M parameters, spectral weight decay lowers effective rank and improves SVD-LLM compression at matched validation loss. At 500 500 M and a 4 % 4\\% distortion budget, it reaches 1.89 × 1.89\\times compression and 1.18 × 1.18\\times GPU inference speedup, compared with 1.14 × 1.14\\times and 1.01 × 1.01\\times after standard weight decay. Under fixed-horizon training with 60 % 60\\% label noise, it also improves final mean clean-test accuracy over matched ℓ 2 \\ell_{2} regularization by up to 17.8 17.8 points on MNIST and 4.6 4.6 points across four BERT-base tasks. Code is available at https://github.com/brain-lab-research/SpectralWD .",
+      "source": "https://arxiv.org/html/2610.11730v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0002",
+      "section": "1 Introduction",
+      "text": "Optimization is central to deep learning because it governs training stability, efficiency, and the properties of the learned solution. AdamW has become the standard optimizer in modern training recipes [ Loshchilov and Hutter, 2019 ] . At the same time, matrix-aware optimizers such as Shampoo, SOAP, and Muon have begun to exploit the geometry of neural-network weight matrices instead of treating each layer as a flat parameter vector [ Gupta et al., 2018 ; Vyas et al., 2024 ; Jordan et al., 2024 ] . Although their update rules differ, all retain conventional weight decay as a core component. Weight decay remains part of these training recipes because it improves generalization [ Loshchilov and Hutter, 2019 ] , preserves downstream plasticity [ Han et al., 2026 ] , and stabilizes training [ D’Angelo et al., 2024 ] . AdamW decouples weight shrinkage from adaptive preconditioning, so coordinatewise scaling of the loss gradient does not also reshape the decay term. The regularizer itself remains matrix-agnostic: its squared Frobenius penalty depends on the sum of squared singular values without explicitly favoring the removal of small ones.",
+      "source": "https://arxiv.org/html/2610.11730v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0003",
+      "section": "1 Introduction",
+      "text": "To make the regularizer matrix-aware, we begin with the proximal interpretation of decoupled weight decay. To first order, its update is a proximal gradient step for the squared Frobenius penalty [ Parikh and Boyd, 2014 ; Zhuang et al., 2022 ] . We replace this penalty with the nuclear norm, a convex surrogate for rank whose proximal operator soft-thresholds singular values [ Recht et al., 2010 ; Cai et al., 2010 ] . This construction is the matrix analogue of replacing ridge shrinkage with coefficient selection by the lasso [ Hoerl and Kennard, 1970 ; Tibshirani, 1996 ] . Given the loss-only optimizer direction Δ \\Delta , let Z = W ( k ) − η ​ Δ = U Z ​ Σ Z ​ V Z ⊤ Z=W^{(k)}-\\eta\\Delta=U_{Z}\\Sigma_{Z}V_{Z}^{\\top} . Spectral weight decay applies the post-step correction W ( k + 1 ) = Z − η ​ λ ​ U Z ​ V Z ⊤ , W^{(k+1)}=Z-\\eta\\lambda U_{Z}V_{Z}^{\\top}, (1) where η \\eta is the learning rate and λ \\lambda the regularization coefficient. This correction acts additively in the singular basis of Z Z , whereas conventional weight decay scales the spectrum uniformly. SLORR-Nuc also approximates the nuclear-norm polar factor [ González-Martínez and Liu, 2026 ] . Its decoupled extension would use the pre-step correction Z − η ​ λ ​ U W ​ V W ⊤ Z-\\eta\\lambda U_{W}V_{W}^{\\top} for W ( k ) = U W ​ Σ W ​ V W ⊤ W^{(k)}=U_{W}\\Sigma_{W}V_{W}^{\\top} , rather than ( 1 ).",
+      "source": "https://arxiv.org/html/2610.11730v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0004",
+      "section": "1 Introduction",
+      "text": "The additive shrinkage acts more strongly on smaller singular values and concentrates the spectrum. The resulting low-effective-rank weights admit efficient truncated SVD compression. Replacing a dense m × n m\\times n matrix with rank- r r factors reduces its parameter count and multiplication cost from m ​ n mn to r ⁡ ( m + n ) r(m+n) . This factorization lowers storage and inference memory and can reduce latency when the retained rank is sufficiently small. Beyond compression, we test whether the same low-rank bias limits memorization under label noise. We evaluate spectral weight decay in LLaMA [ Touvron et al., 2023 ] pretraining, post-training compression, and fixed-horizon noisy-label classification. Across models with 124 124 M to 500 500 M parameters, it lowers effective rank [ Roy and Vetterli, 2007 ] and improves compression and inference speed at matched validation loss. At 500 500 M and a 4 % 4\\% distortion budget, it reaches 1.89 × 1.89\\times compression and a 1.18 × 1.18\\times GPU inference speedup. At 60 % 60\\% label noise, mean clean-test accuracy gains over matched ℓ 2 \\ell_{2} regularization reach 17.78 17.78 points on MNIST and 4.59 4.59 points on four BERT-base tasks.",
+      "source": "https://arxiv.org/html/2610.11730v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0005",
+      "section": "Contributions",
+      "text": "• We formulate spectral weight decay as decoupled nuclear-norm regularization, derive its additive singular-value shrinkage, and connect the update to approximate proximal descent. • Across LLaMA models with 124 124 M to 500 500 M parameters, spectral weight decay improves low-rank compression and inference speed over standard weight decay at matched validation loss. It also outperforms Cuttlefish and Prehab in matched compression comparisons. • On image and text classification tasks, spectral weight decay improves fixed-horizon robustness to label noise over matched ℓ 2 \\ell_{2} regularization.",
+      "source": "https://arxiv.org/html/2610.11730v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0006",
+      "section": "Weight decay.",
+      "text": "Early work explains weight decay as a regularizer that improves generalization by suppressing irrelevant parameter directions and sensitivity to target noise [ Krogh and Hertz, 1991 ] . For SGD, weight decay is equivalent to an ℓ 2 \\ell_{2} penalty up to rescaling the coefficient. This equivalence breaks under adaptive preconditioning, motivating the decoupled update used by AdamW [ Loshchilov and Hutter, 2019 ] . Analyses show that its effect depends on the optimizer, architecture, learning rate, and training horizon. The benefit can arise through changes in effective learning rate and optimization dynamics rather than norm control alone [ Zhang et al., 2019 ; Lewkowycz and Gur-Ari, 2020 ; D’Angelo et al., 2024 ] . Weight decay interacts with matrix structure. In factorized attention layers, ℓ 2 \\ell_{2} regularization of the factors is linked to nuclear-norm regularization of their product and can induce low-rank key-query and value-projection maps [ Kobayashi et al., 2024 ] . This is an instance of a general equivalence: minimizing the ℓ 2 \\ell_{2} penalties of two factors over all factorizations W = U ​ V ⊤ W=UV^{\\top} is equivalent to penalizing the nuclear norm of W W [ Srebro et al., 2004 ] . As a convex rank surrogate [ Recht et al., 2010 ] , the nuclear norm can instead regularize each weight matrix directly.",
+      "source": "https://arxiv.org/html/2610.11730v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0007",
+      "section": "Nuclear-norm regularization.",
+      "text": "Direct nuclear-norm penalties act on the learned weight matrices without fixing a rank in advance, but exact gradients and proximal updates require spectral decompositions. Álvarez and Salzmann [2017] use periodic singular-value thresholding to prepare networks for post-training SVD compression. SLORR regularizes dense weight matrices using approximations of the polar factor [ González-Martínez and Liu, 2026 ] . Its variants use either the Hoyer penalty or the nuclear norm. SLORR-Nuc applies the penalty through the loss. The paper also describes a decoupled pre-step rule, but evaluates it only for SLORR-Hoyer, not SLORR-Nuc. This rule computes the polar factor at W W , while our post-step update ( 1 ) uses that of Z Z . SLORR develops efficient low-rank regularization. We replace the squared Frobenius penalty of standard weight decay with the nuclear norm and analyze the post-step update as approximate proximal descent. NuMuon instead acts on the optimizer update rather than the weights. It constrains the nuclear norm of Muon’s update direction to promote low-rank updates [ Dolatabadi et al., 2026 ] .",
+      "source": "https://arxiv.org/html/2610.11730v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0008",
+      "section": "Low-rank training.",
+      "text": "Another line of work imposes explicit low-rank structure during training. Cuttlefish begins with dense training, waits for the stable ranks of the layers to converge, and then switches to a factorized model at the corresponding ranks [ Wang et al., 2023 ] . TRP periodically replaces weight matrices with truncated-SVD approximations, selects the retained rank using a spectral-energy criterion, and continues gradient updates in the original parameterization [ Xu et al., 2020 ] . These projections can be combined with nuclear-norm regularization. Spectral weight decay instead retains dense weight matrices throughout training and does not select a hard rank until compression. Appendix B.3 compares spectral weight decay with Cuttlefish.",
+      "source": "https://arxiv.org/html/2610.11730v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0009",
+      "section": "Post-training low-rank compression.",
+      "text": "SliceGPT removes rows and columns after a principal-component transformation [ Ashkboos et al., 2024 ] . ASVD [ Yuan et al., 2023 ] and SVD-LLM [ Wang et al., 2024 ] use activation statistics to improve the factorization. Dobi-SVD learns layerwise truncation and reconstructs weights from truncated activations [ Wang et al., 2025 ] . Prehab fine-tunes a trained model for SVD compression [ Qin et al., 2025 ] . Appendix B.2 compares spectral weight decay with Prehab in this setting. Our main experiments apply it throughout pretraining and evaluate compression and inference with SVD-LLM. Appendix B.4 compares post-training compression methods. Section 3 shows the resulting compression and inference gains.",
+      "source": "https://arxiv.org/html/2610.11730v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0010",
+      "section": "3 Why Low-Rank Structure Matters",
+      "text": "Adam with spectral WD M 0 ← 0 M_{0}\\leftarrow 0 , V 0 ← 0 V_{0}\\leftarrow 0 for t = 1 , … , T t=1,\\ldots,T do G t ← ∇ W ℒ ​ ( W t − 1 ) G_{t}\\leftarrow\\nabla_{W}\\mathcal{L}(W_{t-1}) M t ← β 1 ​ M t − 1 + ( 1 − β 1 ) ​ G t M_{t}\\leftarrow\\beta_{1}M_{t-1}+(1-\\beta_{1})G_{t} V t ← β 2 ​ V t − 1 + ( 1 − β 2 ) ​ G t ⊙ G t V_{t}\\leftarrow\\beta_{2}V_{t-1}+(1-\\beta_{2})G_{t}\\odot G_{t} Z t ← W t − 1 − η ​ M t / ( V t + ε ) Z_{t}\\leftarrow W_{t-1}-\\eta M_{t}/(\\sqrt{V_{t}}+\\varepsilon) + W t ← Z t − η ​ λ ​ NS 5 ​ ( Z t ) +\\hskip 9.24994ptW_{t}\\leftarrow Z_{t}-\\eta\\lambda\\,\\mathrm{NS}_{5}(Z_{t}) ⊳ NS 5 ≈ U Z ​ V Z ⊤ \\triangleright\\ \\mathrm{NS}_{5}\\approx U_{Z}V_{Z}^{\\top} − W t ← Z t − η ​ λ ​ W t − 1 -\\hskip 9.24994ptW_{t}\\leftarrow Z_{t}-\\eta\\lambda W_{t-1} ⊳ ℓ 2 \\triangleright\\ \\ell_{2} WD → \\to spectral WD end for Algorithm 3 shows how spectral weight decay modifies Adam by replacing standard pre-step ℓ 2 \\ell_{2} decay with the post-step correction in ( 1 ). Bias correction is omitted for clarity. The analogy with ℓ 1 \\ell_{1} regularization in linear regression suggests that this additive spectral shrinkage should promote low-rank structure. We show that it reduces the effective rank of learned weight matrices and evaluate the resulting benefits for compression, inference, and robustness to label noise under fixed-horizon training. Section 4 develops the update in detail.",
+      "source": "https://arxiv.org/html/2610.11730v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0011",
+      "section": "3.1 Effective rank and why it matters",
+      "text": "Figure 1 : Validation loss (left) and mean effective rank of the weight matrices (right) during training of a 257 257 M-parameter LLaMA on FineWeb-Edu with Adam and spectral weight decay. We measure spectral concentration with the entropy-based effective rank [ Roy and Vetterli, 2007 ] . For singular values σ 1 ≥ ⋯ ≥ σ r \\sigma_{1}\\geq\\dots\\geq\\sigma_{r} and p i = σ i / ∑ j σ j p_{i}=\\sigma_{i}/\\sum_{j}\\sigma_{j} , it is erank ( W ) = exp ( H ( p ) ) = exp ( − ∑ i p i log p i ) . \\operatorname{erank}(W)=\\exp\\big(H(p)\\big)=\\exp\\!\\Big(-\\sum_{i}p_{i}\\log p_{i}\\Big). (2) Effective rank ranges from 1 1 for a rank-one matrix to r = min ⁡ ( m , n ) r=\\min(m,n) for a flat spectrum and decreases as the spectrum becomes more concentrated. We report a weighted mean across weight matrices, with weights min ⁡ ( m l , n l ) \\min(m_{l},n_{l}) , excluding token embeddings and the output head. Figure 1 shows validation loss and mean effective rank during training of a 257 257 M-parameter LLaMA [ Touvron et al., 2023 ] on FineWeb-Edu [ Penedo et al., 2024 ] with Adam and spectral weight decay. Appendix B.1 summarizes the pretraining configurations. Larger λ \\lambda lowers effective rank, with a corresponding validation-loss trade-off. At the end of training, λ = 0.7 \\lambda=0.7 reduces mean effective rank by a factor of 2.17 2.17 relative to λ = 0 \\lambda=0 , with a 1.10 % 1.10\\% increase in validation loss.",
+      "source": "https://arxiv.org/html/2610.11730v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0012",
+      "section": "3.1 Effective rank and why it matters",
+      "text": "We use effective rank instead of stable rank, ‖ W ‖ F 2 / ‖ W ‖ 2 2 \\|W\\|_{F}^{2}/\\|W\\|_{2}^{2} , because it predicts a practical compression threshold. Truncating to ⌈ erank ⁡ ( W ) ⌉ \\lceil\\operatorname{erank}(W)\\rceil preserves model quality, while lower ranks degrade it sharply (Figure 2 , right). Stable rank can remain near one when a single singular value dominates many active directions, so it does not capture this threshold. Figure 2 : Effective-rank profiles and compression of the λ = 1 \\lambda=1 model. Left: effective rank as a percentage of full rank, grouped by layer type. Middle: the same ratio across transformer blocks. Right: validation loss after truncated SVD and SVD-LLM at different retained ranks. The vertical line marks the mean effective rank. Figure 3 : Compression and inference frontiers under validation-loss distortion budgets. Top: maximum compression rate relative to the best dense checkpoint at each scale. Bottom: maximum inference speedup.",
+      "source": "https://arxiv.org/html/2610.11730v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0013",
+      "section": "3.2 Compression and inference",
+      "text": "Spectral weight decay lowers the effective rank of weight matrices, making them amenable to low-rank compression. We use SVD-LLM [ Wang et al., 2024 ] , which gives the lowest validation loss in our matched comparison. We compress each weight matrix to its own effective rank, which varies substantially across layers (Figure 2 , middle). We leave the token embeddings and output head uncompressed because their ranks respond little to spectral weight decay, and compressing them even to their effective ranks sharply degrades model quality. The comparison and compression procedure are described in Appendix B.4 . Figure 3 (top) reports the maximum compression rate supported by each validation-loss distortion budget. Spectral weight decay substantially shifts this frontier upward at all three model scales. For the 500 500 M model and a 4 % 4\\% distortion budget, it supports 1.89 × 1.89\\times compression, compared with 1.14 × 1.14\\times after standard weight decay. The same factorization reduces the FLOPs of a linear layer when r ⁡ ( m + n ) < m ​ n r(m+n)<mn . This reduction does not translate directly into lower latency because the factorized forward pass evaluates ( U r ​ Σ r ) ​ ( V r ⊤ ​ X ) (U_{r}\\Sigma_{r})(V_{r}^{\\top}X) with two GEMMs instead of the single GEMM W ​ X WX . The additional kernel launch and intermediate activation can offset the reduction in FLOPs. To improve tensor-core utilization, we round the effective rank down to the nearest multiple of 16 16 , r l = max ⁡ ( 16 , 16 ​ ⌊ erank ⁡ ( W l ) 16 ⌋ ) , r_{l}=\\max\\!\\left(16,\\,16\\left\\lfloor\\frac{\\operatorname{erank}(W_{l})}{16}\\right\\rfloor\\right), (3)",
+      "source": "https://arxiv.org/html/2610.11730v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0014",
+      "section": "3.2 Compression and inference",
+      "text": "Adjusting an aligned rank by one step, ± 16 \\pm 16 , has negligible effect on validation loss. We therefore use this rank-aligned compression scheme throughout. The factorized models outperform their dense counterparts only at large batch sizes, so we measure forward-pass latency with a batch size of 256 256 on a single GPU. For the 500 500 M model, spectral weight decay yields a 1.09 × 1.09\\times speedup near a 2 % 2\\% distortion budget and reaches 1.18 × 1.18\\times at 4 % 4\\% , compared with 1.01 × 1.01\\times under standard weight decay (Figure 3 , bottom).",
+      "source": "https://arxiv.org/html/2610.11730v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0015",
+      "section": "3.3 Robustness to noisy labels",
+      "text": "Standard ℓ 2 \\ell_{2} weight decay limits overfitting [ Loshchilov and Hutter, 2019 ] . We ask whether the low-rank bias of spectral weight decay provides stronger protection against unreliable labels, which are common in applied machine learning [ Song et al., 2022 ] . We replace 10 % 10\\% , 25 % 25\\% , 40 % 40\\% , or 60 % 60\\% of the training labels uniformly at random and evaluate the final checkpoint after a fixed training horizon. We assume that no clean validation set is available, as is often the case in practice, so checkpoint selection cannot rely on clean-validation early stopping. This protocol exposes memorization of corrupted labels after the model has learned the clean signal. Figure 4 : Final-checkpoint clean-test accuracy under label noise for MNIST (top) and BERT-base (bottom). Curves show means over five label-corruption seeds. Shaded bands show ± \\pm one sample standard deviation. Model initialization, data splits, and regularization coefficients are fixed. We train a 15 15 M-parameter MLP and row-sequential GRU [ Cho et al., 2014 ] for 60 60 epochs on 3,000 3{,}000 MNIST examples [ Lecun et al., 1998 ] . We also fine-tune a 110 110 M-parameter BERT-base model [ Devlin et al., 2019 ] for 25 25 epochs on AG News, DBpedia-14, Yahoo Answers, and Yelp Review Full [ Zhang et al., 2015 ] . On MNIST, spectral and decoupled ℓ 2 \\ell_{2} weight decay act on the same matrices. For BERT, both methods regularize the displacement Δ ​ W = W − W 0 \\Delta W=W-W_{0} from pretrained weights: spectral weight decay penalizes its nuclear norm, while ℓ 2 \\ell_{2} -SP [ Li et al., 2018 ] penalizes its squared Frobenius norm. Figure 4 shows final-checkpoint clean-test accuracy as the mean ± \\pm one sample standard deviation over five label-corruption seeds.",
+      "source": "https://arxiv.org/html/2610.11730v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0016",
+      "section": "3.3 Robustness to noisy labels",
+      "text": "On MNIST, the advantage of post-step spectral weight decay over ℓ 2 \\ell_{2} grows with label noise, reaching 17.78 17.78 percentage points at 60 % 60\\% noise. These gains coincide with less memorization of corrupted labels. On BERT, post-step spectral weight decay yields higher mean accuracy than ℓ 2 \\ell_{2} -SP on every dataset and noise level, with gains of up to 4.59 4.59 points at the highest noise level. Pre- and post-step spectral weight decay nearly coincide on BERT, while neither order is consistently better on MNIST. Appendix B.5 provides the architectures and coefficient-selection protocol, together with detailed pre/post-step and baseline results in Tables 3 , 4 , and 5 . These results suggest a capacity-control effect: by reducing the effective rank of weights, or their fine-tuning displacements, spectral weight decay limits the model’s ability to memorize corrupted labels.",
+      "source": "https://arxiv.org/html/2610.11730v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0017",
+      "section": "4 From Weight Decay to Spectral Shrinkage",
+      "text": "We now examine the update underlying the low-rank behavior observed in Section 3 . Starting from decoupled weight decay, we derive spectral shrinkage and contrast it with conventional ℓ 2 \\ell_{2} decay. We then analyze how update order affects the spectral correction and explain our choice of post-step regularization. We consider training with a matrix regularizer h h , min W ⁡ ( ℒ ⁡ ( W ) + λ ​ h ​ ( W ) ) , \\min_{W}\\big(\\mathcal{L}(W)+\\lambda h(W)\\big), (4) where W ∈ ℝ m × n W\\in\\mathbb{R}^{m\\times n} is a weight matrix, ℒ \\mathcal{L} is the training loss, and λ \\lambda controls the regularization strength. When h h is differentiable, a gradient step with learning rate η \\eta has the form W ( k + 1 ) = W ( k ) − η ∇ ℒ ( W ( k ) ) − η λ ∇ h ( W ( k ) ) . W^{(k+1)}=W^{(k)}-\\eta\\,\\nabla\\mathcal{L}\\!\\left(W^{(k)}\\right)-\\eta\\lambda\\,\\nabla h\\!\\left(W^{(k)}\\right). (5) AdamW instead decouples regularization from the update on the training loss [ Loshchilov and Hutter, 2019 ] . Let Z ( k ) = W ( k ) − η ​ Δ ( k ) Z^{(k)}=W^{(k)}-\\eta\\Delta^{(k)} be the candidate produced using only the loss, where Δ ( k ) \\Delta^{(k)} is the optimizer direction. For a differentiable regularizer, its gradient can be evaluated before or after the optimizer step: W pre ( k + 1 ) = Z ( k ) − η λ ∇ h ( W ( k ) ) , W post ( k + 1 ) = Z ( k ) − η λ ∇ h ( Z ( k ) ) . W_{\\mathrm{pre}}^{(k+1)}=Z^{(k)}-\\eta\\lambda\\nabla h\\!\\left(W^{(k)}\\right),\\qquad W_{\\mathrm{post}}^{(k+1)}=Z^{(k)}-\\eta\\lambda\\nabla h\\!\\left(Z^{(k)}\\right). (6)",
+      "source": "https://arxiv.org/html/2610.11730v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0018",
+      "section": "4 From Weight Decay to Spectral Shrinkage",
+      "text": "Standard AdamW uses the pre-step form for the squared Frobenius penalty, whose gradient at W ( k ) W^{(k)} is W ( k ) W^{(k)} . For spectral weight decay, we use the post-step form. It regularizes the candidate Z ( k ) Z^{(k)} , which is the argument of the proximal operator in proximal-gradient descent (Appendix A.2 ).",
+      "source": "https://arxiv.org/html/2610.11730v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0019",
+      "section": "4.1 The spectral update",
+      "text": "Spectral weight decay uses the nuclear norm h ⁡ ( W ) = ‖ W ‖ ∗ = ∑ i σ i ​ ( W ) h(W)=\\|W\\|_{*}=\\sum_{i}\\sigma_{i}(W) as its matrix penalty. For a compact SVD Z ( k ) = U Z ​ diag ⁡ ( σ i ) ​ V Z ⊤ Z^{(k)}=U_{Z}\\operatorname{diag}(\\sigma_{i})V_{Z}^{\\top} , we use the polar factor U Z ​ V Z ⊤ U_{Z}V_{Z}^{\\top} in place of ∇ h ​ ( Z ( k ) ) \\nabla h(Z^{(k)}) in the post-step rule ( 6 ). This gives ( 1 ) at iteration k k . The polar factor U Z ​ V Z ⊤ U_{Z}V_{Z}^{\\top} is a minimum-Frobenius-norm subgradient of ‖ Z ( k ) ‖ ∗ \\|Z^{(k)}\\|_{*} [ Recht et al., 2010 ] . We approximate U Z ​ V Z ⊤ U_{Z}V_{Z}^{\\top} without an SVD using Newton-Schulz iterations, using the same five-step polynomial iteration as Muon [ Jordan et al., 2024 ] .",
+      "source": "https://arxiv.org/html/2610.11730v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0020",
+      "section": "Comparison with ℓ 2 \\ell_{2} weight decay.",
+      "text": "Ordinary weight decay follows from the squared Frobenius penalty h F ​ ( W ) = 1 2 ​ ‖ W ‖ F 2 h_{F}(W)=\\tfrac{1}{2}\\|W\\|_{F}^{2} , whose gradient is W W . Fix the current weights W = W ( k ) W=W^{(k)} and the loss-only optimizer direction Δ = Δ ( k ) \\Delta=\\Delta^{(k)} , and set Z = W − η ​ Δ Z=W-\\eta\\Delta and τ = η ​ λ \\tau=\\eta\\lambda . Let W = U W ​ Σ W ​ V W ⊤ W=U_{W}\\Sigma_{W}V_{W}^{\\top} and Z = U Z ​ Σ Z ​ V Z ⊤ Z=U_{Z}\\Sigma_{Z}V_{Z}^{\\top} be compact SVDs. The resulting weights are W ℓ 2 pre = Z − τ ​ W , W ℓ 2 post = ( 1 − τ ) ​ Z , W spec pre = Z − τ ​ U W ​ V W ⊤ , W spec post = Z − τ ​ U Z ​ V Z ⊤ . W_{\\ell_{2}}^{\\mathrm{pre}}=Z-\\tau W,\\qquad W_{\\ell_{2}}^{\\mathrm{post}}=(1-\\tau)Z,\\qquad W_{\\mathrm{spec}}^{\\mathrm{pre}}=Z-\\tau U_{W}V_{W}^{\\top},\\qquad W_{\\mathrm{spec}}^{\\mathrm{post}}=Z-\\tau U_{Z}V_{Z}^{\\top}. (7) The pre- and post-step ℓ 2 \\ell_{2} updates differ by W ℓ 2 pre − W ℓ 2 post = − η 2 ​ λ ​ Δ W_{\\ell_{2}}^{\\mathrm{pre}}-W_{\\ell_{2}}^{\\mathrm{post}}=-\\eta^{2}\\lambda\\Delta . For a bounded optimizer direction, this is O ⁡ ( η 2 ​ λ ) O(\\eta^{2}\\lambda) for a single step. For spectral WD, the order dependence is less straightforward because the task update can change the polar factor that determines the decay direction. The following result quantifies the difference.",
+      "source": "https://arxiv.org/html/2610.11730v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0021",
+      "section": "Proposition 1 (Sensitivity to update order) .",
+      "text": "Let W , Z = W − η ​ Δ ∈ ℝ m × n W,Z=W-\\eta\\Delta\\in\\mathbb{R}^{m\\times n} have full rank, and denote their smallest singular values by σ min ​ ( W ) \\sigma_{\\min}(W) and σ min ​ ( Z ) \\sigma_{\\min}(Z) . Then ‖ W spec post − W spec pre ‖ F ≤ 2 ​ η 2 ​ λ ​ ‖ Δ ‖ F σ min ​ ( W ) + σ min ​ ( Z ) , ‖ W spec post − W spec pre ‖ 2 ≤ 2 ​ η ​ λ . \\left\\|W_{\\mathrm{spec}}^{\\mathrm{post}}-W_{\\mathrm{spec}}^{\\mathrm{pre}}\\right\\|_{F}\\leq\\frac{2\\eta^{2}\\lambda\\|\\Delta\\|_{F}}{\\sigma_{\\min}(W)+\\sigma_{\\min}(Z)},\\qquad\\left\\|W_{\\mathrm{spec}}^{\\mathrm{post}}-W_{\\mathrm{spec}}^{\\mathrm{pre}}\\right\\|_{2}\\leq 2\\eta\\lambda. (8) If both smallest singular values are at least γ > 0 \\gamma>0 and ‖ Δ ‖ F = O ⁡ ( 1 ) \\|\\Delta\\|_{F}=O(1) , the discrepancy is O ⁡ ( η 2 ​ λ / γ ) O(\\eta^{2}\\lambda/\\gamma) . The 2 ​ η ​ λ 2\\eta\\lambda spectral-norm bound is attained near rank deficiency. The Frobenius bound follows from the polar-factor perturbation estimate of Li et al. [2026, Proposition 2, Appendix A.4] . Appendix A.1 gives a proof and the quadratic example. Post-step decay uses the singular directions of the updated weights. Pre-step decay uses those of W W , which can mix the current directions when the polar factor changes. Proposition 1 shows that this difference can be larger than the corresponding pre/post difference under ℓ 2 \\ell_{2} weight decay. Appendix A.3 compares the two orders empirically.",
+      "source": "https://arxiv.org/html/2610.11730v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0022",
+      "section": "Proposition 1 (Sensitivity to update order) .",
+      "text": "The two post-step rules then differ in how they shrink the spectrum of Z Z . ℓ 2 \\ell_{2} decay multiplies each singular value by 1 − τ 1-\\tau , while spectral decay subtracts τ \\tau from each coefficient in the same singular basis. Above τ \\tau , the relative reduction τ / σ i \\tau/\\sigma_{i} is greater for smaller singular values. Below τ \\tau , the spectral step lets the signed coefficient cross zero. The exact nuclear-norm proximal update instead sets it to zero (Appendix A.2 ). This additive shrinkage should favor low-rank weights by driving small singular values toward zero, analogous to the sparsity induced by ℓ 1 \\ell_{1} regularization in linear regression [ Tibshirani, 1996 ] . The approximate spectral step need not produce exact zeros in a single iteration. The interpretation of post-step spectral weight decay as an approximate nuclear-norm proximal step further motivates its use over the pre-step form. Appendix A.2 develops this interpretation.",
+      "source": "https://arxiv.org/html/2610.11730v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0023",
+      "section": "5.1 Fine-tuning for low-rank compression",
+      "text": "Figure 5 : Validation loss versus mean effective rank for 124 124 M spectral weight decay pretraining and 32.8 32.8 M-token fine-tuning from an ℓ 2 \\ell_{2} WD checkpoint. Pretraining is expensive, motivating methods that prepare existing checkpoints for compression during a short fine-tuning stage. Substantial rank reduction without loss of model quality remains difficult. We compare spectral weight decay during pretraining with its use after pretraining from a standard ℓ 2 \\ell_{2} weight decay checkpoint. The 124 124 M-parameter model is pretrained for one Chinchilla-optimal training budget [ Hoffmann et al., 2022 ] , then fine-tuned on 32.8 32.8 M tokens. Figure 5 plots the final validation loss against mean effective rank as the spectral coefficient varies. Within the observed overlap, fine-tuning incurs substantially more loss at the same rank. Fine-tuning also requires a much larger λ \\lambda before rank changes appreciably. The sweeps in Figure 5 use λ \\lambda values from 0 0 to 7 7 for pretraining and from 4 4 to 250 250 for fine-tuning. Preparing an existing checkpoint for low-rank compression without a substantial loss increase remains open. SLORR also reports difficulties in fine-tuning LLMs with low-rank regularization while preserving their general capabilities [ González-Martínez and Liu, 2026 ] . Appendix B.2 compares spectral weight decay with the fine-tuning method Prehab [ Qin et al., 2025 ] .",
+      "source": "https://arxiv.org/html/2610.11730v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0024",
+      "section": "5.2 Spectral regularization with matrix-aware optimizers",
+      "text": "The main experiments use Adam-family optimizers. Conventional ℓ 2 \\ell_{2} weight decay is routinely used across optimizer families, so we also examine whether spectral weight decay transfers beyond Adam. Its decoupled correction can be applied to the candidate weights produced by any optimizer, but the resulting loss and rank dynamics depend on the optimizer. Figure 6 : Optimizer-dependent loss and rank dynamics. The top row shows validation loss, and the bottom row shows mean effective rank. The columns compare ℓ 2 \\ell_{2} weight decay with coefficient 0.1 0.1 across optimizers, spectral regularization with Muon, and spectral regularization with Lion. Colors match between the loss and rank panels. Figure 6 (a,d) compares optimizers with the same ℓ 2 \\ell_{2} weight decay coefficient of 0.1 0.1 . Muon [ Jordan et al., 2024 ] and SOAP [ Vyas et al., 2024 ] produce higher effective ranks than the other optimizers, whose final ranks cluster in a narrow range. This suggests that their optimization dynamics may oppose the spectral concentration encouraged by spectral weight decay. The Muon sweep in Figure 6 (b,e) shows that substantial rank reduction comes with a steep validation-loss increase, limiting the practical appeal of this combination. By contrast, Lion exhibits a more favorable trade-off between loss and rank in Figure 6 (c,f), qualitatively similar to Adam.",
+      "source": "https://arxiv.org/html/2610.11730v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0025",
+      "section": "5.2 Spectral regularization with matrix-aware optimizers",
+      "text": "The required regularization scale also varies across optimizers. A mean effective rank of about 300 300 requires λ = 0.8 \\lambda=0.8 for Adam, λ = 0.4 \\lambda=0.4 for Muon, and λ = 4 \\lambda=4 for Lion. Although the ℓ 2 \\ell_{2} baselines use a common coefficient, spectral weight decay requires optimizer-specific calibration for the desired rank and validation-loss budget. The strong training results reported for Muon motivate adapting the techniques studied here to Muon and related matrix-aware optimizers. Understanding how to combine their optimization benefits with effective spectral regularization remains a direction for future work.",
+      "source": "https://arxiv.org/html/2610.11730v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0026",
+      "section": "6 Conclusion",
+      "text": "We introduced spectral weight decay by replacing the squared Frobenius penalty of conventional ℓ 2 \\ell_{2} weight decay with the nuclear norm. Its decoupled post-step correction shrinks the spectrum of the updated weights additively, with a stronger relative effect on smaller singular values. The connection to approximate proximal descent supports this choice of update order. Our analysis also shows that pre- and post-step spectral updates can differ more substantially than their ℓ 2 \\ell_{2} counterparts near rank deficiency. Across 124 124 M to 500 500 M LLaMA models trained with Adam-family optimizers, the resulting low-effective-rank structure improves post-training compression under matched validation-loss budgets. At 500 500 M and a 4 % 4\\% distortion budget, we obtain 1.89 × 1.89\\times compression and 1.18 × 1.18\\times GPU inference speedup. The benefits extend beyond compression. Under fixed-horizon training with noisy labels, spectral regularization reduces memorization and improves clean-test accuracy on image and text classification tasks. These observations are consistent with the view that concentrating the weight spectrum limits the capacity available to fit corrupted labels. The benefits depend on when and how spectral regularization is applied. Short fine-tuning from a conventional-weight-decay checkpoint incurs a larger loss penalty for rank reduction than regularization during pretraining. Optimizer choice also matters: Adam and Lion exhibit a favorable trade-off between loss and rank, whereas the Muon runs show a steeper loss increase as rank decreases. Adapting spectral regularization to matrix-aware optimizers and reducing the cost of preparing existing checkpoints for low-rank compression remain open problems.",
+      "source": "https://arxiv.org/html/2610.11730v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0027",
+      "section": "References",
+      "text": "Loshchilov and Hutter [2019] Ilya Loshchilov and Frank Hutter. Decoupled weight decay regularization. In International Conference on Learning Representations (ICLR) , 2019. Gupta et al. [2018] Vineet Gupta, Tomer Koren, and Yoram Singer. Shampoo: Preconditioned stochastic tensor optimization. In Proceedings of the 35th International Conference on Machine Learning , volume 80 of Proceedings of Machine Learning Research , pages 1842–1850. PMLR, 2018. URL https://proceedings.mlr.press/v80/gupta18a.html . Vyas et al. [2024] Nikhil Vyas, Depen Morwani, Rosie Zhao, Mujin Kwun, Itai Shapira, David Brandfonbrener, Lucas Janson, and Sham M. Kakade. SOAP: Improving and stabilizing Shampoo using Adam, 2024. URL https://arxiv.org/abs/2409.11321 . Jordan et al. [2024] Keller Jordan, Yuchen Jin, Vlado Boza, Jiacheng You, Franz Cesista, Laker Newhouse, and Jeremy Bernstein. Muon: An optimizer for hidden layers in neural networks. https://kellerjordan.github.io/posts/muon/ , 2024. Han et al. [2026] Tessa Han, Sebastian Bordt, Hanlin Zhang, and Sham Kakade. Weight decay improves language model plasticity, 2026. URL https://arxiv.org/abs/2602.11137 . D’Angelo et al. [2024] Francesco D’Angelo, Maksym Andriushchenko, Aditya Vardhan Varre, and Nicolas Flammarion. Why do we need weight decay in modern deep learning? In Advances in Neural Information Processing Systems 37: Annual Conference on Neural Information Processing Systems 2024, NeurIPS 2024, Vancouver, BC, Canada, December 10 - 15, 2024 , 2024. URL http://papers.nips.cc/paper_files/paper/2024/hash/29496c942ed6e08ecc469f4521ebfff0-Abstract-Conference.html . Parikh and Boyd [2014] Neal Parikh and Stephen Boyd. Proximal algorithms. Foundations and Trends in Optimization , 1(3):127–239, 2014. doi: 10.1561/2400000003 .",
+      "source": "https://arxiv.org/html/2610.11730v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0028",
+      "section": "References",
+      "text": "Zhuang et al. [2022] Zhenxun Zhuang, Mingrui Liu, Ashok Cutkosky, and Francesco Orabona. Understanding AdamW through proximal methods and scale-freeness. Transactions on Machine Learning Research , 2022. URL https://openreview.net/forum?id=IKhEPWGdwK . Recht et al. [2010] Benjamin Recht, Maryam Fazel, and Pablo A. Parrilo. Guaranteed minimum-rank solutions of linear matrix equations via nuclear norm minimization. SIAM Review , 52(3):471–501, 2010. doi: 10.1137/070697835 . Cai et al. [2010] Jian-Feng Cai, Emmanuel J. Candès, and Zuowei Shen. A singular value thresholding algorithm for matrix completion. SIAM Journal on Optimization , 20(4):1956–1982, 2010. doi: 10.1137/080738970 . Hoerl and Kennard [1970] Arthur E. Hoerl and Robert W. Kennard. Ridge regression: Biased estimation for nonorthogonal problems. Technometrics , 12(1):55–67, 1970. doi: 10.1080/00401706.1970.10488634 . Tibshirani [1996] Robert Tibshirani. Regression shrinkage and selection via the lasso. Journal of the Royal Statistical Society: Series B (Methodological) , 58(1):267–288, 1996. doi: 10.1111/j.2517-6161.1996.tb02080.x . González-Martínez and Liu [2026] David González-Martínez and Shiwei Liu. SLORR: Simple and efficient in-training low-rank regularization, 2026. URL https://arxiv.org/abs/2607.08754 . Touvron et al. [2023] Hugo Touvron, Thibaut Lavril, Gautier Izacard, Xavier Martinet, Marie-Anne Lachaux, Timothée Lacroix, Baptiste Rozière, Naman Goyal, Eric Hambro, Faisal Azhar, Aurelien Rodriguez, Armand Joulin, Edouard Grave, and Guillaume Lample. LLaMA: Open and efficient foundation language models, 2023. URL https://arxiv.org/abs/2302.13971 .",
+      "source": "https://arxiv.org/html/2610.11730v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0029",
+      "section": "References",
+      "text": "Roy and Vetterli [2007] Olivier Roy and Martin Vetterli. The effective rank: A measure of effective dimensionality. In 15th European Signal Processing Conference (EUSIPCO) , pages 606–610, 2007. Krogh and Hertz [1991] Anders Krogh and John A. Hertz. A simple weight decay can improve generalization. In J. Moody, S. Hanson, and R. P. Lippmann, editors, Advances in Neural Information Processing Systems , volume 4. Morgan-Kaufmann, 1991. URL https://proceedings.neurips.cc/paper/1991/hash/8eefcfdf5990e441f0fb6f3fad709e21-Abstract.html . Zhang et al. [2019] Guodong Zhang, Chaoqi Wang, Bowen Xu, and Roger Grosse. Three mechanisms of weight decay regularization. In International Conference on Learning Representations , 2019. URL https://openreview.net/forum?id=B1lz-3Rct7 . Lewkowycz and Gur-Ari [2020] Aitor Lewkowycz and Guy Gur-Ari. On the training dynamics of deep networks with L 2 L_{2} regularization. In H. Larochelle, M. Ranzato, R. Hadsell, M. F. Balcan, and H. Lin, editors, Advances in Neural Information Processing Systems , volume 33, pages 4790–4799. Curran Associates, Inc., 2020. URL https://proceedings.neurips.cc/paper/2020/hash/32fcc8cfe1fa4c77b5c58dafd36d1a98-Abstract.html . Kobayashi et al. [2024] Seijin Kobayashi, Yassir Akram, and Johannes von Oswald. Weight decay induces low-rank attention layers. In A. Globerson, L. Mackey, D. Belgrave, A. Fan, U. Paquet, J. Tomczak, and C. Zhang, editors, Advances in Neural Information Processing Systems , volume 37, pages 4481–4510. Curran Associates, Inc., 2024. doi: 10.52202/079017-0146 . URL https://proceedings.neurips.cc/paper_files/paper/2024/hash/084a67fb91826028f555e288f3adc9a4-Abstract-Conference.html .",
+      "source": "https://arxiv.org/html/2610.11730v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0030",
+      "section": "References",
+      "text": "Srebro et al. [2004] Nathan Srebro, Jason Rennie, and Tommi S. Jaakkola. Maximum-margin matrix factorization. In Lawrence Saul, Yair Weiss, and Léon Bottou, editors, Advances in Neural Information Processing Systems , volume 17. MIT Press, 2004. URL https://proceedings.neurips.cc/paper_files/paper/2004/hash/e0688d13958a19e087e123148555e4b4-Abstract.html . Álvarez and Salzmann [2017] José M. Álvarez and Mathieu Salzmann. Compression-aware training of deep networks. In Advances in Neural Information Processing Systems 30: Annual Conference on Neural Information Processing Systems 2017, December 4-9, 2017, Long Beach, CA, USA , pages 856–867, 2017. URL https://proceedings.neurips.cc/paper/2017/hash/db85e2590b6109813dafa101ceb2faeb-Abstract.html . Dolatabadi et al. [2026] Hadi Mohaghegh Dolatabadi, Thalaiyasingam Ajanthan, Sameera Ramasinghe, Chamin P Hewa Koneputugodage, Shamane Siriwardhana, Violetta Shevchenko, Karol Pajak, James Snewin, Gil Avraham, and Alexander Long. NuMuon: Nuclear-norm-constrained Muon for compressible LLM training, 2026. URL https://arxiv.org/abs/2603.03597 . Wang et al. [2023] Hongyi Wang, Saurabh Agarwal, Pongsakorn U-chupala, Yoshiki Tanaka, Eric P. Xing, and Dimitris S. Papailiopoulos. Cuttlefish: Low-rank model training without all the tuning, 2023. URL https://arxiv.org/abs/2305.02538 .",
+      "source": "https://arxiv.org/html/2610.11730v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0031",
+      "section": "References",
+      "text": "Xu et al. [2020] Yuhui Xu, Yuxi Li, Shuai Zhang, Wei Wen, Botao Wang, Yingyong Qi, Yiran Chen, Weiyao Lin, and Hongkai Xiong. TRP: Trained rank pruning for efficient deep neural networks. In Christian Bessiere, editor, Proceedings of the Twenty-Ninth International Joint Conference on Artificial Intelligence, IJCAI-20 , pages 977–983. International Joint Conferences on Artificial Intelligence Organization, 7 2020. doi: 10.24963/ijcai.2020/136 . URL https://doi.org/10.24963/ijcai.2020/136 . Main track. Ashkboos et al. [2024] Saleh Ashkboos, Maximilian L. Croci, Marcelo Gennari do Nascimento, Torsten Hoefler, and James Hensman. SliceGPT: Compress large language models by deleting rows and columns, 2024. Yuan et al. [2023] Zhihang Yuan, Yuzhang Shang, Yue Song, Dawei Yang, Qiang Wu, Yan Yan, and Guangyu Sun. ASVD: Activation-aware singular value decomposition for compressing large language models, 2023. Wang et al. [2024] Xin Wang, Yu Zheng, Zhongwei Wan, and Mi Zhang. SVD-LLM: Truncation-aware singular value decomposition for large language model compression, 2024. Wang et al. [2025] Qinsi Wang, Jinghan Ke, Masayoshi Tomizuka, Yiran Chen, Kurt Keutzer, and Chenfeng Xu. Dobi-SVD: Differentiable SVD for LLM compression and some new perspectives, 2025. URL https://arxiv.org/abs/2502.02723 . Qin et al. [2025] Haoran Qin, Shansita D. Sharma, Ali Abbasi, Chayne Thrash, and Soheil Kolouri. Low-rank Prehab: Preparing neural networks for SVD compression, 2025. URL https://arxiv.org/abs/2512.01980 . Penedo et al. [2024] Guilherme Penedo, Hynek Kydlíček, Loubna Ben allal, Anton Lozhkov, Margaret Mitchell, Colin Raffel, Leandro Von Werra, and Thomas Wolf. The FineWeb datasets: Decanting the web for the finest text data at scale, 2024. URL https://arxiv.org/abs/2406.17557 .",
+      "source": "https://arxiv.org/html/2610.11730v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0032",
+      "section": "References",
+      "text": "Song et al. [2022] Hwanjun Song, Minseok Kim, Dongmin Park, Yooju Shin, and Jae-Gil Lee. Learning from noisy labels with deep neural networks: A survey, 2022. URL https://arxiv.org/abs/2007.08199 . Cho et al. [2014] Kyunghyun Cho, Bart van Merrienboer, Caglar Gulcehre, Dzmitry Bahdanau, Fethi Bougares, Holger Schwenk, and Yoshua Bengio. Learning phrase representations using RNN encoder–decoder for statistical machine translation. In Proceedings of the 2014 Conference on Empirical Methods in Natural Language Processing (EMNLP) , page 1724–1734. Association for Computational Linguistics, 2014. doi: 10.3115/v1/d14-1179 . URL http://dx.doi.org/10.3115/v1/D14-1179 . Lecun et al. [1998] Y. Lecun, L. Bottou, Y. Bengio, and P. Haffner. Gradient-based learning applied to document recognition. Proceedings of the IEEE , 86(11):2278–2324, 1998. ISSN 0018-9219. doi: 10.1109/5.726791 . URL http://dx.doi.org/10.1109/5.726791 . Devlin et al. [2019] Jacob Devlin, Ming-Wei Chang, Kenton Lee, and Kristina Toutanova. BERT: Pre-training of deep bidirectional transformers for language understanding. In Proceedings of the 2019 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies, Volume 1 (Long and Short Papers) , page 4171–4186. Association for Computational Linguistics, 2019. doi: 10.18653/v1/n19-1423 . URL http://dx.doi.org/10.18653/v1/N19-1423 . Zhang et al. [2015] Xiang Zhang, Junbo Zhao, and Yann LeCun. Character-level convolutional networks for text classification. In Advances in Neural Information Processing Systems , volume 28. Curran Associates, Inc., 2015. URL https://arxiv.org/abs/1509.01626 .",
+      "source": "https://arxiv.org/html/2610.11730v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0033",
+      "section": "References",
+      "text": "Li et al. [2018] Xuhong Li, Yves Grandvalet, and Franck Davoine. Explicit inductive bias for transfer learning with convolutional networks. In Proceedings of the 35th International Conference on Machine Learning, ICML 2018, Stockholmsmässan, Stockholm, Sweden, July 10-15, 2018 , volume 80 of Proceedings of Machine Learning Research , pages 2825–2834. PMLR, 2018. URL http://proceedings.mlr.press/v80/li18a.html . Li et al. [2026] Chenghao Li, Xiao Han, Xinxin Huang, Wei Liu, Boyang Li, Bing Xiao, Heran Zhang, Juanma Perez Rua, Ke Xu, Kangning Liu, Linjun Kuang, Na Li, Tan Wang, Tian Xie, Wei Peng, Yang Pei, Yifan Xu, Yuanhao Zhai, Yuwei Lin, Zhe Wang, Zihao He, Daniel Li, Junbiao Tang, Ziyang Jiang, and Dake Chen. Scaling Muon for diffusion transformers, 2026. URL https://arxiv.org/abs/2608.20818 . Hoffmann et al. [2022] Jordan Hoffmann, Sebastian Borgeaud, Arthur Mensch, Elena Buchatskaya, Trevor Cai, Eliza Rutherford, Diego de Las Casas, Lisa Anne Hendricks, Johannes Welbl, Aidan Clark, Thomas Hennigan, Eric Noland, Katherine Millican, George van den Driessche, Bogdan Damoc, Aurelia Guy, Simon Osindero, Karén Simonyan, Erich Elsen, Oriol Vinyals, Jack Rae, and Laurent Sifre. An empirical analysis of compute-optimal large language model training. In Advances in Neural Information Processing Systems , volume 35, pages 30016–30030. Curran Associates, Inc., 2022. doi: 10.52202/068431-2176 . URL https://proceedings.neurips.cc/paper_files/paper/2022/file/c1e2faff6f588870935f114ebe04a3e5-Paper-Conference.pdf . Kingma and Ba [2015] Diederik P. Kingma and Jimmy Ba. Adam: A method for stochastic optimization, 2015. URL https://arxiv.org/abs/1412.6980 .",
+      "source": "https://arxiv.org/html/2610.11730v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0034",
+      "section": "References",
+      "text": "Yuan et al. [2025] Huizhuo Yuan, Yifeng Liu, Shuang Wu, Xun Zhou, and Quanquan Gu. MARS: Unleashing the power of variance reduction for training large models. In Proceedings of the 42nd International Conference on Machine Learning , volume 267 of Proceedings of Machine Learning Research , pages 73553–73587. PMLR, 2025. URL https://proceedings.mlr.press/v267/yuan25f.html . Chen et al. [2023] Xiangning Chen, Chen Liang, Da Huang, Esteban Real, Kaiyuan Wang, Hieu Pham, Xuanyi Dong, Thang Luong, Cho-Jui Hsieh, Yifeng Lu, and Quoc V. Le. Symbolic discovery of optimization algorithms. In Advances in Neural Information Processing Systems , volume 36, pages 49205–49233. Curran Associates, Inc., 2023. doi: 10.52202/075280-2140 . URL https://proceedings.neurips.cc/paper_files/paper/2023/file/9a39b4925e35cf447ccba8757137d84f-Paper-Conference.pdf . Bernstein et al. [2018] Jeremy Bernstein, Yu-Xiang Wang, Kamyar Azizzadenesheli, and Animashree Anandkumar. signSGD: Compressed optimisation for non-convex problems. In Proceedings of the 35th International Conference on Machine Learning , volume 80 of Proceedings of Machine Learning Research , pages 560–569. PMLR, 2018. URL https://proceedings.mlr.press/v80/bernstein18a.html . Liu et al. [2024] Hong Liu, Zhiyuan Li, David Hall, Percy Liang, and Tengyu Ma. Sophia: A scalable stochastic second-order optimizer for language model pre-training. In International Conference on Learning Representations , pages 1621–1650, 2024. URL https://proceedings.iclr.cc/paper_files/paper/2024/file/06960915ba8674c7a898ec0b472b80ff-Paper-Conference.pdf .",
+      "source": "https://arxiv.org/html/2610.11730v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0035",
+      "section": "References",
+      "text": "Clark et al. [2018] Peter Clark, Isaac Cowhey, Oren Etzioni, Tushar Khot, Ashish Sabharwal, Carissa Schoenick, and Oyvind Tafjord. Think you have solved question answering? try ARC, the AI2 reasoning challenge, 2018. URL https://arxiv.org/abs/1803.05457 . Zellers et al. [2019] Rowan Zellers, Ari Holtzman, Yonatan Bisk, Ali Farhadi, and Yejin Choi. HellaSwag: Can a machine really finish your sentence?, 2019. URL https://arxiv.org/abs/1905.07830 . Bisk et al. [2020] Yonatan Bisk, Rowan Zellers, Ronan Le Bras, Jianfeng Gao, and Yejin Choi. PIQA: Reasoning about physical commonsense in natural language. Proceedings of the AAAI Conference on Artificial Intelligence , 34(05):7432–7439, 2020. doi: 10.1609/aaai.v34i05.6239 . URL https://ojs.aaai.org/index.php/AAAI/article/view/6239 . Appendix Supplementary Materials for Spectral Weight Decay: Inducing Low-Rank Structure in Neural Network Weights",
+      "source": "https://arxiv.org/html/2610.11730v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0036",
+      "section": "A.1 Proof of the spectral update-order bound",
+      "text": "For a full-rank matrix A = U A ​ Σ A ​ V A ⊤ A=U_{A}\\Sigma_{A}V_{A}^{\\top} , write Q ⁡ ( A ) = U A ​ V A ⊤ Q(A)=U_{A}V_{A}^{\\top} for its polar factor. We first bound changes in this factor. The bound holds for rectangular matrices and does not require gaps between their nonzero singular values. It is proved by Li et al. [2026, Proposition 2, Appendix A.4] for full-row-rank matrices. The full-column-rank case follows by transposition.",
+      "source": "https://arxiv.org/html/2610.11730v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0037",
+      "section": "Lemma 1 (Polar-factor perturbation) .",
+      "text": "For full-rank A , B ∈ ℝ m × n A,B\\in\\mathbb{R}^{m\\times n} , ‖ Q ⁡ ( A ) − Q ⁡ ( B ) ‖ F ≤ 2 ​ ‖ A − B ‖ F σ min ​ ( A ) + σ min ​ ( B ) . \\|Q(A)-Q(B)\\|_{F}\\leq\\frac{2\\|A-B\\|_{F}}{\\sigma_{\\min}(A)+\\sigma_{\\min}(B)}. (9)",
+      "source": "https://arxiv.org/html/2610.11730v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0038",
+      "section": "Proof of Proposition 1 .",
+      "text": "By the definitions of the two spectral updates, W spec post − W spec pre = η ​ λ ​ ( Q ⁡ ( W ) − Q ⁡ ( Z ) ) . W_{\\mathrm{spec}}^{\\mathrm{post}}-W_{\\mathrm{spec}}^{\\mathrm{pre}}=\\eta\\lambda\\bigl(Q(W)-Q(Z)\\bigr). (10) Applying Lemma 1 with Z = W − η ​ Δ Z=W-\\eta\\Delta gives ‖ W spec post − W spec pre ‖ F \\displaystyle\\left\\|W_{\\mathrm{spec}}^{\\mathrm{post}}-W_{\\mathrm{spec}}^{\\mathrm{pre}}\\right\\|_{F} ≤ 2 ​ η ​ λ ​ ‖ W − Z ‖ F σ min ​ ( W ) + σ min ​ ( Z ) = 2 ​ η 2 ​ λ ​ ‖ Δ ‖ F σ min ​ ( W ) + σ min ​ ( Z ) . \\displaystyle\\leq\\frac{2\\eta\\lambda\\|W-Z\\|_{F}}{\\sigma_{\\min}(W)+\\sigma_{\\min}(Z)}=\\frac{2\\eta^{2}\\lambda\\|\\Delta\\|_{F}}{\\sigma_{\\min}(W)+\\sigma_{\\min}(Z)}. Since a full-rank polar factor has spectral norm one, the triangle inequality also gives ‖ W spec post − W spec pre ‖ 2 = η ​ λ ​ ‖ Q ⁡ ( W ) − Q ⁡ ( Z ) ‖ 2 ≤ η ​ λ ​ ( ‖ Q ⁡ ( W ) ‖ 2 + ‖ Q ⁡ ( Z ) ‖ 2 ) = 2 ​ η ​ λ . \\displaystyle\\left\\|W_{\\mathrm{spec}}^{\\mathrm{post}}-W_{\\mathrm{spec}}^{\\mathrm{pre}}\\right\\|_{2}=\\eta\\lambda\\|Q(W)-Q(Z)\\|_{2}\\leq\\eta\\lambda\\bigl(\\|Q(W)\\|_{2}+\\|Q(Z)\\|_{2}\\bigr)=2\\eta\\lambda. To show that the latter bound is attained near rank deficiency, consider the fixed loss f ⁡ ( X ) = 1 2 ​ ‖ X − diag ⁡ ( 1 , − 1 ) ‖ F 2 f(X)=\\tfrac{1}{2}\\|X-\\operatorname{diag}(1,-1)\\|_{F}^{2} . It is 1 1 -smooth and 1 1 -strongly convex. For 0 < η < 1 0<\\eta<1 , choose W η = ( 1 0 0 η / 2 ) , D η = ∇ f ( W η ) = ( 1 0 0 η / 2 ) − ( 1 0 0 − 1 ) = ( 0 0 0 1 + η / 2 ) . \\begin{gathered}W_{\\eta}=\\begin{pmatrix}1&0\\\\ 0&\\eta/2\\end{pmatrix},\\qquad D_{\\eta}=\\nabla f(W_{\\eta})=\\begin{pmatrix}1&0\\\\ 0&\\eta/2\\end{pmatrix}-\\begin{pmatrix}1&0\\\\ 0&-1\\end{pmatrix}=\\begin{pmatrix}0&0\\\\ 0&1+\\eta/2\\end{pmatrix}.\\end{gathered} (11)",
+      "source": "https://arxiv.org/html/2610.11730v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0039",
+      "section": "Proof of Proposition 1 .",
+      "text": "The loss-only step with direction D η D_{\\eta} gives Z η = W η − η D η = diag ( 1 , − η ( 1 + η ) / 2 ) Z_{\\eta}=W_{\\eta}-\\eta D_{\\eta}=\\operatorname{diag}(1,-\\eta(1+\\eta)/2) . Both matrices have full rank, so their polar factors are unique and Lemma 1 applies. Their smallest singular values are η / 2 \\eta/2 and η ⁡ ( 1 + η ) / 2 \\eta(1+\\eta)/2 , respectively. Thus, they approach rank deficiency as η → 0 \\eta\\to 0 , while the task direction remains bounded: ‖ D η ‖ F ≤ 3 / 2 \\|D_{\\eta}\\|_{F}\\leq 3/2 . The task update therefore vanishes with η \\eta , but it changes the sign of the second diagonal entry. For a diagonal matrix with nonzero entries, the polar factor replaces each diagonal entry by its sign. Consequently, Q ⁡ ( W η ) = I Q(W_{\\eta})=I and Q ⁡ ( Z η ) = diag ⁡ ( 1 , − 1 ) Q(Z_{\\eta})=\\operatorname{diag}(1,-1) differ by a fixed amount even as the weights become arbitrarily close. Thus, a small task update does not guarantee a small difference between pre- and post-step spectral weight decay relative to the decay step itself. Equation ( 10 ) therefore gives W spec post − W spec pre = η ​ λ ​ ( Q ⁡ ( W η ) − Q ⁡ ( Z η ) ) = η ​ λ ​ ( 0 0 0 2 ) . W_{\\mathrm{spec}}^{\\mathrm{post}}-W_{\\mathrm{spec}}^{\\mathrm{pre}}=\\eta\\lambda\\bigl(Q(W_{\\eta})-Q(Z_{\\eta})\\bigr)=\\eta\\lambda\\begin{pmatrix}0&0\\\\ 0&2\\end{pmatrix}. This matrix has a single nonzero singular value, 2 ​ η ​ λ 2\\eta\\lambda . Its spectral norm and Frobenius norm therefore coincide: ‖ W spec post − W spec pre ‖ 2 = ‖ W spec post − W spec pre ‖ F = 2 ​ η ​ λ . \\left\\|W_{\\mathrm{spec}}^{\\mathrm{post}}-W_{\\mathrm{spec}}^{\\mathrm{pre}}\\right\\|_{2}=\\left\\|W_{\\mathrm{spec}}^{\\mathrm{post}}-W_{\\mathrm{spec}}^{\\mathrm{pre}}\\right\\|_{F}=2\\eta\\lambda. (12) ∎",
+      "source": "https://arxiv.org/html/2610.11730v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0040",
+      "section": "A.2 Proximal interpretation",
+      "text": "Proximal-gradient descent gives a complementary interpretation of the post-step rule. It first follows the gradient of the training loss, then regularizes the resulting candidate. For a regularizer h h and τ > 0 \\tau>0 , its proximal operator is [ Parikh and Boyd, 2014 ] prox τ , h ⁡ ( Z ) = arg ​ min X ⁡ ( h ⁡ ( X ) + 1 2 ​ τ ​ ‖ X − Z ‖ F 2 ) . \\operatorname{prox}_{\\tau,h}(Z)=\\argmin_{X}\\left(h(X)+\\frac{1}{2\\tau}\\|X-Z\\|_{F}^{2}\\right). (13) With Z = W ( k ) − η ∇ ℒ ( W ( k ) ) Z=W^{(k)}-\\eta\\nabla\\mathcal{L}(W^{(k)}) and τ = η ​ λ \\tau=\\eta\\lambda , proximal gradient descent applies W ( k + 1 ) = prox τ , h ( W ( k ) − η ∇ ℒ ( W ( k ) ) ) . W^{(k+1)}=\\operatorname{prox}_{\\tau,h}\\!\\left(W^{(k)}-\\eta\\nabla\\mathcal{L}\\!\\left(W^{(k)}\\right)\\right). (14) For the squared Frobenius penalty h F ​ ( W ) = 1 2 ​ ‖ W ‖ F 2 h_{F}(W)=\\tfrac{1}{2}\\|W\\|_{F}^{2} , the exact proximal map is prox τ , h F ⁡ ( Z ) = Z / ( 1 + τ ) \\operatorname{prox}_{\\tau,h_{F}}(Z)=Z/(1+\\tau) . Post-step ℓ 2 \\ell_{2} shrinkage, ( 1 − τ ) ​ Z (1-\\tau)Z , is its first-order expansion. Pre-step AdamW is also first-order accurate. Zhuang et al. [2022] proved this for vector-valued parameters, and vectorization gives the matrix statement.",
+      "source": "https://arxiv.org/html/2610.11730v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0041",
+      "section": "Proposition 2 .",
+      "text": "Let h = h F h=h_{F} , τ = η ​ λ \\tau=\\eta\\lambda , and Z ( k ) = W ( k ) − η ∇ ℒ ( W ( k ) ) Z^{(k)}=W^{(k)}-\\eta\\nabla\\mathcal{L}(W^{(k)}) . For fixed λ \\lambda and bounded W ( k ) W^{(k)} and ∇ ℒ ​ ( W ( k ) ) \\nabla\\mathcal{L}(W^{(k)}) , the pre-step update W ℓ 2 pre W_{\\ell_{2}}^{\\mathrm{pre}} in ( 7 ) differs from the proximal iteration ( 14 ) by O ⁡ ( η 2 ​ λ ) O(\\eta^{2}\\lambda) as η → 0 \\eta\\to 0 . For the nuclear norm, the proximal map instead performs singular-value soft-thresholding [ Cai et al., 2010 ] . Given Z = U ​ diag ⁡ ( σ i ) ​ V ⊤ Z=U\\operatorname{diag}(\\sigma_{i})V^{\\top} , prox τ , ∥ ⋅ ∥ ∗ ( Z ) = U diag ( max ( σ i − τ , 0 ) ) V ⊤ . \\operatorname{prox}_{\\tau,\\|\\cdot\\|_{*}}(Z)=U\\operatorname{diag}\\!\\big(\\max(\\sigma_{i}-\\tau,0)\\big)V^{\\top}. (15) Equivalently, prox τ , ∥ ⋅ ∥ ∗ ( Z ) \\displaystyle\\operatorname{prox}_{\\tau,\\|\\cdot\\|_{*}}(Z) = Z − U ​ diag ⁡ ( γ i ) ​ V ⊤ , \\displaystyle=Z-U\\operatorname{diag}(\\gamma_{i})V^{\\top}, γ i \\displaystyle\\gamma_{i} = { τ , σ i ≥ τ , σ i , σ i < τ . \\displaystyle=\\begin{cases}\\tau,&\\sigma_{i}\\geq\\tau,\\\\ \\sigma_{i},&\\sigma_{i}<\\tau.\\end{cases} (16) The post-step spectral update ( 1 ) uses τ ​ U ​ V ⊤ \\tau UV^{\\top} for every active singular direction. It matches the proximal correction when σ i ≥ τ \\sigma_{i}\\geq\\tau . For 0 < σ i < τ 0<\\sigma_{i}<\\tau , the exact update instead subtracts only σ i \\sigma_{i} and sets that direction to zero. With an exact polar factor, spectral weight decay is thus an approximate nuclear-norm proximal step whose discrepancy is confined to the sub-threshold tail.",
+      "source": "https://arxiv.org/html/2610.11730v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0042",
+      "section": "Proposition 2 .",
+      "text": "Figure 7 : Exact singular-value thresholding and its Newton–Schulz U ​ V ⊤ UV^{\\top} approximation at a matched spectral coefficient on a 124 124 M-parameter LLaMA model. Left: validation loss. Right: mean effective rank of the weight matrices. Both updates reach similar effective rank, while the exact update ends with higher validation loss. To assess how this difference in the sub-threshold tail affects training, Figure 7 compares exact nuclear-norm proximal updates with post-step spectral weight decay on a 124 124 M-parameter LLaMA trained on FineWeb-Edu with λ = 1 \\lambda=1 . In this comparison, spectral weight decay approximates the polar factor using Newton–Schulz iterations, while the exact proximal update computes singular-value thresholding from a full SVD at every step. Both updates follow nearly identical effective-rank trajectories, but exact thresholding does not improve validation loss. Its loss initially follows the Newton–Schulz update, then rises late in training and ends higher. Applying the exact update once every s s steps ( s = 10 s=10 to 50 50 ) leaves these results unchanged. We therefore use the less expensive Newton–Schulz update in the main text.",
+      "source": "https://arxiv.org/html/2610.11730v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0043",
+      "section": "A.3 Empirical comparison of pre- and post-step spectral weight decay",
+      "text": "Proposition 1 establishes that the difference between pre- and post-step spectral weight decay can exceed that of ℓ 2 \\ell_{2} weight decay. We examine the practical consequences of update order through controlled low-rank recovery problems and language-model pretraining at increasing learning rates. Both synthetic tasks recover a rank- 16 16 matrix W ⋆ ∈ ℝ 128 × 128 W_{\\star}\\in\\mathbb{R}^{128\\times 128} without imposing a rank constraint on the learned matrix. Their convex data-fitting objectives and known recovery targets allow us to evaluate update order without the nonconvexity of neural-network training. We use 1,000 1{,}000 full-batch gradient steps. We compare the exact partial polar factor with its five-iteration Newton–Schulz approximation ( NS 5 \\mathrm{NS}_{5} ), both computed in double precision. At each noise level, we select λ \\lambda independently for each variant and implementation on one tuning instance with separate noisy validation data. We evaluate the final iterate using e s = ‖ W T , s − W ⋆ , s ‖ F 2 / ‖ W ⋆ , s ‖ F 2 e_{s}=\\|W_{T,s}-W_{\\star,s}\\|_{F}^{2}/\\|W_{\\star,s}\\|_{F}^{2} and plot the mean error and percentage gain. We include separately tuned pre- and post-step ℓ 2 \\ell_{2} weight decay as a baseline. Shaded bands show one sample standard deviation of the gain across the five evaluation seeds. Figure 8 : Pre/post-step weight decay in matrix denoising. From left to right: mean NMSE with the exact polar factor, mean NMSE with NS 5 \\mathrm{NS}_{5} , post-step gain for ℓ 2 \\ell_{2} weight decay, and post-step gain for spectral weight decay. Absolute errors are averaged over five seeds. Dashed curves denote pre-step and solid curves post-step in the first two panels. Gain bands show ± \\pm one standard deviation. Positive gains favor post-step.",
+      "source": "https://arxiv.org/html/2610.11730v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0044",
+      "section": "Low-rank recovery by matrix denoising.",
+      "text": "We first study recovery when all matrix entries are observed with noise, minimizing 1 2 ​ ‖ W − Y ‖ F 2 \\tfrac{1}{2}\\|W-Y\\|_{F}^{2} for Y = W ⋆ + ν ​ ‖ W ⋆ ‖ F ​ E / 128 Y=W_{\\star}+\\nu\\|W_{\\star}\\|_{F}E/128 , with E i ​ j ∼ 𝒩 ⁡ ( 0 , 1 ) E_{ij}\\sim\\mathcal{N}(0,1) . The nonzero teacher singular values decrease geometrically with a smallest-to-largest ratio of 0.15 0.15 , testing whether regularization preserves weak signal directions while suppressing noise. Figure 8 shows that exact post-step decay reduces mean reconstruction error at all displayed noise levels, with gains from 1.4 % 1.4\\% to 5.0 % 5.0\\% . With NS 5 \\mathrm{NS}_{5} , post-step also performs better on average, although its gains fluctuate more across noise levels. The pre/post-step difference for ℓ 2 \\ell_{2} weight decay remains below 0.02 % 0.02\\% , negligible compared with the percentage-level gains under spectral weight decay. Figure 9 : Pre/post-step weight decay in matrix sensing. Panels show mean NMSE with the exact polar factor, mean NMSE with NS 5 \\mathrm{NS}_{5} , post-step gain for ℓ 2 \\ell_{2} weight decay, and post-step gain for spectral weight decay. Absolute errors are averaged over five seeds. Dashed curves denote pre-step and solid curves post-step in the first two panels. Gain bands show ± \\pm one sample standard deviation. Positive gains favor post-step.",
+      "source": "https://arxiv.org/html/2610.11730v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0045",
+      "section": "Low-rank recovery from linear measurements.",
+      "text": "We next replace full noisy observations with 7,680 7{,}680 Gaussian linear measurements, twice the degrees of freedom of a rank- 16 16 matrix, y i = ⟨ A i , W ⋆ ⟩ + ξ i y_{i}=\\langle A_{i},W_{\\star}\\rangle+\\xi_{i} , where ( A i ) j ​ k ∼ 𝒩 ⁡ ( 0 , 1 ) (A_{i})_{jk}\\sim\\mathcal{N}(0,1) and ξ i ∼ 𝒩 ⁡ ( 0 , ν 2 ​ ‖ W ⋆ ‖ F 2 ) \\xi_{i}\\sim\\mathcal{N}(0,\\nu^{2}\\|W_{\\star}\\|_{F}^{2}) . We minimize the least-squares measurement loss using a flatter teacher spectrum, with sixteen nonzero singular values ranging linearly from 1 1 to 0.6 0.6 . All signal directions are therefore relatively strong, unlike in the denoising task. Figure 9 shows that post-step achieves lower mean reconstruction error at every displayed noise level with both the exact polar factor and NS 5 \\mathrm{NS}_{5} , with NS 5 \\mathrm{NS}_{5} gains ranging from 1.2 % 1.2\\% to 6.1 % 6.1\\% . The ℓ 2 \\ell_{2} baseline again differs only by tiny fractions of a percent between the two update orders.",
+      "source": "https://arxiv.org/html/2610.11730v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0046",
+      "section": "Update-order sensitivity in language-model pretraining.",
+      "text": "We next examine whether the two variants produce different training dynamics with Adam on a 124 124 M-parameter LLaMA trained on FineWeb-Edu at fixed λ = 1 \\lambda=1 as the learning rate increases. Figure 10 shows that at η = 0.005 \\eta=0.005 , the trajectories nearly coincide, whereas at η = 0.010 \\eta=0.010 they separate more clearly. Post-step reaches a lower effective rank but a higher final validation loss at the largest learning rate. This sweep therefore exposes sensitivity to update order, but the accompanying change in rank prevents a clear preference between the variants. Figure 10 : Pre/post-step spectral weight decay with Adam on a 124 124 M-parameter LLaMA trained on FineWeb-Edu at fixed λ = 1 \\lambda=1 . The top row shows validation loss after 1.5 1.5 B tokens, and the bottom row shows mean effective rank from the start of training. Dashed curves denote pre-step and solid curves post-step. Our LLM pretraining experiments show little difference between the two update orders at small learning rates. The synthetic recovery tasks favor post-step on average, with generally modest gains. Both schemes have the same computational requirements, so we adopt post-step and recommend it as the default.",
+      "source": "https://arxiv.org/html/2610.11730v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0047",
+      "section": "B.1 Language-model pretraining setup",
+      "text": "Table 1 summarizes the main LLaMA pretraining configurations. We train on FineWeb-Edu using GPT-2 tokenization, rotary position embeddings, RMSNorm, and SwiGLU feed-forward layers. Input embeddings and the output head share weights. All runs use sequences of 1,024 1{,}024 tokens, an effective batch of 128 128 sequences, cosine learning-rate decay with 2,000 2{,}000 warmup steps, Adam betas ( 0.9 , 0.95 ) (0.9,0.95) , gradient clipping at 0.5 0.5 , and no dropout. Spectral decay acts on two-dimensional weight matrices using five Newton-Schulz iterations, as in Muon. The higher-learning-rate comparison in Appendix A.3 varies the learning rate while retaining the 124 124 M architecture and training horizon. Table 1 : LLaMA architectures and reference pretraining configurations. Token budgets are rounded. Setting 124 124 M 257 257 M 500 500 M Transformer blocks 12 12 16 16 22 22 Hidden dimension 768 768 1,024 1{,}024 1,280 1{,}280 Attention heads 12 12 16 16 20 20 Feed-forward dimension 2,048 2{,}048 2,816 2{,}816 3,584 3{,}584 Embedding vocabulary size 50,304 50{,}304 50,304 50{,}304 50,304 50{,}304 Training steps 19,000 19{,}000 39,000 39{,}000 76,294 76{,}294 Training tokens (B) 2.49 2.49 5.11 5.11 10.00 10.00",
+      "source": "https://arxiv.org/html/2610.11730v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0048",
+      "section": "B.2 Comparison with Prehab",
+      "text": "Prehab [ Qin et al., 2025 ] adds a smooth rank surrogate over activation-whitened weights to the task loss. We initialize both methods from the same 124 124 M-parameter checkpoint, pretrained with standard ℓ 2 \\ell_{2} weight decay for one Chinchilla-optimal training budget [ Hoffmann et al., 2022 ] . We apply spectral weight decay without modification and tune only λ \\lambda . After 1,000 1{,}000 steps, it reduces mean effective rank by 15.9 % 15.9\\% with a 2.46 % 2.46\\% relative increase in validation loss. At comparable validation loss, the rank reduction is much larger than with Prehab (Figure 11 ), although the loss cost is still too high for practical compression. Figure 11 : Fine-tuning trajectories from the same 124 124 M-parameter LLaMA checkpoint. At comparable validation loss, spectral weight decay reduces effective rank more than Prehab.",
+      "source": "https://arxiv.org/html/2610.11730v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0049",
+      "section": "B.3 Comparison with Cuttlefish",
+      "text": "Cuttlefish [ Wang et al., 2023 ] is a direct training-time alternative based on a simple idea: it starts with full-rank training, waits for the stable ranks of the layers to converge, then factorizes each layer at the corresponding rank and continues training the low-rank factors. Like spectral weight decay, it modifies the model during training rather than compressing a fixed checkpoint. Across all four matched settings in Figure 12 , spectral weight decay reaches a substantially lower final effective rank at comparable validation loss. Figure 12 : Training trajectories for spectral weight decay and Cuttlefish on 124 124 M-parameter LLaMA models trained on FineWeb-Edu. Each column compares the spectral coefficient λ \\lambda with the indicated Cuttlefish rank fraction r frac r_{\\mathrm{frac}} .",
+      "source": "https://arxiv.org/html/2610.11730v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0050",
+      "section": "B.4 Compression method and procedure",
+      "text": "The compression results in Section 3 use SVD-LLM. We compare five singular-value-based compression methods on one checkpoint to select this method. Table 2 applies truncated SVD, SliceGPT [ Ashkboos et al., 2024 ] , ASVD [ Yuan et al., 2023 ] , SVD-LLM [ Wang et al., 2024 ] , and Dobi-SVD [ Wang et al., 2025 ] to a 124 124 M-parameter spectral-weight-decay model with coefficient 1 1 . We also report accuracy on ARC-Easy [ Clark et al., 2018 ] , HellaSwag [ Zellers et al., 2019 ] , and PIQA [ Bisk et al., 2020 ] after compression. Truncated SVD reaches 1.43 × 1.43\\times compression with a + 0.0359 +0.0359 validation-loss increase. SliceGPT produces a larger loss increase at a lower compression rate. ASVD and SVD-LLM preserve validation loss better at comparable compression, with increases of + 0.0286 +0.0286 and + 0.0196 +0.0196 , respectively. Dobi-SVD reaches a similar + 0.0207 +0.0207 increase at 1.21 × 1.21\\times compression. SVD-LLM gives the lowest validation loss among the compressed models, so we use it throughout. Table 2 : Five compression methods applied to the 124 124 M spectral-weight-decay model ( λ = 1 \\lambda=1 ). Lower losses are better. Higher compression rates and downstream accuracies are better. Bold marks the best compressed value in each column.",
+      "source": "https://arxiv.org/html/2610.11730v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0051",
+      "section": "B.4 Compression method and procedure",
+      "text": "Method Compression val loss Δ \\Delta val loss ARC-E HellaSwag PIQA baseline (uncompressed) – 3.1129 3.1129 – 0.4947 0.4947 0.3004 0.3004 0.6088 0.6088 truncated SVD 1.43 × 1.43\\times 3.1488 3.1488 + 0.0359 +0.0359 0.4947 0.4947 0.2999 0.2999 0.6099 0.6099 SliceGPT 1.22 × 1.22\\times 4.6347 4.6347 + 1.5218 +1.5218 0.4140 0.4140 0.2815 0.2815 0.5680 0.5680 ASVD 1.45 × \\mathbf{1.45\\times} 3.1416 3.1416 + 0.0286 +0.0286 0.4877 0.4877 0.2998 0.2998 0.6121 \\mathbf{0.6121} SVD-LLM 1.42 × 1.42\\times 3.1325 \\mathbf{3.1325} + 0.0196 \\mathbf{+0.0196} 0.4982 \\mathbf{0.4982} 0.2991 0.2991 0.6088 0.6088 Dobi-SVD 1.21 × 1.21\\times 3.1336 3.1336 + 0.0207 +0.0207 0.4912 0.4912 0.3005 \\mathbf{0.3005} 0.6110 0.6110 We leave the token embeddings and output head uncompressed because truncating them sharply degrades model quality. Spectral weight decay also has little effect on their ranks (Figure 2 , left). We choose a separate truncation rank for each remaining weight matrix because effective rank varies substantially across transformer blocks (Figure 2 , middle). After folding the singular values into one factor, a rank- r r approximation of W ∈ ℝ m × n W\\in\\mathbb{R}^{m\\times n} stores r ⁡ ( m + n ) r(m+n) parameters instead of m ​ n mn . Decreasing r r therefore saves parameter memory at the cost of higher validation loss.",
+      "source": "https://arxiv.org/html/2610.11730v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0052",
+      "section": "B.5 Noisy-label robustness results",
+      "text": "Tables 3 , 4 , and 5 report final-checkpoint clean-test accuracy as the mean ± \\pm one sample standard deviation, in percentage points, over five label-corruption seeds. Model initialization, training order, data splits, and regularization coefficients are fixed. Standard deviations quantify variability from label corruption, not from model initialization or data splitting. The MNIST MLP flattens each 28 × 28 28\\times 28 image and applies four hidden layers of width 2,048 2{,}048 with ReLU activations, followed by a ten-class linear head. The row-sequential GRU reads the image as 28 28 vectors of dimension 28 28 , uses two recurrent layers with hidden dimension 1,280 1{,}280 , and applies a ten-class linear head to the final hidden state of the top layer. Table 3 : MNIST MLP: final clean-test accuracy, mean ± \\pm one sample standard deviation. Method 10 % 10\\% noise 25 % 25\\% noise 40 % 40\\% noise 60 % 60\\% noise No WD 87.99 ± 0.93 87.99\\pm 0.93 79.52 ± 1.67 79.52\\pm 1.67 65.29 ± 3.27 65.29\\pm 3.27 45.71 ± 1.79 45.71\\pm 1.79 ℓ 2 \\ell_{2} WD 86.89 ± 1.70 86.89\\pm 1.70 77.90 ± 2.00 77.90\\pm 2.00 67.12 ± 2.71 67.12\\pm 2.71 45.78 ± 1.29 45.78\\pm 1.29 Spectral WD (post-step) 87.99 ± 0.93 87.99\\pm 0.93 81.22 ± 2.36 81.22\\pm 2.36 75.01 ± 3.01 75.01\\pm 3.01 63.56 ± 1.04 63.56\\pm 1.04 Spectral WD (pre-step) 87.31 ± 1.13 87.31\\pm 1.13 81.63 ± 1.77 81.63\\pm 1.77 75.52 ± 2.35 75.52\\pm 2.35 61.63 ± 2.74 61.63\\pm 2.74 Table 4 : MNIST GRU: final clean-test accuracy, mean ± \\pm one sample standard deviation.",
+      "source": "https://arxiv.org/html/2610.11730v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0053",
+      "section": "B.5 Noisy-label robustness results",
+      "text": "Method 10 % 10\\% noise 25 % 25\\% noise 40 % 40\\% noise 60 % 60\\% noise No WD 91.29 ± 0.64 91.29\\pm 0.64 82.42 ± 1.18 82.42\\pm 1.18 71.50 ± 1.13 71.50\\pm 1.13 51.65 ± 2.12 51.65\\pm 2.12 ℓ 2 \\ell_{2} WD 91.07 ± 1.55 91.07\\pm 1.55 82.98 ± 0.54 82.98\\pm 0.54 72.69 ± 0.84 72.69\\pm 0.84 51.20 ± 2.78 51.20\\pm 2.78 Spectral WD (post-step) 94.06 ± 1.03 94.06\\pm 1.03 89.96 ± 0.97 89.96\\pm 0.97 81.38 ± 3.15 81.38\\pm 3.15 65.60 ± 3.70 65.60\\pm 3.70 Spectral WD (pre-step) 94.83 ± 0.62 94.83\\pm 0.62 90.00 ± 1.17 90.00\\pm 1.17 80.02 ± 2.03 80.02\\pm 2.03 67.33 ± 1.52 67.33\\pm 1.52 We use BERT-base-uncased [ Devlin et al., 2019 ] , initialized from the google-bert/bert-base-uncased checkpoint. The encoder has 12 12 transformer blocks, each with 12 12 attention heads, hidden dimension 768 768 , and feed-forward dimension 3072 3072 with GELU activations. Its WordPiece vocabulary contains 30,522 30{,}522 tokens. The checkpoint supports 512 512 positions, but our inputs are truncated to 128 128 tokens. Attention and hidden-layer dropout probabilities are both 0.1 0.1 . A linear classifier maps the pooled [CLS] representation to 4 4 , 14 14 , 10 10 , or 5 5 classes for AG News, DBpedia-14, Yahoo Answers, and Yelp Review Full, respectively. The model has approximately 110 110 M parameters, of which 29 29 M are trainable. We freeze the embeddings and encoder blocks 1 1 through 8 8 , and train blocks 9 9 through 12 12 , the pooler, and the classifier. Both regularizers act on the displacements from the pretrained checkpoint of the attention and feed-forward weight matrices in the trainable blocks and the pooler weight matrix. The classifier, biases, and LayerNorm parameters are not regularized.",
+      "source": "https://arxiv.org/html/2610.11730v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0054",
+      "section": "B.5 Noisy-label robustness results",
+      "text": "Regularization coefficients are calibrated in separate tuning runs using final clean-validation accuracy, independently at each noise level for MNIST and at 60 % 60\\% noise for BERT. The selected BERT coefficients are then fixed across noise levels. All coefficients are frozen before the five new label-corruption replications. Clean validation is not used to select checkpoints, and the replication test results are not used to tune coefficients. Each reported checkpoint is taken at the fixed training horizon. Table 5 : BERT-base: final clean-test accuracy, mean ± \\pm one sample standard deviation.",
+      "source": "https://arxiv.org/html/2610.11730v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0055",
+      "section": "B.5 Noisy-label robustness results",
+      "text": "Dataset Noise No WD ℓ 2 \\ell_{2} -SP Spectral WD (post-step) Spectral WD (pre-step) AG News 10 % 10\\% 88.49 ± 0.10 88.49\\pm 0.10 89.63 ± 0.03 89.63\\pm 0.03 90.57 ± 0.10 90.57\\pm 0.10 90.55 ± 0.11 90.55\\pm 0.11 25 % 25\\% 79.23 ± 0.47 79.23\\pm 0.47 88.60 ± 0.21 88.60\\pm 0.21 89.77 ± 0.11 89.77\\pm 0.11 89.76 ± 0.13 89.76\\pm 0.13 40 % 40\\% 66.02 ± 0.50 66.02\\pm 0.50 86.65 ± 0.55 86.65\\pm 0.55 88.56 ± 0.33 88.56\\pm 0.33 88.61 ± 0.31 88.61\\pm 0.31 60 % 60\\% 44.05 ± 0.85 44.05\\pm 0.85 78.40 ± 1.91 78.40\\pm 1.91 81.07 ± 1.14 81.07\\pm 1.14 81.08 ± 1.10 81.08\\pm 1.10 DBpedia-14 10 % 10\\% 97.97 ± 0.11 97.97\\pm 0.11 98.72 ± 0.01 98.72\\pm 0.01 98.86 ± 0.03 98.86\\pm 0.03 98.85 ± 0.04 98.85\\pm 0.04 25 % 25\\% 95.19 ± 0.18 95.19\\pm 0.18 98.52 ± 0.13 98.52\\pm 0.13 98.72 ± 0.10 98.72\\pm 0.10 98.72 ± 0.10 98.72\\pm 0.10 40 % 40\\% 90.43 ± 0.38 90.43\\pm 0.38 98.10 ± 0.25 98.10\\pm 0.25 98.55 ± 0.21 98.55\\pm 0.21 98.53 ± 0.20 98.53\\pm 0.20 60 % 60\\% 73.74 ± 1.05 73.74\\pm 1.05 96.65 ± 0.36 96.65\\pm 0.36 97.88 ± 0.34 97.88\\pm 0.34 97.83 ± 0.30 97.83\\pm 0.30 Yahoo Answers 10 % 10\\% 66.86 ± 0.23 66.86\\pm 0.23 69.06 ± 0.14 69.06\\pm 0.14 70.94 ± 0.09 70.94\\pm 0.09 70.95 ± 0.12 70.95\\pm 0.12 25 % 25\\% 61.99 ± 0.17 61.99\\pm 0.17 68.01 ± 0.12 68.01\\pm 0.12 70.25 ± 0.14 70.25\\pm 0.14 70.24 ± 0.13 70.24\\pm 0.13 40 % 40\\% 54.71 ± 0.15 54.71\\pm 0.15 66.52 ± 0.33 66.52\\pm 0.33 69.18 ± 0.22 69.18\\pm 0.22 69.17 ± 0.19 69.17\\pm 0.19 60 % 60\\% 40.95 ± 0.88 40.95\\pm 0.88 61.34 ± 0.37 61.34\\pm 0.37 65.93 ± 0.53 65.93\\pm 0.53 65.92 ± 0.52 65.92\\pm 0.52 Yelp Review Full 10 % 10\\% 51.93 ± 0.10 51.93\\pm 0.10 52.92 ± 0.14 52.92\\pm 0.14 54.42 ± 0.12 54.42\\pm 0.12 54.41 ± 0.15 54.41\\pm 0.15 25 % 25\\% 47.12 ± 0.16 47.12\\pm 0.16 51.44 ± 0.11 51.44\\pm 0.11 53.08 ± 0.20 53.08\\pm 0.20 53.15 ± 0.25 53.15\\pm 0.25 40 % 40\\%",
+      "source": "https://arxiv.org/html/2610.11730v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0056",
+      "section": "B.5 Noisy-label robustness results",
+      "text": "0.14 52.92\\pm 0.14 54.42 ± 0.12 54.42\\pm 0.12 54.41 ± 0.15 54.41\\pm 0.15 25 % 25\\% 47.12 ± 0.16 47.12\\pm 0.16 51.44 ± 0.11 51.44\\pm 0.11 53.08 ± 0.20 53.08\\pm 0.20 53.15 ± 0.25 53.15\\pm 0.25 40 % 40\\% 40.58 ± 0.48 40.58\\pm 0.48 48.62 ± 0.70 48.62\\pm 0.70 50.91 ± 0.46 50.91\\pm 0.46 50.92 ± 0.51 50.92\\pm 0.51 60 % 60\\% 29.76 ± 0.97 29.76\\pm 0.97 38.62 ± 1.50 38.62\\pm 1.50 42.78 ± 2.39 42.78\\pm 2.39 42.89 ± 2.37 42.89\\pm 2.37",
+      "source": "https://arxiv.org/html/2610.11730v1",
+      "offset": 1595
+    },
+    {
+      "chunk_id": "chunk-0057",
+      "section": "B.5 Noisy-label robustness results",
+      "text": "39 , 40 , 41 , 42 , 43",
+      "source": "https://arxiv.org/html/2610.11730v1",
+      "offset": 0
+    }
+  ],
+  "links": [
+    {
+      "href": "https://github.com/brain-lab-research/SpectralWD",
+      "text": "https://github.com/brain-lab-research/SpectralWD",
+      "section": "Article",
+      "context": "cay lowers effective rank and improves SVD-LLM compression at matched validation loss. At 500 500 M and a 4 % 4\\% distortion budget, it reaches 1.89 × 1.89\\times compression and 1.18 × 1.18\\times GPU inference speedup, compared with 1.14 × 1.14\\times and 1.01 × 1.01\\times after standard weight decay. Under fixed-horizon training with 60 % 60\\% label noise, it also improves final mean clean-test accuracy over matched ℓ 2 \\ell_{2} regularization by up to 17.8 17.8 points on MNIST and 4.6 4.6 points across four BERT-base tasks. Code is available at https://github.com/brain-lab-research/SpectralWD",
+      "url": "https://github.com/brain-lab-research/SpectralWD"
+    },
+    {
+      "href": "#bib.bib1",
+      "text": "Loshchilov and Hutter, 2019",
+      "section": "1 Introduction",
+      "context": "Optimization is central to deep learning because it governs training stability, efficiency, and the properties of the learned solution. AdamW has become the standard optimizer in modern training recipes [ Loshchilov and Hutter, 2019",
+      "url": "https://arxiv.org/html/2610.11730v1#bib.bib1"
+    },
+    {
+      "href": "#bib.bib2",
+      "text": "Gupta et al., 2018",
+      "section": "1 Introduction",
+      "context": "Optimization is central to deep learning because it governs training stability, efficiency, and the properties of the learned solution. AdamW has become the standard optimizer in modern training recipes [ Loshchilov and Hutter, 2019 ] . At the same time, matrix-aware optimizers such as Shampoo, SOAP, and Muon have begun to exploit the geometry of neural-network weight matrices instead of treating each layer as a flat parameter vector [ Gupta et al., 2018",
+      "url": "https://arxiv.org/html/2610.11730v1#bib.bib2"
+    },
+    {
+      "href": "#bib.bib3",
+      "text": "Vyas et al., 2024",
+      "section": "1 Introduction",
+      "context": "Optimization is central to deep learning because it governs training stability, efficiency, and the properties of the learned solution. AdamW has become the standard optimizer in modern training recipes [ Loshchilov and Hutter, 2019 ] . At the same time, matrix-aware optimizers such as Shampoo, SOAP, and Muon have begun to exploit the geometry of neural-network weight matrices instead of treating each layer as a flat parameter vector [ Gupta et al., 2018 ; Vyas et al., 2024",
+      "url": "https://arxiv.org/html/2610.11730v1#bib.bib3"
+    },
+    {
+      "href": "#bib.bib4",
+      "text": "Jordan et al., 2024",
+      "section": "1 Introduction",
+      "context": "Optimization is central to deep learning because it governs training stability, efficiency, and the properties of the learned solution. AdamW has become the standard optimizer in modern training recipes [ Loshchilov and Hutter, 2019 ] . At the same time, matrix-aware optimizers such as Shampoo, SOAP, and Muon have begun to exploit the geometry of neural-network weight matrices instead of treating each layer as a flat parameter vector [ Gupta et al., 2018 ; Vyas et al., 2024 ; Jordan et al., 2024",
+      "url": "https://arxiv.org/html/2610.11730v1#bib.bib4"
+    },
+    {
+      "href": "#bib.bib1",
+      "text": "Loshchilov and Hutter, 2019",
+      "section": "1 Introduction",
+      "context": "Weight decay remains part of these training recipes because it improves generalization [ Loshchilov and Hutter, 2019",
+      "url": "https://arxiv.org/html/2610.11730v1#bib.bib1"
+    },
+    {
+      "href": "#bib.bib5",
+      "text": "Han et al., 2026",
+      "section": "1 Introduction",
+      "context": "Weight decay remains part of these training recipes because it improves generalization [ Loshchilov and Hutter, 2019 ] , preserves downstream plasticity [ Han et al., 2026",
+      "url": "https://arxiv.org/html/2610.11730v1#bib.bib5"
+    },
+    {
+      "href": "#bib.bib6",
+      "text": "D’Angelo et al., 2024",
+      "section": "1 Introduction",
+      "context": "Weight decay remains part of these training recipes because it improves generalization [ Loshchilov and Hutter, 2019 ] , preserves downstream plasticity [ Han et al., 2026 ] , and stabilizes training [ D’Angelo et al., 2024",
+      "url": "https://arxiv.org/html/2610.11730v1#bib.bib6"
+    },
+    {
+      "href": "#bib.bib7",
+      "text": "Parikh and Boyd, 2014",
+      "section": "1 Introduction",
+      "context": "To make the regularizer matrix-aware, we begin with the proximal interpretation of decoupled weight decay. To first order, its update is a proximal gradient step for the squared Frobenius penalty [ Parikh and Boyd, 2014",
+      "url": "https://arxiv.org/html/2610.11730v1#bib.bib7"
+    },
+    {
+      "href": "#bib.bib8",
+      "text": "Zhuang et al., 2022",
+      "section": "1 Introduction",
+      "context": "To make the regularizer matrix-aware, we begin with the proximal interpretation of decoupled weight decay. To first order, its update is a proximal gradient step for the squared Frobenius penalty [ Parikh and Boyd, 2014 ; Zhuang et al., 2022",
+      "url": "https://arxiv.org/html/2610.11730v1#bib.bib8"
+    },
+    {
+      "href": "#bib.bib9",
+      "text": "Recht et al., 2010",
+      "section": "1 Introduction",
+      "context": "To make the regularizer matrix-aware, we begin with the proximal interpretation of decoupled weight decay. To first order, its update is a proximal gradient step for the squared Frobenius penalty [ Parikh and Boyd, 2014 ; Zhuang et al., 2022 ] . We replace this penalty with the nuclear norm, a convex surrogate for rank whose proximal operator soft-thresholds singular values [ Recht et al., 2010",
+      "url": "https://arxiv.org/html/2610.11730v1#bib.bib9"
+    },
+    {
+      "href": "#bib.bib10",
+      "text": "Cai et al., 2010",
+      "section": "1 Introduction",
+      "context": "To make the regularizer matrix-aware, we begin with the proximal interpretation of decoupled weight decay. To first order, its update is a proximal gradient step for the squared Frobenius penalty [ Parikh and Boyd, 2014 ; Zhuang et al., 2022 ] . We replace this penalty with the nuclear norm, a convex surrogate for rank whose proximal operator soft-thresholds singular values [ Recht et al., 2010 ; Cai et al., 2010",
+      "url": "https://arxiv.org/html/2610.11730v1#bib.bib10"
+    },
+    {
+      "href": "#bib.bib11",
+      "text": "Hoerl and Kennard, 1970",
+      "section": "1 Introduction",
+      "context": "To make the regularizer matrix-aware, we begin with the proximal interpretation of decoupled weight decay. To first order, its update is a proximal gradient step for the squared Frobenius penalty [ Parikh and Boyd, 2014 ; Zhuang et al., 2022 ] . We replace this penalty with the nuclear norm, a convex surrogate for rank whose proximal operator soft-thresholds singular values [ Recht et al., 2010 ; Cai et al., 2010 ] . This construction is the matrix analogue of replacing ridge shrinkage with coefficient selection by the lasso [ Hoerl and Kennard, 1970",
+      "url": "https://arxiv.org/html/2610.11730v1#bib.bib11"
+    },
+    {
+      "href": "#bib.bib12",
+      "text": "Tibshirani, 1996",
+      "section": "1 Introduction",
+      "context": "To make the regularizer matrix-aware, we begin with the proximal interpretation of decoupled weight decay. To first order, its update is a proximal gradient step for the squared Frobenius penalty [ Parikh and Boyd, 2014 ; Zhuang et al., 2022 ] . We replace this penalty with the nuclear norm, a convex surrogate for rank whose proximal operator soft-thresholds singular values [ Recht et al., 2010 ; Cai et al., 2010 ] . This construction is the matrix analogue of replacing ridge shrinkage with coefficient selection by the lasso [ Hoerl and Kennard, 1970 ; Tibshirani, 1996",
+      "url": "https://arxiv.org/html/2610.11730v1#bib.bib12"
+    },
+    {
+      "href": "#bib.bib13",
+      "text": "González-Martínez and Liu, 2026",
+      "section": "1 Introduction",
+      "context": "SLORR-Nuc also approximates the nuclear-norm polar factor [ González-Martínez and Liu, 2026",
+      "url": "https://arxiv.org/html/2610.11730v1#bib.bib13"
+    },
+    {
+      "href": "#S1.E1",
+      "text": "1",
+      "section": "1 Introduction",
+      "context": "SLORR-Nuc also approximates the nuclear-norm polar factor [ González-Martínez and Liu, 2026 ] . Its decoupled extension would use the pre-step correction Z − η ​ λ ​ U W ​ V W ⊤ Z-\\eta\\lambda U_{W}V_{W}^{\\top} for W ( k ) = U W ​ Σ W ​ V W ⊤ W^{(k)}=U_{W}\\Sigma_{W}V_{W}^{\\top} , rather than ( 1",
+      "url": "https://arxiv.org/html/2610.11730v1#S1.E1"
+    },
+    {
+      "href": "#bib.bib14",
+      "text": "Touvron et al., 2023",
+      "section": "1 Introduction",
+      "context": "We evaluate spectral weight decay in LLaMA [ Touvron et al., 2023",
+      "url": "https://arxiv.org/html/2610.11730v1#bib.bib14"
+    },
+    {
+      "href": "#bib.bib15",
+      "text": "Roy and Vetterli, 2007",
+      "section": "1 Introduction",
+      "context": "We evaluate spectral weight decay in LLaMA [ Touvron et al., 2023 ] pretraining, post-training compression, and fixed-horizon noisy-label classification. Across models with 124 124 M to 500 500 M parameters, it lowers effective rank [ Roy and Vetterli, 2007",
+      "url": "https://arxiv.org/html/2610.11730v1#bib.bib15"
+    },
+    {
+      "href": "#bib.bib16",
+      "text": "Krogh and Hertz, 1991",
+      "section": "Weight decay.",
+      "context": "Early work explains weight decay as a regularizer that improves generalization by suppressing irrelevant parameter directions and sensitivity to target noise [ Krogh and Hertz, 1991",
+      "url": "https://arxiv.org/html/2610.11730v1#bib.bib16"
+    },
+    {
+      "href": "#bib.bib1",
+      "text": "Loshchilov and Hutter, 2019",
+      "section": "Weight decay.",
+      "context": "Early work explains weight decay as a regularizer that improves generalization by suppressing irrelevant parameter directions and sensitivity to target noise [ Krogh and Hertz, 1991 ] . For SGD, weight decay is equivalent to an ℓ 2 \\ell_{2} penalty up to rescaling the coefficient. This equivalence breaks under adaptive preconditioning, motivating the decoupled update used by AdamW [ Loshchilov and Hutter, 2019",
+      "url": "https://arxiv.org/html/2610.11730v1#bib.bib1"
+    },
+    {
+      "href": "#bib.bib17",
+      "text": "Zhang et al., 2019",
+      "section": "Weight decay.",
+      "context": "eralization by suppressing irrelevant parameter directions and sensitivity to target noise [ Krogh and Hertz, 1991 ] . For SGD, weight decay is equivalent to an ℓ 2 \\ell_{2} penalty up to rescaling the coefficient. This equivalence breaks under adaptive preconditioning, motivating the decoupled update used by AdamW [ Loshchilov and Hutter, 2019 ] . Analyses show that its effect depends on the optimizer, architecture, learning rate, and training horizon. The benefit can arise through changes in effective learning rate and optimization dynamics rather than norm control alone [ Zhang et al., 2019",
+      "url": "https://arxiv.org/html/2610.11730v1#bib.bib17"
+    },
+    {
+      "href": "#bib.bib18",
+      "text": "Lewkowycz and Gur-Ari, 2020",
+      "section": "Weight decay.",
+      "context": "elevant parameter directions and sensitivity to target noise [ Krogh and Hertz, 1991 ] . For SGD, weight decay is equivalent to an ℓ 2 \\ell_{2} penalty up to rescaling the coefficient. This equivalence breaks under adaptive preconditioning, motivating the decoupled update used by AdamW [ Loshchilov and Hutter, 2019 ] . Analyses show that its effect depends on the optimizer, architecture, learning rate, and training horizon. The benefit can arise through changes in effective learning rate and optimization dynamics rather than norm control alone [ Zhang et al., 2019 ; Lewkowycz and Gur-Ari, 2020",
+      "url": "https://arxiv.org/html/2610.11730v1#bib.bib18"
+    },
+    {
+      "href": "#bib.bib6",
+      "text": "D’Angelo et al., 2024",
+      "section": "Weight decay.",
+      "context": "ions and sensitivity to target noise [ Krogh and Hertz, 1991 ] . For SGD, weight decay is equivalent to an ℓ 2 \\ell_{2} penalty up to rescaling the coefficient. This equivalence breaks under adaptive preconditioning, motivating the decoupled update used by AdamW [ Loshchilov and Hutter, 2019 ] . Analyses show that its effect depends on the optimizer, architecture, learning rate, and training horizon. The benefit can arise through changes in effective learning rate and optimization dynamics rather than norm control alone [ Zhang et al., 2019 ; Lewkowycz and Gur-Ari, 2020 ; D’Angelo et al., 2024",
+      "url": "https://arxiv.org/html/2610.11730v1#bib.bib6"
+    },
+    {
+      "href": "#bib.bib19",
+      "text": "Kobayashi et al., 2024",
+      "section": "Weight decay.",
+      "context": "hchilov and Hutter, 2019 ] . Analyses show that its effect depends on the optimizer, architecture, learning rate, and training horizon. The benefit can arise through changes in effective learning rate and optimization dynamics rather than norm control alone [ Zhang et al., 2019 ; Lewkowycz and Gur-Ari, 2020 ; D’Angelo et al., 2024 ] . Weight decay interacts with matrix structure. In factorized attention layers, ℓ 2 \\ell_{2} regularization of the factors is linked to nuclear-norm regularization of their product and can induce low-rank key-query and value-projection maps [ Kobayashi et al., 2024",
+      "url": "https://arxiv.org/html/2610.11730v1#bib.bib19"
+    },
+    {
+      "href": "#bib.bib20",
+      "text": "Srebro et al., 2004",
+      "section": "Weight decay.",
+      "context": "s rather than norm control alone [ Zhang et al., 2019 ; Lewkowycz and Gur-Ari, 2020 ; D’Angelo et al., 2024 ] . Weight decay interacts with matrix structure. In factorized attention layers, ℓ 2 \\ell_{2} regularization of the factors is linked to nuclear-norm regularization of their product and can induce low-rank key-query and value-projection maps [ Kobayashi et al., 2024 ] . This is an instance of a general equivalence: minimizing the ℓ 2 \\ell_{2} penalties of two factors over all factorizations W = U ​ V ⊤ W=UV^{\\top} is equivalent to penalizing the nuclear norm of W W [ Srebro et al., 2004",
+      "url": "https://arxiv.org/html/2610.11730v1#bib.bib20"
+    },
+    {
+      "href": "#bib.bib9",
+      "text": "Recht et al., 2010",
+      "section": "Weight decay.",
+      "context": "9 ; Lewkowycz and Gur-Ari, 2020 ; D’Angelo et al., 2024 ] . Weight decay interacts with matrix structure. In factorized attention layers, ℓ 2 \\ell_{2} regularization of the factors is linked to nuclear-norm regularization of their product and can induce low-rank key-query and value-projection maps [ Kobayashi et al., 2024 ] . This is an instance of a general equivalence: minimizing the ℓ 2 \\ell_{2} penalties of two factors over all factorizations W = U ​ V ⊤ W=UV^{\\top} is equivalent to penalizing the nuclear norm of W W [ Srebro et al., 2004 ] . As a convex rank surrogate [ Recht et al., 2010",
+      "url": "https://arxiv.org/html/2610.11730v1#bib.bib9"
+    },
+    {
+      "href": "#bib.bib21",
+      "text": "Álvarez and Salzmann [2017]",
+      "section": "Nuclear-norm regularization.",
+      "context": "Direct nuclear-norm penalties act on the learned weight matrices without fixing a rank in advance, but exact gradients and proximal updates require spectral decompositions. Álvarez and Salzmann [2017]",
+      "url": "https://arxiv.org/html/2610.11730v1#bib.bib21"
+    },
+    {
+      "href": "#bib.bib13",
+      "text": "González-Martínez and Liu, 2026",
+      "section": "Nuclear-norm regularization.",
+      "context": "Direct nuclear-norm penalties act on the learned weight matrices without fixing a rank in advance, but exact gradients and proximal updates require spectral decompositions. Álvarez and Salzmann [2017] use periodic singular-value thresholding to prepare networks for post-training SVD compression. SLORR regularizes dense weight matrices using approximations of the polar factor [ González-Martínez and Liu, 2026",
+      "url": "https://arxiv.org/html/2610.11730v1#bib.bib13"
+    },
+    {
+      "href": "#S1.E1",
+      "text": "1",
+      "section": "Nuclear-norm regularization.",
+      "context": " gradients and proximal updates require spectral decompositions. Álvarez and Salzmann [2017] use periodic singular-value thresholding to prepare networks for post-training SVD compression. SLORR regularizes dense weight matrices using approximations of the polar factor [ González-Martínez and Liu, 2026 ] . Its variants use either the Hoyer penalty or the nuclear norm. SLORR-Nuc applies the penalty through the loss. The paper also describes a decoupled pre-step rule, but evaluates it only for SLORR-Hoyer, not SLORR-Nuc. This rule computes the polar factor at W W , while our post-step update ( 1",
+      "url": "https://arxiv.org/html/2610.11730v1#S1.E1"
+    },
+    {
+      "href": "#bib.bib22",
+      "text": "Dolatabadi et al., 2026",
+      "section": "Nuclear-norm regularization.",
+      "context": "gh the loss. The paper also describes a decoupled pre-step rule, but evaluates it only for SLORR-Hoyer, not SLORR-Nuc. This rule computes the polar factor at W W , while our post-step update ( 1 ) uses that of Z Z . SLORR develops efficient low-rank regularization. We replace the squared Frobenius penalty of standard weight decay with the nuclear norm and analyze the post-step update as approximate proximal descent. NuMuon instead acts on the optimizer update rather than the weights. It constrains the nuclear norm of Muon’s update direction to promote low-rank updates [ Dolatabadi et al., 2026",
+      "url": "https://arxiv.org/html/2610.11730v1#bib.bib22"
+    },
+    {
+      "href": "#bib.bib23",
+      "text": "Wang et al., 2023",
+      "section": "Low-rank training.",
+      "context": "Another line of work imposes explicit low-rank structure during training. Cuttlefish begins with dense training, waits for the stable ranks of the layers to converge, and then switches to a factorized model at the corresponding ranks [ Wang et al., 2023",
+      "url": "https://arxiv.org/html/2610.11730v1#bib.bib23"
+    },
+    {
+      "href": "#bib.bib24",
+      "text": "Xu et al., 2020",
+      "section": "Low-rank training.",
+      "context": "Another line of work imposes explicit low-rank structure during training. Cuttlefish begins with dense training, waits for the stable ranks of the layers to converge, and then switches to a factorized model at the corresponding ranks [ Wang et al., 2023 ] . TRP periodically replaces weight matrices with truncated-SVD approximations, selects the retained rank using a spectral-energy criterion, and continues gradient updates in the original parameterization [ Xu et al., 2020",
+      "url": "https://arxiv.org/html/2610.11730v1#bib.bib24"
+    },
+    {
+      "href": "#A2.SS3",
+      "text": "B.3",
+      "section": "Low-rank training.",
+      "context": "ith dense training, waits for the stable ranks of the layers to converge, and then switches to a factorized model at the corresponding ranks [ Wang et al., 2023 ] . TRP periodically replaces weight matrices with truncated-SVD approximations, selects the retained rank using a spectral-energy criterion, and continues gradient updates in the original parameterization [ Xu et al., 2020 ] . These projections can be combined with nuclear-norm regularization. Spectral weight decay instead retains dense weight matrices throughout training and does not select a hard rank until compression. Appendix B.3",
+      "url": "https://arxiv.org/html/2610.11730v1#A2.SS3"
+    },
+    {
+      "href": "#bib.bib25",
+      "text": "Ashkboos et al., 2024",
+      "section": "Post-training low-rank compression.",
+      "context": "SliceGPT removes rows and columns after a principal-component transformation [ Ashkboos et al., 2024",
+      "url": "https://arxiv.org/html/2610.11730v1#bib.bib25"
+    },
+    {
+      "href": "#bib.bib26",
+      "text": "Yuan et al., 2023",
+      "section": "Post-training low-rank compression.",
+      "context": "SliceGPT removes rows and columns after a principal-component transformation [ Ashkboos et al., 2024 ] . ASVD [ Yuan et al., 2023",
+      "url": "https://arxiv.org/html/2610.11730v1#bib.bib26"
+    },
+    {
+      "href": "#bib.bib27",
+      "text": "Wang et al., 2024",
+      "section": "Post-training low-rank compression.",
+      "context": "SliceGPT removes rows and columns after a principal-component transformation [ Ashkboos et al., 2024 ] . ASVD [ Yuan et al., 2023 ] and SVD-LLM [ Wang et al., 2024",
+      "url": "https://arxiv.org/html/2610.11730v1#bib.bib27"
+    },
+    {
+      "href": "#bib.bib28",
+      "text": "Wang et al., 2025",
+      "section": "Post-training low-rank compression.",
+      "context": "SliceGPT removes rows and columns after a principal-component transformation [ Ashkboos et al., 2024 ] . ASVD [ Yuan et al., 2023 ] and SVD-LLM [ Wang et al., 2024 ] use activation statistics to improve the factorization. Dobi-SVD learns layerwise truncation and reconstructs weights from truncated activations [ Wang et al., 2025",
+      "url": "https://arxiv.org/html/2610.11730v1#bib.bib28"
+    },
+    {
+      "href": "#bib.bib29",
+      "text": "Qin et al., 2025",
+      "section": "Post-training low-rank compression.",
+      "context": "SliceGPT removes rows and columns after a principal-component transformation [ Ashkboos et al., 2024 ] . ASVD [ Yuan et al., 2023 ] and SVD-LLM [ Wang et al., 2024 ] use activation statistics to improve the factorization. Dobi-SVD learns layerwise truncation and reconstructs weights from truncated activations [ Wang et al., 2025 ] . Prehab fine-tunes a trained model for SVD compression [ Qin et al., 2025",
+      "url": "https://arxiv.org/html/2610.11730v1#bib.bib29"
+    },
+    {
+      "href": "#A2.SS2",
+      "text": "B.2",
+      "section": "Post-training low-rank compression.",
+      "context": "SliceGPT removes rows and columns after a principal-component transformation [ Ashkboos et al., 2024 ] . ASVD [ Yuan et al., 2023 ] and SVD-LLM [ Wang et al., 2024 ] use activation statistics to improve the factorization. Dobi-SVD learns layerwise truncation and reconstructs weights from truncated activations [ Wang et al., 2025 ] . Prehab fine-tunes a trained model for SVD compression [ Qin et al., 2025 ] . Appendix B.2",
+      "url": "https://arxiv.org/html/2610.11730v1#A2.SS2"
+    },
+    {
+      "href": "#A2.SS4",
+      "text": "B.4",
+      "section": "Post-training low-rank compression.",
+      "context": "ceGPT removes rows and columns after a principal-component transformation [ Ashkboos et al., 2024 ] . ASVD [ Yuan et al., 2023 ] and SVD-LLM [ Wang et al., 2024 ] use activation statistics to improve the factorization. Dobi-SVD learns layerwise truncation and reconstructs weights from truncated activations [ Wang et al., 2025 ] . Prehab fine-tunes a trained model for SVD compression [ Qin et al., 2025 ] . Appendix B.2 compares spectral weight decay with Prehab in this setting. Our main experiments apply it throughout pretraining and evaluate compression and inference with SVD-LLM. Appendix B.4",
+      "url": "https://arxiv.org/html/2610.11730v1#A2.SS4"
+    },
+    {
+      "href": "#S3",
+      "text": "3",
+      "section": "Post-training low-rank compression.",
+      "context": "nent transformation [ Ashkboos et al., 2024 ] . ASVD [ Yuan et al., 2023 ] and SVD-LLM [ Wang et al., 2024 ] use activation statistics to improve the factorization. Dobi-SVD learns layerwise truncation and reconstructs weights from truncated activations [ Wang et al., 2025 ] . Prehab fine-tunes a trained model for SVD compression [ Qin et al., 2025 ] . Appendix B.2 compares spectral weight decay with Prehab in this setting. Our main experiments apply it throughout pretraining and evaluate compression and inference with SVD-LLM. Appendix B.4 compares post-training compression methods. Section 3",
+      "url": "https://arxiv.org/html/2610.11730v1#S3"
+    },
+    {
+      "href": "#S3",
+      "text": "3",
+      "section": "3 Why Low-Rank Structure Matters",
+      "context": "tarrow\\beta_{1}M_{t-1}+(1-\\beta_{1})G_{t} V t ← β 2 ​ V t − 1 + ( 1 − β 2 ) ​ G t ⊙ G t V_{t}\\leftarrow\\beta_{2}V_{t-1}+(1-\\beta_{2})G_{t}\\odot G_{t} Z t ← W t − 1 − η ​ M t / ( V t + ε ) Z_{t}\\leftarrow W_{t-1}-\\eta M_{t}/(\\sqrt{V_{t}}+\\varepsilon) + W t ← Z t − η ​ λ ​ NS 5 ​ ( Z t ) +\\hskip 9.24994ptW_{t}\\leftarrow Z_{t}-\\eta\\lambda\\,\\mathrm{NS}_{5}(Z_{t}) ⊳ NS 5 ≈ U Z ​ V Z ⊤ \\triangleright\\ \\mathrm{NS}_{5}\\approx U_{Z}V_{Z}^{\\top} − W t ← Z t − η ​ λ ​ W t − 1 -\\hskip 9.24994ptW_{t}\\leftarrow Z_{t}-\\eta\\lambda W_{t-1} ⊳ ℓ 2 \\triangleright\\ \\ell_{2} WD → \\to spectral WD end for Algorithm 3",
+      "url": "https://arxiv.org/html/2610.11730v1#S3"
+    },
+    {
+      "href": "#S1.E1",
+      "text": "1",
+      "section": "3 Why Low-Rank Structure Matters",
+      "context": "G_{t}\\odot G_{t} Z t ← W t − 1 − η ​ M t / ( V t + ε ) Z_{t}\\leftarrow W_{t-1}-\\eta M_{t}/(\\sqrt{V_{t}}+\\varepsilon) + W t ← Z t − η ​ λ ​ NS 5 ​ ( Z t ) +\\hskip 9.24994ptW_{t}\\leftarrow Z_{t}-\\eta\\lambda\\,\\mathrm{NS}_{5}(Z_{t}) ⊳ NS 5 ≈ U Z ​ V Z ⊤ \\triangleright\\ \\mathrm{NS}_{5}\\approx U_{Z}V_{Z}^{\\top} − W t ← Z t − η ​ λ ​ W t − 1 -\\hskip 9.24994ptW_{t}\\leftarrow Z_{t}-\\eta\\lambda W_{t-1} ⊳ ℓ 2 \\triangleright\\ \\ell_{2} WD → \\to spectral WD end for Algorithm 3 shows how spectral weight decay modifies Adam by replacing standard pre-step ℓ 2 \\ell_{2} decay with the post-step correction in ( 1",
+      "url": "https://arxiv.org/html/2610.11730v1#S1.E1"
+    },
+    {
+      "href": "#S4",
+      "text": "4",
+      "section": "3 Why Low-Rank Structure Matters",
+      "context": " ⊳ ℓ 2 \\triangleright\\ \\ell_{2} WD → \\to spectral WD end for Algorithm 3 shows how spectral weight decay modifies Adam by replacing standard pre-step ℓ 2 \\ell_{2} decay with the post-step correction in ( 1 ). Bias correction is omitted for clarity. The analogy with ℓ 1 \\ell_{1} regularization in linear regression suggests that this additive spectral shrinkage should promote low-rank structure. We show that it reduces the effective rank of learned weight matrices and evaluate the resulting benefits for compression, inference, and robustness to label noise under fixed-horizon training. Section 4",
+      "url": "https://arxiv.org/html/2610.11730v1#S4"
+    },
+    {
+      "href": "#bib.bib15",
+      "text": "Roy and Vetterli, 2007",
+      "section": "3.1 Effective rank and why it matters",
+      "context": "We measure spectral concentration with the entropy-based effective rank [ Roy and Vetterli, 2007",
+      "url": "https://arxiv.org/html/2610.11730v1#bib.bib15"
+    },
+    {
+      "href": "#S3.F1",
+      "text": "1",
+      "section": "3.1 Effective rank and why it matters",
+      "context": "Figure 1",
+      "url": "https://arxiv.org/html/2610.11730v1#S3.F1"
+    },
+    {
+      "href": "#bib.bib14",
+      "text": "Touvron et al., 2023",
+      "section": "3.1 Effective rank and why it matters",
+      "context": "Figure 1 shows validation loss and mean effective rank during training of a 257 257 M-parameter LLaMA [ Touvron et al., 2023",
+      "url": "https://arxiv.org/html/2610.11730v1#bib.bib14"
+    },
+    {
+      "href": "#bib.bib30",
+      "text": "Penedo et al., 2024",
+      "section": "3.1 Effective rank and why it matters",
+      "context": "Figure 1 shows validation loss and mean effective rank during training of a 257 257 M-parameter LLaMA [ Touvron et al., 2023 ] on FineWeb-Edu [ Penedo et al., 2024",
+      "url": "https://arxiv.org/html/2610.11730v1#bib.bib30"
+    },
+    {
+      "href": "#A2.SS1",
+      "text": "B.1",
+      "section": "3.1 Effective rank and why it matters",
+      "context": "Figure 1 shows validation loss and mean effective rank during training of a 257 257 M-parameter LLaMA [ Touvron et al., 2023 ] on FineWeb-Edu [ Penedo et al., 2024 ] with Adam and spectral weight decay. Appendix B.1",
+      "url": "https://arxiv.org/html/2610.11730v1#A2.SS1"
+    },
+    {
+      "href": "#S3.F2",
+      "text": "2",
+      "section": "3.1 Effective rank and why it matters",
+      "context": "We use effective rank instead of stable rank, ‖ W ‖ F 2 / ‖ W ‖ 2 2 \\|W\\|_{F}^{2}/\\|W\\|_{2}^{2} , because it predicts a practical compression threshold. Truncating to ⌈ erank ⁡ ( W ) ⌉ \\lceil\\operatorname{erank}(W)\\rceil preserves model quality, while lower ranks degrade it sharply (Figure 2",
+      "url": "https://arxiv.org/html/2610.11730v1#S3.F2"
+    },
+    {
+      "href": "#bib.bib27",
+      "text": "Wang et al., 2024",
+      "section": "3.2 Compression and inference",
+      "context": "Spectral weight decay lowers the effective rank of weight matrices, making them amenable to low-rank compression. We use SVD-LLM [ Wang et al., 2024",
+      "url": "https://arxiv.org/html/2610.11730v1#bib.bib27"
+    },
+    {
+      "href": "#S3.F2",
+      "text": "2",
+      "section": "3.2 Compression and inference",
+      "context": "Spectral weight decay lowers the effective rank of weight matrices, making them amenable to low-rank compression. We use SVD-LLM [ Wang et al., 2024 ] , which gives the lowest validation loss in our matched comparison. We compress each weight matrix to its own effective rank, which varies substantially across layers (Figure 2",
+      "url": "https://arxiv.org/html/2610.11730v1#S3.F2"
+    },
+    {
+      "href": "#A2.SS4",
+      "text": "B.4",
+      "section": "3.2 Compression and inference",
+      "context": "ght decay lowers the effective rank of weight matrices, making them amenable to low-rank compression. We use SVD-LLM [ Wang et al., 2024 ] , which gives the lowest validation loss in our matched comparison. We compress each weight matrix to its own effective rank, which varies substantially across layers (Figure 2 , middle). We leave the token embeddings and output head uncompressed because their ranks respond little to spectral weight decay, and compressing them even to their effective ranks sharply degrades model quality. The comparison and compression procedure are described in Appendix B.4",
+      "url": "https://arxiv.org/html/2610.11730v1#A2.SS4"
+    },
+    {
+      "href": "#S3.F3",
+      "text": "3",
+      "section": "3.2 Compression and inference",
+      "context": "owers the effective rank of weight matrices, making them amenable to low-rank compression. We use SVD-LLM [ Wang et al., 2024 ] , which gives the lowest validation loss in our matched comparison. We compress each weight matrix to its own effective rank, which varies substantially across layers (Figure 2 , middle). We leave the token embeddings and output head uncompressed because their ranks respond little to spectral weight decay, and compressing them even to their effective ranks sharply degrades model quality. The comparison and compression procedure are described in Appendix B.4 . Figure 3",
+      "url": "https://arxiv.org/html/2610.11730v1#S3.F3"
+    },
+    {
+      "href": "#S3.F3",
+      "text": "3",
+      "section": "3.2 Compression and inference",
+      "context": "Adjusting an aligned rank by one step, ± 16 \\pm 16 , has negligible effect on validation loss. We therefore use this rank-aligned compression scheme throughout. The factorized models outperform their dense counterparts only at large batch sizes, so we measure forward-pass latency with a batch size of 256 256 on a single GPU. For the 500 500 M model, spectral weight decay yields a 1.09 × 1.09\\times speedup near a 2 % 2\\% distortion budget and reaches 1.18 × 1.18\\times at 4 % 4\\% , compared with 1.01 × 1.01\\times under standard weight decay (Figure 3",
+      "url": "https://arxiv.org/html/2610.11730v1#S3.F3"
+    },
+    {
+      "href": "#bib.bib1",
+      "text": "Loshchilov and Hutter, 2019",
+      "section": "3.3 Robustness to noisy labels",
+      "context": "Standard ℓ 2 \\ell_{2} weight decay limits overfitting [ Loshchilov and Hutter, 2019",
+      "url": "https://arxiv.org/html/2610.11730v1#bib.bib1"
+    },
+    {
+      "href": "#bib.bib31",
+      "text": "Song et al., 2022",
+      "section": "3.3 Robustness to noisy labels",
+      "context": "Standard ℓ 2 \\ell_{2} weight decay limits overfitting [ Loshchilov and Hutter, 2019 ] . We ask whether the low-rank bias of spectral weight decay provides stronger protection against unreliable labels, which are common in applied machine learning [ Song et al., 2022",
+      "url": "https://arxiv.org/html/2610.11730v1#bib.bib31"
+    },
+    {
+      "href": "#bib.bib32",
+      "text": "Cho et al., 2014",
+      "section": "3.3 Robustness to noisy labels",
+      "context": "We train a 15 15 M-parameter MLP and row-sequential GRU [ Cho et al., 2014",
+      "url": "https://arxiv.org/html/2610.11730v1#bib.bib32"
+    },
+    {
+      "href": "#bib.bib33",
+      "text": "Lecun et al., 1998",
+      "section": "3.3 Robustness to noisy labels",
+      "context": "We train a 15 15 M-parameter MLP and row-sequential GRU [ Cho et al., 2014 ] for 60 60 epochs on 3,000 3{,}000 MNIST examples [ Lecun et al., 1998",
+      "url": "https://arxiv.org/html/2610.11730v1#bib.bib33"
+    },
+    {
+      "href": "#bib.bib34",
+      "text": "Devlin et al., 2019",
+      "section": "3.3 Robustness to noisy labels",
+      "context": "We train a 15 15 M-parameter MLP and row-sequential GRU [ Cho et al., 2014 ] for 60 60 epochs on 3,000 3{,}000 MNIST examples [ Lecun et al., 1998 ] . We also fine-tune a 110 110 M-parameter BERT-base model [ Devlin et al., 2019",
+      "url": "https://arxiv.org/html/2610.11730v1#bib.bib34"
+    },
+    {
+      "href": "#bib.bib35",
+      "text": "Zhang et al., 2015",
+      "section": "3.3 Robustness to noisy labels",
+      "context": "We train a 15 15 M-parameter MLP and row-sequential GRU [ Cho et al., 2014 ] for 60 60 epochs on 3,000 3{,}000 MNIST examples [ Lecun et al., 1998 ] . We also fine-tune a 110 110 M-parameter BERT-base model [ Devlin et al., 2019 ] for 25 25 epochs on AG News, DBpedia-14, Yahoo Answers, and Yelp Review Full [ Zhang et al., 2015",
+      "url": "https://arxiv.org/html/2610.11730v1#bib.bib35"
+    },
+    {
+      "href": "#bib.bib36",
+      "text": "Li et al., 2018",
+      "section": "3.3 Robustness to noisy labels",
+      "context": "M-parameter MLP and row-sequential GRU [ Cho et al., 2014 ] for 60 60 epochs on 3,000 3{,}000 MNIST examples [ Lecun et al., 1998 ] . We also fine-tune a 110 110 M-parameter BERT-base model [ Devlin et al., 2019 ] for 25 25 epochs on AG News, DBpedia-14, Yahoo Answers, and Yelp Review Full [ Zhang et al., 2015 ] . On MNIST, spectral and decoupled ℓ 2 \\ell_{2} weight decay act on the same matrices. For BERT, both methods regularize the displacement Δ ​ W = W − W 0 \\Delta W=W-W_{0} from pretrained weights: spectral weight decay penalizes its nuclear norm, while ℓ 2 \\ell_{2} -SP [ Li et al., 2018",
+      "url": "https://arxiv.org/html/2610.11730v1#bib.bib36"
+    },
+    {
+      "href": "#S3.F4",
+      "text": "4",
+      "section": "3.3 Robustness to noisy labels",
+      "context": "l., 2014 ] for 60 60 epochs on 3,000 3{,}000 MNIST examples [ Lecun et al., 1998 ] . We also fine-tune a 110 110 M-parameter BERT-base model [ Devlin et al., 2019 ] for 25 25 epochs on AG News, DBpedia-14, Yahoo Answers, and Yelp Review Full [ Zhang et al., 2015 ] . On MNIST, spectral and decoupled ℓ 2 \\ell_{2} weight decay act on the same matrices. For BERT, both methods regularize the displacement Δ ​ W = W − W 0 \\Delta W=W-W_{0} from pretrained weights: spectral weight decay penalizes its nuclear norm, while ℓ 2 \\ell_{2} -SP [ Li et al., 2018 ] penalizes its squared Frobenius norm. Figure 4",
+      "url": "https://arxiv.org/html/2610.11730v1#S3.F4"
+    },
+    {
+      "href": "#A2.SS5",
+      "text": "B.5",
+      "section": "3.3 Robustness to noisy labels",
+      "context": "On MNIST, the advantage of post-step spectral weight decay over ℓ 2 \\ell_{2} grows with label noise, reaching 17.78 17.78 percentage points at 60 % 60\\% noise. These gains coincide with less memorization of corrupted labels. On BERT, post-step spectral weight decay yields higher mean accuracy than ℓ 2 \\ell_{2} -SP on every dataset and noise level, with gains of up to 4.59 4.59 points at the highest noise level. Pre- and post-step spectral weight decay nearly coincide on BERT, while neither order is consistently better on MNIST. Appendix B.5",
+      "url": "https://arxiv.org/html/2610.11730v1#A2.SS5"
+    },
+    {
+      "href": "#A2.T3",
+      "text": "3",
+      "section": "3.3 Robustness to noisy labels",
+      "context": "ows with label noise, reaching 17.78 17.78 percentage points at 60 % 60\\% noise. These gains coincide with less memorization of corrupted labels. On BERT, post-step spectral weight decay yields higher mean accuracy than ℓ 2 \\ell_{2} -SP on every dataset and noise level, with gains of up to 4.59 4.59 points at the highest noise level. Pre- and post-step spectral weight decay nearly coincide on BERT, while neither order is consistently better on MNIST. Appendix B.5 provides the architectures and coefficient-selection protocol, together with detailed pre/post-step and baseline results in Tables 3",
+      "url": "https://arxiv.org/html/2610.11730v1#A2.T3"
+    },
+    {
+      "href": "#A2.T4",
+      "text": "4",
+      "section": "3.3 Robustness to noisy labels",
+      "context": "with label noise, reaching 17.78 17.78 percentage points at 60 % 60\\% noise. These gains coincide with less memorization of corrupted labels. On BERT, post-step spectral weight decay yields higher mean accuracy than ℓ 2 \\ell_{2} -SP on every dataset and noise level, with gains of up to 4.59 4.59 points at the highest noise level. Pre- and post-step spectral weight decay nearly coincide on BERT, while neither order is consistently better on MNIST. Appendix B.5 provides the architectures and coefficient-selection protocol, together with detailed pre/post-step and baseline results in Tables 3 , 4",
+      "url": "https://arxiv.org/html/2610.11730v1#A2.T4"
+    },
+    {
+      "href": "#A2.T5",
+      "text": "5",
+      "section": "3.3 Robustness to noisy labels",
+      "context": "el noise, reaching 17.78 17.78 percentage points at 60 % 60\\% noise. These gains coincide with less memorization of corrupted labels. On BERT, post-step spectral weight decay yields higher mean accuracy than ℓ 2 \\ell_{2} -SP on every dataset and noise level, with gains of up to 4.59 4.59 points at the highest noise level. Pre- and post-step spectral weight decay nearly coincide on BERT, while neither order is consistently better on MNIST. Appendix B.5 provides the architectures and coefficient-selection protocol, together with detailed pre/post-step and baseline results in Tables 3 , 4 , and 5",
+      "url": "https://arxiv.org/html/2610.11730v1#A2.T5"
+    },
+    {
+      "href": "#S3",
+      "text": "3",
+      "section": "4 From Weight Decay to Spectral Shrinkage",
+      "context": "We now examine the update underlying the low-rank behavior observed in Section 3",
+      "url": "https://arxiv.org/html/2610.11730v1#S3"
+    },
+    {
+      "href": "#bib.bib1",
+      "text": "Loshchilov and Hutter, 2019",
+      "section": "4 From Weight Decay to Spectral Shrinkage",
+      "context": "AdamW instead decouples regularization from the update on the training loss [ Loshchilov and Hutter, 2019",
+      "url": "https://arxiv.org/html/2610.11730v1#bib.bib1"
+    },
+    {
+      "href": "#A1.SS2",
+      "text": "A.2",
+      "section": "4 From Weight Decay to Spectral Shrinkage",
+      "context": "Standard AdamW uses the pre-step form for the squared Frobenius penalty, whose gradient at W ( k ) W^{(k)} is W ( k ) W^{(k)} . For spectral weight decay, we use the post-step form. It regularizes the candidate Z ( k ) Z^{(k)} , which is the argument of the proximal operator in proximal-gradient descent (Appendix A.2",
+      "url": "https://arxiv.org/html/2610.11730v1#A1.SS2"
+    },
+    {
+      "href": "#S4.E6",
+      "text": "6",
+      "section": "4.1 The spectral update",
+      "context": "Spectral weight decay uses the nuclear norm h ⁡ ( W ) = ‖ W ‖ ∗ = ∑ i σ i ​ ( W ) h(W)=\\|W\\|_{*}=\\sum_{i}\\sigma_{i}(W) as its matrix penalty. For a compact SVD Z ( k ) = U Z ​ diag ⁡ ( σ i ) ​ V Z ⊤ Z^{(k)}=U_{Z}\\operatorname{diag}(\\sigma_{i})V_{Z}^{\\top} , we use the polar factor U Z ​ V Z ⊤ U_{Z}V_{Z}^{\\top} in place of ∇ h ​ ( Z ( k ) ) \\nabla h(Z^{(k)}) in the post-step rule ( 6",
+      "url": "https://arxiv.org/html/2610.11730v1#S4.E6"
+    },
+    {
+      "href": "#S1.E1",
+      "text": "1",
+      "section": "4.1 The spectral update",
+      "context": "Spectral weight decay uses the nuclear norm h ⁡ ( W ) = ‖ W ‖ ∗ = ∑ i σ i ​ ( W ) h(W)=\\|W\\|_{*}=\\sum_{i}\\sigma_{i}(W) as its matrix penalty. For a compact SVD Z ( k ) = U Z ​ diag ⁡ ( σ i ) ​ V Z ⊤ Z^{(k)}=U_{Z}\\operatorname{diag}(\\sigma_{i})V_{Z}^{\\top} , we use the polar factor U Z ​ V Z ⊤ U_{Z}V_{Z}^{\\top} in place of ∇ h ​ ( Z ( k ) ) \\nabla h(Z^{(k)}) in the post-step rule ( 6 ). This gives ( 1",
+      "url": "https://arxiv.org/html/2610.11730v1#S1.E1"
+    },
+    {
+      "href": "#bib.bib9",
+      "text": "Recht et al., 2010",
+      "section": "4.1 The spectral update",
+      "context": "Spectral weight decay uses the nuclear norm h ⁡ ( W ) = ‖ W ‖ ∗ = ∑ i σ i ​ ( W ) h(W)=\\|W\\|_{*}=\\sum_{i}\\sigma_{i}(W) as its matrix penalty. For a compact SVD Z ( k ) = U Z ​ diag ⁡ ( σ i ) ​ V Z ⊤ Z^{(k)}=U_{Z}\\operatorname{diag}(\\sigma_{i})V_{Z}^{\\top} , we use the polar factor U Z ​ V Z ⊤ U_{Z}V_{Z}^{\\top} in place of ∇ h ​ ( Z ( k ) ) \\nabla h(Z^{(k)}) in the post-step rule ( 6 ). This gives ( 1 ) at iteration k k . The polar factor U Z ​ V Z ⊤ U_{Z}V_{Z}^{\\top} is a minimum-Frobenius-norm subgradient of ‖ Z ( k ) ‖ ∗ \\|Z^{(k)}\\|_{*} [ Recht et al., 2010",
+      "url": "https://arxiv.org/html/2610.11730v1#bib.bib9"
+    },
+    {
+      "href": "#bib.bib4",
+      "text": "Jordan et al., 2024",
+      "section": "4.1 The spectral update",
+      "context": "lty. For a compact SVD Z ( k ) = U Z ​ diag ⁡ ( σ i ) ​ V Z ⊤ Z^{(k)}=U_{Z}\\operatorname{diag}(\\sigma_{i})V_{Z}^{\\top} , we use the polar factor U Z ​ V Z ⊤ U_{Z}V_{Z}^{\\top} in place of ∇ h ​ ( Z ( k ) ) \\nabla h(Z^{(k)}) in the post-step rule ( 6 ). This gives ( 1 ) at iteration k k . The polar factor U Z ​ V Z ⊤ U_{Z}V_{Z}^{\\top} is a minimum-Frobenius-norm subgradient of ‖ Z ( k ) ‖ ∗ \\|Z^{(k)}\\|_{*} [ Recht et al., 2010 ] . We approximate U Z ​ V Z ⊤ U_{Z}V_{Z}^{\\top} without an SVD using Newton-Schulz iterations, using the same five-step polynomial iteration as Muon [ Jordan et al., 2024",
+      "url": "https://arxiv.org/html/2610.11730v1#bib.bib4"
+    },
+    {
+      "href": "#bib.bib37",
+      "text": "Li et al. [2026, Proposition 2, Appendix A.4]",
+      "section": "Proposition 1 (Sensitivity to update order) .",
+      "context": "The Frobenius bound follows from the polar-factor perturbation estimate of Li et al. [2026, Proposition 2, Appendix A.4]",
+      "url": "https://arxiv.org/html/2610.11730v1#bib.bib37"
+    },
+    {
+      "href": "#A1.SS1",
+      "text": "A.1",
+      "section": "Proposition 1 (Sensitivity to update order) .",
+      "context": "The Frobenius bound follows from the polar-factor perturbation estimate of Li et al. [2026, Proposition 2, Appendix A.4] . Appendix A.1",
+      "url": "https://arxiv.org/html/2610.11730v1#A1.SS1"
+    },
+    {
+      "href": "#Thmproposition1",
+      "text": "1",
+      "section": "Proposition 1 (Sensitivity to update order) .",
+      "context": "The Frobenius bound follows from the polar-factor perturbation estimate of Li et al. [2026, Proposition 2, Appendix A.4] . Appendix A.1 gives a proof and the quadratic example. Post-step decay uses the singular directions of the updated weights. Pre-step decay uses those of W W , which can mix the current directions when the polar factor changes. Proposition 1",
+      "url": "https://arxiv.org/html/2610.11730v1#Thmproposition1"
+    },
+    {
+      "href": "#A1.SS3",
+      "text": "A.3",
+      "section": "Proposition 1 (Sensitivity to update order) .",
+      "context": "The Frobenius bound follows from the polar-factor perturbation estimate of Li et al. [2026, Proposition 2, Appendix A.4] . Appendix A.1 gives a proof and the quadratic example. Post-step decay uses the singular directions of the updated weights. Pre-step decay uses those of W W , which can mix the current directions when the polar factor changes. Proposition 1 shows that this difference can be larger than the corresponding pre/post difference under ℓ 2 \\ell_{2} weight decay. Appendix A.3",
+      "url": "https://arxiv.org/html/2610.11730v1#A1.SS3"
+    },
+    {
+      "href": "#A1.SS2",
+      "text": "A.2",
+      "section": "Proposition 1 (Sensitivity to update order) .",
+      "context": "The two post-step rules then differ in how they shrink the spectrum of Z Z . ℓ 2 \\ell_{2} decay multiplies each singular value by 1 − τ 1-\\tau , while spectral decay subtracts τ \\tau from each coefficient in the same singular basis. Above τ \\tau , the relative reduction τ / σ i \\tau/\\sigma_{i} is greater for smaller singular values. Below τ \\tau , the spectral step lets the signed coefficient cross zero. The exact nuclear-norm proximal update instead sets it to zero (Appendix A.2",
+      "url": "https://arxiv.org/html/2610.11730v1#A1.SS2"
+    },
+    {
+      "href": "#bib.bib12",
+      "text": "Tibshirani, 1996",
+      "section": "Proposition 1 (Sensitivity to update order) .",
+      "context": "cay multiplies each singular value by 1 − τ 1-\\tau , while spectral decay subtracts τ \\tau from each coefficient in the same singular basis. Above τ \\tau , the relative reduction τ / σ i \\tau/\\sigma_{i} is greater for smaller singular values. Below τ \\tau , the spectral step lets the signed coefficient cross zero. The exact nuclear-norm proximal update instead sets it to zero (Appendix A.2 ). This additive shrinkage should favor low-rank weights by driving small singular values toward zero, analogous to the sparsity induced by ℓ 1 \\ell_{1} regularization in linear regression [ Tibshirani, 1996",
+      "url": "https://arxiv.org/html/2610.11730v1#bib.bib12"
+    },
+    {
+      "href": "#A1.SS2",
+      "text": "A.2",
+      "section": "Proposition 1 (Sensitivity to update order) .",
+      "context": "The interpretation of post-step spectral weight decay as an approximate nuclear-norm proximal step further motivates its use over the pre-step form. Appendix A.2",
+      "url": "https://arxiv.org/html/2610.11730v1#A1.SS2"
+    },
+    {
+      "href": "#bib.bib38",
+      "text": "Hoffmann et al., 2022",
+      "section": "5.1 Fine-tuning for low-rank compression",
+      "context": "We compare spectral weight decay during pretraining with its use after pretraining from a standard ℓ 2 \\ell_{2} weight decay checkpoint. The 124 124 M-parameter model is pretrained for one Chinchilla-optimal training budget [ Hoffmann et al., 2022",
+      "url": "https://arxiv.org/html/2610.11730v1#bib.bib38"
+    },
+    {
+      "href": "#S5.F5",
+      "text": "5",
+      "section": "5.1 Fine-tuning for low-rank compression",
+      "context": "We compare spectral weight decay during pretraining with its use after pretraining from a standard ℓ 2 \\ell_{2} weight decay checkpoint. The 124 124 M-parameter model is pretrained for one Chinchilla-optimal training budget [ Hoffmann et al., 2022 ] , then fine-tuned on 32.8 32.8 M tokens. Figure 5",
+      "url": "https://arxiv.org/html/2610.11730v1#S5.F5"
+    },
+    {
+      "href": "#S5.F5",
+      "text": "5",
+      "section": "5.1 Fine-tuning for low-rank compression",
+      "context": "We compare spectral weight decay during pretraining with its use after pretraining from a standard ℓ 2 \\ell_{2} weight decay checkpoint. The 124 124 M-parameter model is pretrained for one Chinchilla-optimal training budget [ Hoffmann et al., 2022 ] , then fine-tuned on 32.8 32.8 M tokens. Figure 5 plots the final validation loss against mean effective rank as the spectral coefficient varies. Within the observed overlap, fine-tuning incurs substantially more loss at the same rank. Fine-tuning also requires a much larger λ \\lambda before rank changes appreciably. The sweeps in Figure 5",
+      "url": "https://arxiv.org/html/2610.11730v1#S5.F5"
+    },
+    {
+      "href": "#bib.bib13",
+      "text": "González-Martínez and Liu, 2026",
+      "section": "5.1 Fine-tuning for low-rank compression",
+      "context": "ve rank as the spectral coefficient varies. Within the observed overlap, fine-tuning incurs substantially more loss at the same rank. Fine-tuning also requires a much larger λ \\lambda before rank changes appreciably. The sweeps in Figure 5 use λ \\lambda values from 0 0 to 7 7 for pretraining and from 4 4 to 250 250 for fine-tuning. Preparing an existing checkpoint for low-rank compression without a substantial loss increase remains open. SLORR also reports difficulties in fine-tuning LLMs with low-rank regularization while preserving their general capabilities [ González-Martínez and Liu, 2026",
+      "url": "https://arxiv.org/html/2610.11730v1#bib.bib13"
+    },
+    {
+      "href": "#A2.SS2",
+      "text": "B.2",
+      "section": "5.1 Fine-tuning for low-rank compression",
+      "context": "ectral coefficient varies. Within the observed overlap, fine-tuning incurs substantially more loss at the same rank. Fine-tuning also requires a much larger λ \\lambda before rank changes appreciably. The sweeps in Figure 5 use λ \\lambda values from 0 0 to 7 7 for pretraining and from 4 4 to 250 250 for fine-tuning. Preparing an existing checkpoint for low-rank compression without a substantial loss increase remains open. SLORR also reports difficulties in fine-tuning LLMs with low-rank regularization while preserving their general capabilities [ González-Martínez and Liu, 2026 ] . Appendix B.2",
+      "url": "https://arxiv.org/html/2610.11730v1#A2.SS2"
+    },
+    {
+      "href": "#bib.bib29",
+      "text": "Qin et al., 2025",
+      "section": "5.1 Fine-tuning for low-rank compression",
+      "context": "lly more loss at the same rank. Fine-tuning also requires a much larger λ \\lambda before rank changes appreciably. The sweeps in Figure 5 use λ \\lambda values from 0 0 to 7 7 for pretraining and from 4 4 to 250 250 for fine-tuning. Preparing an existing checkpoint for low-rank compression without a substantial loss increase remains open. SLORR also reports difficulties in fine-tuning LLMs with low-rank regularization while preserving their general capabilities [ González-Martínez and Liu, 2026 ] . Appendix B.2 compares spectral weight decay with the fine-tuning method Prehab [ Qin et al., 2025",
+      "url": "https://arxiv.org/html/2610.11730v1#bib.bib29"
+    },
+    {
+      "href": "#S5.F6",
+      "text": "6",
+      "section": "5.2 Spectral regularization with matrix-aware optimizers",
+      "context": "Figure 6",
+      "url": "https://arxiv.org/html/2610.11730v1#S5.F6"
+    },
+    {
+      "href": "#bib.bib4",
+      "text": "Jordan et al., 2024",
+      "section": "5.2 Spectral regularization with matrix-aware optimizers",
+      "context": "Figure 6 (a,d) compares optimizers with the same ℓ 2 \\ell_{2} weight decay coefficient of 0.1 0.1 . Muon [ Jordan et al., 2024",
+      "url": "https://arxiv.org/html/2610.11730v1#bib.bib4"
+    },
+    {
+      "href": "#bib.bib3",
+      "text": "Vyas et al., 2024",
+      "section": "5.2 Spectral regularization with matrix-aware optimizers",
+      "context": "Figure 6 (a,d) compares optimizers with the same ℓ 2 \\ell_{2} weight decay coefficient of 0.1 0.1 . Muon [ Jordan et al., 2024 ] and SOAP [ Vyas et al., 2024",
+      "url": "https://arxiv.org/html/2610.11730v1#bib.bib3"
+    },
+    {
+      "href": "#S5.F6",
+      "text": "6",
+      "section": "5.2 Spectral regularization with matrix-aware optimizers",
+      "context": "Figure 6 (a,d) compares optimizers with the same ℓ 2 \\ell_{2} weight decay coefficient of 0.1 0.1 . Muon [ Jordan et al., 2024 ] and SOAP [ Vyas et al., 2024 ] produce higher effective ranks than the other optimizers, whose final ranks cluster in a narrow range. This suggests that their optimization dynamics may oppose the spectral concentration encouraged by spectral weight decay. The Muon sweep in Figure 6",
+      "url": "https://arxiv.org/html/2610.11730v1#S5.F6"
+    },
+    {
+      "href": "#S5.F6",
+      "text": "6",
+      "section": "5.2 Spectral regularization with matrix-aware optimizers",
+      "context": " the same ℓ 2 \\ell_{2} weight decay coefficient of 0.1 0.1 . Muon [ Jordan et al., 2024 ] and SOAP [ Vyas et al., 2024 ] produce higher effective ranks than the other optimizers, whose final ranks cluster in a narrow range. This suggests that their optimization dynamics may oppose the spectral concentration encouraged by spectral weight decay. The Muon sweep in Figure 6 (b,e) shows that substantial rank reduction comes with a steep validation-loss increase, limiting the practical appeal of this combination. By contrast, Lion exhibits a more favorable trade-off between loss and rank in Figure 6",
+      "url": "https://arxiv.org/html/2610.11730v1#S5.F6"
+    },
+    {
+      "href": "https://proceedings.mlr.press/v80/gupta18a.html",
+      "text": "https://proceedings.mlr.press/v80/gupta18a.html",
+      "section": "References",
+      "context": "Gupta et al. [2018] Vineet Gupta, Tomer Koren, and Yoram Singer. Shampoo: Preconditioned stochastic tensor optimization. In Proceedings of the 35th International Conference on Machine Learning , volume 80 of Proceedings of Machine Learning Research , pages 1842–1850. PMLR, 2018. URL https://proceedings.mlr.press/v80/gupta18a.html",
+      "url": "https://proceedings.mlr.press/v80/gupta18a.html"
+    },
+    {
+      "href": "https://arxiv.org/abs/2409.11321",
+      "text": "https://arxiv.org/abs/2409.11321",
+      "section": "References",
+      "context": "Vyas et al. [2024] Nikhil Vyas, Depen Morwani, Rosie Zhao, Mujin Kwun, Itai Shapira, David Brandfonbrener, Lucas Janson, and Sham M. Kakade. SOAP: Improving and stabilizing Shampoo using Adam, 2024. URL https://arxiv.org/abs/2409.11321",
+      "url": "https://arxiv.org/abs/2409.11321"
+    },
+    {
+      "href": "https://kellerjordan.github.io/posts/muon/",
+      "text": "https://kellerjordan.github.io/posts/muon/",
+      "section": "References",
+      "context": "Jordan et al. [2024] Keller Jordan, Yuchen Jin, Vlado Boza, Jiacheng You, Franz Cesista, Laker Newhouse, and Jeremy Bernstein. Muon: An optimizer for hidden layers in neural networks. https://kellerjordan.github.io/posts/muon/",
+      "url": "https://kellerjordan.github.io/posts/muon/"
+    },
+    {
+      "href": "https://arxiv.org/abs/2602.11137",
+      "text": "https://arxiv.org/abs/2602.11137",
+      "section": "References",
+      "context": "Han et al. [2026] Tessa Han, Sebastian Bordt, Hanlin Zhang, and Sham Kakade. Weight decay improves language model plasticity, 2026. URL https://arxiv.org/abs/2602.11137",
+      "url": "https://arxiv.org/abs/2602.11137"
+    },
+    {
+      "href": "http://papers.nips.cc/paper_files/paper/2024/hash/29496c942ed6e08ecc469f4521ebfff0-Abstract-Conference.html",
+      "text": "http://papers.nips.cc/paper_files/paper/2024/hash/29496c942ed6e08ecc469f4521ebfff0-Abstract-Conference.html",
+      "section": "References",
+      "context": "D’Angelo et al. [2024] Francesco D’Angelo, Maksym Andriushchenko, Aditya Vardhan Varre, and Nicolas Flammarion. Why do we need weight decay in modern deep learning? In Advances in Neural Information Processing Systems 37: Annual Conference on Neural Information Processing Systems 2024, NeurIPS 2024, Vancouver, BC, Canada, December 10 - 15, 2024 , 2024. URL http://papers.nips.cc/paper_files/paper/2024/hash/29496c942ed6e08ecc469f4521ebfff0-Abstract-Conference.html",
+      "url": "http://papers.nips.cc/paper_files/paper/2024/hash/29496c942ed6e08ecc469f4521ebfff0-Abstract-Conference.html"
+    },
+    {
+      "href": "https://openreview.net/forum?id=IKhEPWGdwK",
+      "text": "https://openreview.net/forum?id=IKhEPWGdwK",
+      "section": "References",
+      "context": "Zhuang et al. [2022] Zhenxun Zhuang, Mingrui Liu, Ashok Cutkosky, and Francesco Orabona. Understanding AdamW through proximal methods and scale-freeness. Transactions on Machine Learning Research , 2022. URL https://openreview.net/forum?id=IKhEPWGdwK",
+      "url": "https://openreview.net/forum?id=IKhEPWGdwK"
+    },
+    {
+      "href": "https://arxiv.org/abs/2607.08754",
+      "text": "https://arxiv.org/abs/2607.08754",
+      "section": "References",
+      "context": "González-Martínez and Liu [2026] David González-Martínez and Shiwei Liu. SLORR: Simple and efficient in-training low-rank regularization, 2026. URL https://arxiv.org/abs/2607.08754",
+      "url": "https://arxiv.org/abs/2607.08754"
+    },
+    {
+      "href": "https://arxiv.org/abs/2302.13971",
+      "text": "https://arxiv.org/abs/2302.13971",
+      "section": "References",
+      "context": "Touvron et al. [2023] Hugo Touvron, Thibaut Lavril, Gautier Izacard, Xavier Martinet, Marie-Anne Lachaux, Timothée Lacroix, Baptiste Rozière, Naman Goyal, Eric Hambro, Faisal Azhar, Aurelien Rodriguez, Armand Joulin, Edouard Grave, and Guillaume Lample. LLaMA: Open and efficient foundation language models, 2023. URL https://arxiv.org/abs/2302.13971",
+      "url": "https://arxiv.org/abs/2302.13971"
+    },
+    {
+      "href": "https://proceedings.neurips.cc/paper/1991/hash/8eefcfdf5990e441f0fb6f3fad709e21-Abstract.html",
+      "text": "https://proceedings.neurips.cc/paper/1991/hash/8eefcfdf5990e441f0fb6f3fad709e21-Abstract.html",
+      "section": "References",
+      "context": "Krogh and Hertz [1991] Anders Krogh and John A. Hertz. A simple weight decay can improve generalization. In J. Moody, S. Hanson, and R. P. Lippmann, editors, Advances in Neural Information Processing Systems , volume 4. Morgan-Kaufmann, 1991. URL https://proceedings.neurips.cc/paper/1991/hash/8eefcfdf5990e441f0fb6f3fad709e21-Abstract.html",
+      "url": "https://proceedings.neurips.cc/paper/1991/hash/8eefcfdf5990e441f0fb6f3fad709e21-Abstract.html"
+    },
+    {
+      "href": "https://openreview.net/forum?id=B1lz-3Rct7",
+      "text": "https://openreview.net/forum?id=B1lz-3Rct7",
+      "section": "References",
+      "context": "Zhang et al. [2019] Guodong Zhang, Chaoqi Wang, Bowen Xu, and Roger Grosse. Three mechanisms of weight decay regularization. In International Conference on Learning Representations , 2019. URL https://openreview.net/forum?id=B1lz-3Rct7",
+      "url": "https://openreview.net/forum?id=B1lz-3Rct7"
+    },
+    {
+      "href": "https://proceedings.neurips.cc/paper/2020/hash/32fcc8cfe1fa4c77b5c58dafd36d1a98-Abstract.html",
+      "text": "https://proceedings.neurips.cc/paper/2020/hash/32fcc8cfe1fa4c77b5c58dafd36d1a98-Abstract.html",
+      "section": "References",
+      "context": "Lewkowycz and Gur-Ari [2020] Aitor Lewkowycz and Guy Gur-Ari. On the training dynamics of deep networks with L 2 L_{2} regularization. In H. Larochelle, M. Ranzato, R. Hadsell, M. F. Balcan, and H. Lin, editors, Advances in Neural Information Processing Systems , volume 33, pages 4790–4799. Curran Associates, Inc., 2020. URL https://proceedings.neurips.cc/paper/2020/hash/32fcc8cfe1fa4c77b5c58dafd36d1a98-Abstract.html",
+      "url": "https://proceedings.neurips.cc/paper/2020/hash/32fcc8cfe1fa4c77b5c58dafd36d1a98-Abstract.html"
+    },
+    {
+      "href": "https://proceedings.neurips.cc/paper_files/paper/2024/hash/084a67fb91826028f555e288f3adc9a4-Abstract-Conference.html",
+      "text": "https://proceedings.neurips.cc/paper_files/paper/2024/hash/084a67fb91826028f555e288f3adc9a4-Abstract-Conference.html",
+      "section": "References",
+      "context": "Kobayashi et al. [2024] Seijin Kobayashi, Yassir Akram, and Johannes von Oswald. Weight decay induces low-rank attention layers. In A. Globerson, L. Mackey, D. Belgrave, A. Fan, U. Paquet, J. Tomczak, and C. Zhang, editors, Advances in Neural Information Processing Systems , volume 37, pages 4481–4510. Curran Associates, Inc., 2024. doi: 10.52202/079017-0146 . URL https://proceedings.neurips.cc/paper_files/paper/2024/hash/084a67fb91826028f555e288f3adc9a4-Abstract-Conference.html",
+      "url": "https://proceedings.neurips.cc/paper_files/paper/2024/hash/084a67fb91826028f555e288f3adc9a4-Abstract-Conference.html"
+    },
+    {
+      "href": "https://proceedings.neurips.cc/paper_files/paper/2004/hash/e0688d13958a19e087e123148555e4b4-Abstract.html",
+      "text": "https://proceedings.neurips.cc/paper_files/paper/2004/hash/e0688d13958a19e087e123148555e4b4-Abstract.html",
+      "section": "References",
+      "context": "Srebro et al. [2004] Nathan Srebro, Jason Rennie, and Tommi S. Jaakkola. Maximum-margin matrix factorization. In Lawrence Saul, Yair Weiss, and Léon Bottou, editors, Advances in Neural Information Processing Systems , volume 17. MIT Press, 2004. URL https://proceedings.neurips.cc/paper_files/paper/2004/hash/e0688d13958a19e087e123148555e4b4-Abstract.html",
+      "url": "https://proceedings.neurips.cc/paper_files/paper/2004/hash/e0688d13958a19e087e123148555e4b4-Abstract.html"
+    },
+    {
+      "href": "https://proceedings.neurips.cc/paper/2017/hash/db85e2590b6109813dafa101ceb2faeb-Abstract.html",
+      "text": "https://proceedings.neurips.cc/paper/2017/hash/db85e2590b6109813dafa101ceb2faeb-Abstract.html",
+      "section": "References",
+      "context": "Álvarez and Salzmann [2017] José M. Álvarez and Mathieu Salzmann. Compression-aware training of deep networks. In Advances in Neural Information Processing Systems 30: Annual Conference on Neural Information Processing Systems 2017, December 4-9, 2017, Long Beach, CA, USA , pages 856–867, 2017. URL https://proceedings.neurips.cc/paper/2017/hash/db85e2590b6109813dafa101ceb2faeb-Abstract.html",
+      "url": "https://proceedings.neurips.cc/paper/2017/hash/db85e2590b6109813dafa101ceb2faeb-Abstract.html"
+    },
+    {
+      "href": "https://arxiv.org/abs/2603.03597",
+      "text": "https://arxiv.org/abs/2603.03597",
+      "section": "References",
+      "context": "Dolatabadi et al. [2026] Hadi Mohaghegh Dolatabadi, Thalaiyasingam Ajanthan, Sameera Ramasinghe, Chamin P Hewa Koneputugodage, Shamane Siriwardhana, Violetta Shevchenko, Karol Pajak, James Snewin, Gil Avraham, and Alexander Long. NuMuon: Nuclear-norm-constrained Muon for compressible LLM training, 2026. URL https://arxiv.org/abs/2603.03597",
+      "url": "https://arxiv.org/abs/2603.03597"
+    },
+    {
+      "href": "https://arxiv.org/abs/2305.02538",
+      "text": "https://arxiv.org/abs/2305.02538",
+      "section": "References",
+      "context": "Wang et al. [2023] Hongyi Wang, Saurabh Agarwal, Pongsakorn U-chupala, Yoshiki Tanaka, Eric P. Xing, and Dimitris S. Papailiopoulos. Cuttlefish: Low-rank model training without all the tuning, 2023. URL https://arxiv.org/abs/2305.02538",
+      "url": "https://arxiv.org/abs/2305.02538"
+    },
+    {
+      "href": "https://doi.org/10.24963/ijcai.2020/136",
+      "text": "https://doi.org/10.24963/ijcai.2020/136",
+      "section": "References",
+      "context": "Xu et al. [2020] Yuhui Xu, Yuxi Li, Shuai Zhang, Wei Wen, Botao Wang, Yingyong Qi, Yiran Chen, Weiyao Lin, and Hongkai Xiong. TRP: Trained rank pruning for efficient deep neural networks. In Christian Bessiere, editor, Proceedings of the Twenty-Ninth International Joint Conference on Artificial Intelligence, IJCAI-20 , pages 977–983. International Joint Conferences on Artificial Intelligence Organization, 7 2020. doi: 10.24963/ijcai.2020/136 . URL https://doi.org/10.24963/ijcai.2020/136",
+      "url": "https://doi.org/10.24963/ijcai.2020/136"
+    },
+    {
+      "href": "https://arxiv.org/abs/2502.02723",
+      "text": "https://arxiv.org/abs/2502.02723",
+      "section": "References",
+      "context": "Wang et al. [2025] Qinsi Wang, Jinghan Ke, Masayoshi Tomizuka, Yiran Chen, Kurt Keutzer, and Chenfeng Xu. Dobi-SVD: Differentiable SVD for LLM compression and some new perspectives, 2025. URL https://arxiv.org/abs/2502.02723",
+      "url": "https://arxiv.org/abs/2502.02723"
+    },
+    {
+      "href": "https://arxiv.org/abs/2512.01980",
+      "text": "https://arxiv.org/abs/2512.01980",
+      "section": "References",
+      "context": "Qin et al. [2025] Haoran Qin, Shansita D. Sharma, Ali Abbasi, Chayne Thrash, and Soheil Kolouri. Low-rank Prehab: Preparing neural networks for SVD compression, 2025. URL https://arxiv.org/abs/2512.01980",
+      "url": "https://arxiv.org/abs/2512.01980"
+    },
+    {
+      "href": "https://arxiv.org/abs/2406.17557",
+      "text": "https://arxiv.org/abs/2406.17557",
+      "section": "References",
+      "context": "Penedo et al. [2024] Guilherme Penedo, Hynek Kydlíček, Loubna Ben allal, Anton Lozhkov, Margaret Mitchell, Colin Raffel, Leandro Von Werra, and Thomas Wolf. The FineWeb datasets: Decanting the web for the finest text data at scale, 2024. URL https://arxiv.org/abs/2406.17557",
+      "url": "https://arxiv.org/abs/2406.17557"
+    },
+    {
+      "href": "https://arxiv.org/abs/2007.08199",
+      "text": "https://arxiv.org/abs/2007.08199",
+      "section": "References",
+      "context": "Song et al. [2022] Hwanjun Song, Minseok Kim, Dongmin Park, Yooju Shin, and Jae-Gil Lee. Learning from noisy labels with deep neural networks: A survey, 2022. URL https://arxiv.org/abs/2007.08199",
+      "url": "https://arxiv.org/abs/2007.08199"
+    },
+    {
+      "href": "http://dx.doi.org/10.3115/v1/D14-1179",
+      "text": "http://dx.doi.org/10.3115/v1/D14-1179",
+      "section": "References",
+      "context": "Cho et al. [2014] Kyunghyun Cho, Bart van Merrienboer, Caglar Gulcehre, Dzmitry Bahdanau, Fethi Bougares, Holger Schwenk, and Yoshua Bengio. Learning phrase representations using RNN encoder–decoder for statistical machine translation. In Proceedings of the 2014 Conference on Empirical Methods in Natural Language Processing (EMNLP) , page 1724–1734. Association for Computational Linguistics, 2014. doi: 10.3115/v1/d14-1179 . URL http://dx.doi.org/10.3115/v1/D14-1179",
+      "url": "http://dx.doi.org/10.3115/v1/D14-1179"
+    },
+    {
+      "href": "http://dx.doi.org/10.1109/5.726791",
+      "text": "http://dx.doi.org/10.1109/5.726791",
+      "section": "References",
+      "context": "Lecun et al. [1998] Y. Lecun, L. Bottou, Y. Bengio, and P. Haffner. Gradient-based learning applied to document recognition. Proceedings of the IEEE , 86(11):2278–2324, 1998. ISSN 0018-9219. doi: 10.1109/5.726791 . URL http://dx.doi.org/10.1109/5.726791",
+      "url": "http://dx.doi.org/10.1109/5.726791"
+    },
+    {
+      "href": "http://dx.doi.org/10.18653/v1/N19-1423",
+      "text": "http://dx.doi.org/10.18653/v1/N19-1423",
+      "section": "References",
+      "context": "Devlin et al. [2019] Jacob Devlin, Ming-Wei Chang, Kenton Lee, and Kristina Toutanova. BERT: Pre-training of deep bidirectional transformers for language understanding. In Proceedings of the 2019 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies, Volume 1 (Long and Short Papers) , page 4171–4186. Association for Computational Linguistics, 2019. doi: 10.18653/v1/n19-1423 . URL http://dx.doi.org/10.18653/v1/N19-1423",
+      "url": "http://dx.doi.org/10.18653/v1/N19-1423"
+    },
+    {
+      "href": "https://arxiv.org/abs/1509.01626",
+      "text": "https://arxiv.org/abs/1509.01626",
+      "section": "References",
+      "context": "Zhang et al. [2015] Xiang Zhang, Junbo Zhao, and Yann LeCun. Character-level convolutional networks for text classification. In Advances in Neural Information Processing Systems , volume 28. Curran Associates, Inc., 2015. URL https://arxiv.org/abs/1509.01626",
+      "url": "https://arxiv.org/abs/1509.01626"
+    },
+    {
+      "href": "http://proceedings.mlr.press/v80/li18a.html",
+      "text": "http://proceedings.mlr.press/v80/li18a.html",
+      "section": "References",
+      "context": "Li et al. [2018] Xuhong Li, Yves Grandvalet, and Franck Davoine. Explicit inductive bias for transfer learning with convolutional networks. In Proceedings of the 35th International Conference on Machine Learning, ICML 2018, Stockholmsmässan, Stockholm, Sweden, July 10-15, 2018 , volume 80 of Proceedings of Machine Learning Research , pages 2825–2834. PMLR, 2018. URL http://proceedings.mlr.press/v80/li18a.html",
+      "url": "http://proceedings.mlr.press/v80/li18a.html"
+    },
+    {
+      "href": "https://arxiv.org/abs/2608.20818",
+      "text": "https://arxiv.org/abs/2608.20818",
+      "section": "References",
+      "context": "Li et al. [2026] Chenghao Li, Xiao Han, Xinxin Huang, Wei Liu, Boyang Li, Bing Xiao, Heran Zhang, Juanma Perez Rua, Ke Xu, Kangning Liu, Linjun Kuang, Na Li, Tan Wang, Tian Xie, Wei Peng, Yang Pei, Yifan Xu, Yuanhao Zhai, Yuwei Lin, Zhe Wang, Zihao He, Daniel Li, Junbiao Tang, Ziyang Jiang, and Dake Chen. Scaling Muon for diffusion transformers, 2026. URL https://arxiv.org/abs/2608.20818",
+      "url": "https://arxiv.org/abs/2608.20818"
+    },
+    {
+      "href": "https://proceedings.neurips.cc/paper_files/paper/2022/file/c1e2faff6f588870935f114ebe04a3e5-Paper-Conference.pdf",
+      "text": "https://proceedings.neurips.cc/paper_files/paper/2022/file/c1e2faff6f588870935f114ebe04a3e5-Paper-Conference.pdf",
+      "section": "References",
+      "context": "ford, Diego de Las Casas, Lisa Anne Hendricks, Johannes Welbl, Aidan Clark, Thomas Hennigan, Eric Noland, Katherine Millican, George van den Driessche, Bogdan Damoc, Aurelia Guy, Simon Osindero, Karén Simonyan, Erich Elsen, Oriol Vinyals, Jack Rae, and Laurent Sifre. An empirical analysis of compute-optimal large language model training. In Advances in Neural Information Processing Systems , volume 35, pages 30016–30030. Curran Associates, Inc., 2022. doi: 10.52202/068431-2176 . URL https://proceedings.neurips.cc/paper_files/paper/2022/file/c1e2faff6f588870935f114ebe04a3e5-Paper-Conference.pdf",
+      "url": "https://proceedings.neurips.cc/paper_files/paper/2022/file/c1e2faff6f588870935f114ebe04a3e5-Paper-Conference.pdf"
+    },
+    {
+      "href": "https://arxiv.org/abs/1412.6980",
+      "text": "https://arxiv.org/abs/1412.6980",
+      "section": "References",
+      "context": "Kingma and Ba [2015] Diederik P. Kingma and Jimmy Ba. Adam: A method for stochastic optimization, 2015. URL https://arxiv.org/abs/1412.6980",
+      "url": "https://arxiv.org/abs/1412.6980"
+    },
+    {
+      "href": "https://proceedings.mlr.press/v267/yuan25f.html",
+      "text": "https://proceedings.mlr.press/v267/yuan25f.html",
+      "section": "References",
+      "context": "Yuan et al. [2025] Huizhuo Yuan, Yifeng Liu, Shuang Wu, Xun Zhou, and Quanquan Gu. MARS: Unleashing the power of variance reduction for training large models. In Proceedings of the 42nd International Conference on Machine Learning , volume 267 of Proceedings of Machine Learning Research , pages 73553–73587. PMLR, 2025. URL https://proceedings.mlr.press/v267/yuan25f.html",
+      "url": "https://proceedings.mlr.press/v267/yuan25f.html"
+    },
+    {
+      "href": "https://proceedings.neurips.cc/paper_files/paper/2023/file/9a39b4925e35cf447ccba8757137d84f-Paper-Conference.pdf",
+      "text": "https://proceedings.neurips.cc/paper_files/paper/2023/file/9a39b4925e35cf447ccba8757137d84f-Paper-Conference.pdf",
+      "section": "References",
+      "context": "Chen et al. [2023] Xiangning Chen, Chen Liang, Da Huang, Esteban Real, Kaiyuan Wang, Hieu Pham, Xuanyi Dong, Thang Luong, Cho-Jui Hsieh, Yifeng Lu, and Quoc V. Le. Symbolic discovery of optimization algorithms. In Advances in Neural Information Processing Systems , volume 36, pages 49205–49233. Curran Associates, Inc., 2023. doi: 10.52202/075280-2140 . URL https://proceedings.neurips.cc/paper_files/paper/2023/file/9a39b4925e35cf447ccba8757137d84f-Paper-Conference.pdf",
+      "url": "https://proceedings.neurips.cc/paper_files/paper/2023/file/9a39b4925e35cf447ccba8757137d84f-Paper-Conference.pdf"
+    },
+    {
+      "href": "https://proceedings.mlr.press/v80/bernstein18a.html",
+      "text": "https://proceedings.mlr.press/v80/bernstein18a.html",
+      "section": "References",
+      "context": "Bernstein et al. [2018] Jeremy Bernstein, Yu-Xiang Wang, Kamyar Azizzadenesheli, and Animashree Anandkumar. signSGD: Compressed optimisation for non-convex problems. In Proceedings of the 35th International Conference on Machine Learning , volume 80 of Proceedings of Machine Learning Research , pages 560–569. PMLR, 2018. URL https://proceedings.mlr.press/v80/bernstein18a.html",
+      "url": "https://proceedings.mlr.press/v80/bernstein18a.html"
+    },
+    {
+      "href": "https://proceedings.iclr.cc/paper_files/paper/2024/file/06960915ba8674c7a898ec0b472b80ff-Paper-Conference.pdf",
+      "text": "https://proceedings.iclr.cc/paper_files/paper/2024/file/06960915ba8674c7a898ec0b472b80ff-Paper-Conference.pdf",
+      "section": "References",
+      "context": "Liu et al. [2024] Hong Liu, Zhiyuan Li, David Hall, Percy Liang, and Tengyu Ma. Sophia: A scalable stochastic second-order optimizer for language model pre-training. In International Conference on Learning Representations , pages 1621–1650, 2024. URL https://proceedings.iclr.cc/paper_files/paper/2024/file/06960915ba8674c7a898ec0b472b80ff-Paper-Conference.pdf",
+      "url": "https://proceedings.iclr.cc/paper_files/paper/2024/file/06960915ba8674c7a898ec0b472b80ff-Paper-Conference.pdf"
+    },
+    {
+      "href": "https://arxiv.org/abs/1803.05457",
+      "text": "https://arxiv.org/abs/1803.05457",
+      "section": "References",
+      "context": "Clark et al. [2018] Peter Clark, Isaac Cowhey, Oren Etzioni, Tushar Khot, Ashish Sabharwal, Carissa Schoenick, and Oyvind Tafjord. Think you have solved question answering? try ARC, the AI2 reasoning challenge, 2018. URL https://arxiv.org/abs/1803.05457",
+      "url": "https://arxiv.org/abs/1803.05457"
+    },
+    {
+      "href": "https://arxiv.org/abs/1905.07830",
+      "text": "https://arxiv.org/abs/1905.07830",
+      "section": "References",
+      "context": "Zellers et al. [2019] Rowan Zellers, Ari Holtzman, Yonatan Bisk, Ali Farhadi, and Yejin Choi. HellaSwag: Can a machine really finish your sentence?, 2019. URL https://arxiv.org/abs/1905.07830",
+      "url": "https://arxiv.org/abs/1905.07830"
+    },
+    {
+      "href": "https://ojs.aaai.org/index.php/AAAI/article/view/6239",
+      "text": "https://ojs.aaai.org/index.php/AAAI/article/view/6239",
+      "section": "References",
+      "context": "Bisk et al. [2020] Yonatan Bisk, Rowan Zellers, Ronan Le Bras, Jianfeng Gao, and Yejin Choi. PIQA: Reasoning about physical commonsense in natural language. Proceedings of the AAAI Conference on Artificial Intelligence , 34(05):7432–7439, 2020. doi: 10.1609/aaai.v34i05.6239 . URL https://ojs.aaai.org/index.php/AAAI/article/view/6239",
+      "url": "https://ojs.aaai.org/index.php/AAAI/article/view/6239"
+    },
+    {
+      "href": "#bib.bib37",
+      "text": "Li et al. [2026, Proposition 2, Appendix A.4]",
+      "section": "A.1 Proof of the spectral update-order bound",
+      "context": "For a full-rank matrix A = U A ​ Σ A ​ V A ⊤ A=U_{A}\\Sigma_{A}V_{A}^{\\top} , write Q ⁡ ( A ) = U A ​ V A ⊤ Q(A)=U_{A}V_{A}^{\\top} for its polar factor. We first bound changes in this factor. The bound holds for rectangular matrices and does not require gaps between their nonzero singular values. It is proved by Li et al. [2026, Proposition 2, Appendix A.4]",
+      "url": "https://arxiv.org/html/2610.11730v1#bib.bib37"
+    },
+    {
+      "href": "#Thmproposition1",
+      "text": "1",
+      "section": "Lemma 1 (Polar-factor perturbation) .",
+      "context": "",
+      "url": "https://arxiv.org/html/2610.11730v1#Thmproposition1"
+    },
+    {
+      "href": "#Thmlemma1",
+      "text": "1",
+      "section": "Proof of Proposition 1 .",
+      "context": "Applying Lemma 1",
+      "url": "https://arxiv.org/html/2610.11730v1#Thmlemma1"
+    },
+    {
+      "href": "#Thmlemma1",
+      "text": "1",
+      "section": "Proof of Proposition 1 .",
+      "context": "The loss-only step with direction D η D_{\\eta} gives Z η = W η − η D η = diag ( 1 , − η ( 1 + η ) / 2 ) Z_{\\eta}=W_{\\eta}-\\eta D_{\\eta}=\\operatorname{diag}(1,-\\eta(1+\\eta)/2) . Both matrices have full rank, so their polar factors are unique and Lemma 1",
+      "url": "https://arxiv.org/html/2610.11730v1#Thmlemma1"
+    },
+    {
+      "href": "#A1.E10",
+      "text": "10",
+      "section": "Proof of Proposition 1 .",
+      "context": "D η ‖ F ≤ 3 / 2 \\|D_{\\eta}\\|_{F}\\leq 3/2 . The task update therefore vanishes with η \\eta , but it changes the sign of the second diagonal entry. For a diagonal matrix with nonzero entries, the polar factor replaces each diagonal entry by its sign. Consequently, Q ⁡ ( W η ) = I Q(W_{\\eta})=I and Q ⁡ ( Z η ) = diag ⁡ ( 1 , − 1 ) Q(Z_{\\eta})=\\operatorname{diag}(1,-1) differ by a fixed amount even as the weights become arbitrarily close. Thus, a small task update does not guarantee a small difference between pre- and post-step spectral weight decay relative to the decay step itself. Equation ( 10",
+      "url": "https://arxiv.org/html/2610.11730v1#A1.E10"
+    },
+    {
+      "href": "#bib.bib7",
+      "text": "Parikh and Boyd, 2014",
+      "section": "A.2 Proximal interpretation",
+      "context": "Proximal-gradient descent gives a complementary interpretation of the post-step rule. It first follows the gradient of the training loss, then regularizes the resulting candidate. For a regularizer h h and τ > 0 \\tau>0 , its proximal operator is [ Parikh and Boyd, 2014",
+      "url": "https://arxiv.org/html/2610.11730v1#bib.bib7"
+    },
+    {
+      "href": "#bib.bib8",
+      "text": "Zhuang et al. [2022]",
+      "section": "A.2 Proximal interpretation",
+      "context": "For the squared Frobenius penalty h F ​ ( W ) = 1 2 ​ ‖ W ‖ F 2 h_{F}(W)=\\tfrac{1}{2}\\|W\\|_{F}^{2} , the exact proximal map is prox τ , h F ⁡ ( Z ) = Z / ( 1 + τ ) \\operatorname{prox}_{\\tau,h_{F}}(Z)=Z/(1+\\tau) . Post-step ℓ 2 \\ell_{2} shrinkage, ( 1 − τ ) ​ Z (1-\\tau)Z , is its first-order expansion. Pre-step AdamW is also first-order accurate. Zhuang et al. [2022]",
+      "url": "https://arxiv.org/html/2610.11730v1#bib.bib8"
+    },
+    {
+      "href": "#S4.E7",
+      "text": "7",
+      "section": "Proposition 2 .",
+      "context": "Let h = h F h=h_{F} , τ = η ​ λ \\tau=\\eta\\lambda , and Z ( k ) = W ( k ) − η ∇ ℒ ( W ( k ) ) Z^{(k)}=W^{(k)}-\\eta\\nabla\\mathcal{L}(W^{(k)}) . For fixed λ \\lambda and bounded W ( k ) W^{(k)} and ∇ ℒ ​ ( W ( k ) ) \\nabla\\mathcal{L}(W^{(k)}) , the pre-step update W ℓ 2 pre W_{\\ell_{2}}^{\\mathrm{pre}} in ( 7",
+      "url": "https://arxiv.org/html/2610.11730v1#S4.E7"
+    },
+    {
+      "href": "#A1.E14",
+      "text": "14",
+      "section": "Proposition 2 .",
+      "context": "Let h = h F h=h_{F} , τ = η ​ λ \\tau=\\eta\\lambda , and Z ( k ) = W ( k ) − η ∇ ℒ ( W ( k ) ) Z^{(k)}=W^{(k)}-\\eta\\nabla\\mathcal{L}(W^{(k)}) . For fixed λ \\lambda and bounded W ( k ) W^{(k)} and ∇ ℒ ​ ( W ( k ) ) \\nabla\\mathcal{L}(W^{(k)}) , the pre-step update W ℓ 2 pre W_{\\ell_{2}}^{\\mathrm{pre}} in ( 7 ) differs from the proximal iteration ( 14",
+      "url": "https://arxiv.org/html/2610.11730v1#A1.E14"
+    },
+    {
+      "href": "#bib.bib10",
+      "text": "Cai et al., 2010",
+      "section": "Proposition 2 .",
+      "context": "For the nuclear norm, the proximal map instead performs singular-value soft-thresholding [ Cai et al., 2010",
+      "url": "https://arxiv.org/html/2610.11730v1#bib.bib10"
+    },
+    {
+      "href": "#S1.E1",
+      "text": "1",
+      "section": "Proposition 2 .",
+      "context": "The post-step spectral update ( 1",
+      "url": "https://arxiv.org/html/2610.11730v1#S1.E1"
+    },
+    {
+      "href": "#A1.F7",
+      "text": "7",
+      "section": "Proposition 2 .",
+      "context": "To assess how this difference in the sub-threshold tail affects training, Figure 7",
+      "url": "https://arxiv.org/html/2610.11730v1#A1.F7"
+    },
+    {
+      "href": "#Thmproposition1",
+      "text": "1",
+      "section": "A.3 Empirical comparison of pre- and post-step spectral weight decay",
+      "context": "Proposition 1",
+      "url": "https://arxiv.org/html/2610.11730v1#Thmproposition1"
+    },
+    {
+      "href": "#A1.F8",
+      "text": "8",
+      "section": "Low-rank recovery by matrix denoising.",
+      "context": "We first study recovery when all matrix entries are observed with noise, minimizing 1 2 ​ ‖ W − Y ‖ F 2 \\tfrac{1}{2}\\|W-Y\\|_{F}^{2} for Y = W ⋆ + ν ​ ‖ W ⋆ ‖ F ​ E / 128 Y=W_{\\star}+\\nu\\|W_{\\star}\\|_{F}E/128 , with E i ​ j ∼ 𝒩 ⁡ ( 0 , 1 ) E_{ij}\\sim\\mathcal{N}(0,1) . The nonzero teacher singular values decrease geometrically with a smallest-to-largest ratio of 0.15 0.15 , testing whether regularization preserves weak signal directions while suppressing noise. Figure 8",
+      "url": "https://arxiv.org/html/2610.11730v1#A1.F8"
+    },
+    {
+      "href": "#A1.F9",
+      "text": "9",
+      "section": "Low-rank recovery from linear measurements.",
+      "context": "vations with 7,680 7{,}680 Gaussian linear measurements, twice the degrees of freedom of a rank- 16 16 matrix, y i = ⟨ A i , W ⋆ ⟩ + ξ i y_{i}=\\langle A_{i},W_{\\star}\\rangle+\\xi_{i} , where ( A i ) j ​ k ∼ 𝒩 ⁡ ( 0 , 1 ) (A_{i})_{jk}\\sim\\mathcal{N}(0,1) and ξ i ∼ 𝒩 ⁡ ( 0 , ν 2 ​ ‖ W ⋆ ‖ F 2 ) \\xi_{i}\\sim\\mathcal{N}(0,\\nu^{2}\\|W_{\\star}\\|_{F}^{2}) . We minimize the least-squares measurement loss using a flatter teacher spectrum, with sixteen nonzero singular values ranging linearly from 1 1 to 0.6 0.6 . All signal directions are therefore relatively strong, unlike in the denoising task. Figure 9",
+      "url": "https://arxiv.org/html/2610.11730v1#A1.F9"
+    },
+    {
+      "href": "#A1.F10",
+      "text": "10",
+      "section": "Update-order sensitivity in language-model pretraining.",
+      "context": "We next examine whether the two variants produce different training dynamics with Adam on a 124 124 M-parameter LLaMA trained on FineWeb-Edu at fixed λ = 1 \\lambda=1 as the learning rate increases. Figure 10",
+      "url": "https://arxiv.org/html/2610.11730v1#A1.F10"
+    },
+    {
+      "href": "#A2.T1",
+      "text": "1",
+      "section": "B.1 Language-model pretraining setup",
+      "context": "Table 1",
+      "url": "https://arxiv.org/html/2610.11730v1#A2.T1"
+    },
+    {
+      "href": "#A1.SS3",
+      "text": "A.3",
+      "section": "B.1 Language-model pretraining setup",
+      "context": "main LLaMA pretraining configurations. We train on FineWeb-Edu using GPT-2 tokenization, rotary position embeddings, RMSNorm, and SwiGLU feed-forward layers. Input embeddings and the output head share weights. All runs use sequences of 1,024 1{,}024 tokens, an effective batch of 128 128 sequences, cosine learning-rate decay with 2,000 2{,}000 warmup steps, Adam betas ( 0.9 , 0.95 ) (0.9,0.95) , gradient clipping at 0.5 0.5 , and no dropout. Spectral decay acts on two-dimensional weight matrices using five Newton-Schulz iterations, as in Muon. The higher-learning-rate comparison in Appendix A.3",
+      "url": "https://arxiv.org/html/2610.11730v1#A1.SS3"
+    },
+    {
+      "href": "#bib.bib29",
+      "text": "Qin et al., 2025",
+      "section": "B.2 Comparison with Prehab",
+      "context": "Prehab [ Qin et al., 2025",
+      "url": "https://arxiv.org/html/2610.11730v1#bib.bib29"
+    },
+    {
+      "href": "#bib.bib38",
+      "text": "Hoffmann et al., 2022",
+      "section": "B.2 Comparison with Prehab",
+      "context": "Prehab [ Qin et al., 2025 ] adds a smooth rank surrogate over activation-whitened weights to the task loss. We initialize both methods from the same 124 124 M-parameter checkpoint, pretrained with standard ℓ 2 \\ell_{2} weight decay for one Chinchilla-optimal training budget [ Hoffmann et al., 2022",
+      "url": "https://arxiv.org/html/2610.11730v1#bib.bib38"
+    },
+    {
+      "href": "#A2.F11",
+      "text": "11",
+      "section": "B.2 Comparison with Prehab",
+      "context": "[ Qin et al., 2025 ] adds a smooth rank surrogate over activation-whitened weights to the task loss. We initialize both methods from the same 124 124 M-parameter checkpoint, pretrained with standard ℓ 2 \\ell_{2} weight decay for one Chinchilla-optimal training budget [ Hoffmann et al., 2022 ] . We apply spectral weight decay without modification and tune only λ \\lambda . After 1,000 1{,}000 steps, it reduces mean effective rank by 15.9 % 15.9\\% with a 2.46 % 2.46\\% relative increase in validation loss. At comparable validation loss, the rank reduction is much larger than with Prehab (Figure 11",
+      "url": "https://arxiv.org/html/2610.11730v1#A2.F11"
+    },
+    {
+      "href": "#bib.bib23",
+      "text": "Wang et al., 2023",
+      "section": "B.3 Comparison with Cuttlefish",
+      "context": "Cuttlefish [ Wang et al., 2023",
+      "url": "https://arxiv.org/html/2610.11730v1#bib.bib23"
+    },
+    {
+      "href": "#A2.F12",
+      "text": "12",
+      "section": "B.3 Comparison with Cuttlefish",
+      "context": "Cuttlefish [ Wang et al., 2023 ] is a direct training-time alternative based on a simple idea: it starts with full-rank training, waits for the stable ranks of the layers to converge, then factorizes each layer at the corresponding rank and continues training the low-rank factors. Like spectral weight decay, it modifies the model during training rather than compressing a fixed checkpoint. Across all four matched settings in Figure 12",
+      "url": "https://arxiv.org/html/2610.11730v1#A2.F12"
+    },
+    {
+      "href": "#S3",
+      "text": "3",
+      "section": "B.4 Compression method and procedure",
+      "context": "The compression results in Section 3",
+      "url": "https://arxiv.org/html/2610.11730v1#S3"
+    },
+    {
+      "href": "#A2.T2",
+      "text": "2",
+      "section": "B.4 Compression method and procedure",
+      "context": "The compression results in Section 3 use SVD-LLM. We compare five singular-value-based compression methods on one checkpoint to select this method. Table 2",
+      "url": "https://arxiv.org/html/2610.11730v1#A2.T2"
+    },
+    {
+      "href": "#bib.bib25",
+      "text": "Ashkboos et al., 2024",
+      "section": "B.4 Compression method and procedure",
+      "context": "The compression results in Section 3 use SVD-LLM. We compare five singular-value-based compression methods on one checkpoint to select this method. Table 2 applies truncated SVD, SliceGPT [ Ashkboos et al., 2024",
+      "url": "https://arxiv.org/html/2610.11730v1#bib.bib25"
+    },
+    {
+      "href": "#bib.bib26",
+      "text": "Yuan et al., 2023",
+      "section": "B.4 Compression method and procedure",
+      "context": "The compression results in Section 3 use SVD-LLM. We compare five singular-value-based compression methods on one checkpoint to select this method. Table 2 applies truncated SVD, SliceGPT [ Ashkboos et al., 2024 ] , ASVD [ Yuan et al., 2023",
+      "url": "https://arxiv.org/html/2610.11730v1#bib.bib26"
+    },
+    {
+      "href": "#bib.bib27",
+      "text": "Wang et al., 2024",
+      "section": "B.4 Compression method and procedure",
+      "context": "The compression results in Section 3 use SVD-LLM. We compare five singular-value-based compression methods on one checkpoint to select this method. Table 2 applies truncated SVD, SliceGPT [ Ashkboos et al., 2024 ] , ASVD [ Yuan et al., 2023 ] , SVD-LLM [ Wang et al., 2024",
+      "url": "https://arxiv.org/html/2610.11730v1#bib.bib27"
+    },
+    {
+      "href": "#bib.bib28",
+      "text": "Wang et al., 2025",
+      "section": "B.4 Compression method and procedure",
+      "context": "The compression results in Section 3 use SVD-LLM. We compare five singular-value-based compression methods on one checkpoint to select this method. Table 2 applies truncated SVD, SliceGPT [ Ashkboos et al., 2024 ] , ASVD [ Yuan et al., 2023 ] , SVD-LLM [ Wang et al., 2024 ] , and Dobi-SVD [ Wang et al., 2025",
+      "url": "https://arxiv.org/html/2610.11730v1#bib.bib28"
+    },
+    {
+      "href": "#bib.bib44",
+      "text": "Clark et al., 2018",
+      "section": "B.4 Compression method and procedure",
+      "context": "The compression results in Section 3 use SVD-LLM. We compare five singular-value-based compression methods on one checkpoint to select this method. Table 2 applies truncated SVD, SliceGPT [ Ashkboos et al., 2024 ] , ASVD [ Yuan et al., 2023 ] , SVD-LLM [ Wang et al., 2024 ] , and Dobi-SVD [ Wang et al., 2025 ] to a 124 124 M-parameter spectral-weight-decay model with coefficient 1 1 . We also report accuracy on ARC-Easy [ Clark et al., 2018",
+      "url": "https://arxiv.org/html/2610.11730v1#bib.bib44"
+    },
+    {
+      "href": "#bib.bib45",
+      "text": "Zellers et al., 2019",
+      "section": "B.4 Compression method and procedure",
+      "context": "The compression results in Section 3 use SVD-LLM. We compare five singular-value-based compression methods on one checkpoint to select this method. Table 2 applies truncated SVD, SliceGPT [ Ashkboos et al., 2024 ] , ASVD [ Yuan et al., 2023 ] , SVD-LLM [ Wang et al., 2024 ] , and Dobi-SVD [ Wang et al., 2025 ] to a 124 124 M-parameter spectral-weight-decay model with coefficient 1 1 . We also report accuracy on ARC-Easy [ Clark et al., 2018 ] , HellaSwag [ Zellers et al., 2019",
+      "url": "https://arxiv.org/html/2610.11730v1#bib.bib45"
+    },
+    {
+      "href": "#bib.bib46",
+      "text": "Bisk et al., 2020",
+      "section": "B.4 Compression method and procedure",
+      "context": "The compression results in Section 3 use SVD-LLM. We compare five singular-value-based compression methods on one checkpoint to select this method. Table 2 applies truncated SVD, SliceGPT [ Ashkboos et al., 2024 ] , ASVD [ Yuan et al., 2023 ] , SVD-LLM [ Wang et al., 2024 ] , and Dobi-SVD [ Wang et al., 2025 ] to a 124 124 M-parameter spectral-weight-decay model with coefficient 1 1 . We also report accuracy on ARC-Easy [ Clark et al., 2018 ] , HellaSwag [ Zellers et al., 2019 ] , and PIQA [ Bisk et al., 2020",
+      "url": "https://arxiv.org/html/2610.11730v1#bib.bib46"
+    },
+    {
+      "href": "#S3.F2",
+      "text": "2",
+      "section": "B.4 Compression method and procedure",
+      "context": "We leave the token embeddings and output head uncompressed because truncating them sharply degrades model quality. Spectral weight decay also has little effect on their ranks (Figure 2",
+      "url": "https://arxiv.org/html/2610.11730v1#S3.F2"
+    },
+    {
+      "href": "#S3.F2",
+      "text": "2",
+      "section": "B.4 Compression method and procedure",
+      "context": "We leave the token embeddings and output head uncompressed because truncating them sharply degrades model quality. Spectral weight decay also has little effect on their ranks (Figure 2 , left). We choose a separate truncation rank for each remaining weight matrix because effective rank varies substantially across transformer blocks (Figure 2",
+      "url": "https://arxiv.org/html/2610.11730v1#S3.F2"
+    },
+    {
+      "href": "#A2.T3",
+      "text": "3",
+      "section": "B.5 Noisy-label robustness results",
+      "context": "Tables 3",
+      "url": "https://arxiv.org/html/2610.11730v1#A2.T3"
+    },
+    {
+      "href": "#A2.T4",
+      "text": "4",
+      "section": "B.5 Noisy-label robustness results",
+      "context": "Tables 3 , 4",
+      "url": "https://arxiv.org/html/2610.11730v1#A2.T4"
+    },
+    {
+      "href": "#A2.T5",
+      "text": "5",
+      "section": "B.5 Noisy-label robustness results",
+      "context": "Tables 3 , 4 , and 5",
+      "url": "https://arxiv.org/html/2610.11730v1#A2.T5"
+    },
+    {
+      "href": "#bib.bib34",
+      "text": "Devlin et al., 2019",
+      "section": "B.5 Noisy-label robustness results",
+      "context": "We use BERT-base-uncased [ Devlin et al., 2019",
+      "url": "https://arxiv.org/html/2610.11730v1#bib.bib34"
+    },
+    {
+      "href": "#bib.bib39",
+      "text": "39",
+      "section": "B.5 Noisy-label robustness results",
+      "context": "39",
+      "url": "https://arxiv.org/html/2610.11730v1#bib.bib39"
+    },
+    {
+      "href": "#bib.bib40",
+      "text": "40",
+      "section": "B.5 Noisy-label robustness results",
+      "context": "39 , 40",
+      "url": "https://arxiv.org/html/2610.11730v1#bib.bib40"
+    },
+    {
+      "href": "#bib.bib41",
+      "text": "41",
+      "section": "B.5 Noisy-label robustness results",
+      "context": "39 , 40 , 41",
+      "url": "https://arxiv.org/html/2610.11730v1#bib.bib41"
+    },
+    {
+      "href": "#bib.bib42",
+      "text": "42",
+      "section": "B.5 Noisy-label robustness results",
+      "context": "39 , 40 , 41 , 42",
+      "url": "https://arxiv.org/html/2610.11730v1#bib.bib42"
+    },
+    {
+      "href": "#bib.bib43",
+      "text": "43",
+      "section": "B.5 Noisy-label robustness results",
+      "context": "39 , 40 , 41 , 42 , 43",
+      "url": "https://arxiv.org/html/2610.11730v1#bib.bib43"
+    }
+  ],
+  "note": "Extracted HTML text; equations and table formatting may be imperfect. No PDF extraction was attempted."
+}

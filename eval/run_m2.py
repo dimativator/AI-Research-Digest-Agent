@@ -12,6 +12,12 @@ from typing import Any
 
 from research_digest.agent.config import DigestConfig
 from research_digest.agent.digest_agent import DigestAgent
+from research_digest.llm.usage import (
+    DEFAULT_MODEL,
+    COST_NOTE,
+    MeteredClient,
+    summarize_usage,
+)
 from research_digest.llm.codex_llm import CodexOpenAI
 from research_digest.profiles.user_profile import UserProfile
 from research_digest.retrieval.arxiv_source import Page, Paper
@@ -55,28 +61,60 @@ class DisabledX:
         pass
 
 
+def _usage_total(records, key):
+    values = [record["usage"][key] for record in records]
+    return sum(values) if all(value is not None for value in values) else None
+
+
+def _usage_mean(records, key):
+    total = _usage_total(records, key)
+    return total / len(records) if total is not None and records else None
+
+
 def metrics(records: list[dict[str, Any]]) -> dict[str, float | int | None]:
     true_positive = sum(x["prediction"] and x["gold"] for x in records)
     false_positive = sum(x["prediction"] and not x["gold"] for x in records)
     false_negative = sum(not x["prediction"] and x["gold"] for x in records)
     correct = sum(x["prediction"] == x["gold"] for x in records)
-    precision = true_positive / (true_positive + false_positive) if true_positive + false_positive else 0.0
-    recall = true_positive / (true_positive + false_negative) if true_positive + false_negative else 0.0
+    precision = (
+        true_positive / (true_positive + false_positive)
+        if true_positive + false_positive
+        else 0.0
+    )
+    recall = (
+        true_positive / (true_positive + false_negative)
+        if true_positive + false_negative
+        else 0.0
+    )
     return {
         "tasks": len(records),
         "accuracy": correct / len(records) if records else None,
         "precision": precision,
         "recall": recall,
-        "f1": 2 * precision * recall / (precision + recall) if precision + recall else 0.0,
-        "mean_latency_seconds": statistics.mean(x["latency_seconds"] for x in records) if records else None,
+        "f1": (
+            2 * precision * recall / (precision + recall) if precision + recall else 0.0
+        ),
+        "mean_latency_seconds": (
+            statistics.mean(x["latency_seconds"] for x in records) if records else None
+        ),
         "mean_steps_per_task": statistics.mean(x["steps"] for x in records),
         "mean_llm_calls_per_task": statistics.mean(x["llm_calls"] for x in records),
         "mean_tool_calls_per_task": statistics.mean(x["tool_calls"] for x in records),
-        "cost_usd": None,
+        "estimated_api_cost_usd": _usage_total(records, "estimated_api_cost_usd"),
+        "mean_estimated_api_cost_usd_per_task": _usage_mean(
+            records, "estimated_api_cost_usd"
+        ),
+        "mean_input_tokens_per_task": _usage_mean(records, "input_tokens"),
+        "mean_output_tokens_per_task": _usage_mean(records, "output_tokens"),
     }
 
 
-def baseline_one_call(client: CodexOpenAI, profile: dict[str, Any], task: dict[str, Any], model: str | None) -> bool:
+def baseline_one_call(
+    client: CodexOpenAI,
+    profile: dict[str, Any],
+    task: dict[str, Any],
+    model: str | None,
+) -> bool:
     response = client.responses.create(
         model=model,
         instructions=(
@@ -152,17 +190,21 @@ def run_agent_task(
             prediction = False
             error = f"{type(exc).__name__}: {exc}"
         events = store.events(agent.run_id)
-        return prediction, {
-            "status": status,
-            "steps": agent.state.get("steps", 0),
-            "llm_calls": agent.state.get("llm_calls", 0),
-            "tool_calls": sum(event["type"] == "observation" for event in events),
-            "actions": [
-                event["decision"]["action"]
-                for event in events
-                if event["type"] == "action"
-            ],
-        }, error
+        return (
+            prediction,
+            {
+                "status": status,
+                "steps": agent.state.get("steps", 0),
+                "llm_calls": agent.state.get("llm_calls", 0),
+                "tool_calls": sum(event["type"] == "observation" for event in events),
+                "actions": [
+                    event["decision"]["action"]
+                    for event in events
+                    if event["type"] == "action"
+                ],
+            },
+            error,
+        )
 
 
 def evaluate_method(
@@ -174,10 +216,11 @@ def evaluate_method(
     records = []
     profile = sample["profile"]
     for task in sample["tasks"]:
+        metered = MeteredClient(client)
         started = time.perf_counter()
         if method == "baseline":
             try:
-                prediction = baseline_one_call(client, profile, task, model)
+                prediction = baseline_one_call(metered, profile, task, model)
                 usage = {"steps": 0, "llm_calls": 1, "tool_calls": 0}
                 error = None
             except Exception as exc:
@@ -186,7 +229,7 @@ def evaluate_method(
                 error = f"{type(exc).__name__}: {exc}"
         else:
             prediction, usage, error = run_agent_task(
-                client, profile, task, sample, model
+                metered, profile, task, sample, model
             )
         records.append(
             {
@@ -197,6 +240,8 @@ def evaluate_method(
                 "latency_seconds": round(time.perf_counter() - started, 3),
                 **usage,
                 "error": error,
+                "usage": summarize_usage(metered.records),
+                "llm_usage": metered.records,
             }
         )
     return records, metrics(records)
@@ -205,7 +250,7 @@ def evaluate_method(
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--sample", type=Path, default=Path("eval/sample.json"))
-    parser.add_argument("--model")
+    parser.add_argument("--model", default=DEFAULT_MODEL)
     parser.add_argument("--output", type=Path, default=Path("eval/results.json"))
     args = parser.parse_args()
     sample = json.loads(args.sample.read_text(encoding="utf-8"))
@@ -217,7 +262,7 @@ def main() -> int:
         "sample": str(args.sample),
         "sample_tasks": len(sample["tasks"]),
         "model": args.model or "Codex CLI default",
-        "cost_note": "CodexOpenAI does not expose token usage or price; cost is unknown.",
+        "cost_note": COST_NOTE,
         "methods": {},
     }
     for method in ("baseline", "agent"):

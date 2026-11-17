@@ -1,0 +1,151 @@
+{
+  "initial_top30": {
+    "1.0": 10,
+    "0.5": 4,
+    "0.0": 16
+  },
+  "runs": [
+    {
+      "run": "run-1",
+      "events": {
+        "run_started": 1,
+        "llm_request": 5,
+        "llm_usage": 5,
+        "screening_result": 3,
+        "screening_progress": 3,
+        "action": 2,
+        "observation": 1
+      },
+      "usage": {
+        "recorded_calls": 5,
+        "llm_latency_seconds": 91.1736077490059,
+        "input_tokens": 76157,
+        "output_tokens": 3946,
+        "estimated_api_cost_usd": 0.0199666,
+        "calls_without_usage": 0,
+        "cost_note": "API-equivalent estimate using standard GPT-5.6-Luna rates checked 2026-11-17: $0.20/M input, $1.20/M output; above 272K input, $0.40/M and $1.80/M. Assumes all input is uncached; excludes cache writes and external tools. Not actual Codex subscription billing. Unknown usage/model yields null cost.",
+        "price_source": "https://developers.openai.com/api/docs/models/gpt-5.6-luna"
+      },
+      "actions": {
+        "inspect_paper": 1,
+        "finish": 1
+      },
+      "screening_confusion": {
+        "1.0 -> relevant": 10,
+        "0.5 -> uncertain": 2,
+        "0.0 -> irrelevant": 8,
+        "0.5 -> relevant": 2,
+        "0.0 -> relevant": 4,
+        "0.0 -> uncertain": 4
+      },
+      "rejected_quotes": [
+        {
+          "call": 5,
+          "paper_id": "2610.11730",
+          "quote": "At 500 M and a 4% distortion budget, it supports 1.89× compression, compared with 1.14× after standard weight decay."
+        }
+      ]
+    },
+    {
+      "run": "run-2",
+      "events": {
+        "run_started": 1,
+        "llm_request": 6,
+        "llm_usage": 6,
+        "screening_result": 3,
+        "screening_progress": 3,
+        "action": 3,
+        "observation": 2
+      },
+      "usage": {
+        "recorded_calls": 6,
+        "llm_latency_seconds": 113.84886020797421,
+        "input_tokens": 108547,
+        "output_tokens": 4723,
+        "estimated_api_cost_usd": 0.027377000000000002,
+        "calls_without_usage": 0,
+        "cost_note": "API-equivalent estimate using standard GPT-5.6-Luna rates checked 2026-11-17: $0.20/M input, $1.20/M output; above 272K input, $0.40/M and $1.80/M. Assumes all input is uncached; excludes cache writes and external tools. Not actual Codex subscription billing. Unknown usage/model yields null cost.",
+        "price_source": "https://developers.openai.com/api/docs/models/gpt-5.6-luna"
+      },
+      "actions": {
+        "inspect_paper": 2,
+        "finish": 1
+      },
+      "screening_confusion": {
+        "1.0 -> relevant": 10,
+        "0.5 -> uncertain": 4,
+        "0.0 -> irrelevant": 10,
+        "0.0 -> uncertain": 3,
+        "0.0 -> relevant": 3
+      },
+      "rejected_quotes": [
+        {
+          "call": 6,
+          "paper_id": "2610.11730",
+          "quote": "Across LLaMA models with 124 M to 500 M parameters, spectral weight decay lowers effective rank and improves SVD-LLM compression at matched validation loss."
+        },
+        {
+          "call": 6,
+          "paper_id": "2610.11730",
+          "quote": "At 500 M and a 4% distortion budget, it reaches 1.89× compression and a 1.18× GPU inference speedup."
+        },
+        {
+          "call": 6,
+          "paper_id": "2609.40127",
+          "quote": "All baselines are using the same calibration budget of 1024 sequences of 2048 tokens."
+        },
+        {
+          "call": 6,
+          "paper_id": "2609.40127",
+          "quote": "At weights and FLOPs matched to within 2%, LSP decodes fastest at every ratio."
+        }
+      ]
+    },
+    {
+      "run": "run-3",
+      "events": {
+        "run_started": 1,
+        "llm_request": 6,
+        "llm_usage": 6,
+        "screening_result": 3,
+        "screening_progress": 3,
+        "action": 3,
+        "observation": 2
+      },
+      "usage": {
+        "recorded_calls": 6,
+        "llm_latency_seconds": 111.30900225199002,
+        "input_tokens": 102844,
+        "output_tokens": 4690,
+        "estimated_api_cost_usd": 0.026196800000000003,
+        "calls_without_usage": 0,
+        "cost_note": "API-equivalent estimate using standard GPT-5.6-Luna rates checked 2026-11-17: $0.20/M input, $1.20/M output; above 272K input, $0.40/M and $1.80/M. Assumes all input is uncached; excludes cache writes and external tools. Not actual Codex subscription billing. Unknown usage/model yields null cost.",
+        "price_source": "https://developers.openai.com/api/docs/models/gpt-5.6-luna"
+      },
+      "actions": {
+        "inspect_paper": 2,
+        "finish": 1
+      },
+      "screening_confusion": {
+        "1.0 -> relevant": 10,
+        "0.5 -> uncertain": 3,
+        "0.0 -> uncertain": 5,
+        "0.0 -> relevant": 3,
+        "0.0 -> irrelevant": 8,
+        "0.5 -> relevant": 1
+      },
+      "rejected_quotes": [
+        {
+          "call": 6,
+          "paper_id": "2610.11730",
+          "quote": "At 500M and a 4% distortion budget, we obtain 1.89× compression and 1.18× GPU inference speedup."
+        },
+        {
+          "call": 6,
+          "paper_id": "2609.40127",
+          "quote": "all projectors are optimized jointly across the network with the pretrained weights frozen"
+        }
+      ]
+    }
+  ]
+}

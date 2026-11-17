@@ -1,0 +1,295 @@
+{
+  "run_id": "04a41df9ca3e42b9904bc54d112d5870",
+  "status": "completed",
+  "user_id": "dmitrii",
+  "profile_fingerprint": "a2480e0075ad9cdf236d40e30f74f9bfd87a08dd948530b42e6b57e4a123bfc0",
+  "pipeline_version": "react-v2",
+  "categories": [
+    "cs.AI",
+    "cs.CG",
+    "cs.CL",
+    "cs.CR",
+    "cs.CV",
+    "cs.DB",
+    "cs.DC",
+    "cs.DS",
+    "cs.GR",
+    "cs.HC",
+    "cs.IR",
+    "cs.LG",
+    "cs.LO",
+    "cs.MA",
+    "cs.NE",
+    "cs.NI",
+    "cs.RO",
+    "cs.SD",
+    "cs.SE",
+    "eess.AS",
+    "eess.IV",
+    "eess.SP",
+    "eess.SY",
+    "math.AP",
+    "math.OC",
+    "math.PR",
+    "nlin.CD",
+    "q-bio.NC",
+    "stat.ML"
+  ],
+  "date_from": "2018-02-27",
+  "date_to": "2026-10-22",
+  "papers": [
+    {
+      "paper_id": "2610.11730",
+      "summary": "Proposes a nuclear-norm-based spectral weight-decay update and reports lower effective rank and better low-rank compression at matched validation loss.",
+      "relevance": "Directly addresses spectral regularization, compressibility, and label noise.",
+      "evidence": [
+        {
+          "source": "abstract",
+          "quote": "spectral weight decay lowers effective rank and improves SVD-LLM compression at matched validation loss"
+        }
+      ],
+      "title": "Spectral Weight Decay: Inducing Low-Rank Structure in Neural Network Weights",
+      "url": "https://arxiv.org/abs/2610.11730v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2608.14492",
+      "summary": "Approximates a relaxed Muon objective for low-rank adapters and evaluates sMuon in fine-tuning and a ReLoRA pretraining experiment.",
+      "relevance": "Direct match for Muon optimization of LoRA parameterizations.",
+      "evidence": [
+        {
+          "source": "abstract",
+          "quote": "approximating the solution to a relaxed Muon objective in the low-rank setting via linearization and then least-squares"
+        }
+      ],
+      "title": "Approximate Muon with low-rank adapters",
+      "url": "https://arxiv.org/abs/2608.14492v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2608.31036",
+      "summary": "Normalizes LoRA down-projection matrices during training or at initialization to alter early optimization dynamics.",
+      "relevance": "Addresses practical LoRA optimization and stability.",
+      "evidence": [
+        {
+          "source": "abstract",
+          "quote": "Because LoRA initializes the up-projection to zero, its early optimization dynamics are largely governed by the down-projection."
+        }
+      ],
+      "title": "Normalized Low-Rank Adaptation",
+      "url": "https://arxiv.org/abs/2608.31036v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2609.40127",
+      "summary": "Learns subspaces to discard jointly under a model-level objective, then merges the resulting projectors into low-rank factors.",
+      "relevance": "Relevant to preserving quality under low-rank weight compression.",
+      "evidence": [
+        {
+          "source": "abstract",
+          "quote": "All projectors are optimized jointly against a global objective--the KL divergence to the dense model's output distribution or the model's original training loss--while the pretrained weights remain frozen."
+        }
+      ],
+      "title": "Learning Functional Subspaces for Neural Network Compression",
+      "url": "https://arxiv.org/abs/2609.40127v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2510.05491",
+      "summary": "Combines Muon orthogonalization with neuron-wise normalization. At 5.4B parameters, the reported optimizer-state costs are 21.19 GB for NorMuon, 21.14 GB for Muon, and 40.56 GB for AdamW; these are not peak training-memory figures.",
+      "relevance": "Provides measured optimizer-state and step-time tradeoffs for LLM pretraining.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "Table 2 : Computational and memory overhead comparison for different optimizers when training a 5.4B parameter model. Training step time includes forward pass, backward pass, and optimizer step."
+        },
+        {
+          "source": "inspection",
+          "quote": "Optimizer Memory cost of optimizer states (GB) Optimizer step time (s) Training step time (s) AdamW 40.56 0.02 28.73 Muon 21.14 0.83 29.56 (2.8% ↑ \\\\uparrow ) Muon + Adam 40.56 0.85 29.58 (3.0% ↑ \\\\uparrow ) NorMuon 21.19 0.84 29.57 (2.9% ↑ \\\\uparrow )"
+        }
+      ],
+      "title": "NorMuon: Making Muon more efficient and scalable",
+      "url": "https://arxiv.org/abs/2510.05491v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.08975",
+      "summary": "Finds that optimizer rankings in language-model pretraining can change with batch size despite hyperparameter tuning.",
+      "relevance": "Informs evaluation of Muon and training-efficiency claims across settings.",
+      "evidence": [
+        {
+          "source": "abstract",
+          "quote": "the best optimizer for language model pretraining changes with batch size even after extensive hyperparameter tuning"
+        }
+      ],
+      "title": "The Best Optimizer Depends on Batch Size",
+      "url": "https://arxiv.org/abs/2610.08975v2",
+      "version": 2,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.27674",
+      "summary": "Introduces hybrid momentum and a Muon variant that orthogonalizes its hybrid direction using Newton–Schulz.",
+      "relevance": "Matches the interest in Newton–Schulz-based matrix optimization.",
+      "evidence": [
+        {
+          "source": "abstract",
+          "quote": "we propose HyMUON, which applies Newton--Schulz orthogonalization to the hybrid direction"
+        }
+      ],
+      "title": "Hybrid Momentum Methods for Optimizing Deep Learning Models",
+      "url": "https://arxiv.org/abs/2610.27674v2",
+      "version": 2,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.30191",
+      "summary": "Analyzes how constraints on QLoRA updates relate to retention during continual supervised fine-tuning.",
+      "relevance": "Addresses practical behavior of low-rank language-model fine-tuning.",
+      "evidence": [
+        {
+          "source": "abstract",
+          "quote": "Matched QLoRA interventions separate constraint granularity from placement before or after Adam"
+        }
+      ],
+      "title": "Why Constrained Updates Still Forget: A Functional-Path Analysis of Continual SFT",
+      "url": "https://arxiv.org/abs/2610.30191v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.30344",
+      "summary": "Combines RS-LoRA adapters with selective parameter training for Arabic continual pretraining and compares quality and wall-clock time with full-parameter training.",
+      "relevance": "Offers a measured, though domain-specific, quality–training-time comparison for partial-parameter pretraining.",
+      "evidence": [
+        {
+          "source": "abstract",
+          "quote": "AQL-Lite recovers 94% of the gain of full-parameter CPT (mean 73.19 vs. 73.58) in 52% of the wall-clock time"
+        }
+      ],
+      "title": "AQL-Lite: Enabling Efficient Knowledge Acquisition for Arabic LLMs via Data-Centric Continual Pretraining",
+      "url": "https://arxiv.org/abs/2610.30344v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.25858",
+      "summary": "Studies agents that adapt by changing their harness, including prompts, memory, and skills, rather than model weights.",
+      "relevance": "Relevant to designing the user's research-digest harness, though it does not specifically evaluate paper retrieval.",
+      "evidence": [
+        {
+          "source": "abstract",
+          "quote": "they adapt by rewriting their own harness, such as prompts, memory, and skills, from task feedback while the model weights stay frozen"
+        }
+      ],
+      "title": "Are Self-Evolving Agents Continual Learners?",
+      "url": "https://arxiv.org/abs/2610.25858v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    }
+  ],
+  "x_feature": null,
+  "limitations": [
+    "Several abstracts are truncated; claims for those papers are limited to the supplied excerpts.",
+    "Optimizer-state storage reported for NorMuon must not be interpreted as peak GPU training memory.",
+    "Code availability and reproducibility were not verified.",
+    "X attention was disabled and was not used.",
+    "inspect:2510.05491: only question-relevant HTML passages were inspected, not the whole paper."
+  ],
+  "stats": {
+    "fetched_count": 100,
+    "candidate_count": 100,
+    "llm_calls": 12,
+    "steps": 7,
+    "inspections": 1,
+    "expansions": 2,
+    "screened": 34,
+    "usage": {
+      "recorded_calls": 12,
+      "llm_latency_seconds": 223.90425037496607,
+      "input_tokens": 259574,
+      "output_tokens": 9044,
+      "estimated_api_cost_usd": null,
+      "calls_without_usage": 0,
+      "cost_note": "API-equivalent estimate using standard GPT-5.6-Luna rates checked 2026-11-17: $0.20/M input, $1.20/M output; above 272K input, $0.40/M and $1.80/M. Assumes all input is uncached; excludes cache writes and external tools. Not actual Codex subscription billing. Unknown usage/model yields null cost.",
+      "price_source": "https://developers.openai.com/api/docs/models/gpt-5.6-luna"
+    },
+    "tool_calls": 4,
+    "tool_latency_seconds": 18.011997540976154
+  }
+}

@@ -1,0 +1,1122 @@
+{
+  "pipeline_version": "react-v2",
+  "profile": {
+    "user_id": "dmitrii",
+    "summary": "LLM research focused on optimization, low-rank and memory-efficient training, spectral regularization, parameter-efficient fine-tuning, and an AI research-digest agent.",
+    "topics": [
+      {
+        "name": "Low-rank pretraining and compressibility",
+        "keywords": [
+          "low-rank pretraining",
+          "low-rank factorization",
+          "model compressibility",
+          "effective rank",
+          "singular-value spectrum"
+        ],
+        "source_id": "description",
+        "evidence_quote": "A central question is whether training can make a model easier to compress with low-rank factorization while preserving its quality."
+      },
+      {
+        "name": "Spectral regularization and matrix optimization",
+        "keywords": [
+          "spectral regularization",
+          "spectral weight decay",
+          "nuclear-norm regularization",
+          "proximal methods",
+          "Newton-Schulz approximation"
+        ],
+        "source_id": "description",
+        "evidence_quote": "I am interested in spectral weight decay, nuclear-norm regularization, proximal methods, and Newton-Schulz approximations."
+      },
+      {
+        "name": "Generalization and memorization under label noise",
+        "keywords": [
+          "generalization",
+          "memorization",
+          "label noise",
+          "noisy labels",
+          "neural network training"
+        ],
+        "source_id": "description",
+        "evidence_quote": "Related questions concern generalization and memorization under label noise."
+      },
+      {
+        "name": "Optimization for LoRA and low-rank parameterizations",
+        "keywords": [
+          "LoRA",
+          "low-rank adaptation",
+          "Muon optimizer",
+          "factorized weights",
+          "rebalancing",
+          "convergence analysis"
+        ],
+        "source_id": "description",
+        "evidence_quote": "Another research direction is optimization for LoRA and other low-rank parameterizations."
+      },
+      {
+        "name": "Memory-efficient LLM pretraining",
+        "keywords": [
+          "memory-efficient LLM pretraining",
+          "low-rank gradients",
+          "optimizer-state compression",
+          "GaLore",
+          "Frugal",
+          "FP8 optimizer states"
+        ],
+        "source_id": "description",
+        "evidence_quote": "I also work on memory-efficient LLM pretraining."
+      },
+      {
+        "name": "Training-efficiency tradeoffs at scale",
+        "keywords": [
+          "training memory",
+          "throughput",
+          "communication cost",
+          "model quality",
+          "scaling behavior",
+          "LLM scale"
+        ],
+        "source_id": "description",
+        "evidence_quote": "I am interested in their tradeoffs between model quality, training memory, throughput, and communication cost, including how those tradeoffs change with model scale."
+      },
+      {
+        "name": "AI research digest agents and paper retrieval",
+        "keywords": [
+          "research digest agent",
+          "context management",
+          "structured LLM decisions",
+          "tool orchestration",
+          "paper retrieval",
+          "relevance ranking"
+        ],
+        "source_id": "description",
+        "evidence_quote": "Relevant work includes explicit context management, structured LLM decisions, application-controlled tools, and paper retrieval and relevance ranking using lexical or embedding-based methods."
+      }
+    ],
+    "goals": [
+      "Understand how optimization and regularization affect singular-value spectra and the effective rank of weight matrices.",
+      "Determine whether training can improve low-rank compressibility while preserving model quality.",
+      "Understand the geometry and practical language-model fine-tuning behavior of LoRA and other low-rank updates.",
+      "Evaluate tradeoffs among model quality, memory, throughput, and communication cost across model scales.",
+      "Build an AI research digest agent with a handwritten harness."
+    ],
+    "exclusions": [],
+    "arxiv_categories": [
+      "cs.LG",
+      "cs.CL",
+      "stat.ML",
+      "cs.AI",
+      "cs.IR"
+    ],
+    "open_questions": [],
+    "sources": {
+      "description": "I am an LLM researcher working on optimization and efficient training of neural networks. My current research includes low-rank pretraining, spectral regularization, parameter-efficient fine-tuning, and reducing the memory cost of language-model training.\n\nI study how optimization and regularization affect the singular-value spectra and effective rank of weight matrices. I am interested in spectral weight decay, nuclear-norm regularization, proximal methods, and Newton-Schulz approximations. A central question is whether training can make a model easier to compress with low-rank factorization while preserving its quality. Related questions concern generalization and memorization under label noise.\n\nAnother research direction is optimization for LoRA and other low-rank parameterizations. Relevant topics include Muon-style matrix updates, optimization of factorized weights, rebalancing, spectral constraints, and convergence analysis. I want to understand both the geometry of these updates and their practical behavior when fine-tuning language models.\n\nI also work on memory-efficient LLM pretraining. Relevant methods include low-rank gradient and optimizer-state representations, GaLore, Frugal-style methods, and low-precision optimizer states such as FP8. I am interested in their tradeoffs between model quality, training memory, throughput, and communication cost, including how those tradeoffs change with model scale.\n\nAs a secondary current interest, I am building an AI research digest agent with a handwritten harness. Relevant work includes explicit context management, structured LLM decisions, application-controlled tools, and paper retrieval and relevance ranking using lexical or embedding-based methods.\n\nI have not specified hard topic exclusions for this digest."
+    },
+    "model": null,
+    "schema_version": 1
+  },
+  "config": {
+    "categories": [
+      "cs.AI",
+      "cs.CG",
+      "cs.CL",
+      "cs.CR",
+      "cs.CV",
+      "cs.DB",
+      "cs.DC",
+      "cs.DS",
+      "cs.GR",
+      "cs.HC",
+      "cs.IR",
+      "cs.LG",
+      "cs.LO",
+      "cs.MA",
+      "cs.NE",
+      "cs.NI",
+      "cs.RO",
+      "cs.SD",
+      "cs.SE",
+      "eess.AS",
+      "eess.IV",
+      "eess.SP",
+      "eess.SY",
+      "math.AP",
+      "math.OC",
+      "math.PR",
+      "nlin.CD",
+      "q-bio.NC",
+      "stat.ML"
+    ],
+    "date_from": "2018-02-27",
+    "date_to": "2026-10-22",
+    "model": "gpt-5.6-luna",
+    "shortlist_size": 30,
+    "batch_size": 10,
+    "expansion_size": 10,
+    "max_candidates": 100,
+    "digest_size": 5,
+    "max_steps": null,
+    "max_llm_calls": null,
+    "max_inspections": null,
+    "max_expansions": null,
+    "page_size": 100,
+    "refresh_metadata": false,
+    "max_context_chars": null,
+    "new_only": false,
+    "x_enabled": false,
+    "variant": "react"
+  },
+  "phase": "react",
+  "screened": {
+    "2610.11730": {
+      "paper_id": "2610.11730",
+      "label": "relevant",
+      "reason": "Directly studies spectral weight decay, nuclear-norm/proximal updates, effective rank, low-rank compression, and label-noise generalization in language models.",
+      "evidence_quote": "spectral weight decay lowers effective rank and improves SVD-LLM compression"
+    },
+    "2609.40127": {
+      "paper_id": "2609.40127",
+      "label": "relevant",
+      "reason": "Studies learned low-rank factorization for neural-network compression, including rank allocation, model quality, inference speed, and memory reduction.",
+      "evidence_quote": "Low-rank weight factorization reduces both while keeping the matrices dense"
+    },
+    "2608.14492": {
+      "paper_id": "2608.14492",
+      "label": "relevant",
+      "reason": "Directly addresses optimization for LoRA and low-rank parameterizations by adapting the Muon optimizer to low-rank fine-tuning and ReLoRA pretraining.",
+      "evidence_quote": "using Muon for low-rank fine-tuning provides moderate performance improvements"
+    },
+    "2608.31036": {
+      "paper_id": "2608.31036",
+      "label": "relevant",
+      "reason": "Studies LoRA training dynamics and normalization for more stable and efficient low-rank adaptation across pretraining and fine-tuning.",
+      "evidence_quote": "regularize its training dynamics for stable and effective optimization"
+    },
+    "2010.01412": {
+      "paper_id": "2010.01412",
+      "label": "relevant",
+      "reason": "Addresses generalization and robustness to label noise through an optimization method, matching the user's interest in generalization and memorization under noisy labels.",
+      "evidence_quote": "SAM natively provides robustness to label noise"
+    },
+    "2510.05491": {
+      "paper_id": "2510.05491",
+      "label": "relevant",
+      "reason": "Develops and evaluates a scalable optimizer related to Muon, with analysis of conditioning, distributed implementation, training efficiency, and memory footprint across model scales.",
+      "evidence_quote": "achieving 21.74% better training efficiency than Adam and 11.31% improvement over Muon"
+    },
+    "2610.29357": {
+      "paper_id": "2610.29357",
+      "label": "relevant",
+      "reason": "Concerns continual learning and memory management for foundation-model agents, overlapping with the user's AI research-agent and context-management interests.",
+      "evidence_quote": "memory should be judged by whether it improves future actions"
+    },
+    "2610.30646": {
+      "paper_id": "2610.30646",
+      "label": "irrelevant",
+      "reason": "Focuses on one-shot federated unsupervised domain adaptation and knowledge distillation rather than the user's low-rank optimization, memory-efficient LLM training, spectral regularization, or research-digest agent topics.",
+      "evidence_quote": "One-shot federated unsupervised domain adaptation"
+    },
+    "2610.28500": {
+      "paper_id": "2610.28500",
+      "label": "relevant",
+      "reason": "Studies system and algorithm co-design for low-bit LLM inference, with explicit quality-throughput tradeoffs across model sizes and GPU types, relevant to training-efficiency and deployment-efficiency interests.",
+      "evidence_quote": "efficient deployment of large language models (LLMs)"
+    },
+    "2610.31098": {
+      "paper_id": "2610.31098",
+      "label": "relevant",
+      "reason": "Studies KV-cache compression and compressibility-driven drafter training for long-context LLM inference, directly relevant to memory efficiency and model-quality/latency tradeoffs.",
+      "evidence_quote": "compressibility-driven drafter training phase"
+    },
+    "2610.30344": {
+      "paper_id": "2610.30344",
+      "label": "relevant",
+      "reason": "Studies efficient continual pretraining using RS-LoRA and partial parameter updates, directly matching memory-efficient training and parameter-efficient fine-tuning interests.",
+      "evidence_quote": "partial-parameter CPT recipe that trains RS-LoRA adapters"
+    },
+    "2610.27674": {
+      "paper_id": "2610.27674",
+      "label": "relevant",
+      "reason": "Directly studies optimization for language-model training and combines momentum with Newton--Schulz orthogonalization, closely matching Muon and spectral optimization interests.",
+      "evidence_quote": "HyMUON, which applies Newton--Schulz orthogonalization to the hybrid direction"
+    },
+    "2610.08975": {
+      "paper_id": "2610.08975",
+      "label": "relevant",
+      "reason": "Analyzes Muon, optimizer behavior, gradient noise, curvature, and batch-size-dependent scaling in language-model pretraining.",
+      "evidence_quote": "The Best Optimizer Depends on Batch Size"
+    },
+    "2610.29326": {
+      "paper_id": "2610.29326",
+      "label": "relevant",
+      "reason": "Presents an embedding-based relevance filter for agent policies, directly relevant to paper retrieval, relevance ranking, and efficient research-digest agent orchestration.",
+      "evidence_quote": "a lightweight first-stage relevance filter"
+    },
+    "2610.29298": {
+      "paper_id": "2610.29298",
+      "label": "irrelevant",
+      "reason": "Focuses on long-tail item retrieval and memorization in generative recommender systems rather than LLM optimization, low-rank training, or research agents.",
+      "evidence_quote": "Generative Recommenders Forget the Long Tail"
+    },
+    "2610.30478": {
+      "paper_id": "2610.30478",
+      "label": "uncertain",
+      "reason": "Studies LoRA policies and whether memory should reside in weights or an external retrieval buffer, but the setting is embodied-agent control rather than language-model fine-tuning.",
+      "evidence_quote": "we distil LoRA student policies"
+    },
+    "2610.30933": {
+      "paper_id": "2610.30933",
+      "label": "irrelevant",
+      "reason": "Studies reinforcement-learning policy optimization for long-horizon tool-use agents, without a clear connection to the user's low-rank, memory-efficient training, or research-digest goals.",
+      "evidence_quote": "Reflection-Guided Policy Optimization for Long-Horizon LLM Agents"
+    },
+    "2610.28851": {
+      "paper_id": "2610.28851",
+      "label": "irrelevant",
+      "reason": "Addresses differentiable low-fidelity optimization models for power, gas, and pooling systems, not neural-network optimization or LLM training.",
+      "evidence_quote": "The low-fidelity problem is embedded as a differentiable optimization layer"
+    },
+    "2610.25858": {
+      "paper_id": "2610.25858",
+      "label": "relevant",
+      "reason": "Evaluates self-evolving agents, memory retrieval, prompt and workspace modification, and continual adaptation, matching interests in research-digest agents and context management.",
+      "evidence_quote": "they adapt by rewriting their own harness"
+    },
+    "2610.27952": {
+      "paper_id": "2610.27952",
+      "label": "irrelevant",
+      "reason": "Focuses on federated split-computing personalization for mobile inference and communication reduction, without targeting LLM training or the stated agent goals.",
+      "evidence_quote": "Unsupervised Head Network Personalization for Split Computing via Federated Learning"
+    },
+    "2610.29720": {
+      "paper_id": "2610.29720",
+      "label": "irrelevant",
+      "reason": "Focuses on spiking speech-recognition architecture and modeled inference efficiency, not the user's optimization, low-rank training, or LLM research interests.",
+      "evidence_quote": "Spiking Neural Networks (SNNs) promise energy-efficient inference"
+    },
+    "2610.29192": {
+      "paper_id": "2610.29192",
+      "label": "relevant",
+      "reason": "Directly studies optimization convergence and sharpness-aware regularization, aligning with the user's interest in optimization and regularization methods.",
+      "evidence_quote": "we propose Curvature-Scaled SAM (CS-SAM)"
+    },
+    "2610.31305": {
+      "paper_id": "2610.31305",
+      "label": "uncertain",
+      "reason": "Studies compact latent representations and large-scale language-model training, but does not specifically address low-rank factorization, spectral structure, or memory-efficient optimization.",
+      "evidence_quote": "learn compact, predictive latent representations"
+    },
+    "2610.29577": {
+      "paper_id": "2610.29577",
+      "label": "uncertain",
+      "reason": "Uses spectral-radius analysis for learning stability, which may inform optimization theory, but it is focused on performative multi-agent prediction rather than the user's core training topics.",
+      "evidence_quote": "identify a spectral threshold that separates stable learning"
+    },
+    "2610.30825": {
+      "paper_id": "2610.30825",
+      "label": "irrelevant",
+      "reason": "Applies flow-based semantic transfer to sequential recommendation and does not address the user's research directions.",
+      "evidence_quote": "Cross-domain sequential recommendation aims to alleviate data sparsity"
+    },
+    "2609.37725": {
+      "paper_id": "2609.37725",
+      "label": "relevant",
+      "reason": "Directly concerns intrinsic context management, multi-agent contexts, and agentic systems, matching the user's AI research-digest agent interests.",
+      "evidence_quote": "language models that natively manage their own context"
+    },
+    "2610.28945": {
+      "paper_id": "2610.28945",
+      "label": "uncertain",
+      "reason": "Studies self-improving LLM agents and experience-based planning, but does not specifically address research-digest agents, paper retrieval, or relevance ranking.",
+      "evidence_quote": "A dual-branch experience memory enables self-improvement"
+    },
+    "2610.27628": {
+      "paper_id": "2610.27628",
+      "label": "irrelevant",
+      "reason": "Focuses on recurrent state tracking and length generalization, without clear connection to low-rank training, spectral regularization, or research-digest agents.",
+      "evidence_quote": "Progress-Aligned Recurrence (PAR)"
+    },
+    "2610.29189": {
+      "paper_id": "2610.29189",
+      "label": "relevant",
+      "reason": "Reviews interactive retrieval, agentic search loops, controller design, grounding, and quality-cost tradeoffs, directly matching paper retrieval and research-digest agent goals.",
+      "evidence_quote": "tightly coupling step-by-step reasoning with interactive search"
+    },
+    "2610.31642": {
+      "paper_id": "2610.31642",
+      "label": "relevant",
+      "reason": "Addresses numerical issues in softmax and cross-entropy and connects them to weight decay, memorization, optimization dynamics, and distillation.",
+      "evidence_quote": "after memorization, logit growth is bounded by an equilibrium between weight decay and Adam's $ε$ hyperparameter"
+    }
+  },
+  "admitted_ids": [
+    "2610.11730",
+    "2609.40127",
+    "2608.14492",
+    "2608.31036",
+    "2010.01412",
+    "2510.05491",
+    "2610.29357",
+    "2610.30646",
+    "2610.28500",
+    "2610.31098",
+    "2610.30344",
+    "2610.27674",
+    "2610.08975",
+    "2610.29326",
+    "2610.29298",
+    "2610.30478",
+    "2610.30933",
+    "2610.28851",
+    "2610.25858",
+    "2610.27952",
+    "2610.29720",
+    "2610.29192",
+    "2610.31305",
+    "2610.29577",
+    "2610.30825",
+    "2609.37725",
+    "2610.28945",
+    "2610.27628",
+    "2610.29189",
+    "2610.31642"
+  ],
+  "observations": {
+    "inspect:2610.11730": {
+      "status": "ok",
+      "question": "Retrieve passages detailing experimental baselines and controls for spectral weight decay, including comparisons with standard L2 weight decay and other regularizers, matched validation-loss or compute conditions, effective-rank and SVD-LLM compression measurements, GPU memory/throughput costs, and label-noise experimental design.",
+      "source": "https://arxiv.org/html/2610.11730v1",
+      "passages": [
+        {
+          "chunk_id": "chunk-0001",
+          "section": "Article",
+          "text": "BRAIn Lab Spectral Weight Decay: Inducing Low-Rank Structure in Neural Network Weights Dmitrii Andriianov 1 , Andrey Veprikov 1,2 , Aleksandr Beznosikov 1,3 1 Basic Research of Artificial Intelligence Laboratory (BRAIn Lab) 2 SB AI Lab 3 Innopolis University Standard weight decay treats each weight matrix as a vector and ignores its spectral structure. We introduce spectral weight decay, a post-step decoupled nuclear-norm update that applies additive rather than multiplicative spectral shrinkage. We connect the update to approximate proximal descent and show that its sensitivity to update order can exceed that of conventional ℓ 2 \\ell_{2} weight decay near rank deficiency. Across LLaMA models with 124 124 M to 500 500 M parameters, spectral weight decay lowers effective rank and improves SVD-LLM compression at matched validation loss. At 500 500 M and a 4 % 4\\% distortion budget, it reaches 1.89 × 1.89\\times compression and 1.18 × 1.18\\times GPU inference speedup, compared with 1.14 × 1.14\\times and 1.01 × 1.01\\times after standard weight decay. Under fixed-horizon training with 60 % 60\\% label noise, it also improves final mean clean-test accuracy over matched ℓ 2 \\ell_{2} regularization by up to 17.8 17.8 points on MNIST and 4.6 4.6 points across four BERT-base tasks. Code is available at https://github.com/brain-lab-research/SpectralWD .",
+          "source": "https://arxiv.org/html/2610.11730v1",
+          "offset": 0,
+          "score": 20.400147792215574
+        },
+        {
+          "chunk_id": "chunk-0003",
+          "section": "1 Introduction",
+          "text": "To make the regularizer matrix-aware, we begin with the proximal interpretation of decoupled weight decay. To first order, its update is a proximal gradient step for the squared Frobenius penalty [ Parikh and Boyd, 2014 ; Zhuang et al., 2022 ] . We replace this penalty with the nuclear norm, a convex surrogate for rank whose proximal operator soft-thresholds singular values [ Recht et al., 2010 ; Cai et al., 2010 ] . This construction is the matrix analogue of replacing ridge shrinkage with coefficient selection by the lasso [ Hoerl and Kennard, 1970 ; Tibshirani, 1996 ] . Given the loss-only optimizer direction Δ \\Delta , let Z = W ( k ) − η ​ Δ = U Z ​ Σ Z ​ V Z ⊤ Z=W^{(k)}-\\eta\\Delta=U_{Z}\\Sigma_{Z}V_{Z}^{\\top} . Spectral weight decay applies the post-step correction W ( k + 1 ) = Z − η ​ λ ​ U Z ​ V Z ⊤ , W^{(k+1)}=Z-\\eta\\lambda U_{Z}V_{Z}^{\\top}, (1) where η \\eta is the learning rate and λ \\lambda the regularization coefficient. This correction acts additively in the singular basis of Z Z , whereas conventional weight decay scales the spectrum uniformly. SLORR-Nuc also approximates the nuclear-norm polar factor [ González-Martínez and Liu, 2026 ] . Its decoupled extension would use the pre-step correction Z − η ​ λ ​ U W ​ V W ⊤ Z-\\eta\\lambda U_{W}V_{W}^{\\top} for W ( k ) = U W ​ Σ W ​ V W ⊤ W^{(k)}=U_{W}\\Sigma_{W}V_{W}^{\\top} , rather than ( 1 ).",
+          "source": "https://arxiv.org/html/2610.11730v1",
+          "offset": 0,
+          "score": 2.6601823127151047
+        },
+        {
+          "chunk_id": "chunk-0004",
+          "section": "1 Introduction",
+          "text": "The additive shrinkage acts more strongly on smaller singular values and concentrates the spectrum. The resulting low-effective-rank weights admit efficient truncated SVD compression. Replacing a dense m × n m\\times n matrix with rank- r r factors reduces its parameter count and multiplication cost from m ​ n mn to r ⁡ ( m + n ) r(m+n) . This factorization lowers storage and inference memory and can reduce latency when the retained rank is sufficiently small. Beyond compression, we test whether the same low-rank bias limits memorization under label noise. We evaluate spectral weight decay in LLaMA [ Touvron et al., 2023 ] pretraining, post-training compression, and fixed-horizon noisy-label classification. Across models with 124 124 M to 500 500 M parameters, it lowers effective rank [ Roy and Vetterli, 2007 ] and improves compression and inference speed at matched validation loss. At 500 500 M and a 4 % 4\\% distortion budget, it reaches 1.89 × 1.89\\times compression and a 1.18 × 1.18\\times GPU inference speedup. At 60 % 60\\% label noise, mean clean-test accuracy gains over matched ℓ 2 \\ell_{2} regularization reach 17.78 17.78 points on MNIST and 4.59 4.59 points on four BERT-base tasks.",
+          "source": "https://arxiv.org/html/2610.11730v1",
+          "offset": 0,
+          "score": 22.472096976918706
+        },
+        {
+          "chunk_id": "chunk-0005",
+          "section": "Contributions",
+          "text": "• We formulate spectral weight decay as decoupled nuclear-norm regularization, derive its additive singular-value shrinkage, and connect the update to approximate proximal descent. • Across LLaMA models with 124 124 M to 500 500 M parameters, spectral weight decay improves low-rank compression and inference speed over standard weight decay at matched validation loss. It also outperforms Cuttlefish and Prehab in matched compression comparisons. • On image and text classification tasks, spectral weight decay improves fixed-horizon robustness to label noise over matched ℓ 2 \\ell_{2} regularization.",
+          "source": "https://arxiv.org/html/2610.11730v1",
+          "offset": 0,
+          "score": 22.09499933642982
+        },
+        {
+          "chunk_id": "chunk-0013",
+          "section": "3.2 Compression and inference",
+          "text": "Spectral weight decay lowers the effective rank of weight matrices, making them amenable to low-rank compression. We use SVD-LLM [ Wang et al., 2024 ] , which gives the lowest validation loss in our matched comparison. We compress each weight matrix to its own effective rank, which varies substantially across layers (Figure 2 , middle). We leave the token embeddings and output head uncompressed because their ranks respond little to spectral weight decay, and compressing them even to their effective ranks sharply degrades model quality. The comparison and compression procedure are described in Appendix B.4 . Figure 3 (top) reports the maximum compression rate supported by each validation-loss distortion budget. Spectral weight decay substantially shifts this frontier upward at all three model scales. For the 500 500 M model and a 4 % 4\\% distortion budget, it supports 1.89 × 1.89\\times compression, compared with 1.14 × 1.14\\times after standard weight decay. The same factorization reduces the FLOPs of a linear layer when r ⁡ ( m + n ) < m ​ n r(m+n)<mn . This reduction does not translate directly into lower latency because the factorized forward pass evaluates ( U r ​ Σ r ) ​ ( V r ⊤ ​ X ) (U_{r}\\Sigma_{r})(V_{r}^{\\top}X) with two GEMMs instead of the single GEMM W ​ X WX . The additional kernel launch and intermediate activation can offset the reduction in FLOPs. To improve tensor-core utilization, we round the effective rank down to the nearest multiple of 16 16 , r l = max ⁡ ( 16 , 16 ​ ⌊ erank ⁡ ( W l ) 16 ⌋ ) , r_{l}=\\max\\!\\left(16,\\,16\\left\\lfloor\\frac{\\operatorname{erank}(W_{l})}{16}\\right\\rfloor\\right), (3)",
+          "source": "https://arxiv.org/html/2610.11730v1",
+          "offset": 0,
+          "score": 14.889047276930285
+        },
+        {
+          "chunk_id": "chunk-0014",
+          "section": "3.2 Compression and inference",
+          "text": "Adjusting an aligned rank by one step, ± 16 \\pm 16 , has negligible effect on validation loss. We therefore use this rank-aligned compression scheme throughout. The factorized models outperform their dense counterparts only at large batch sizes, so we measure forward-pass latency with a batch size of 256 256 on a single GPU. For the 500 500 M model, spectral weight decay yields a 1.09 × 1.09\\times speedup near a 2 % 2\\% distortion budget and reaches 1.18 × 1.18\\times at 4 % 4\\% , compared with 1.01 × 1.01\\times under standard weight decay (Figure 3 , bottom).",
+          "source": "https://arxiv.org/html/2610.11730v1",
+          "offset": 0,
+          "score": 11.771643832875581
+        }
+      ],
+      "text": "BRAIn Lab Spectral Weight Decay: Inducing Low-Rank Structure in Neural Network Weights Dmitrii Andriianov 1 , Andrey Veprikov 1,2 , Aleksandr Beznosikov 1,3 1 Basic Research of Artificial Intelligence Laboratory (BRAIn Lab) 2 SB AI Lab 3 Innopolis University Standard weight decay treats each weight matrix as a vector and ignores its spectral structure. We introduce spectral weight decay, a post-step decoupled nuclear-norm update that applies additive rather than multiplicative spectral shrinkage. We connect the update to approximate proximal descent and show that its sensitivity to update order can exceed that of conventional ℓ 2 \\ell_{2} weight decay near rank deficiency. Across LLaMA models with 124 124 M to 500 500 M parameters, spectral weight decay lowers effective rank and improves SVD-LLM compression at matched validation loss. At 500 500 M and a 4 % 4\\% distortion budget, it reaches 1.89 × 1.89\\times compression and 1.18 × 1.18\\times GPU inference speedup, compared with 1.14 × 1.14\\times and 1.01 × 1.01\\times after standard weight decay. Under fixed-horizon training with 60 % 60\\% label noise, it also improves final mean clean-test accuracy over matched ℓ 2 \\ell_{2} regularization by up to 17.8 17.8 points on MNIST and 4.6 4.6 points across four BERT-base tasks. Code is available at https://github.com/brain-lab-research/SpectralWD .\n\nTo make the regularizer matrix-aware, we begin with the proximal interpretation of decoupled weight decay. To first order, its update is a proximal gradient step for the squared Frobenius penalty [ Parikh and Boyd, 2014 ; Zhuang et al., 2022 ] . We replace this penalty with the nuclear norm, a convex surrogate for rank whose proximal operator soft-thresholds singular values [ Recht et al., 2010 ; Cai et al., 2010 ] . This construction is the matrix analogue of replacing ridge shrinkage with coefficient selection by the lasso [ Hoerl and Kennard, 1970 ; Tibshirani, 1996 ] . Given the loss-only optimizer direction Δ \\Delta , let Z = W ( k ) − η ​ Δ = U Z ​ Σ Z ​ V Z ⊤ Z=W^{(k)}-\\eta\\Delta=U_{Z}\\Sigma_{Z}V_{Z}^{\\top} . Spectral weight decay applies the post-step correction W ( k + 1 ) = Z − η ​ λ ​ U Z ​ V Z ⊤ , W^{(k+1)}=Z-\\eta\\lambda U_{Z}V_{Z}^{\\top}, (1) where η \\eta is the learning rate and λ \\lambda the regularization coefficient. This correction acts additively in the singular basis of Z Z , whereas conventional weight decay scales the spectrum uniformly. SLORR-Nuc also approximates the nuclear-norm polar factor [ González-Martínez and Liu, 2026 ] . Its decoupled extension would use the pre-step correction Z − η ​ λ ​ U W ​ V W ⊤ Z-\\eta\\lambda U_{W}V_{W}^{\\top} for W ( k ) = U W ​ Σ W ​ V W ⊤ W^{(k)}=U_{W}\\Sigma_{W}V_{W}^{\\top} , rather than ( 1 ).\n\nThe additive shrinkage acts more strongly on smaller singular values and concentrates the spectrum. The resulting low-effective-rank weights admit efficient truncated SVD compression. Replacing a dense m × n m\\times n matrix with rank- r r factors reduces its parameter count and multiplication cost from m ​ n mn to r ⁡ ( m + n ) r(m+n) . This factorization lowers storage and inference memory and can reduce latency when the retained rank is sufficiently small. Beyond compression, we test whether the same low-rank bias limits memorization under label noise. We evaluate spectral weight decay in LLaMA [ Touvron et al., 2023 ] pretraining, post-training compression, and fixed-horizon noisy-label classification. Across models with 124 124 M to 500 500 M parameters, it lowers effective rank [ Roy and Vetterli, 2007 ] and improves compression and inference speed at matched validation loss. At 500 500 M and a 4 % 4\\% distortion budget, it reaches 1.89 × 1.89\\times compression and a 1.18 × 1.18\\times GPU inference speedup. At 60 % 60\\% label noise, mean clean-test accuracy gains over matched ℓ 2 \\ell_{2} regularization reach 17.78 17.78 points on MNIST and 4.59 4.59 points on four BERT-base tasks.\n\n• We formulate spectral weight decay as decoupled nuclear-norm regularization, derive its additive singular-value shrinkage, and connect the update to approximate proximal descent. • Across LLaMA models with 124 124 M to 500 500 M parameters, spectral weight decay improves low-rank compression and inference speed over standard weight decay at matched validation loss. It also outperforms Cuttlefish and Prehab in matched compression comparisons. • On image and text classification tasks, spectral weight decay improves fixed-horizon robustness to label noise over matched ℓ 2 \\ell_{2} regularization.\n\nSpectral weight decay lowers the effective rank of weight matrices, making them amenable to low-rank compression. We use SVD-LLM [ Wang et al., 2024 ] , which gives the lowest validation loss in our matched comparison. We compress each weight matrix to its own effective rank, which varies substantially across layers (Figure 2 , middle). We leave the token embeddings and output head uncompressed because their ranks respond little to spectral weight decay, and compressing them even to their effective ranks sharply degrades model quality. The comparison and compression procedure are described in Appendix B.4 . Figure 3 (top) reports the maximum compression rate supported by each validation-loss distortion budget. Spectral weight decay substantially shifts this frontier upward at all three model scales. For the 500 500 M model and a 4 % 4\\% distortion budget, it supports 1.89 × 1.89\\times compression, compared with 1.14 × 1.14\\times after standard weight decay. The same factorization reduces the FLOPs of a linear layer when r ⁡ ( m + n ) < m ​ n r(m+n)<mn . This reduction does not translate directly into lower latency because the factorized forward pass evaluates ( U r ​ Σ r ) ​ ( V r ⊤ ​ X ) (U_{r}\\Sigma_{r})(V_{r}^{\\top}X) with two GEMMs instead of the single GEMM W ​ X WX . The additional kernel launch and intermediate activation can offset the reduction in FLOPs. To improve tensor-core utilization, we round the effective rank down to the nearest multiple of 16 16 , r l = max ⁡ ( 16 , 16 ​ ⌊ erank ⁡ ( W l ) 16 ⌋ ) , r_{l}=\\max\\!\\left(16,\\,16\\left\\lfloor\\frac{\\operatorname{erank}(W_{l})}{16}\\right\\rfloor\\right), (3)\n\nAdjusting an aligned rank by one step, ± 16 \\pm 16 , has negligible effect on validation loss. We therefore use this rank-aligned compression scheme throughout. The factorized models outperform their dense counterparts only at large batch sizes, so we measure forward-pass latency with a batch size of 256 256 on a single GPU. For the 500 500 M model, spectral weight decay yields a 1.09 × 1.09\\times speedup near a 2 % 2\\% distortion budget and reaches 1.18 × 1.18\\times at 4 % 4\\% , compared with 1.01 × 1.01\\times under standard weight decay (Figure 3 , bottom).",
+      "truncated": true,
+      "available_chars": 68851,
+      "note": "Retrieved passages, not an answer. Missing matches do not establish that the paper lacks the requested experiment. Extracted HTML text; equations and table formatting may be imperfect. No PDF extraction was attempted.",
+      "questions": [
+        "Retrieve passages detailing experimental baselines and controls for spectral weight decay, including comparisons with standard L2 weight decay and other regularizers, matched validation-loss or compute conditions, effective-rank and SVD-LLM compression measurements, GPU memory/throughput costs, and label-noise experimental design."
+      ]
+    },
+    "inspect:2608.14492": {
+      "status": "ok",
+      "question": "Retrieve passages describing the SFT and ReLoRA experiments, baseline optimizers and LoRA methods, model and dataset settings, measured performance differences, compute or memory costs, and limitations or cases where sMuon does not improve results.",
+      "source": "https://arxiv.org/html/2608.14492v1",
+      "passages": [
+        {
+          "chunk_id": "chunk-0002",
+          "section": "Abstract",
+          "text": "The Muon optimizer shows clear benefits versus alternatives when pretraining neural networks. However, it is used less frequently for parameter-efficient fine-tuning (PEFT). One potential reason is that the most common PEFT method, LoRA, does not naturally combine with Muon since it is not mathematically possible to orthogonalize the weight update given by a low-rank parameterization. In this paper, we address this issue by approximating the solution to a relaxed Muon objective in the low-rank setting via linearization and then least-squares. We provide an efficient implementation that uses matmul operations only, as opposed to more complex linear algebra decomposition routines. Our method, sMuon (small Muon), performs favourably across SFT and a ReLoRA pretraining experiment. While results are model- and eval-dependent, we find overall that using Muon for low-rank fine-tuning provides moderate performance improvements.",
+          "source": "https://arxiv.org/html/2608.14492v1",
+          "offset": 0,
+          "score": 17.107615513727787
+        },
+        {
+          "chunk_id": "chunk-0005",
+          "section": "1 Introduction",
+          "text": "In this paper, we linearize the low-rank Muon objective to find the optimal descent step within the available parameter space. This solution effectively orthogonalizes the full layer’s gradient and projects it onto the appropriate low-rank subspace. Empirically, we find this retains a more uniform spectrum than alternatives such as per-factor Muon (Fig. 1 ) and LoRA-Muon ( Cesista et al., 2026 ) . Furthermore, unlike Riemannion ( Bogachev et al., 2026 ) , our approach avoids expensive matrix decompositions. While our solution to the low-rank Muon problem is clean (Alg. 1 ), a naive implementation is computationally inefficient, as it requires orthogonalizing a large matrix. To address this, we introduce a mathematically equivalent formulation (Alg. 2 ) that is both fast and memory-efficient. By relying entirely on matrix multiplications, we are able to avoid the overhead from QR and SVD. Finally, we show that our optimizer, sMuon, achieves competitive performance across a range of commonsense and coding SFT benchmarks, as well as in ReLoRA pretraining experiments. Our contributions are as follows: • We derive a method for training LoRA adapters with Muon by taking a first-order approximation of the spectral-norm-regularized steepest descent objective. The method is available in closed form, and requires less optimizer state than AdamW. • We provide a matmul-only algorithm of the method, sMuon, that is efficient for modern hardware, with comparable speed to other Muon methods such as per-factor Muon and LoRA-Muon, while being significantly faster than Riemannion for larger LoRA rank.",
+          "source": "https://arxiv.org/html/2608.14492v1",
+          "offset": 0,
+          "score": 15.187452174808767
+        },
+        {
+          "chunk_id": "chunk-0006",
+          "section": "1 Introduction",
+          "text": "• We run SFT experiments on four base models, three AdamW-pretrained and one Muon-pretrained, over eleven benchmarks to compare low-rank Muon optimizers. While results are model-dependent, we find that our optimizer gives strong performance, performing best on the Muon-pretrained model with the top accuracy in six out of eleven tasks with Moonlight-16B-A3B. • In the ReLoRA pretraining setting, we illustrate that Muon LoRA methods are generally stronger than AdamW LoRA. Specifically we find that our method attains the lowest final validation loss, tying with Riemannion, but being ∼ 30 % \\sim\\!30\\% faster.",
+          "source": "https://arxiv.org/html/2608.14492v1",
+          "offset": 0,
+          "score": 23.5017134406907
+        },
+        {
+          "chunk_id": "chunk-0027",
+          "section": "5 Experiments",
+          "text": "Table 2: Code pass@1 (%), grouped by base model. Each column is an optimizer (best run by validation loss); per row the best optimizer is bolded and cells are shaded green (best) to white (worst). Eval AdamW Per-factor Muon LoRA-Muon Riemannion sMuon (ours) Qwen2.5-3B HumanEval 54.9 20.1 43.3 31.1 51.8 HumanEval+ 48.8 17.1 39.0 25.6 43.9 MBPP 65.9 69.3 68.0 65.9 62.7 MBPP+ 57.1 60.6 58.7 56.9 53.4 Llama-3.2-3B HumanEval 22.0 18.3 29.9 30.5 29.9 HumanEval+ 19.5 16.5 25.0 26.8 27.4 MBPP 43.1 35.7 42.1 46.3 45.2 MBPP+ 35.4 30.4 34.1 38.1 38.6 DeepSeek-V2-Lite HumanEval 36.6 29.3 22.0 23.2 26.8 HumanEval+ 28.7 23.8 18.3 19.5 23.2 MBPP 52.6 53.7 48.4 49.5 51.3 MBPP+ 45.5 45.0 43.4 43.7 44.7 Moonlight-16B-A3B HumanEval 49.4 57.9 53.7 40.2 54.9 HumanEval+ 42.7 48.8 47.0 35.4 48.8 MBPP 71.7 71.2 71.2 68.8 71.2 MBPP+ 60.1 60.1 61.4 58.7 60.3 Table 3: ReLoRA pretraining: final validation loss at each optimizer’s optimal learning rate, where the optimal LR minimises the validation loss at the final logged step. Lower is better; the best optimizer is bolded and cells are shaded green (best) to white (worst). AdamW Per-factor Muon LoRA-Muon Riemannion sMuon (ours) Final val loss 3.83 3.70 3.68 3.66 3.66 Optimal LR 0.001 0.006 0.001 0.0006 0.0006",
+          "source": "https://arxiv.org/html/2608.14492v1",
+          "offset": 0,
+          "score": 8.934425573731028
+        },
+        {
+          "chunk_id": "chunk-0028",
+          "section": "5 Experiments",
+          "text": "We compare sMuon to regular LoRA with AdamW, per-factor Muon (LoRA with Muon applied to each adapter weight B B and A A individually), LoRA-Muon ( Cesista et al., 2026 ) , and Riemannion ( Bogachev et al., 2026 ) . We evaluated on standard commonsense ( Clark et al., 2018 ; Clark et al., 2019 ; Zellers et al., 2019 ; Mihaylov et al., 2018 ; Bisk et al., 2020 ; Sakaguchi et al., 2021 ) and coding ( Chen et al., 2021 ; Austin et al., 2021 ) benchmarks after training with SFT. We experimented with four models, Llama-3.2-3B ( Grattafiori et al., 2024 ) , Qwen2.5-3B ( Qwen Team, 2025 ) , DeepSeek-V2-Lite ( DeepSeek-AI, 2024 ) , and Moonlight-16B-A3B ( Liu et al., 2025 ) . The first two models are dense models; the last two are sparse MoE models. The Moonlight model is of particular note because it was pretrained with Muon, whereas the others are all AdamW-pretrained. We also tested the methods in a pretraining setting using ReLoRA ( Lialin et al., 2023 ) which periodically merges and refreshes the adapter. We tuned the learning rate for each method and model, with example learning rate sweeps for the commonsense tasks shown in Appendix E . While our results are both model- and eval-dependent, sMuon performs strongly overall, especially when combined with the Moonlight-16B-A3B base model, a Muon-pretrained model (Tables 1 and 2 ). sMuon also achieved the joint-best validation loss in the ReLoRA pretraining setting (Table 3 ). We attribute performance gains, particularly over AdamW and per-factor Muon, to more accurately approximating the Muon objective.",
+          "source": "https://arxiv.org/html/2608.14492v1",
+          "offset": 0,
+          "score": 19.086519442309147
+        },
+        {
+          "chunk_id": "chunk-0029",
+          "section": "Experiment details",
+          "text": "LoRA-Muon and Riemannion were chosen as baselines in addition to the simpler AdamW and per-factor Muon baselines as these are the most similar to our method. Unfortunately, we could not find implementations for LoRA-Muon or Riemannion, so we implemented these ourselves. For Riemannion and our method, we use an A = 0 A=0 and B B orthonormal initialization, and for the remaining methods we used a standard initialization ( B = 0 B=0 , A A random Gaussian). We scale the learning rate to approximately match AdamW RMS for all Muon optimizers (for details see App. A.1 ). For all experiments, we used weight decay 0.01 0.01 , momentum 0.9 0.9 , inserted LoRA adapters into all hidden layers (except the router for models with MoE). We used GH200 for all experiments except to produce Table 4 for which we used A100. We used bf16 to store weights and optimizer states, but used fp32 to compute the step for Riemannion, sMuon, and LoRA-Muon. For the ReLoRA experiments ( Lialin et al., 2023 ) , we started with the modded-nanogpt codebase at ‘record 8’ ( Jordan et al., 2024a ) , which trains a 162M parameter transformer from scratch (using features including QK-norm, ReLU 2 activations) on the FineWeb dataset ( Penedo et al., 2024 ) , and evaluates on a 10M token validation set. We initialize LoRA adapters with rank 64, and train for a total of 3000 steps; every 500 steps we merge the adapters into the base weights and reinitialize the adapters; we use a cosine decay learning rate schedule, though after each merge+reinitialization, we also reset the learning rate to zero and warm back up to the target learning rate over 50 steps (this is also known as a jagged cosine schedule). We swept learning rates in 3e-4, 6e-4, 1e-3, 3e-3, 6e-3, 1e-2.",
+          "source": "https://arxiv.org/html/2608.14492v1",
+          "offset": 0,
+          "score": 16.12378387392679
+        }
+      ],
+      "text": "The Muon optimizer shows clear benefits versus alternatives when pretraining neural networks. However, it is used less frequently for parameter-efficient fine-tuning (PEFT). One potential reason is that the most common PEFT method, LoRA, does not naturally combine with Muon since it is not mathematically possible to orthogonalize the weight update given by a low-rank parameterization. In this paper, we address this issue by approximating the solution to a relaxed Muon objective in the low-rank setting via linearization and then least-squares. We provide an efficient implementation that uses matmul operations only, as opposed to more complex linear algebra decomposition routines. Our method, sMuon (small Muon), performs favourably across SFT and a ReLoRA pretraining experiment. While results are model- and eval-dependent, we find overall that using Muon for low-rank fine-tuning provides moderate performance improvements.\n\nIn this paper, we linearize the low-rank Muon objective to find the optimal descent step within the available parameter space. This solution effectively orthogonalizes the full layer’s gradient and projects it onto the appropriate low-rank subspace. Empirically, we find this retains a more uniform spectrum than alternatives such as per-factor Muon (Fig. 1 ) and LoRA-Muon ( Cesista et al., 2026 ) . Furthermore, unlike Riemannion ( Bogachev et al., 2026 ) , our approach avoids expensive matrix decompositions. While our solution to the low-rank Muon problem is clean (Alg. 1 ), a naive implementation is computationally inefficient, as it requires orthogonalizing a large matrix. To address this, we introduce a mathematically equivalent formulation (Alg. 2 ) that is both fast and memory-efficient. By relying entirely on matrix multiplications, we are able to avoid the overhead from QR and SVD. Finally, we show that our optimizer, sMuon, achieves competitive performance across a range of commonsense and coding SFT benchmarks, as well as in ReLoRA pretraining experiments. Our contributions are as follows: • We derive a method for training LoRA adapters with Muon by taking a first-order approximation of the spectral-norm-regularized steepest descent objective. The method is available in closed form, and requires less optimizer state than AdamW. • We provide a matmul-only algorithm of the method, sMuon, that is efficient for modern hardware, with comparable speed to other Muon methods such as per-factor Muon and LoRA-Muon, while being significantly faster than Riemannion for larger LoRA rank.\n\n• We run SFT experiments on four base models, three AdamW-pretrained and one Muon-pretrained, over eleven benchmarks to compare low-rank Muon optimizers. While results are model-dependent, we find that our optimizer gives strong performance, performing best on the Muon-pretrained model with the top accuracy in six out of eleven tasks with Moonlight-16B-A3B. • In the ReLoRA pretraining setting, we illustrate that Muon LoRA methods are generally stronger than AdamW LoRA. Specifically we find that our method attains the lowest final validation loss, tying with Riemannion, but being ∼ 30 % \\sim\\!30\\% faster.\n\nTable 2: Code pass@1 (%), grouped by base model. Each column is an optimizer (best run by validation loss); per row the best optimizer is bolded and cells are shaded green (best) to white (worst). Eval AdamW Per-factor Muon LoRA-Muon Riemannion sMuon (ours) Qwen2.5-3B HumanEval 54.9 20.1 43.3 31.1 51.8 HumanEval+ 48.8 17.1 39.0 25.6 43.9 MBPP 65.9 69.3 68.0 65.9 62.7 MBPP+ 57.1 60.6 58.7 56.9 53.4 Llama-3.2-3B HumanEval 22.0 18.3 29.9 30.5 29.9 HumanEval+ 19.5 16.5 25.0 26.8 27.4 MBPP 43.1 35.7 42.1 46.3 45.2 MBPP+ 35.4 30.4 34.1 38.1 38.6 DeepSeek-V2-Lite HumanEval 36.6 29.3 22.0 23.2 26.8 HumanEval+ 28.7 23.8 18.3 19.5 23.2 MBPP 52.6 53.7 48.4 49.5 51.3 MBPP+ 45.5 45.0 43.4 43.7 44.7 Moonlight-16B-A3B HumanEval 49.4 57.9 53.7 40.2 54.9 HumanEval+ 42.7 48.8 47.0 35.4 48.8 MBPP 71.7 71.2 71.2 68.8 71.2 MBPP+ 60.1 60.1 61.4 58.7 60.3 Table 3: ReLoRA pretraining: final validation loss at each optimizer’s optimal learning rate, where the optimal LR minimises the validation loss at the final logged step. Lower is better; the best optimizer is bolded and cells are shaded green (best) to white (worst). AdamW Per-factor Muon LoRA-Muon Riemannion sMuon (ours) Final val loss 3.83 3.70 3.68 3.66 3.66 Optimal LR 0.001 0.006 0.001 0.0006 0.0006\n\nWe compare sMuon to regular LoRA with AdamW, per-factor Muon (LoRA with Muon applied to each adapter weight B B and A A individually), LoRA-Muon ( Cesista et al., 2026 ) , and Riemannion ( Bogachev et al., 2026 ) . We evaluated on standard commonsense ( Clark et al., 2018 ; Clark et al., 2019 ; Zellers et al., 2019 ; Mihaylov et al., 2018 ; Bisk et al., 2020 ; Sakaguchi et al., 2021 ) and coding ( Chen et al., 2021 ; Austin et al., 2021 ) benchmarks after training with SFT. We experimented with four models, Llama-3.2-3B ( Grattafiori et al., 2024 ) , Qwen2.5-3B ( Qwen Team, 2025 ) , DeepSeek-V2-Lite ( DeepSeek-AI, 2024 ) , and Moonlight-16B-A3B ( Liu et al., 2025 ) . The first two models are dense models; the last two are sparse MoE models. The Moonlight model is of particular note because it was pretrained with Muon, whereas the others are all AdamW-pretrained. We also tested the methods in a pretraining setting using ReLoRA ( Lialin et al., 2023 ) which periodically merges and refreshes the adapter. We tuned the learning rate for each method and model, with example learning rate sweeps for the commonsense tasks shown in Appendix E . While our results are both model- and eval-dependent, sMuon performs strongly overall, especially when combined with the Moonlight-16B-A3B base model, a Muon-pretrained model (Tables 1 and 2 ). sMuon also achieved the joint-best validation loss in the ReLoRA pretraining setting (Table 3 ). We attribute performance gains, particularly over AdamW and per-factor Muon, to more accurately approximating the Muon objective.\n\nLoRA-Muon and Riemannion were chosen as baselines in addition to the simpler AdamW and per-factor Muon baselines as these are the most similar to our method. Unfortunately, we could not find implementations for LoRA-Muon or Riemannion, so we implemented these ourselves. For Riemannion and our method, we use an A = 0 A=0 and B B orthonormal initialization, and for the remaining methods we used a standard initialization ( B = 0 B=0 , A A random Gaussian). We scale the learning rate to approximately match AdamW RMS for all Muon optimizers (for details see App. A.1 ). For all experiments, we used weight decay 0.01 0.01 , momentum 0.9 0.9 , inserted LoRA adapters into all hidden layers (except the router for models with MoE). We used GH200 for all experiments except to produce Table 4 for which we used A100. We used bf16 to store weights and optimizer states, but used fp32 to compute the step for Riemannion, sMuon, and LoRA-Muon. For the ReLoRA experiments ( Lialin et al., 2023 ) , we started with the modded-nanogpt codebase at ‘record 8’ ( Jordan et al., 2024a ) , which trains a 162M parameter transformer from scratch (using features including QK-norm, ReLU 2 activations) on the FineWeb dataset ( Penedo et al., 2024 ) , and evaluates on a 10M token validation set. We initialize LoRA adapters with rank 64, and train for a total of 3000 steps; every 500 steps we merge the adapters into the base weights and reinitialize the adapters; we use a cosine decay learning rate schedule, though after each merge+reinitialization, we also reset the learning rate to zero and warm back up to the target learning rate over 50 steps (this is also known as a jagged cosine schedule). We swept learning rates in 3e-4, 6e-4, 1e-3, 3e-3, 6e-3, 1e-2.",
+      "truncated": true,
+      "available_chars": 70899,
+      "note": "Retrieved passages, not an answer. Missing matches do not establish that the paper lacks the requested experiment. Extracted HTML text; equations and table formatting may be imperfect. No PDF extraction was attempted.",
+      "questions": [
+        "Retrieve passages describing the SFT and ReLoRA experiments, baseline optimizers and LoRA methods, model and dataset settings, measured performance differences, compute or memory costs, and limitations or cases where sMuon does not improve results."
+      ]
+    },
+    "inspect:2609.40127": {
+      "status": "ok",
+      "question": "Retrieve experimental results and baselines for Learnable Subspace Projections, including model scales, compression ratios or ranks, quality degradation, memory and inference speed, rank allocation comparisons, and limitations.",
+      "source": "https://arxiv.org/html/2609.40127v1",
+      "passages": [
+        {
+          "chunk_id": "chunk-0002",
+          "section": "Abstract",
+          "text": "Modern transformers pair impressive capabilities with substantial memory and compute demands. Low-rank weight factorization reduces both while keeping the matrices dense, and thus efficient on standard hardware. Existing methods, however, choose the subspace to remove from each weight matrix with local closed-form criteria: activation energy, layer-wise reconstruction error, or a quadratic approximation of the loss. These criteria ignore how errors propagate through the network, so at high compression the errors compound with depth and performance collapses. We introduce Learnable Subspace Projections (LSP), which instead learns the subspaces to discard end-to-end. Each linear layer, or tied group of layers that read the same activations, is assigned an orthogonal projector. All projectors are optimized jointly against a global objective—the KL divergence to the dense model’s output distribution or the model’s original training loss—while the pretrained weights remain frozen. Projectors are initialized from a whitened SVD truncation, and ranks are allocated by the output KL each projector induces per parameter saved. After training, the projectors merge into standard low-rank factors, with each tied group sharing one factor. In attention, this also lets the model cache one narrow latent in place of full keys and values. Across LLMs (OPT-125M/1.3B, Qwen3-4B, Llama-2-7B) and ViT-B/16, LSP outperforms baselines, and its advantage widens as compression increases. At − 70 % -70\\% compression, LSP brings Llama-2-7B to 10.9 10.9 WikiText-2 perplexity and 42.2 % 42.2\\% mean zero-shot accuracy, versus 13.3 13.3 and 36.0 % 36.0\\% for the strongest baseline. The factorized model decodes up to 1.6 × 1.6\\times faster than the dense model at small batch sizes, and aching the shared",
+          "source": "https://arxiv.org/html/2609.40127v1",
+          "offset": 0,
+          "score": 16.251961075343893
+        },
+        {
+          "chunk_id": "chunk-0003",
+          "section": "Abstract",
+          "text": "shot accuracy, versus 13.3 13.3 and 36.0 % 36.0\\% for the strongest baseline. The factorized model decodes up to 1.6 × 1.6\\times faster than the dense model at small batch sizes, and aching the shared latent shrinks the combined memory of weights and KV cache by 13.5 × 13.5\\times at a 128k-token context, versus at most 6.5 × 6.5\\times for untied baseline factorizations.",
+          "source": "https://arxiv.org/html/2609.40127v1",
+          "offset": 1598,
+          "score": 4.98196259975436
+        },
+        {
+          "chunk_id": "chunk-0007",
+          "section": "1 Introduction",
+          "text": "Figure 1: Spectral energy is not function. Each arrow is a direction in the input activation space of a linear layer 𝑾 {\\bm{W}} : its length is the spectral energy it carries, its orientation how much the network output depends on it (horizontal right: most), and faded arrows are removed. Activation-based low-rank compression (top) keeps the highest-energy directions, even when the output barely depends on them (red), and can discard functional ones (blue). LSP (bottom) learns the projector 𝑷 {\\bm{P}} against the network output, removing the directions the output is least sensitive to, whatever their energy.",
+          "source": "https://arxiv.org/html/2609.40127v1",
+          "offset": 0,
+          "score": 2.4844457402598343
+        },
+        {
+          "chunk_id": "chunk-0008",
+          "section": "1 Introduction",
+          "text": "We propose Learnable Subspace Projections (LSP), which does exactly this: every projector is learned against a global objective, by default the KL divergence to the dense model’s output distribution, or alternatively the model’s original training objective, a variant we denote LSP T . Our contributions are: (1) Learned subspace projections. Layers that read the same activations (Q/K/V, gate/up) form a tied group and share one projector; we optimize all projectors jointly across the network with the pretrained weights frozen. An activation-space parameterization with fused QR orthonormalization keeps this tractable at billion-parameter scale. (2) Whitened initialization and measured-KL allocation. Each projector is initialized from a whitened truncation, recast as an orthogonal projector and extended to tied groups. To decide how many directions each layer or tied group removes, we apply each projector in isolation, measure the KL divergence it induces on the model output, and allocate the budget by KL cost per saved parameter. The model at initialization, which we call NoLSP, serves as a control that isolates the effect of learning. (3) Efficient low-rank inference. After training, the projectors merge into plain low-rank factors, so the deployed model contains no LSP-specific operations. At the same compression ratio it requires the same FLOPs per token as other factorizations, yet the input factor shared by each tied group speeds up small-batch decoding and, in a latent-cache deployment, stores one narrow latent per group where untied factorizations store two (one each for keys and values), shrinking the KV cache. Because LSP applies to any linear layer, the same recipe transfers across Transformer models without architecture-specific surgery. LSP outperforms pruning",
+          "source": "https://arxiv.org/html/2609.40127v1",
+          "offset": 0,
+          "score": 13.933032494566294
+        },
+        {
+          "chunk_id": "chunk-0039",
+          "section": "5 Conclusion",
+          "text": "We introduced Learnable Subspace Projections (LSP), which compresses a pretrained network by learning, for each linear layer, the subspace the network can do without. Its premise is that statistical redundancy, whether measured by activation energy or by layer-wise reconstruction error, is not functional redundancy. LSP therefore selects the removed subspaces against the network output: it allocates ranks by measured output KL and optimizes all projectors jointly, with the pretrained weights frozen. Across four decoder LLMs, one of its two objectives attains the lowest perplexity in all twelve model–ratio settings, and both achieve the best zero-shot accuracy among low-rank methods. The margin grows with the compression ratio: at − 70 % -70\\% on Llama-2-7B, LSP reaches 10.9 10.9 perplexity, against 13.3 13.3 for the strongest baseline and 222.8 222.8 without learning. On a vision transformer, it is the most robust to calibration shift and transfers best when calibrated on diverse unlabeled data. The merged model is also the fastest factorization we measure, decoding up to 1.56 × 1.56\\times faster than the dense model. Its shared latent reduces the memory of weights and KV cache by 13.5 × 13.5\\times at a 128k-token context, twice the savings of untied factorizations.",
+          "source": "https://arxiv.org/html/2609.40127v1",
+          "offset": 0,
+          "score": 14.98988020070751
+        },
+        {
+          "chunk_id": "chunk-0073",
+          "section": "A.7 Limitations",
+          "text": "(i) The measured-KL allocation is a local surrogate: isolated unit costs omit interactions, and the current strategy has no global-optimality guarantee. This makes the allocation uncertain on quality in specific settings: in a few cases uniform ranks can still be preferred; however empirical evidence shows that measured KL is still better, since it is able to adapt to different architectures: performance improvement over Qwen3-4B, OPT-1.3B, and two out of three compression ranges of Llama-2-7B. (ii) Compression is also not free: LSP requires both the KL measurements and projection training, although the measurements are reusable across ratios and objectives. On the other hand, compression is a one-off cost that is repaid by the inference savings of Section 3.3 and LSP justifies this with the strong performance. (iii) Tied groups only lead to savings with latent cache if KV are tied on the input side. This means our best configuration for Qwen3-4B does not gain in efficiency as much as the input-tied version does. This represents a performance-efficiency trade-off, as shown in Table 12 : tying KV on the output side leads to the best performance, but one can choose to tie KV on the input side for improved inference efficiency instead.",
+          "source": "https://arxiv.org/html/2609.40127v1",
+          "offset": 0,
+          "score": 19.24124570707079
+        }
+      ],
+      "text": "Modern transformers pair impressive capabilities with substantial memory and compute demands. Low-rank weight factorization reduces both while keeping the matrices dense, and thus efficient on standard hardware. Existing methods, however, choose the subspace to remove from each weight matrix with local closed-form criteria: activation energy, layer-wise reconstruction error, or a quadratic approximation of the loss. These criteria ignore how errors propagate through the network, so at high compression the errors compound with depth and performance collapses. We introduce Learnable Subspace Projections (LSP), which instead learns the subspaces to discard end-to-end. Each linear layer, or tied group of layers that read the same activations, is assigned an orthogonal projector. All projectors are optimized jointly against a global objective—the KL divergence to the dense model’s output distribution or the model’s original training loss—while the pretrained weights remain frozen. Projectors are initialized from a whitened SVD truncation, and ranks are allocated by the output KL each projector induces per parameter saved. After training, the projectors merge into standard low-rank factors, with each tied group sharing one factor. In attention, this also lets the model cache one narrow latent in place of full keys and values. Across LLMs (OPT-125M/1.3B, Qwen3-4B, Llama-2-7B) and ViT-B/16, LSP outperforms baselines, and its advantage widens as compression increases. At − 70 % -70\\% compression, LSP brings Llama-2-7B to 10.9 10.9 WikiText-2 perplexity and 42.2 % 42.2\\% mean zero-shot accuracy, versus 13.3 13.3 and 36.0 % 36.0\\% for the strongest baseline. The factorized model decodes up to 1.6 × 1.6\\times faster than the dense model at small batch sizes, and aching the shared\n\nshot accuracy, versus 13.3 13.3 and 36.0 % 36.0\\% for the strongest baseline. The factorized model decodes up to 1.6 × 1.6\\times faster than the dense model at small batch sizes, and aching the shared latent shrinks the combined memory of weights and KV cache by 13.5 × 13.5\\times at a 128k-token context, versus at most 6.5 × 6.5\\times for untied baseline factorizations.\n\nFigure 1: Spectral energy is not function. Each arrow is a direction in the input activation space of a linear layer 𝑾 {\\bm{W}} : its length is the spectral energy it carries, its orientation how much the network output depends on it (horizontal right: most), and faded arrows are removed. Activation-based low-rank compression (top) keeps the highest-energy directions, even when the output barely depends on them (red), and can discard functional ones (blue). LSP (bottom) learns the projector 𝑷 {\\bm{P}} against the network output, removing the directions the output is least sensitive to, whatever their energy.\n\nWe propose Learnable Subspace Projections (LSP), which does exactly this: every projector is learned against a global objective, by default the KL divergence to the dense model’s output distribution, or alternatively the model’s original training objective, a variant we denote LSP T . Our contributions are: (1) Learned subspace projections. Layers that read the same activations (Q/K/V, gate/up) form a tied group and share one projector; we optimize all projectors jointly across the network with the pretrained weights frozen. An activation-space parameterization with fused QR orthonormalization keeps this tractable at billion-parameter scale. (2) Whitened initialization and measured-KL allocation. Each projector is initialized from a whitened truncation, recast as an orthogonal projector and extended to tied groups. To decide how many directions each layer or tied group removes, we apply each projector in isolation, measure the KL divergence it induces on the model output, and allocate the budget by KL cost per saved parameter. The model at initialization, which we call NoLSP, serves as a control that isolates the effect of learning. (3) Efficient low-rank inference. After training, the projectors merge into plain low-rank factors, so the deployed model contains no LSP-specific operations. At the same compression ratio it requires the same FLOPs per token as other factorizations, yet the input factor shared by each tied group speeds up small-batch decoding and, in a latent-cache deployment, stores one narrow latent per group where untied factorizations store two (one each for keys and values), shrinking the KV cache. Because LSP applies to any linear layer, the same recipe transfers across Transformer models without architecture-specific surgery. LSP outperforms pruning\n\nWe introduced Learnable Subspace Projections (LSP), which compresses a pretrained network by learning, for each linear layer, the subspace the network can do without. Its premise is that statistical redundancy, whether measured by activation energy or by layer-wise reconstruction error, is not functional redundancy. LSP therefore selects the removed subspaces against the network output: it allocates ranks by measured output KL and optimizes all projectors jointly, with the pretrained weights frozen. Across four decoder LLMs, one of its two objectives attains the lowest perplexity in all twelve model–ratio settings, and both achieve the best zero-shot accuracy among low-rank methods. The margin grows with the compression ratio: at − 70 % -70\\% on Llama-2-7B, LSP reaches 10.9 10.9 perplexity, against 13.3 13.3 for the strongest baseline and 222.8 222.8 without learning. On a vision transformer, it is the most robust to calibration shift and transfers best when calibrated on diverse unlabeled data. The merged model is also the fastest factorization we measure, decoding up to 1.56 × 1.56\\times faster than the dense model. Its shared latent reduces the memory of weights and KV cache by 13.5 × 13.5\\times at a 128k-token context, twice the savings of untied factorizations.\n\n(i) The measured-KL allocation is a local surrogate: isolated unit costs omit interactions, and the current strategy has no global-optimality guarantee. This makes the allocation uncertain on quality in specific settings: in a few cases uniform ranks can still be preferred; however empirical evidence shows that measured KL is still better, since it is able to adapt to different architectures: performance improvement over Qwen3-4B, OPT-1.3B, and two out of three compression ranges of Llama-2-7B. (ii) Compression is also not free: LSP requires both the KL measurements and projection training, although the measurements are reusable across ratios and objectives. On the other hand, compression is a one-off cost that is repaid by the inference savings of Section 3.3 and LSP justifies this with the strong performance. (iii) Tied groups only lead to savings with latent cache if KV are tied on the input side. This means our best configuration for Qwen3-4B does not gain in efficiency as much as the input-tied version does. This represents a performance-efficiency trade-off, as shown in Table 12 : tying KV on the output side leads to the best performance, but one can choose to tie KV on the input side for improved inference efficiency instead.",
+      "truncated": true,
+      "available_chars": 125587,
+      "note": "Retrieved passages, not an answer. Missing matches do not establish that the paper lacks the requested experiment. Extracted HTML text; equations and table formatting may be imperfect. No PDF extraction was attempted.",
+      "questions": [
+        "Retrieve experimental results and baselines for Learnable Subspace Projections, including model scales, compression ratios or ranks, quality degradation, memory and inference speed, rank allocation comparisons, and limitations."
+      ]
+    },
+    "inspect:2608.31036": {
+      "status": "ok",
+      "question": "Retrieve experimental baselines and controls for NoRA across pretraining, supervised fine-tuning, and reinforcement learning, including model and dataset settings, convergence or quality gains, stability and catastrophic-forgetting measurements, compute or memory overhead, and limitations or cases without improvement.",
+      "source": "https://arxiv.org/html/2608.31036v1",
+      "passages": [
+        {
+          "chunk_id": "chunk-0002",
+          "section": "Abstract",
+          "text": "While low-rank adaptation (LoRA) is widely used for parameter-efficient model adaptation, how to regularize its training dynamics for stable and effective optimization remains underexplored. Because LoRA initializes the up-projection to zero, its early optimization dynamics are largely governed by the down-projection. Building on this observation, we introduce Normalized Low-Rank Adaptation (NoRA), a simple yet effective method that normalizes the down-projection matrices during training. We further show that the same normalization can be applied only at initialization, improving standard LoRA without requiring repeated normalization throughout training. Across pretraining, supervised finetuning, and reinforcement learning, NoRA consistently accelerates convergence, improves performance and training stability, and mitigates catastrophic forgetting. These benefits require neither additional trainable parameters nor inference-time computation, making NoRA a simple and broadly applicable enhancement to LoRA. spherelab.ai/NoRA",
+          "source": "https://arxiv.org/html/2608.31036v1",
+          "offset": 0,
+          "score": 23.232908866401083
+        },
+        {
+          "chunk_id": "chunk-0006",
+          "section": "1 Introduction",
+          "text": "To this end, we adapt MLA’s normalization principle from the latent feature to the low-rank projection itself. Each column of 𝑨 ∈ ℝ r × k \\bm{A}\\in\\mathbb{R}^{r\\times k} represents how an input coordinate is projected into the r r -dimensional latent space. Guided by the normalization dimension in MLA, we propose to normalize these projection vectors along the rank dimension, yielding the linear form 𝑩 ⋅ Norm ​ ( 𝑨 ) ​ 𝒙 \\bm{B}\\cdot\\text{Norm}(\\bm{A})\\bm{x} . We refer to this formulation as Normalized LoRA (NoRA), which constrains the input-to-latent projection magnitudes throughout training while preserving exact weight mergeability. This normalization scheme also ensures that the gradient norm of NoRA can be better aligned with full finetuning, bridging the learnability gap between LoRA and full finetuning.",
+          "source": "https://arxiv.org/html/2608.31036v1",
+          "offset": 0,
+          "score": 0.9737226590199957
+        },
+        {
+          "chunk_id": "chunk-0007",
+          "section": "1 Introduction",
+          "text": "NoRA requires the down-projection matrix 𝑨 \\bm{A} to be normalized along the output rank dimension. This principle motivates two ways of applying normalization: (1) as a training constraint ( i.e. , NoRA) and (2) as an initialization strategy ( i.e. , NoRA-init). In the former, NoRA continuously normalizes the down-projection matrix 𝑨 \\bm{A} along the low-rank dimension r r throughout training. In the latter, NoRA-init normalizes 𝑨 \\bm{A} only once at initialization and subsequently optimizes it without constraints during training. For NoRA-init, we propose two initialization variants: (1) random normalization, where 𝑨 \\bm{A} is randomly initialized and then normalized; and (2) Block Identity Matrix Initialization (BIMI), where 𝑨 \\bm{A} is constructed as a block-identity matrix that inherently satisfies the rank-dimensional normalization requirement. NoRA improves training by removing undesirable scale imbalance across the low-rank dimensions, providing a better-conditioned parameterization than standard LoRA. We evaluate both NoRA and NoRA-init across pretraining, supervised finetuning, and reinforcement learning with verifiable rewards. Across a diverse range of base models, tasks, and training configurations, both methods consistently accelerate convergence, improve training stability, and enhance downstream performance. They also mitigate catastrophic forgetting during supervised adaptation and remain robust in reinforcement-learning settings where other spectral initialization methods can be fragile. In general, we can conclude that these results establish rank-dimension normalization of the down-projection as an important design principle for improving LoRA optimization. Our contributions are summarized as follows:",
+          "source": "https://arxiv.org/html/2608.31036v1",
+          "offset": 0,
+          "score": 22.156330278333954
+        },
+        {
+          "chunk_id": "chunk-0008",
+          "section": "1 Introduction",
+          "text": "• We identify the down-projection matrix 𝑨 \\bm{A} as a previously underexplored yet important design dimension in LoRA, showing that its magnitude can play a critical role in shaping optimization dynamics and ultimately improving training efficiency and downstream performance. • We propose NoRA, which normalizes the down-projection matrix 𝑨 \\bm{A} along the rank dimension in the LoRA parameterization. We further introduce NoRA-init, an initialization-only variant that applies this normalization at initialization and requires no re-normalization during training, enabling seamless performance improvements without modifying the optimization procedure. • Extensive experiments across pretraining, SFT, and RLVR demonstrate NoRA’s improved convergence, stability, downstream performance, and resistance to catastrophic forgetting.",
+          "source": "https://arxiv.org/html/2608.31036v1",
+          "offset": 0,
+          "score": 17.69256869628089
+        },
+        {
+          "chunk_id": "chunk-0023",
+          "section": "4 Experiments and Results",
+          "text": "To thoroughly evaluate our method, we conduct experiments across pretraining, supervised finetuning (SFT), and reinforcement learning. We further perform ablation studies to investigate the effect of the normalization dimension and initialization distribution. Evaluation settings are in Table 2 . Ablation Study. We investigate the effect of the normalization dimension of the down-projection matrix 𝑨 \\bm{A} by comparing column-wise and row-wise normalization, and further evaluate the effectiveness of NoRA across different random or deterministic initialization schemes. Pretraining. We begin with controlled studies on the MLA architecture under the L24-D1024 setting to examine the effect of intermediate normalization within low-rank latent representations. Building on these observations, we further evaluate NoRA on standard multi-head attention (MHA), where all attention projection layers are adapted with NoRA. Supervised finetuning. We evaluate NoRA on Llama 3.2-3B across a diverse set of downstream tasks, including mathematical reasoning and code generation, as well as its robustness against catastrophic forgetting ( Huang et al., 2026 ) . More detailed settings are given in Appendix B . Reinforcement learning with verifiable rewards. To assess its effectiveness in post-training optimization, we additionally evaluate NoRA under reinforcement learning using the ReRL framework.",
+          "source": "https://arxiv.org/html/2608.31036v1",
+          "offset": 0,
+          "score": 23.091391316652647
+        },
+        {
+          "chunk_id": "chunk-0024",
+          "section": "4 Experiments and Results",
+          "text": "Stage Repository Model Train Data Benchmark Pretrain FLA ( Yang and Zhang, 2024 ) MLA ( Liu et al., 2024a ) MHA ( Vaswani et al., 2017 ) SlimPajama ( Soboleva et al., 2023 ) LAMBADA ( Paperno et al., 2016 ) WikiText ( Merity et al., 2016 ) Arc-Easy/Arc-Challenge ( Clark et al., 2018 ) HellaSwag ( Zellers et al., 2019 ) PIQA ( Bisk et al., 2020 ) OpenBookQA ( Mihaylov et al., 2018 ) WinoGrande ( Sakaguchi et al., 2021 ) SFT PEFT-Arena ( Huang et al., 2026 ) Llama-3.2-3B ( Grattafiori et al., 2024 ) MetaMath ( Yu et al., 2024 ) CodeFeedback ( Zheng et al., 2024 ) Math: GSM8k ( Cobbe et al., 2021 ) Math500 ( Yu et al., 2024 ) Code: HumanEval ( Chen et al., 2021 ) Mbpp ( Austin et al., 2021 ) RL PeRL ( Yin et al., 2025 ) DeepSeek-R1-Distill-Qwen1.5B ( Liu et al., 2024a ) open-r1/DAPO-Math-17k-Processed ( Yu et al., 2026 ) AIME24 ( Zhang and Math-AI, 2025 ) ( Avg ​ @ ​ 32 \\mathrm{Avg}@32 ) AIME25 ( Zhang and Math-AI, 2025 ) ( Avg ​ @ ​ 32 \\mathrm{Avg}@32 ) MATH500 ( Lightman et al., 2024 ) ( Avg ​ @ ​ 4 \\mathrm{Avg}@4 ) Minerva ( Lewkowycz et al., 2022 ) ( Avg ​ @ ​ 4 \\mathrm{Avg}@4 ) AMC ( Li et al., 2024 ) ( Avg ​ @ ​ 32 \\mathrm{Avg}@32 ) HMMT ( Balunović et al., 2025 ) ( Avg ​ @ ​ 32 \\mathrm{Avg}@32 ) Table 2: Overview of all the training settings in our experiments.",
+          "source": "https://arxiv.org/html/2608.31036v1",
+          "offset": 0,
+          "score": 2.7742524006805094
+        }
+      ],
+      "text": "While low-rank adaptation (LoRA) is widely used for parameter-efficient model adaptation, how to regularize its training dynamics for stable and effective optimization remains underexplored. Because LoRA initializes the up-projection to zero, its early optimization dynamics are largely governed by the down-projection. Building on this observation, we introduce Normalized Low-Rank Adaptation (NoRA), a simple yet effective method that normalizes the down-projection matrices during training. We further show that the same normalization can be applied only at initialization, improving standard LoRA without requiring repeated normalization throughout training. Across pretraining, supervised finetuning, and reinforcement learning, NoRA consistently accelerates convergence, improves performance and training stability, and mitigates catastrophic forgetting. These benefits require neither additional trainable parameters nor inference-time computation, making NoRA a simple and broadly applicable enhancement to LoRA. spherelab.ai/NoRA\n\nTo this end, we adapt MLA’s normalization principle from the latent feature to the low-rank projection itself. Each column of 𝑨 ∈ ℝ r × k \\bm{A}\\in\\mathbb{R}^{r\\times k} represents how an input coordinate is projected into the r r -dimensional latent space. Guided by the normalization dimension in MLA, we propose to normalize these projection vectors along the rank dimension, yielding the linear form 𝑩 ⋅ Norm ​ ( 𝑨 ) ​ 𝒙 \\bm{B}\\cdot\\text{Norm}(\\bm{A})\\bm{x} . We refer to this formulation as Normalized LoRA (NoRA), which constrains the input-to-latent projection magnitudes throughout training while preserving exact weight mergeability. This normalization scheme also ensures that the gradient norm of NoRA can be better aligned with full finetuning, bridging the learnability gap between LoRA and full finetuning.\n\nNoRA requires the down-projection matrix 𝑨 \\bm{A} to be normalized along the output rank dimension. This principle motivates two ways of applying normalization: (1) as a training constraint ( i.e. , NoRA) and (2) as an initialization strategy ( i.e. , NoRA-init). In the former, NoRA continuously normalizes the down-projection matrix 𝑨 \\bm{A} along the low-rank dimension r r throughout training. In the latter, NoRA-init normalizes 𝑨 \\bm{A} only once at initialization and subsequently optimizes it without constraints during training. For NoRA-init, we propose two initialization variants: (1) random normalization, where 𝑨 \\bm{A} is randomly initialized and then normalized; and (2) Block Identity Matrix Initialization (BIMI), where 𝑨 \\bm{A} is constructed as a block-identity matrix that inherently satisfies the rank-dimensional normalization requirement. NoRA improves training by removing undesirable scale imbalance across the low-rank dimensions, providing a better-conditioned parameterization than standard LoRA. We evaluate both NoRA and NoRA-init across pretraining, supervised finetuning, and reinforcement learning with verifiable rewards. Across a diverse range of base models, tasks, and training configurations, both methods consistently accelerate convergence, improve training stability, and enhance downstream performance. They also mitigate catastrophic forgetting during supervised adaptation and remain robust in reinforcement-learning settings where other spectral initialization methods can be fragile. In general, we can conclude that these results establish rank-dimension normalization of the down-projection as an important design principle for improving LoRA optimization. Our contributions are summarized as follows:\n\n• We identify the down-projection matrix 𝑨 \\bm{A} as a previously underexplored yet important design dimension in LoRA, showing that its magnitude can play a critical role in shaping optimization dynamics and ultimately improving training efficiency and downstream performance. • We propose NoRA, which normalizes the down-projection matrix 𝑨 \\bm{A} along the rank dimension in the LoRA parameterization. We further introduce NoRA-init, an initialization-only variant that applies this normalization at initialization and requires no re-normalization during training, enabling seamless performance improvements without modifying the optimization procedure. • Extensive experiments across pretraining, SFT, and RLVR demonstrate NoRA’s improved convergence, stability, downstream performance, and resistance to catastrophic forgetting.\n\nTo thoroughly evaluate our method, we conduct experiments across pretraining, supervised finetuning (SFT), and reinforcement learning. We further perform ablation studies to investigate the effect of the normalization dimension and initialization distribution. Evaluation settings are in Table 2 . Ablation Study. We investigate the effect of the normalization dimension of the down-projection matrix 𝑨 \\bm{A} by comparing column-wise and row-wise normalization, and further evaluate the effectiveness of NoRA across different random or deterministic initialization schemes. Pretraining. We begin with controlled studies on the MLA architecture under the L24-D1024 setting to examine the effect of intermediate normalization within low-rank latent representations. Building on these observations, we further evaluate NoRA on standard multi-head attention (MHA), where all attention projection layers are adapted with NoRA. Supervised finetuning. We evaluate NoRA on Llama 3.2-3B across a diverse set of downstream tasks, including mathematical reasoning and code generation, as well as its robustness against catastrophic forgetting ( Huang et al., 2026 ) . More detailed settings are given in Appendix B . Reinforcement learning with verifiable rewards. To assess its effectiveness in post-training optimization, we additionally evaluate NoRA under reinforcement learning using the ReRL framework.\n\nStage Repository Model Train Data Benchmark Pretrain FLA ( Yang and Zhang, 2024 ) MLA ( Liu et al., 2024a ) MHA ( Vaswani et al., 2017 ) SlimPajama ( Soboleva et al., 2023 ) LAMBADA ( Paperno et al., 2016 ) WikiText ( Merity et al., 2016 ) Arc-Easy/Arc-Challenge ( Clark et al., 2018 ) HellaSwag ( Zellers et al., 2019 ) PIQA ( Bisk et al., 2020 ) OpenBookQA ( Mihaylov et al., 2018 ) WinoGrande ( Sakaguchi et al., 2021 ) SFT PEFT-Arena ( Huang et al., 2026 ) Llama-3.2-3B ( Grattafiori et al., 2024 ) MetaMath ( Yu et al., 2024 ) CodeFeedback ( Zheng et al., 2024 ) Math: GSM8k ( Cobbe et al., 2021 ) Math500 ( Yu et al., 2024 ) Code: HumanEval ( Chen et al., 2021 ) Mbpp ( Austin et al., 2021 ) RL PeRL ( Yin et al., 2025 ) DeepSeek-R1-Distill-Qwen1.5B ( Liu et al., 2024a ) open-r1/DAPO-Math-17k-Processed ( Yu et al., 2026 ) AIME24 ( Zhang and Math-AI, 2025 ) ( Avg ​ @ ​ 32 \\mathrm{Avg}@32 ) AIME25 ( Zhang and Math-AI, 2025 ) ( Avg ​ @ ​ 32 \\mathrm{Avg}@32 ) MATH500 ( Lightman et al., 2024 ) ( Avg ​ @ ​ 4 \\mathrm{Avg}@4 ) Minerva ( Lewkowycz et al., 2022 ) ( Avg ​ @ ​ 4 \\mathrm{Avg}@4 ) AMC ( Li et al., 2024 ) ( Avg ​ @ ​ 32 \\mathrm{Avg}@32 ) HMMT ( Balunović et al., 2025 ) ( Avg ​ @ ​ 32 \\mathrm{Avg}@32 ) Table 2: Overview of all the training settings in our experiments.",
+      "truncated": true,
+      "available_chars": 60542,
+      "note": "Retrieved passages, not an answer. Missing matches do not establish that the paper lacks the requested experiment. Extracted HTML text; equations and table formatting may be imperfect. No PDF extraction was attempted.",
+      "questions": [
+        "Retrieve experimental baselines and controls for NoRA across pretraining, supervised fine-tuning, and reinforcement learning, including model and dataset settings, convergence or quality gains, stability and catastrophic-forgetting measurements, compute or memory overhead, and limitations or cases without improvement."
+      ]
+    }
+  },
+  "x_collector": "arc-v2",
+  "pending": {
+    "action": "finish",
+    "paper_id": "",
+    "reason": "The shortlist is sufficiently supported by abstracts and inspections. Remaining uncertainty concerns uninspected papers' detailed baselines, compute costs, and reproducibility, especially for the agent-oriented candidates; this is unlikely to change the strongest five selections for the user's core optimization and low-rank interests.",
+    "question": "",
+    "query": "",
+    "limit": 10,
+    "selections": [
+      {
+        "paper_id": "2610.11730",
+        "summary": "Introduces decoupled nuclear-norm spectral weight decay that shrinks smaller singular values, lowers effective rank, and improves low-rank compression and noisy-label robustness. At 500M parameters and 4% distortion, it reports 1.89× compression and 1.18× inference speedup versus 1.14× and 1.01× with standard weight decay.",
+        "relevance": "Direct match for spectral regularization, effective rank, compressibility, inference tradeoffs, and generalization under label noise.",
+        "evidence": [
+          {
+            "source": "abstract",
+            "quote": "spectral weight decay lowers effective rank and improves SVD-LLM compression at matched validation loss"
+          },
+          {
+            "source": "inspection",
+            "quote": "The additive shrinkage acts more strongly on smaller singular values and concentrates the spectrum."
+          },
+          {
+            "source": "inspection",
+            "quote": "For the 500 M model and a 4 % distortion budget, it supports 1.89 × compression, compared with 1.14 × after standard weight decay."
+          }
+        ]
+      },
+      {
+        "paper_id": "2609.40127",
+        "summary": "Presents Learnable Subspace Projections, which learn compression subspaces end-to-end against the model output rather than using local spectral or reconstruction criteria. Across LLMs and ViT, it reports stronger quality under compression, up to 1.56× faster decoding, and 13.5× lower combined weight and KV-cache memory at 128k context.",
+        "relevance": "Strong match for low-rank compression, functional versus spectral redundancy, rank allocation, and quality-memory-speed tradeoffs at multiple model scales.",
+        "evidence": [
+          {
+            "source": "abstract",
+            "quote": "At −70% compression, LSP brings Llama-2-7B to 10.9 WikiText-2 perplexity and 42.2% mean zero-shot accuracy, versus 13.3 and 36.0% for the strongest baseline."
+          },
+          {
+            "source": "inspection",
+            "quote": "LSP therefore selects the removed subspaces against the network output: it allocates ranks by measured output KL and optimizes all projectors jointly, with the pretrained weights frozen."
+          },
+          {
+            "source": "inspection",
+            "quote": "Its shared latent reduces the memory of weights and KV cache by 13.5 × at a 128k-token context."
+          }
+        ]
+      },
+      {
+        "paper_id": "2608.14492",
+        "summary": "Introduces sMuon, a matmul-only approximation of the Muon objective for LoRA updates. It compares against AdamW, per-factor Muon, LoRA-Muon, and Riemannion across four models and eleven SFT benchmarks, and ties Riemannion for best ReLoRA validation loss while being approximately 30% faster.",
+        "relevance": "Directly addresses optimization geometry and convergence for LoRA, low-rank parameterizations, Muon, and ReLoRA pretraining efficiency.",
+        "evidence": [
+          {
+            "source": "abstract",
+            "quote": "using Muon for low-rank fine-tuning provides moderate performance improvements"
+          },
+          {
+            "source": "inspection",
+            "quote": "We compare sMuon to regular LoRA with AdamW, per-factor Muon, LoRA-Muon, and Riemannion."
+          },
+          {
+            "source": "inspection",
+            "quote": "our method attains the lowest final validation loss, tying with Riemannion, but being ∼30% faster."
+          }
+        ]
+      },
+      {
+        "paper_id": "2608.31036",
+        "summary": "Proposes NoRA and NoRA-init, which normalize LoRA's down-projection along the rank dimension during training or only at initialization. The paper evaluates them in pretraining, SFT, and RL with ablations over normalization and initialization choices, reporting improved convergence, stability, downstream performance, and resistance to catastrophic forgetting without extra trainable parameters or inference computation.",
+        "relevance": "Strong match for LoRA optimization dynamics, parameter-efficient fine-tuning, spectral normalization, and practical training overhead.",
+        "evidence": [
+          {
+            "source": "abstract",
+            "quote": "Across pretraining, supervised finetuning, and reinforcement learning, NoRA consistently accelerates convergence, improves performance and training stability, and mitigates catastrophic forgetting."
+          },
+          {
+            "source": "inspection",
+            "quote": "NoRA-init normalizes A only once at initialization and subsequently optimizes it without constraints during training."
+          },
+          {
+            "source": "inspection",
+            "quote": "These benefits require neither additional trainable parameters nor inference-time computation."
+          }
+        ]
+      },
+      {
+        "paper_id": "2609.37725",
+        "summary": "Introduces Context Language Models that treat context as a file the model can update, extending the approach to multiple agent contexts. The abstract reports higher accuracy with fewer FLOPs on several agent benchmarks and improved held-out context-management performance through skill optimization.",
+        "relevance": "Best match among the supplied candidates for the user's AI research-digest agent, context-management, and multi-agent orchestration interests, though it is less connected to low-rank optimization.",
+        "evidence": [
+          {
+            "source": "abstract",
+            "quote": "We introduce Context Language Models (CLMs), language models that natively manage their own context."
+          },
+          {
+            "source": "abstract",
+            "quote": "11.4% higher accuracy with 21.5% fewer FLOPs on BrowseComp-Plus"
+          },
+          {
+            "source": "abstract",
+            "quote": "CLMs naturally enable both in-context and parametric learning of context-management strategies."
+          }
+        ]
+      }
+    ],
+    "limitations": [
+      "X analysis is disabled, so no attention signal is available.",
+      "The retrieved inspection passages are not full-paper verification; some tables, implementation details, and limitations remain unexamined.",
+      "The NoRA inspection confirms the experimental scope and claimed benefits but does not provide detailed quantitative gains or a clear failure-case analysis in the retrieved passages.",
+      "The context-management recommendation relies on the abstract only and has less detailed experimental support than the four inspected optimization/compression papers."
+    ]
+  },
+  "screen_target": 30,
+  "llm_calls": 8,
+  "steps": 5,
+  "inspections": 4,
+  "expansions": 0,
+  "fetched_count": 100,
+  "candidate_count": 100,
+  "llm_usage": [
+    {
+      "model": "gpt-5.6-luna",
+      "status": "completed",
+      "input_tokens": 9349,
+      "output_tokens": 752,
+      "latency_seconds": 18.15108270800556,
+      "estimated_api_cost_usd": 0.0027722000000000003
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "status": "completed",
+      "input_tokens": 9431,
+      "output_tokens": 852,
+      "latency_seconds": 19.340011874999618,
+      "estimated_api_cost_usd": 0.0029086
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "status": "completed",
+      "input_tokens": 9496,
+      "output_tokens": 813,
+      "latency_seconds": 19.44554929199512,
+      "estimated_api_cost_usd": 0.0028748000000000003
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "status": "completed",
+      "input_tokens": 18748,
+      "output_tokens": 249,
+      "latency_seconds": 8.428551000004518,
+      "estimated_api_cost_usd": 0.004048400000000001
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "status": "completed",
+      "input_tokens": 27055,
+      "output_tokens": 288,
+      "latency_seconds": 9.786357832999784,
+      "estimated_api_cost_usd": 0.005756600000000001
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "status": "completed",
+      "input_tokens": 32746,
+      "output_tokens": 265,
+      "latency_seconds": 9.91787404200295,
+      "estimated_api_cost_usd": 0.0068672
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "status": "completed",
+      "input_tokens": 35317,
+      "output_tokens": 322,
+      "latency_seconds": 10.10910016699927,
+      "estimated_api_cost_usd": 0.0074498
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "status": "completed",
+      "input_tokens": 39493,
+      "output_tokens": 1325,
+      "latency_seconds": 28.52202820900129,
+      "estimated_api_cost_usd": 0.0094886
+    }
+  ],
+  "tool_calls": 4,
+  "inspection_queries": {
+    "2610.11730:ff48a3b69f61035acf2ae7a489658f49f2458e947cffe8525b9e2840c53b9c64": {
+      "status": "ok",
+      "question": "Retrieve passages detailing experimental baselines and controls for spectral weight decay, including comparisons with standard L2 weight decay and other regularizers, matched validation-loss or compute conditions, effective-rank and SVD-LLM compression measurements, GPU memory/throughput costs, and label-noise experimental design.",
+      "source": "https://arxiv.org/html/2610.11730v1",
+      "passages": [
+        {
+          "chunk_id": "chunk-0001",
+          "section": "Article",
+          "text": "BRAIn Lab Spectral Weight Decay: Inducing Low-Rank Structure in Neural Network Weights Dmitrii Andriianov 1 , Andrey Veprikov 1,2 , Aleksandr Beznosikov 1,3 1 Basic Research of Artificial Intelligence Laboratory (BRAIn Lab) 2 SB AI Lab 3 Innopolis University Standard weight decay treats each weight matrix as a vector and ignores its spectral structure. We introduce spectral weight decay, a post-step decoupled nuclear-norm update that applies additive rather than multiplicative spectral shrinkage. We connect the update to approximate proximal descent and show that its sensitivity to update order can exceed that of conventional ℓ 2 \\ell_{2} weight decay near rank deficiency. Across LLaMA models with 124 124 M to 500 500 M parameters, spectral weight decay lowers effective rank and improves SVD-LLM compression at matched validation loss. At 500 500 M and a 4 % 4\\% distortion budget, it reaches 1.89 × 1.89\\times compression and 1.18 × 1.18\\times GPU inference speedup, compared with 1.14 × 1.14\\times and 1.01 × 1.01\\times after standard weight decay. Under fixed-horizon training with 60 % 60\\% label noise, it also improves final mean clean-test accuracy over matched ℓ 2 \\ell_{2} regularization by up to 17.8 17.8 points on MNIST and 4.6 4.6 points across four BERT-base tasks. Code is available at https://github.com/brain-lab-research/SpectralWD .",
+          "source": "https://arxiv.org/html/2610.11730v1",
+          "offset": 0,
+          "score": 20.400147792215574
+        },
+        {
+          "chunk_id": "chunk-0003",
+          "section": "1 Introduction",
+          "text": "To make the regularizer matrix-aware, we begin with the proximal interpretation of decoupled weight decay. To first order, its update is a proximal gradient step for the squared Frobenius penalty [ Parikh and Boyd, 2014 ; Zhuang et al., 2022 ] . We replace this penalty with the nuclear norm, a convex surrogate for rank whose proximal operator soft-thresholds singular values [ Recht et al., 2010 ; Cai et al., 2010 ] . This construction is the matrix analogue of replacing ridge shrinkage with coefficient selection by the lasso [ Hoerl and Kennard, 1970 ; Tibshirani, 1996 ] . Given the loss-only optimizer direction Δ \\Delta , let Z = W ( k ) − η ​ Δ = U Z ​ Σ Z ​ V Z ⊤ Z=W^{(k)}-\\eta\\Delta=U_{Z}\\Sigma_{Z}V_{Z}^{\\top} . Spectral weight decay applies the post-step correction W ( k + 1 ) = Z − η ​ λ ​ U Z ​ V Z ⊤ , W^{(k+1)}=Z-\\eta\\lambda U_{Z}V_{Z}^{\\top}, (1) where η \\eta is the learning rate and λ \\lambda the regularization coefficient. This correction acts additively in the singular basis of Z Z , whereas conventional weight decay scales the spectrum uniformly. SLORR-Nuc also approximates the nuclear-norm polar factor [ González-Martínez and Liu, 2026 ] . Its decoupled extension would use the pre-step correction Z − η ​ λ ​ U W ​ V W ⊤ Z-\\eta\\lambda U_{W}V_{W}^{\\top} for W ( k ) = U W ​ Σ W ​ V W ⊤ W^{(k)}=U_{W}\\Sigma_{W}V_{W}^{\\top} , rather than ( 1 ).",
+          "source": "https://arxiv.org/html/2610.11730v1",
+          "offset": 0,
+          "score": 2.6601823127151047
+        },
+        {
+          "chunk_id": "chunk-0004",
+          "section": "1 Introduction",
+          "text": "The additive shrinkage acts more strongly on smaller singular values and concentrates the spectrum. The resulting low-effective-rank weights admit efficient truncated SVD compression. Replacing a dense m × n m\\times n matrix with rank- r r factors reduces its parameter count and multiplication cost from m ​ n mn to r ⁡ ( m + n ) r(m+n) . This factorization lowers storage and inference memory and can reduce latency when the retained rank is sufficiently small. Beyond compression, we test whether the same low-rank bias limits memorization under label noise. We evaluate spectral weight decay in LLaMA [ Touvron et al., 2023 ] pretraining, post-training compression, and fixed-horizon noisy-label classification. Across models with 124 124 M to 500 500 M parameters, it lowers effective rank [ Roy and Vetterli, 2007 ] and improves compression and inference speed at matched validation loss. At 500 500 M and a 4 % 4\\% distortion budget, it reaches 1.89 × 1.89\\times compression and a 1.18 × 1.18\\times GPU inference speedup. At 60 % 60\\% label noise, mean clean-test accuracy gains over matched ℓ 2 \\ell_{2} regularization reach 17.78 17.78 points on MNIST and 4.59 4.59 points on four BERT-base tasks.",
+          "source": "https://arxiv.org/html/2610.11730v1",
+          "offset": 0,
+          "score": 22.472096976918706
+        },
+        {
+          "chunk_id": "chunk-0005",
+          "section": "Contributions",
+          "text": "• We formulate spectral weight decay as decoupled nuclear-norm regularization, derive its additive singular-value shrinkage, and connect the update to approximate proximal descent. • Across LLaMA models with 124 124 M to 500 500 M parameters, spectral weight decay improves low-rank compression and inference speed over standard weight decay at matched validation loss. It also outperforms Cuttlefish and Prehab in matched compression comparisons. • On image and text classification tasks, spectral weight decay improves fixed-horizon robustness to label noise over matched ℓ 2 \\ell_{2} regularization.",
+          "source": "https://arxiv.org/html/2610.11730v1",
+          "offset": 0,
+          "score": 22.09499933642982
+        },
+        {
+          "chunk_id": "chunk-0013",
+          "section": "3.2 Compression and inference",
+          "text": "Spectral weight decay lowers the effective rank of weight matrices, making them amenable to low-rank compression. We use SVD-LLM [ Wang et al., 2024 ] , which gives the lowest validation loss in our matched comparison. We compress each weight matrix to its own effective rank, which varies substantially across layers (Figure 2 , middle). We leave the token embeddings and output head uncompressed because their ranks respond little to spectral weight decay, and compressing them even to their effective ranks sharply degrades model quality. The comparison and compression procedure are described in Appendix B.4 . Figure 3 (top) reports the maximum compression rate supported by each validation-loss distortion budget. Spectral weight decay substantially shifts this frontier upward at all three model scales. For the 500 500 M model and a 4 % 4\\% distortion budget, it supports 1.89 × 1.89\\times compression, compared with 1.14 × 1.14\\times after standard weight decay. The same factorization reduces the FLOPs of a linear layer when r ⁡ ( m + n ) < m ​ n r(m+n)<mn . This reduction does not translate directly into lower latency because the factorized forward pass evaluates ( U r ​ Σ r ) ​ ( V r ⊤ ​ X ) (U_{r}\\Sigma_{r})(V_{r}^{\\top}X) with two GEMMs instead of the single GEMM W ​ X WX . The additional kernel launch and intermediate activation can offset the reduction in FLOPs. To improve tensor-core utilization, we round the effective rank down to the nearest multiple of 16 16 , r l = max ⁡ ( 16 , 16 ​ ⌊ erank ⁡ ( W l ) 16 ⌋ ) , r_{l}=\\max\\!\\left(16,\\,16\\left\\lfloor\\frac{\\operatorname{erank}(W_{l})}{16}\\right\\rfloor\\right), (3)",
+          "source": "https://arxiv.org/html/2610.11730v1",
+          "offset": 0,
+          "score": 14.889047276930285
+        },
+        {
+          "chunk_id": "chunk-0014",
+          "section": "3.2 Compression and inference",
+          "text": "Adjusting an aligned rank by one step, ± 16 \\pm 16 , has negligible effect on validation loss. We therefore use this rank-aligned compression scheme throughout. The factorized models outperform their dense counterparts only at large batch sizes, so we measure forward-pass latency with a batch size of 256 256 on a single GPU. For the 500 500 M model, spectral weight decay yields a 1.09 × 1.09\\times speedup near a 2 % 2\\% distortion budget and reaches 1.18 × 1.18\\times at 4 % 4\\% , compared with 1.01 × 1.01\\times under standard weight decay (Figure 3 , bottom).",
+          "source": "https://arxiv.org/html/2610.11730v1",
+          "offset": 0,
+          "score": 11.771643832875581
+        }
+      ],
+      "text": "BRAIn Lab Spectral Weight Decay: Inducing Low-Rank Structure in Neural Network Weights Dmitrii Andriianov 1 , Andrey Veprikov 1,2 , Aleksandr Beznosikov 1,3 1 Basic Research of Artificial Intelligence Laboratory (BRAIn Lab) 2 SB AI Lab 3 Innopolis University Standard weight decay treats each weight matrix as a vector and ignores its spectral structure. We introduce spectral weight decay, a post-step decoupled nuclear-norm update that applies additive rather than multiplicative spectral shrinkage. We connect the update to approximate proximal descent and show that its sensitivity to update order can exceed that of conventional ℓ 2 \\ell_{2} weight decay near rank deficiency. Across LLaMA models with 124 124 M to 500 500 M parameters, spectral weight decay lowers effective rank and improves SVD-LLM compression at matched validation loss. At 500 500 M and a 4 % 4\\% distortion budget, it reaches 1.89 × 1.89\\times compression and 1.18 × 1.18\\times GPU inference speedup, compared with 1.14 × 1.14\\times and 1.01 × 1.01\\times after standard weight decay. Under fixed-horizon training with 60 % 60\\% label noise, it also improves final mean clean-test accuracy over matched ℓ 2 \\ell_{2} regularization by up to 17.8 17.8 points on MNIST and 4.6 4.6 points across four BERT-base tasks. Code is available at https://github.com/brain-lab-research/SpectralWD .\n\nTo make the regularizer matrix-aware, we begin with the proximal interpretation of decoupled weight decay. To first order, its update is a proximal gradient step for the squared Frobenius penalty [ Parikh and Boyd, 2014 ; Zhuang et al., 2022 ] . We replace this penalty with the nuclear norm, a convex surrogate for rank whose proximal operator soft-thresholds singular values [ Recht et al., 2010 ; Cai et al., 2010 ] . This construction is the matrix analogue of replacing ridge shrinkage with coefficient selection by the lasso [ Hoerl and Kennard, 1970 ; Tibshirani, 1996 ] . Given the loss-only optimizer direction Δ \\Delta , let Z = W ( k ) − η ​ Δ = U Z ​ Σ Z ​ V Z ⊤ Z=W^{(k)}-\\eta\\Delta=U_{Z}\\Sigma_{Z}V_{Z}^{\\top} . Spectral weight decay applies the post-step correction W ( k + 1 ) = Z − η ​ λ ​ U Z ​ V Z ⊤ , W^{(k+1)}=Z-\\eta\\lambda U_{Z}V_{Z}^{\\top}, (1) where η \\eta is the learning rate and λ \\lambda the regularization coefficient. This correction acts additively in the singular basis of Z Z , whereas conventional weight decay scales the spectrum uniformly. SLORR-Nuc also approximates the nuclear-norm polar factor [ González-Martínez and Liu, 2026 ] . Its decoupled extension would use the pre-step correction Z − η ​ λ ​ U W ​ V W ⊤ Z-\\eta\\lambda U_{W}V_{W}^{\\top} for W ( k ) = U W ​ Σ W ​ V W ⊤ W^{(k)}=U_{W}\\Sigma_{W}V_{W}^{\\top} , rather than ( 1 ).\n\nThe additive shrinkage acts more strongly on smaller singular values and concentrates the spectrum. The resulting low-effective-rank weights admit efficient truncated SVD compression. Replacing a dense m × n m\\times n matrix with rank- r r factors reduces its parameter count and multiplication cost from m ​ n mn to r ⁡ ( m + n ) r(m+n) . This factorization lowers storage and inference memory and can reduce latency when the retained rank is sufficiently small. Beyond compression, we test whether the same low-rank bias limits memorization under label noise. We evaluate spectral weight decay in LLaMA [ Touvron et al., 2023 ] pretraining, post-training compression, and fixed-horizon noisy-label classification. Across models with 124 124 M to 500 500 M parameters, it lowers effective rank [ Roy and Vetterli, 2007 ] and improves compression and inference speed at matched validation loss. At 500 500 M and a 4 % 4\\% distortion budget, it reaches 1.89 × 1.89\\times compression and a 1.18 × 1.18\\times GPU inference speedup. At 60 % 60\\% label noise, mean clean-test accuracy gains over matched ℓ 2 \\ell_{2} regularization reach 17.78 17.78 points on MNIST and 4.59 4.59 points on four BERT-base tasks.\n\n• We formulate spectral weight decay as decoupled nuclear-norm regularization, derive its additive singular-value shrinkage, and connect the update to approximate proximal descent. • Across LLaMA models with 124 124 M to 500 500 M parameters, spectral weight decay improves low-rank compression and inference speed over standard weight decay at matched validation loss. It also outperforms Cuttlefish and Prehab in matched compression comparisons. • On image and text classification tasks, spectral weight decay improves fixed-horizon robustness to label noise over matched ℓ 2 \\ell_{2} regularization.\n\nSpectral weight decay lowers the effective rank of weight matrices, making them amenable to low-rank compression. We use SVD-LLM [ Wang et al., 2024 ] , which gives the lowest validation loss in our matched comparison. We compress each weight matrix to its own effective rank, which varies substantially across layers (Figure 2 , middle). We leave the token embeddings and output head uncompressed because their ranks respond little to spectral weight decay, and compressing them even to their effective ranks sharply degrades model quality. The comparison and compression procedure are described in Appendix B.4 . Figure 3 (top) reports the maximum compression rate supported by each validation-loss distortion budget. Spectral weight decay substantially shifts this frontier upward at all three model scales. For the 500 500 M model and a 4 % 4\\% distortion budget, it supports 1.89 × 1.89\\times compression, compared with 1.14 × 1.14\\times after standard weight decay. The same factorization reduces the FLOPs of a linear layer when r ⁡ ( m + n ) < m ​ n r(m+n)<mn . This reduction does not translate directly into lower latency because the factorized forward pass evaluates ( U r ​ Σ r ) ​ ( V r ⊤ ​ X ) (U_{r}\\Sigma_{r})(V_{r}^{\\top}X) with two GEMMs instead of the single GEMM W ​ X WX . The additional kernel launch and intermediate activation can offset the reduction in FLOPs. To improve tensor-core utilization, we round the effective rank down to the nearest multiple of 16 16 , r l = max ⁡ ( 16 , 16 ​ ⌊ erank ⁡ ( W l ) 16 ⌋ ) , r_{l}=\\max\\!\\left(16,\\,16\\left\\lfloor\\frac{\\operatorname{erank}(W_{l})}{16}\\right\\rfloor\\right), (3)\n\nAdjusting an aligned rank by one step, ± 16 \\pm 16 , has negligible effect on validation loss. We therefore use this rank-aligned compression scheme throughout. The factorized models outperform their dense counterparts only at large batch sizes, so we measure forward-pass latency with a batch size of 256 256 on a single GPU. For the 500 500 M model, spectral weight decay yields a 1.09 × 1.09\\times speedup near a 2 % 2\\% distortion budget and reaches 1.18 × 1.18\\times at 4 % 4\\% , compared with 1.01 × 1.01\\times under standard weight decay (Figure 3 , bottom).",
+      "truncated": true,
+      "available_chars": 68851,
+      "note": "Retrieved passages, not an answer. Missing matches do not establish that the paper lacks the requested experiment. Extracted HTML text; equations and table formatting may be imperfect. No PDF extraction was attempted."
+    },
+    "2608.14492:a994cb8e26752f60f8d885b5fca3151b05d33296785b0d69e743f913bd468563": {
+      "status": "ok",
+      "question": "Retrieve passages describing the SFT and ReLoRA experiments, baseline optimizers and LoRA methods, model and dataset settings, measured performance differences, compute or memory costs, and limitations or cases where sMuon does not improve results.",
+      "source": "https://arxiv.org/html/2608.14492v1",
+      "passages": [
+        {
+          "chunk_id": "chunk-0002",
+          "section": "Abstract",
+          "text": "The Muon optimizer shows clear benefits versus alternatives when pretraining neural networks. However, it is used less frequently for parameter-efficient fine-tuning (PEFT). One potential reason is that the most common PEFT method, LoRA, does not naturally combine with Muon since it is not mathematically possible to orthogonalize the weight update given by a low-rank parameterization. In this paper, we address this issue by approximating the solution to a relaxed Muon objective in the low-rank setting via linearization and then least-squares. We provide an efficient implementation that uses matmul operations only, as opposed to more complex linear algebra decomposition routines. Our method, sMuon (small Muon), performs favourably across SFT and a ReLoRA pretraining experiment. While results are model- and eval-dependent, we find overall that using Muon for low-rank fine-tuning provides moderate performance improvements.",
+          "source": "https://arxiv.org/html/2608.14492v1",
+          "offset": 0,
+          "score": 17.107615513727787
+        },
+        {
+          "chunk_id": "chunk-0005",
+          "section": "1 Introduction",
+          "text": "In this paper, we linearize the low-rank Muon objective to find the optimal descent step within the available parameter space. This solution effectively orthogonalizes the full layer’s gradient and projects it onto the appropriate low-rank subspace. Empirically, we find this retains a more uniform spectrum than alternatives such as per-factor Muon (Fig. 1 ) and LoRA-Muon ( Cesista et al., 2026 ) . Furthermore, unlike Riemannion ( Bogachev et al., 2026 ) , our approach avoids expensive matrix decompositions. While our solution to the low-rank Muon problem is clean (Alg. 1 ), a naive implementation is computationally inefficient, as it requires orthogonalizing a large matrix. To address this, we introduce a mathematically equivalent formulation (Alg. 2 ) that is both fast and memory-efficient. By relying entirely on matrix multiplications, we are able to avoid the overhead from QR and SVD. Finally, we show that our optimizer, sMuon, achieves competitive performance across a range of commonsense and coding SFT benchmarks, as well as in ReLoRA pretraining experiments. Our contributions are as follows: • We derive a method for training LoRA adapters with Muon by taking a first-order approximation of the spectral-norm-regularized steepest descent objective. The method is available in closed form, and requires less optimizer state than AdamW. • We provide a matmul-only algorithm of the method, sMuon, that is efficient for modern hardware, with comparable speed to other Muon methods such as per-factor Muon and LoRA-Muon, while being significantly faster than Riemannion for larger LoRA rank.",
+          "source": "https://arxiv.org/html/2608.14492v1",
+          "offset": 0,
+          "score": 15.187452174808767
+        },
+        {
+          "chunk_id": "chunk-0006",
+          "section": "1 Introduction",
+          "text": "• We run SFT experiments on four base models, three AdamW-pretrained and one Muon-pretrained, over eleven benchmarks to compare low-rank Muon optimizers. While results are model-dependent, we find that our optimizer gives strong performance, performing best on the Muon-pretrained model with the top accuracy in six out of eleven tasks with Moonlight-16B-A3B. • In the ReLoRA pretraining setting, we illustrate that Muon LoRA methods are generally stronger than AdamW LoRA. Specifically we find that our method attains the lowest final validation loss, tying with Riemannion, but being ∼ 30 % \\sim\\!30\\% faster.",
+          "source": "https://arxiv.org/html/2608.14492v1",
+          "offset": 0,
+          "score": 23.5017134406907
+        },
+        {
+          "chunk_id": "chunk-0027",
+          "section": "5 Experiments",
+          "text": "Table 2: Code pass@1 (%), grouped by base model. Each column is an optimizer (best run by validation loss); per row the best optimizer is bolded and cells are shaded green (best) to white (worst). Eval AdamW Per-factor Muon LoRA-Muon Riemannion sMuon (ours) Qwen2.5-3B HumanEval 54.9 20.1 43.3 31.1 51.8 HumanEval+ 48.8 17.1 39.0 25.6 43.9 MBPP 65.9 69.3 68.0 65.9 62.7 MBPP+ 57.1 60.6 58.7 56.9 53.4 Llama-3.2-3B HumanEval 22.0 18.3 29.9 30.5 29.9 HumanEval+ 19.5 16.5 25.0 26.8 27.4 MBPP 43.1 35.7 42.1 46.3 45.2 MBPP+ 35.4 30.4 34.1 38.1 38.6 DeepSeek-V2-Lite HumanEval 36.6 29.3 22.0 23.2 26.8 HumanEval+ 28.7 23.8 18.3 19.5 23.2 MBPP 52.6 53.7 48.4 49.5 51.3 MBPP+ 45.5 45.0 43.4 43.7 44.7 Moonlight-16B-A3B HumanEval 49.4 57.9 53.7 40.2 54.9 HumanEval+ 42.7 48.8 47.0 35.4 48.8 MBPP 71.7 71.2 71.2 68.8 71.2 MBPP+ 60.1 60.1 61.4 58.7 60.3 Table 3: ReLoRA pretraining: final validation loss at each optimizer’s optimal learning rate, where the optimal LR minimises the validation loss at the final logged step. Lower is better; the best optimizer is bolded and cells are shaded green (best) to white (worst). AdamW Per-factor Muon LoRA-Muon Riemannion sMuon (ours) Final val loss 3.83 3.70 3.68 3.66 3.66 Optimal LR 0.001 0.006 0.001 0.0006 0.0006",
+          "source": "https://arxiv.org/html/2608.14492v1",
+          "offset": 0,
+          "score": 8.934425573731028
+        },
+        {
+          "chunk_id": "chunk-0028",
+          "section": "5 Experiments",
+          "text": "We compare sMuon to regular LoRA with AdamW, per-factor Muon (LoRA with Muon applied to each adapter weight B B and A A individually), LoRA-Muon ( Cesista et al., 2026 ) , and Riemannion ( Bogachev et al., 2026 ) . We evaluated on standard commonsense ( Clark et al., 2018 ; Clark et al., 2019 ; Zellers et al., 2019 ; Mihaylov et al., 2018 ; Bisk et al., 2020 ; Sakaguchi et al., 2021 ) and coding ( Chen et al., 2021 ; Austin et al., 2021 ) benchmarks after training with SFT. We experimented with four models, Llama-3.2-3B ( Grattafiori et al., 2024 ) , Qwen2.5-3B ( Qwen Team, 2025 ) , DeepSeek-V2-Lite ( DeepSeek-AI, 2024 ) , and Moonlight-16B-A3B ( Liu et al., 2025 ) . The first two models are dense models; the last two are sparse MoE models. The Moonlight model is of particular note because it was pretrained with Muon, whereas the others are all AdamW-pretrained. We also tested the methods in a pretraining setting using ReLoRA ( Lialin et al., 2023 ) which periodically merges and refreshes the adapter. We tuned the learning rate for each method and model, with example learning rate sweeps for the commonsense tasks shown in Appendix E . While our results are both model- and eval-dependent, sMuon performs strongly overall, especially when combined with the Moonlight-16B-A3B base model, a Muon-pretrained model (Tables 1 and 2 ). sMuon also achieved the joint-best validation loss in the ReLoRA pretraining setting (Table 3 ). We attribute performance gains, particularly over AdamW and per-factor Muon, to more accurately approximating the Muon objective.",
+          "source": "https://arxiv.org/html/2608.14492v1",
+          "offset": 0,
+          "score": 19.086519442309147
+        },
+        {
+          "chunk_id": "chunk-0029",
+          "section": "Experiment details",
+          "text": "LoRA-Muon and Riemannion were chosen as baselines in addition to the simpler AdamW and per-factor Muon baselines as these are the most similar to our method. Unfortunately, we could not find implementations for LoRA-Muon or Riemannion, so we implemented these ourselves. For Riemannion and our method, we use an A = 0 A=0 and B B orthonormal initialization, and for the remaining methods we used a standard initialization ( B = 0 B=0 , A A random Gaussian). We scale the learning rate to approximately match AdamW RMS for all Muon optimizers (for details see App. A.1 ). For all experiments, we used weight decay 0.01 0.01 , momentum 0.9 0.9 , inserted LoRA adapters into all hidden layers (except the router for models with MoE). We used GH200 for all experiments except to produce Table 4 for which we used A100. We used bf16 to store weights and optimizer states, but used fp32 to compute the step for Riemannion, sMuon, and LoRA-Muon. For the ReLoRA experiments ( Lialin et al., 2023 ) , we started with the modded-nanogpt codebase at ‘record 8’ ( Jordan et al., 2024a ) , which trains a 162M parameter transformer from scratch (using features including QK-norm, ReLU 2 activations) on the FineWeb dataset ( Penedo et al., 2024 ) , and evaluates on a 10M token validation set. We initialize LoRA adapters with rank 64, and train for a total of 3000 steps; every 500 steps we merge the adapters into the base weights and reinitialize the adapters; we use a cosine decay learning rate schedule, though after each merge+reinitialization, we also reset the learning rate to zero and warm back up to the target learning rate over 50 steps (this is also known as a jagged cosine schedule). We swept learning rates in 3e-4, 6e-4, 1e-3, 3e-3, 6e-3, 1e-2.",
+          "source": "https://arxiv.org/html/2608.14492v1",
+          "offset": 0,
+          "score": 16.12378387392679
+        }
+      ],
+      "text": "The Muon optimizer shows clear benefits versus alternatives when pretraining neural networks. However, it is used less frequently for parameter-efficient fine-tuning (PEFT). One potential reason is that the most common PEFT method, LoRA, does not naturally combine with Muon since it is not mathematically possible to orthogonalize the weight update given by a low-rank parameterization. In this paper, we address this issue by approximating the solution to a relaxed Muon objective in the low-rank setting via linearization and then least-squares. We provide an efficient implementation that uses matmul operations only, as opposed to more complex linear algebra decomposition routines. Our method, sMuon (small Muon), performs favourably across SFT and a ReLoRA pretraining experiment. While results are model- and eval-dependent, we find overall that using Muon for low-rank fine-tuning provides moderate performance improvements.\n\nIn this paper, we linearize the low-rank Muon objective to find the optimal descent step within the available parameter space. This solution effectively orthogonalizes the full layer’s gradient and projects it onto the appropriate low-rank subspace. Empirically, we find this retains a more uniform spectrum than alternatives such as per-factor Muon (Fig. 1 ) and LoRA-Muon ( Cesista et al., 2026 ) . Furthermore, unlike Riemannion ( Bogachev et al., 2026 ) , our approach avoids expensive matrix decompositions. While our solution to the low-rank Muon problem is clean (Alg. 1 ), a naive implementation is computationally inefficient, as it requires orthogonalizing a large matrix. To address this, we introduce a mathematically equivalent formulation (Alg. 2 ) that is both fast and memory-efficient. By relying entirely on matrix multiplications, we are able to avoid the overhead from QR and SVD. Finally, we show that our optimizer, sMuon, achieves competitive performance across a range of commonsense and coding SFT benchmarks, as well as in ReLoRA pretraining experiments. Our contributions are as follows: • We derive a method for training LoRA adapters with Muon by taking a first-order approximation of the spectral-norm-regularized steepest descent objective. The method is available in closed form, and requires less optimizer state than AdamW. • We provide a matmul-only algorithm of the method, sMuon, that is efficient for modern hardware, with comparable speed to other Muon methods such as per-factor Muon and LoRA-Muon, while being significantly faster than Riemannion for larger LoRA rank.\n\n• We run SFT experiments on four base models, three AdamW-pretrained and one Muon-pretrained, over eleven benchmarks to compare low-rank Muon optimizers. While results are model-dependent, we find that our optimizer gives strong performance, performing best on the Muon-pretrained model with the top accuracy in six out of eleven tasks with Moonlight-16B-A3B. • In the ReLoRA pretraining setting, we illustrate that Muon LoRA methods are generally stronger than AdamW LoRA. Specifically we find that our method attains the lowest final validation loss, tying with Riemannion, but being ∼ 30 % \\sim\\!30\\% faster.\n\nTable 2: Code pass@1 (%), grouped by base model. Each column is an optimizer (best run by validation loss); per row the best optimizer is bolded and cells are shaded green (best) to white (worst). Eval AdamW Per-factor Muon LoRA-Muon Riemannion sMuon (ours) Qwen2.5-3B HumanEval 54.9 20.1 43.3 31.1 51.8 HumanEval+ 48.8 17.1 39.0 25.6 43.9 MBPP 65.9 69.3 68.0 65.9 62.7 MBPP+ 57.1 60.6 58.7 56.9 53.4 Llama-3.2-3B HumanEval 22.0 18.3 29.9 30.5 29.9 HumanEval+ 19.5 16.5 25.0 26.8 27.4 MBPP 43.1 35.7 42.1 46.3 45.2 MBPP+ 35.4 30.4 34.1 38.1 38.6 DeepSeek-V2-Lite HumanEval 36.6 29.3 22.0 23.2 26.8 HumanEval+ 28.7 23.8 18.3 19.5 23.2 MBPP 52.6 53.7 48.4 49.5 51.3 MBPP+ 45.5 45.0 43.4 43.7 44.7 Moonlight-16B-A3B HumanEval 49.4 57.9 53.7 40.2 54.9 HumanEval+ 42.7 48.8 47.0 35.4 48.8 MBPP 71.7 71.2 71.2 68.8 71.2 MBPP+ 60.1 60.1 61.4 58.7 60.3 Table 3: ReLoRA pretraining: final validation loss at each optimizer’s optimal learning rate, where the optimal LR minimises the validation loss at the final logged step. Lower is better; the best optimizer is bolded and cells are shaded green (best) to white (worst). AdamW Per-factor Muon LoRA-Muon Riemannion sMuon (ours) Final val loss 3.83 3.70 3.68 3.66 3.66 Optimal LR 0.001 0.006 0.001 0.0006 0.0006\n\nWe compare sMuon to regular LoRA with AdamW, per-factor Muon (LoRA with Muon applied to each adapter weight B B and A A individually), LoRA-Muon ( Cesista et al., 2026 ) , and Riemannion ( Bogachev et al., 2026 ) . We evaluated on standard commonsense ( Clark et al., 2018 ; Clark et al., 2019 ; Zellers et al., 2019 ; Mihaylov et al., 2018 ; Bisk et al., 2020 ; Sakaguchi et al., 2021 ) and coding ( Chen et al., 2021 ; Austin et al., 2021 ) benchmarks after training with SFT. We experimented with four models, Llama-3.2-3B ( Grattafiori et al., 2024 ) , Qwen2.5-3B ( Qwen Team, 2025 ) , DeepSeek-V2-Lite ( DeepSeek-AI, 2024 ) , and Moonlight-16B-A3B ( Liu et al., 2025 ) . The first two models are dense models; the last two are sparse MoE models. The Moonlight model is of particular note because it was pretrained with Muon, whereas the others are all AdamW-pretrained. We also tested the methods in a pretraining setting using ReLoRA ( Lialin et al., 2023 ) which periodically merges and refreshes the adapter. We tuned the learning rate for each method and model, with example learning rate sweeps for the commonsense tasks shown in Appendix E . While our results are both model- and eval-dependent, sMuon performs strongly overall, especially when combined with the Moonlight-16B-A3B base model, a Muon-pretrained model (Tables 1 and 2 ). sMuon also achieved the joint-best validation loss in the ReLoRA pretraining setting (Table 3 ). We attribute performance gains, particularly over AdamW and per-factor Muon, to more accurately approximating the Muon objective.\n\nLoRA-Muon and Riemannion were chosen as baselines in addition to the simpler AdamW and per-factor Muon baselines as these are the most similar to our method. Unfortunately, we could not find implementations for LoRA-Muon or Riemannion, so we implemented these ourselves. For Riemannion and our method, we use an A = 0 A=0 and B B orthonormal initialization, and for the remaining methods we used a standard initialization ( B = 0 B=0 , A A random Gaussian). We scale the learning rate to approximately match AdamW RMS for all Muon optimizers (for details see App. A.1 ). For all experiments, we used weight decay 0.01 0.01 , momentum 0.9 0.9 , inserted LoRA adapters into all hidden layers (except the router for models with MoE). We used GH200 for all experiments except to produce Table 4 for which we used A100. We used bf16 to store weights and optimizer states, but used fp32 to compute the step for Riemannion, sMuon, and LoRA-Muon. For the ReLoRA experiments ( Lialin et al., 2023 ) , we started with the modded-nanogpt codebase at ‘record 8’ ( Jordan et al., 2024a ) , which trains a 162M parameter transformer from scratch (using features including QK-norm, ReLU 2 activations) on the FineWeb dataset ( Penedo et al., 2024 ) , and evaluates on a 10M token validation set. We initialize LoRA adapters with rank 64, and train for a total of 3000 steps; every 500 steps we merge the adapters into the base weights and reinitialize the adapters; we use a cosine decay learning rate schedule, though after each merge+reinitialization, we also reset the learning rate to zero and warm back up to the target learning rate over 50 steps (this is also known as a jagged cosine schedule). We swept learning rates in 3e-4, 6e-4, 1e-3, 3e-3, 6e-3, 1e-2.",
+      "truncated": true,
+      "available_chars": 70899,
+      "note": "Retrieved passages, not an answer. Missing matches do not establish that the paper lacks the requested experiment. Extracted HTML text; equations and table formatting may be imperfect. No PDF extraction was attempted."
+    },
+    "2609.40127:fb97e9dc392ec7bf46fbb17161539bd52134d8659a621aacd5886a7860dc524c": {
+      "status": "ok",
+      "question": "Retrieve experimental results and baselines for Learnable Subspace Projections, including model scales, compression ratios or ranks, quality degradation, memory and inference speed, rank allocation comparisons, and limitations.",
+      "source": "https://arxiv.org/html/2609.40127v1",
+      "passages": [
+        {
+          "chunk_id": "chunk-0002",
+          "section": "Abstract",
+          "text": "Modern transformers pair impressive capabilities with substantial memory and compute demands. Low-rank weight factorization reduces both while keeping the matrices dense, and thus efficient on standard hardware. Existing methods, however, choose the subspace to remove from each weight matrix with local closed-form criteria: activation energy, layer-wise reconstruction error, or a quadratic approximation of the loss. These criteria ignore how errors propagate through the network, so at high compression the errors compound with depth and performance collapses. We introduce Learnable Subspace Projections (LSP), which instead learns the subspaces to discard end-to-end. Each linear layer, or tied group of layers that read the same activations, is assigned an orthogonal projector. All projectors are optimized jointly against a global objective—the KL divergence to the dense model’s output distribution or the model’s original training loss—while the pretrained weights remain frozen. Projectors are initialized from a whitened SVD truncation, and ranks are allocated by the output KL each projector induces per parameter saved. After training, the projectors merge into standard low-rank factors, with each tied group sharing one factor. In attention, this also lets the model cache one narrow latent in place of full keys and values. Across LLMs (OPT-125M/1.3B, Qwen3-4B, Llama-2-7B) and ViT-B/16, LSP outperforms baselines, and its advantage widens as compression increases. At − 70 % -70\\% compression, LSP brings Llama-2-7B to 10.9 10.9 WikiText-2 perplexity and 42.2 % 42.2\\% mean zero-shot accuracy, versus 13.3 13.3 and 36.0 % 36.0\\% for the strongest baseline. The factorized model decodes up to 1.6 × 1.6\\times faster than the dense model at small batch sizes, and aching the shared",
+          "source": "https://arxiv.org/html/2609.40127v1",
+          "offset": 0,
+          "score": 16.251961075343893
+        },
+        {
+          "chunk_id": "chunk-0003",
+          "section": "Abstract",
+          "text": "shot accuracy, versus 13.3 13.3 and 36.0 % 36.0\\% for the strongest baseline. The factorized model decodes up to 1.6 × 1.6\\times faster than the dense model at small batch sizes, and aching the shared latent shrinks the combined memory of weights and KV cache by 13.5 × 13.5\\times at a 128k-token context, versus at most 6.5 × 6.5\\times for untied baseline factorizations.",
+          "source": "https://arxiv.org/html/2609.40127v1",
+          "offset": 1598,
+          "score": 4.98196259975436
+        },
+        {
+          "chunk_id": "chunk-0007",
+          "section": "1 Introduction",
+          "text": "Figure 1: Spectral energy is not function. Each arrow is a direction in the input activation space of a linear layer 𝑾 {\\bm{W}} : its length is the spectral energy it carries, its orientation how much the network output depends on it (horizontal right: most), and faded arrows are removed. Activation-based low-rank compression (top) keeps the highest-energy directions, even when the output barely depends on them (red), and can discard functional ones (blue). LSP (bottom) learns the projector 𝑷 {\\bm{P}} against the network output, removing the directions the output is least sensitive to, whatever their energy.",
+          "source": "https://arxiv.org/html/2609.40127v1",
+          "offset": 0,
+          "score": 2.4844457402598343
+        },
+        {
+          "chunk_id": "chunk-0008",
+          "section": "1 Introduction",
+          "text": "We propose Learnable Subspace Projections (LSP), which does exactly this: every projector is learned against a global objective, by default the KL divergence to the dense model’s output distribution, or alternatively the model’s original training objective, a variant we denote LSP T . Our contributions are: (1) Learned subspace projections. Layers that read the same activations (Q/K/V, gate/up) form a tied group and share one projector; we optimize all projectors jointly across the network with the pretrained weights frozen. An activation-space parameterization with fused QR orthonormalization keeps this tractable at billion-parameter scale. (2) Whitened initialization and measured-KL allocation. Each projector is initialized from a whitened truncation, recast as an orthogonal projector and extended to tied groups. To decide how many directions each layer or tied group removes, we apply each projector in isolation, measure the KL divergence it induces on the model output, and allocate the budget by KL cost per saved parameter. The model at initialization, which we call NoLSP, serves as a control that isolates the effect of learning. (3) Efficient low-rank inference. After training, the projectors merge into plain low-rank factors, so the deployed model contains no LSP-specific operations. At the same compression ratio it requires the same FLOPs per token as other factorizations, yet the input factor shared by each tied group speeds up small-batch decoding and, in a latent-cache deployment, stores one narrow latent per group where untied factorizations store two (one each for keys and values), shrinking the KV cache. Because LSP applies to any linear layer, the same recipe transfers across Transformer models without architecture-specific surgery. LSP outperforms pruning",
+          "source": "https://arxiv.org/html/2609.40127v1",
+          "offset": 0,
+          "score": 13.933032494566294
+        },
+        {
+          "chunk_id": "chunk-0039",
+          "section": "5 Conclusion",
+          "text": "We introduced Learnable Subspace Projections (LSP), which compresses a pretrained network by learning, for each linear layer, the subspace the network can do without. Its premise is that statistical redundancy, whether measured by activation energy or by layer-wise reconstruction error, is not functional redundancy. LSP therefore selects the removed subspaces against the network output: it allocates ranks by measured output KL and optimizes all projectors jointly, with the pretrained weights frozen. Across four decoder LLMs, one of its two objectives attains the lowest perplexity in all twelve model–ratio settings, and both achieve the best zero-shot accuracy among low-rank methods. The margin grows with the compression ratio: at − 70 % -70\\% on Llama-2-7B, LSP reaches 10.9 10.9 perplexity, against 13.3 13.3 for the strongest baseline and 222.8 222.8 without learning. On a vision transformer, it is the most robust to calibration shift and transfers best when calibrated on diverse unlabeled data. The merged model is also the fastest factorization we measure, decoding up to 1.56 × 1.56\\times faster than the dense model. Its shared latent reduces the memory of weights and KV cache by 13.5 × 13.5\\times at a 128k-token context, twice the savings of untied factorizations.",
+          "source": "https://arxiv.org/html/2609.40127v1",
+          "offset": 0,
+          "score": 14.98988020070751
+        },
+        {
+          "chunk_id": "chunk-0073",
+          "section": "A.7 Limitations",
+          "text": "(i) The measured-KL allocation is a local surrogate: isolated unit costs omit interactions, and the current strategy has no global-optimality guarantee. This makes the allocation uncertain on quality in specific settings: in a few cases uniform ranks can still be preferred; however empirical evidence shows that measured KL is still better, since it is able to adapt to different architectures: performance improvement over Qwen3-4B, OPT-1.3B, and two out of three compression ranges of Llama-2-7B. (ii) Compression is also not free: LSP requires both the KL measurements and projection training, although the measurements are reusable across ratios and objectives. On the other hand, compression is a one-off cost that is repaid by the inference savings of Section 3.3 and LSP justifies this with the strong performance. (iii) Tied groups only lead to savings with latent cache if KV are tied on the input side. This means our best configuration for Qwen3-4B does not gain in efficiency as much as the input-tied version does. This represents a performance-efficiency trade-off, as shown in Table 12 : tying KV on the output side leads to the best performance, but one can choose to tie KV on the input side for improved inference efficiency instead.",
+          "source": "https://arxiv.org/html/2609.40127v1",
+          "offset": 0,
+          "score": 19.24124570707079
+        }
+      ],
+      "text": "Modern transformers pair impressive capabilities with substantial memory and compute demands. Low-rank weight factorization reduces both while keeping the matrices dense, and thus efficient on standard hardware. Existing methods, however, choose the subspace to remove from each weight matrix with local closed-form criteria: activation energy, layer-wise reconstruction error, or a quadratic approximation of the loss. These criteria ignore how errors propagate through the network, so at high compression the errors compound with depth and performance collapses. We introduce Learnable Subspace Projections (LSP), which instead learns the subspaces to discard end-to-end. Each linear layer, or tied group of layers that read the same activations, is assigned an orthogonal projector. All projectors are optimized jointly against a global objective—the KL divergence to the dense model’s output distribution or the model’s original training loss—while the pretrained weights remain frozen. Projectors are initialized from a whitened SVD truncation, and ranks are allocated by the output KL each projector induces per parameter saved. After training, the projectors merge into standard low-rank factors, with each tied group sharing one factor. In attention, this also lets the model cache one narrow latent in place of full keys and values. Across LLMs (OPT-125M/1.3B, Qwen3-4B, Llama-2-7B) and ViT-B/16, LSP outperforms baselines, and its advantage widens as compression increases. At − 70 % -70\\% compression, LSP brings Llama-2-7B to 10.9 10.9 WikiText-2 perplexity and 42.2 % 42.2\\% mean zero-shot accuracy, versus 13.3 13.3 and 36.0 % 36.0\\% for the strongest baseline. The factorized model decodes up to 1.6 × 1.6\\times faster than the dense model at small batch sizes, and aching the shared\n\nshot accuracy, versus 13.3 13.3 and 36.0 % 36.0\\% for the strongest baseline. The factorized model decodes up to 1.6 × 1.6\\times faster than the dense model at small batch sizes, and aching the shared latent shrinks the combined memory of weights and KV cache by 13.5 × 13.5\\times at a 128k-token context, versus at most 6.5 × 6.5\\times for untied baseline factorizations.\n\nFigure 1: Spectral energy is not function. Each arrow is a direction in the input activation space of a linear layer 𝑾 {\\bm{W}} : its length is the spectral energy it carries, its orientation how much the network output depends on it (horizontal right: most), and faded arrows are removed. Activation-based low-rank compression (top) keeps the highest-energy directions, even when the output barely depends on them (red), and can discard functional ones (blue). LSP (bottom) learns the projector 𝑷 {\\bm{P}} against the network output, removing the directions the output is least sensitive to, whatever their energy.\n\nWe propose Learnable Subspace Projections (LSP), which does exactly this: every projector is learned against a global objective, by default the KL divergence to the dense model’s output distribution, or alternatively the model’s original training objective, a variant we denote LSP T . Our contributions are: (1) Learned subspace projections. Layers that read the same activations (Q/K/V, gate/up) form a tied group and share one projector; we optimize all projectors jointly across the network with the pretrained weights frozen. An activation-space parameterization with fused QR orthonormalization keeps this tractable at billion-parameter scale. (2) Whitened initialization and measured-KL allocation. Each projector is initialized from a whitened truncation, recast as an orthogonal projector and extended to tied groups. To decide how many directions each layer or tied group removes, we apply each projector in isolation, measure the KL divergence it induces on the model output, and allocate the budget by KL cost per saved parameter. The model at initialization, which we call NoLSP, serves as a control that isolates the effect of learning. (3) Efficient low-rank inference. After training, the projectors merge into plain low-rank factors, so the deployed model contains no LSP-specific operations. At the same compression ratio it requires the same FLOPs per token as other factorizations, yet the input factor shared by each tied group speeds up small-batch decoding and, in a latent-cache deployment, stores one narrow latent per group where untied factorizations store two (one each for keys and values), shrinking the KV cache. Because LSP applies to any linear layer, the same recipe transfers across Transformer models without architecture-specific surgery. LSP outperforms pruning\n\nWe introduced Learnable Subspace Projections (LSP), which compresses a pretrained network by learning, for each linear layer, the subspace the network can do without. Its premise is that statistical redundancy, whether measured by activation energy or by layer-wise reconstruction error, is not functional redundancy. LSP therefore selects the removed subspaces against the network output: it allocates ranks by measured output KL and optimizes all projectors jointly, with the pretrained weights frozen. Across four decoder LLMs, one of its two objectives attains the lowest perplexity in all twelve model–ratio settings, and both achieve the best zero-shot accuracy among low-rank methods. The margin grows with the compression ratio: at − 70 % -70\\% on Llama-2-7B, LSP reaches 10.9 10.9 perplexity, against 13.3 13.3 for the strongest baseline and 222.8 222.8 without learning. On a vision transformer, it is the most robust to calibration shift and transfers best when calibrated on diverse unlabeled data. The merged model is also the fastest factorization we measure, decoding up to 1.56 × 1.56\\times faster than the dense model. Its shared latent reduces the memory of weights and KV cache by 13.5 × 13.5\\times at a 128k-token context, twice the savings of untied factorizations.\n\n(i) The measured-KL allocation is a local surrogate: isolated unit costs omit interactions, and the current strategy has no global-optimality guarantee. This makes the allocation uncertain on quality in specific settings: in a few cases uniform ranks can still be preferred; however empirical evidence shows that measured KL is still better, since it is able to adapt to different architectures: performance improvement over Qwen3-4B, OPT-1.3B, and two out of three compression ranges of Llama-2-7B. (ii) Compression is also not free: LSP requires both the KL measurements and projection training, although the measurements are reusable across ratios and objectives. On the other hand, compression is a one-off cost that is repaid by the inference savings of Section 3.3 and LSP justifies this with the strong performance. (iii) Tied groups only lead to savings with latent cache if KV are tied on the input side. This means our best configuration for Qwen3-4B does not gain in efficiency as much as the input-tied version does. This represents a performance-efficiency trade-off, as shown in Table 12 : tying KV on the output side leads to the best performance, but one can choose to tie KV on the input side for improved inference efficiency instead.",
+      "truncated": true,
+      "available_chars": 125587,
+      "note": "Retrieved passages, not an answer. Missing matches do not establish that the paper lacks the requested experiment. Extracted HTML text; equations and table formatting may be imperfect. No PDF extraction was attempted."
+    },
+    "2608.31036:e144fd0903acbf3a4053c37eb90a9467b8745e9b067b725e44007de2a3543472": {
+      "status": "ok",
+      "question": "Retrieve experimental baselines and controls for NoRA across pretraining, supervised fine-tuning, and reinforcement learning, including model and dataset settings, convergence or quality gains, stability and catastrophic-forgetting measurements, compute or memory overhead, and limitations or cases without improvement.",
+      "source": "https://arxiv.org/html/2608.31036v1",
+      "passages": [
+        {
+          "chunk_id": "chunk-0002",
+          "section": "Abstract",
+          "text": "While low-rank adaptation (LoRA) is widely used for parameter-efficient model adaptation, how to regularize its training dynamics for stable and effective optimization remains underexplored. Because LoRA initializes the up-projection to zero, its early optimization dynamics are largely governed by the down-projection. Building on this observation, we introduce Normalized Low-Rank Adaptation (NoRA), a simple yet effective method that normalizes the down-projection matrices during training. We further show that the same normalization can be applied only at initialization, improving standard LoRA without requiring repeated normalization throughout training. Across pretraining, supervised finetuning, and reinforcement learning, NoRA consistently accelerates convergence, improves performance and training stability, and mitigates catastrophic forgetting. These benefits require neither additional trainable parameters nor inference-time computation, making NoRA a simple and broadly applicable enhancement to LoRA. spherelab.ai/NoRA",
+          "source": "https://arxiv.org/html/2608.31036v1",
+          "offset": 0,
+          "score": 23.232908866401083
+        },
+        {
+          "chunk_id": "chunk-0006",
+          "section": "1 Introduction",
+          "text": "To this end, we adapt MLA’s normalization principle from the latent feature to the low-rank projection itself. Each column of 𝑨 ∈ ℝ r × k \\bm{A}\\in\\mathbb{R}^{r\\times k} represents how an input coordinate is projected into the r r -dimensional latent space. Guided by the normalization dimension in MLA, we propose to normalize these projection vectors along the rank dimension, yielding the linear form 𝑩 ⋅ Norm ​ ( 𝑨 ) ​ 𝒙 \\bm{B}\\cdot\\text{Norm}(\\bm{A})\\bm{x} . We refer to this formulation as Normalized LoRA (NoRA), which constrains the input-to-latent projection magnitudes throughout training while preserving exact weight mergeability. This normalization scheme also ensures that the gradient norm of NoRA can be better aligned with full finetuning, bridging the learnability gap between LoRA and full finetuning.",
+          "source": "https://arxiv.org/html/2608.31036v1",
+          "offset": 0,
+          "score": 0.9737226590199957
+        },
+        {
+          "chunk_id": "chunk-0007",
+          "section": "1 Introduction",
+          "text": "NoRA requires the down-projection matrix 𝑨 \\bm{A} to be normalized along the output rank dimension. This principle motivates two ways of applying normalization: (1) as a training constraint ( i.e. , NoRA) and (2) as an initialization strategy ( i.e. , NoRA-init). In the former, NoRA continuously normalizes the down-projection matrix 𝑨 \\bm{A} along the low-rank dimension r r throughout training. In the latter, NoRA-init normalizes 𝑨 \\bm{A} only once at initialization and subsequently optimizes it without constraints during training. For NoRA-init, we propose two initialization variants: (1) random normalization, where 𝑨 \\bm{A} is randomly initialized and then normalized; and (2) Block Identity Matrix Initialization (BIMI), where 𝑨 \\bm{A} is constructed as a block-identity matrix that inherently satisfies the rank-dimensional normalization requirement. NoRA improves training by removing undesirable scale imbalance across the low-rank dimensions, providing a better-conditioned parameterization than standard LoRA. We evaluate both NoRA and NoRA-init across pretraining, supervised finetuning, and reinforcement learning with verifiable rewards. Across a diverse range of base models, tasks, and training configurations, both methods consistently accelerate convergence, improve training stability, and enhance downstream performance. They also mitigate catastrophic forgetting during supervised adaptation and remain robust in reinforcement-learning settings where other spectral initialization methods can be fragile. In general, we can conclude that these results establish rank-dimension normalization of the down-projection as an important design principle for improving LoRA optimization. Our contributions are summarized as follows:",
+          "source": "https://arxiv.org/html/2608.31036v1",
+          "offset": 0,
+          "score": 22.156330278333954
+        },
+        {
+          "chunk_id": "chunk-0008",
+          "section": "1 Introduction",
+          "text": "• We identify the down-projection matrix 𝑨 \\bm{A} as a previously underexplored yet important design dimension in LoRA, showing that its magnitude can play a critical role in shaping optimization dynamics and ultimately improving training efficiency and downstream performance. • We propose NoRA, which normalizes the down-projection matrix 𝑨 \\bm{A} along the rank dimension in the LoRA parameterization. We further introduce NoRA-init, an initialization-only variant that applies this normalization at initialization and requires no re-normalization during training, enabling seamless performance improvements without modifying the optimization procedure. • Extensive experiments across pretraining, SFT, and RLVR demonstrate NoRA’s improved convergence, stability, downstream performance, and resistance to catastrophic forgetting.",
+          "source": "https://arxiv.org/html/2608.31036v1",
+          "offset": 0,
+          "score": 17.69256869628089
+        },
+        {
+          "chunk_id": "chunk-0023",
+          "section": "4 Experiments and Results",
+          "text": "To thoroughly evaluate our method, we conduct experiments across pretraining, supervised finetuning (SFT), and reinforcement learning. We further perform ablation studies to investigate the effect of the normalization dimension and initialization distribution. Evaluation settings are in Table 2 . Ablation Study. We investigate the effect of the normalization dimension of the down-projection matrix 𝑨 \\bm{A} by comparing column-wise and row-wise normalization, and further evaluate the effectiveness of NoRA across different random or deterministic initialization schemes. Pretraining. We begin with controlled studies on the MLA architecture under the L24-D1024 setting to examine the effect of intermediate normalization within low-rank latent representations. Building on these observations, we further evaluate NoRA on standard multi-head attention (MHA), where all attention projection layers are adapted with NoRA. Supervised finetuning. We evaluate NoRA on Llama 3.2-3B across a diverse set of downstream tasks, including mathematical reasoning and code generation, as well as its robustness against catastrophic forgetting ( Huang et al., 2026 ) . More detailed settings are given in Appendix B . Reinforcement learning with verifiable rewards. To assess its effectiveness in post-training optimization, we additionally evaluate NoRA under reinforcement learning using the ReRL framework.",
+          "source": "https://arxiv.org/html/2608.31036v1",
+          "offset": 0,
+          "score": 23.091391316652647
+        },
+        {
+          "chunk_id": "chunk-0024",
+          "section": "4 Experiments and Results",
+          "text": "Stage Repository Model Train Data Benchmark Pretrain FLA ( Yang and Zhang, 2024 ) MLA ( Liu et al., 2024a ) MHA ( Vaswani et al., 2017 ) SlimPajama ( Soboleva et al., 2023 ) LAMBADA ( Paperno et al., 2016 ) WikiText ( Merity et al., 2016 ) Arc-Easy/Arc-Challenge ( Clark et al., 2018 ) HellaSwag ( Zellers et al., 2019 ) PIQA ( Bisk et al., 2020 ) OpenBookQA ( Mihaylov et al., 2018 ) WinoGrande ( Sakaguchi et al., 2021 ) SFT PEFT-Arena ( Huang et al., 2026 ) Llama-3.2-3B ( Grattafiori et al., 2024 ) MetaMath ( Yu et al., 2024 ) CodeFeedback ( Zheng et al., 2024 ) Math: GSM8k ( Cobbe et al., 2021 ) Math500 ( Yu et al., 2024 ) Code: HumanEval ( Chen et al., 2021 ) Mbpp ( Austin et al., 2021 ) RL PeRL ( Yin et al., 2025 ) DeepSeek-R1-Distill-Qwen1.5B ( Liu et al., 2024a ) open-r1/DAPO-Math-17k-Processed ( Yu et al., 2026 ) AIME24 ( Zhang and Math-AI, 2025 ) ( Avg ​ @ ​ 32 \\mathrm{Avg}@32 ) AIME25 ( Zhang and Math-AI, 2025 ) ( Avg ​ @ ​ 32 \\mathrm{Avg}@32 ) MATH500 ( Lightman et al., 2024 ) ( Avg ​ @ ​ 4 \\mathrm{Avg}@4 ) Minerva ( Lewkowycz et al., 2022 ) ( Avg ​ @ ​ 4 \\mathrm{Avg}@4 ) AMC ( Li et al., 2024 ) ( Avg ​ @ ​ 32 \\mathrm{Avg}@32 ) HMMT ( Balunović et al., 2025 ) ( Avg ​ @ ​ 32 \\mathrm{Avg}@32 ) Table 2: Overview of all the training settings in our experiments.",
+          "source": "https://arxiv.org/html/2608.31036v1",
+          "offset": 0,
+          "score": 2.7742524006805094
+        }
+      ],
+      "text": "While low-rank adaptation (LoRA) is widely used for parameter-efficient model adaptation, how to regularize its training dynamics for stable and effective optimization remains underexplored. Because LoRA initializes the up-projection to zero, its early optimization dynamics are largely governed by the down-projection. Building on this observation, we introduce Normalized Low-Rank Adaptation (NoRA), a simple yet effective method that normalizes the down-projection matrices during training. We further show that the same normalization can be applied only at initialization, improving standard LoRA without requiring repeated normalization throughout training. Across pretraining, supervised finetuning, and reinforcement learning, NoRA consistently accelerates convergence, improves performance and training stability, and mitigates catastrophic forgetting. These benefits require neither additional trainable parameters nor inference-time computation, making NoRA a simple and broadly applicable enhancement to LoRA. spherelab.ai/NoRA\n\nTo this end, we adapt MLA’s normalization principle from the latent feature to the low-rank projection itself. Each column of 𝑨 ∈ ℝ r × k \\bm{A}\\in\\mathbb{R}^{r\\times k} represents how an input coordinate is projected into the r r -dimensional latent space. Guided by the normalization dimension in MLA, we propose to normalize these projection vectors along the rank dimension, yielding the linear form 𝑩 ⋅ Norm ​ ( 𝑨 ) ​ 𝒙 \\bm{B}\\cdot\\text{Norm}(\\bm{A})\\bm{x} . We refer to this formulation as Normalized LoRA (NoRA), which constrains the input-to-latent projection magnitudes throughout training while preserving exact weight mergeability. This normalization scheme also ensures that the gradient norm of NoRA can be better aligned with full finetuning, bridging the learnability gap between LoRA and full finetuning.\n\nNoRA requires the down-projection matrix 𝑨 \\bm{A} to be normalized along the output rank dimension. This principle motivates two ways of applying normalization: (1) as a training constraint ( i.e. , NoRA) and (2) as an initialization strategy ( i.e. , NoRA-init). In the former, NoRA continuously normalizes the down-projection matrix 𝑨 \\bm{A} along the low-rank dimension r r throughout training. In the latter, NoRA-init normalizes 𝑨 \\bm{A} only once at initialization and subsequently optimizes it without constraints during training. For NoRA-init, we propose two initialization variants: (1) random normalization, where 𝑨 \\bm{A} is randomly initialized and then normalized; and (2) Block Identity Matrix Initialization (BIMI), where 𝑨 \\bm{A} is constructed as a block-identity matrix that inherently satisfies the rank-dimensional normalization requirement. NoRA improves training by removing undesirable scale imbalance across the low-rank dimensions, providing a better-conditioned parameterization than standard LoRA. We evaluate both NoRA and NoRA-init across pretraining, supervised finetuning, and reinforcement learning with verifiable rewards. Across a diverse range of base models, tasks, and training configurations, both methods consistently accelerate convergence, improve training stability, and enhance downstream performance. They also mitigate catastrophic forgetting during supervised adaptation and remain robust in reinforcement-learning settings where other spectral initialization methods can be fragile. In general, we can conclude that these results establish rank-dimension normalization of the down-projection as an important design principle for improving LoRA optimization. Our contributions are summarized as follows:\n\n• We identify the down-projection matrix 𝑨 \\bm{A} as a previously underexplored yet important design dimension in LoRA, showing that its magnitude can play a critical role in shaping optimization dynamics and ultimately improving training efficiency and downstream performance. • We propose NoRA, which normalizes the down-projection matrix 𝑨 \\bm{A} along the rank dimension in the LoRA parameterization. We further introduce NoRA-init, an initialization-only variant that applies this normalization at initialization and requires no re-normalization during training, enabling seamless performance improvements without modifying the optimization procedure. • Extensive experiments across pretraining, SFT, and RLVR demonstrate NoRA’s improved convergence, stability, downstream performance, and resistance to catastrophic forgetting.\n\nTo thoroughly evaluate our method, we conduct experiments across pretraining, supervised finetuning (SFT), and reinforcement learning. We further perform ablation studies to investigate the effect of the normalization dimension and initialization distribution. Evaluation settings are in Table 2 . Ablation Study. We investigate the effect of the normalization dimension of the down-projection matrix 𝑨 \\bm{A} by comparing column-wise and row-wise normalization, and further evaluate the effectiveness of NoRA across different random or deterministic initialization schemes. Pretraining. We begin with controlled studies on the MLA architecture under the L24-D1024 setting to examine the effect of intermediate normalization within low-rank latent representations. Building on these observations, we further evaluate NoRA on standard multi-head attention (MHA), where all attention projection layers are adapted with NoRA. Supervised finetuning. We evaluate NoRA on Llama 3.2-3B across a diverse set of downstream tasks, including mathematical reasoning and code generation, as well as its robustness against catastrophic forgetting ( Huang et al., 2026 ) . More detailed settings are given in Appendix B . Reinforcement learning with verifiable rewards. To assess its effectiveness in post-training optimization, we additionally evaluate NoRA under reinforcement learning using the ReRL framework.\n\nStage Repository Model Train Data Benchmark Pretrain FLA ( Yang and Zhang, 2024 ) MLA ( Liu et al., 2024a ) MHA ( Vaswani et al., 2017 ) SlimPajama ( Soboleva et al., 2023 ) LAMBADA ( Paperno et al., 2016 ) WikiText ( Merity et al., 2016 ) Arc-Easy/Arc-Challenge ( Clark et al., 2018 ) HellaSwag ( Zellers et al., 2019 ) PIQA ( Bisk et al., 2020 ) OpenBookQA ( Mihaylov et al., 2018 ) WinoGrande ( Sakaguchi et al., 2021 ) SFT PEFT-Arena ( Huang et al., 2026 ) Llama-3.2-3B ( Grattafiori et al., 2024 ) MetaMath ( Yu et al., 2024 ) CodeFeedback ( Zheng et al., 2024 ) Math: GSM8k ( Cobbe et al., 2021 ) Math500 ( Yu et al., 2024 ) Code: HumanEval ( Chen et al., 2021 ) Mbpp ( Austin et al., 2021 ) RL PeRL ( Yin et al., 2025 ) DeepSeek-R1-Distill-Qwen1.5B ( Liu et al., 2024a ) open-r1/DAPO-Math-17k-Processed ( Yu et al., 2026 ) AIME24 ( Zhang and Math-AI, 2025 ) ( Avg ​ @ ​ 32 \\mathrm{Avg}@32 ) AIME25 ( Zhang and Math-AI, 2025 ) ( Avg ​ @ ​ 32 \\mathrm{Avg}@32 ) MATH500 ( Lightman et al., 2024 ) ( Avg ​ @ ​ 4 \\mathrm{Avg}@4 ) Minerva ( Lewkowycz et al., 2022 ) ( Avg ​ @ ​ 4 \\mathrm{Avg}@4 ) AMC ( Li et al., 2024 ) ( Avg ​ @ ​ 32 \\mathrm{Avg}@32 ) HMMT ( Balunović et al., 2025 ) ( Avg ​ @ ​ 32 \\mathrm{Avg}@32 ) Table 2: Overview of all the training settings in our experiments.",
+      "truncated": true,
+      "available_chars": 60542,
+      "note": "Retrieved passages, not an answer. Missing matches do not establish that the paper lacks the requested experiment. Extracted HTML text; equations and table formatting may be imperfect. No PDF extraction was attempted."
+    }
+  },
+  "tool_latency_seconds": 0.9974280429742066,
+  "last_observation": {
+    "action": "inspect_paper",
+    "result": {
+      "status": "ok",
+      "question": "Retrieve experimental baselines and controls for NoRA across pretraining, supervised fine-tuning, and reinforcement learning, including model and dataset settings, convergence or quality gains, stability and catastrophic-forgetting measurements, compute or memory overhead, and limitations or cases without improvement.",
+      "source": "https://arxiv.org/html/2608.31036v1",
+      "passages": [
+        {
+          "chunk_id": "chunk-0002",
+          "section": "Abstract",
+          "text": "While low-rank adaptation (LoRA) is widely used for parameter-efficient model adaptation, how to regularize its training dynamics for stable and effective optimization remains underexplored. Because LoRA initializes the up-projection to zero, its early optimization dynamics are largely governed by the down-projection. Building on this observation, we introduce Normalized Low-Rank Adaptation (NoRA), a simple yet effective method that normalizes the down-projection matrices during training. We further show that the same normalization can be applied only at initialization, improving standard LoRA without requiring repeated normalization throughout training. Across pretraining, supervised finetuning, and reinforcement learning, NoRA consistently accelerates convergence, improves performance and training stability, and mitigates catastrophic forgetting. These benefits require neither additional trainable parameters nor inference-time computation, making NoRA a simple and broadly applicable enhancement to LoRA. spherelab.ai/NoRA",
+          "source": "https://arxiv.org/html/2608.31036v1",
+          "offset": 0,
+          "score": 23.232908866401083
+        },
+        {
+          "chunk_id": "chunk-0006",
+          "section": "1 Introduction",
+          "text": "To this end, we adapt MLA’s normalization principle from the latent feature to the low-rank projection itself. Each column of 𝑨 ∈ ℝ r × k \\bm{A}\\in\\mathbb{R}^{r\\times k} represents how an input coordinate is projected into the r r -dimensional latent space. Guided by the normalization dimension in MLA, we propose to normalize these projection vectors along the rank dimension, yielding the linear form 𝑩 ⋅ Norm ​ ( 𝑨 ) ​ 𝒙 \\bm{B}\\cdot\\text{Norm}(\\bm{A})\\bm{x} . We refer to this formulation as Normalized LoRA (NoRA), which constrains the input-to-latent projection magnitudes throughout training while preserving exact weight mergeability. This normalization scheme also ensures that the gradient norm of NoRA can be better aligned with full finetuning, bridging the learnability gap between LoRA and full finetuning.",
+          "source": "https://arxiv.org/html/2608.31036v1",
+          "offset": 0,
+          "score": 0.9737226590199957
+        },
+        {
+          "chunk_id": "chunk-0007",
+          "section": "1 Introduction",
+          "text": "NoRA requires the down-projection matrix 𝑨 \\bm{A} to be normalized along the output rank dimension. This principle motivates two ways of applying normalization: (1) as a training constraint ( i.e. , NoRA) and (2) as an initialization strategy ( i.e. , NoRA-init). In the former, NoRA continuously normalizes the down-projection matrix 𝑨 \\bm{A} along the low-rank dimension r r throughout training. In the latter, NoRA-init normalizes 𝑨 \\bm{A} only once at initialization and subsequently optimizes it without constraints during training. For NoRA-init, we propose two initialization variants: (1) random normalization, where 𝑨 \\bm{A} is randomly initialized and then normalized; and (2) Block Identity Matrix Initialization (BIMI), where 𝑨 \\bm{A} is constructed as a block-identity matrix that inherently satisfies the rank-dimensional normalization requirement. NoRA improves training by removing undesirable scale imbalance across the low-rank dimensions, providing a better-conditioned parameterization than standard LoRA. We evaluate both NoRA and NoRA-init across pretraining, supervised finetuning, and reinforcement learning with verifiable rewards. Across a diverse range of base models, tasks, and training configurations, both methods consistently accelerate convergence, improve training stability, and enhance downstream performance. They also mitigate catastrophic forgetting during supervised adaptation and remain robust in reinforcement-learning settings where other spectral initialization methods can be fragile. In general, we can conclude that these results establish rank-dimension normalization of the down-projection as an important design principle for improving LoRA optimization. Our contributions are summarized as follows:",
+          "source": "https://arxiv.org/html/2608.31036v1",
+          "offset": 0,
+          "score": 22.156330278333954
+        },
+        {
+          "chunk_id": "chunk-0008",
+          "section": "1 Introduction",
+          "text": "• We identify the down-projection matrix 𝑨 \\bm{A} as a previously underexplored yet important design dimension in LoRA, showing that its magnitude can play a critical role in shaping optimization dynamics and ultimately improving training efficiency and downstream performance. • We propose NoRA, which normalizes the down-projection matrix 𝑨 \\bm{A} along the rank dimension in the LoRA parameterization. We further introduce NoRA-init, an initialization-only variant that applies this normalization at initialization and requires no re-normalization during training, enabling seamless performance improvements without modifying the optimization procedure. • Extensive experiments across pretraining, SFT, and RLVR demonstrate NoRA’s improved convergence, stability, downstream performance, and resistance to catastrophic forgetting.",
+          "source": "https://arxiv.org/html/2608.31036v1",
+          "offset": 0,
+          "score": 17.69256869628089
+        },
+        {
+          "chunk_id": "chunk-0023",
+          "section": "4 Experiments and Results",
+          "text": "To thoroughly evaluate our method, we conduct experiments across pretraining, supervised finetuning (SFT), and reinforcement learning. We further perform ablation studies to investigate the effect of the normalization dimension and initialization distribution. Evaluation settings are in Table 2 . Ablation Study. We investigate the effect of the normalization dimension of the down-projection matrix 𝑨 \\bm{A} by comparing column-wise and row-wise normalization, and further evaluate the effectiveness of NoRA across different random or deterministic initialization schemes. Pretraining. We begin with controlled studies on the MLA architecture under the L24-D1024 setting to examine the effect of intermediate normalization within low-rank latent representations. Building on these observations, we further evaluate NoRA on standard multi-head attention (MHA), where all attention projection layers are adapted with NoRA. Supervised finetuning. We evaluate NoRA on Llama 3.2-3B across a diverse set of downstream tasks, including mathematical reasoning and code generation, as well as its robustness against catastrophic forgetting ( Huang et al., 2026 ) . More detailed settings are given in Appendix B . Reinforcement learning with verifiable rewards. To assess its effectiveness in post-training optimization, we additionally evaluate NoRA under reinforcement learning using the ReRL framework.",
+          "source": "https://arxiv.org/html/2608.31036v1",
+          "offset": 0,
+          "score": 23.091391316652647
+        },
+        {
+          "chunk_id": "chunk-0024",
+          "section": "4 Experiments and Results",
+          "text": "Stage Repository Model Train Data Benchmark Pretrain FLA ( Yang and Zhang, 2024 ) MLA ( Liu et al., 2024a ) MHA ( Vaswani et al., 2017 ) SlimPajama ( Soboleva et al., 2023 ) LAMBADA ( Paperno et al., 2016 ) WikiText ( Merity et al., 2016 ) Arc-Easy/Arc-Challenge ( Clark et al., 2018 ) HellaSwag ( Zellers et al., 2019 ) PIQA ( Bisk et al., 2020 ) OpenBookQA ( Mihaylov et al., 2018 ) WinoGrande ( Sakaguchi et al., 2021 ) SFT PEFT-Arena ( Huang et al., 2026 ) Llama-3.2-3B ( Grattafiori et al., 2024 ) MetaMath ( Yu et al., 2024 ) CodeFeedback ( Zheng et al., 2024 ) Math: GSM8k ( Cobbe et al., 2021 ) Math500 ( Yu et al., 2024 ) Code: HumanEval ( Chen et al., 2021 ) Mbpp ( Austin et al., 2021 ) RL PeRL ( Yin et al., 2025 ) DeepSeek-R1-Distill-Qwen1.5B ( Liu et al., 2024a ) open-r1/DAPO-Math-17k-Processed ( Yu et al., 2026 ) AIME24 ( Zhang and Math-AI, 2025 ) ( Avg ​ @ ​ 32 \\mathrm{Avg}@32 ) AIME25 ( Zhang and Math-AI, 2025 ) ( Avg ​ @ ​ 32 \\mathrm{Avg}@32 ) MATH500 ( Lightman et al., 2024 ) ( Avg ​ @ ​ 4 \\mathrm{Avg}@4 ) Minerva ( Lewkowycz et al., 2022 ) ( Avg ​ @ ​ 4 \\mathrm{Avg}@4 ) AMC ( Li et al., 2024 ) ( Avg ​ @ ​ 32 \\mathrm{Avg}@32 ) HMMT ( Balunović et al., 2025 ) ( Avg ​ @ ​ 32 \\mathrm{Avg}@32 ) Table 2: Overview of all the training settings in our experiments.",
+          "source": "https://arxiv.org/html/2608.31036v1",
+          "offset": 0,
+          "score": 2.7742524006805094
+        }
+      ],
+      "text": "While low-rank adaptation (LoRA) is widely used for parameter-efficient model adaptation, how to regularize its training dynamics for stable and effective optimization remains underexplored. Because LoRA initializes the up-projection to zero, its early optimization dynamics are largely governed by the down-projection. Building on this observation, we introduce Normalized Low-Rank Adaptation (NoRA), a simple yet effective method that normalizes the down-projection matrices during training. We further show that the same normalization can be applied only at initialization, improving standard LoRA without requiring repeated normalization throughout training. Across pretraining, supervised finetuning, and reinforcement learning, NoRA consistently accelerates convergence, improves performance and training stability, and mitigates catastrophic forgetting. These benefits require neither additional trainable parameters nor inference-time computation, making NoRA a simple and broadly applicable enhancement to LoRA. spherelab.ai/NoRA\n\nTo this end, we adapt MLA’s normalization principle from the latent feature to the low-rank projection itself. Each column of 𝑨 ∈ ℝ r × k \\bm{A}\\in\\mathbb{R}^{r\\times k} represents how an input coordinate is projected into the r r -dimensional latent space. Guided by the normalization dimension in MLA, we propose to normalize these projection vectors along the rank dimension, yielding the linear form 𝑩 ⋅ Norm ​ ( 𝑨 ) ​ 𝒙 \\bm{B}\\cdot\\text{Norm}(\\bm{A})\\bm{x} . We refer to this formulation as Normalized LoRA (NoRA), which constrains the input-to-latent projection magnitudes throughout training while preserving exact weight mergeability. This normalization scheme also ensures that the gradient norm of NoRA can be better aligned with full finetuning, bridging the learnability gap between LoRA and full finetuning.\n\nNoRA requires the down-projection matrix 𝑨 \\bm{A} to be normalized along the output rank dimension. This principle motivates two ways of applying normalization: (1) as a training constraint ( i.e. , NoRA) and (2) as an initialization strategy ( i.e. , NoRA-init). In the former, NoRA continuously normalizes the down-projection matrix 𝑨 \\bm{A} along the low-rank dimension r r throughout training. In the latter, NoRA-init normalizes 𝑨 \\bm{A} only once at initialization and subsequently optimizes it without constraints during training. For NoRA-init, we propose two initialization variants: (1) random normalization, where 𝑨 \\bm{A} is randomly initialized and then normalized; and (2) Block Identity Matrix Initialization (BIMI), where 𝑨 \\bm{A} is constructed as a block-identity matrix that inherently satisfies the rank-dimensional normalization requirement. NoRA improves training by removing undesirable scale imbalance across the low-rank dimensions, providing a better-conditioned parameterization than standard LoRA. We evaluate both NoRA and NoRA-init across pretraining, supervised finetuning, and reinforcement learning with verifiable rewards. Across a diverse range of base models, tasks, and training configurations, both methods consistently accelerate convergence, improve training stability, and enhance downstream performance. They also mitigate catastrophic forgetting during supervised adaptation and remain robust in reinforcement-learning settings where other spectral initialization methods can be fragile. In general, we can conclude that these results establish rank-dimension normalization of the down-projection as an important design principle for improving LoRA optimization. Our contributions are summarized as follows:\n\n• We identify the down-projection matrix 𝑨 \\bm{A} as a previously underexplored yet important design dimension in LoRA, showing that its magnitude can play a critical role in shaping optimization dynamics and ultimately improving training efficiency and downstream performance. • We propose NoRA, which normalizes the down-projection matrix 𝑨 \\bm{A} along the rank dimension in the LoRA parameterization. We further introduce NoRA-init, an initialization-only variant that applies this normalization at initialization and requires no re-normalization during training, enabling seamless performance improvements without modifying the optimization procedure. • Extensive experiments across pretraining, SFT, and RLVR demonstrate NoRA’s improved convergence, stability, downstream performance, and resistance to catastrophic forgetting.\n\nTo thoroughly evaluate our method, we conduct experiments across pretraining, supervised finetuning (SFT), and reinforcement learning. We further perform ablation studies to investigate the effect of the normalization dimension and initialization distribution. Evaluation settings are in Table 2 . Ablation Study. We investigate the effect of the normalization dimension of the down-projection matrix 𝑨 \\bm{A} by comparing column-wise and row-wise normalization, and further evaluate the effectiveness of NoRA across different random or deterministic initialization schemes. Pretraining. We begin with controlled studies on the MLA architecture under the L24-D1024 setting to examine the effect of intermediate normalization within low-rank latent representations. Building on these observations, we further evaluate NoRA on standard multi-head attention (MHA), where all attention projection layers are adapted with NoRA. Supervised finetuning. We evaluate NoRA on Llama 3.2-3B across a diverse set of downstream tasks, including mathematical reasoning and code generation, as well as its robustness against catastrophic forgetting ( Huang et al., 2026 ) . More detailed settings are given in Appendix B . Reinforcement learning with verifiable rewards. To assess its effectiveness in post-training optimization, we additionally evaluate NoRA under reinforcement learning using the ReRL framework.\n\nStage Repository Model Train Data Benchmark Pretrain FLA ( Yang and Zhang, 2024 ) MLA ( Liu et al., 2024a ) MHA ( Vaswani et al., 2017 ) SlimPajama ( Soboleva et al., 2023 ) LAMBADA ( Paperno et al., 2016 ) WikiText ( Merity et al., 2016 ) Arc-Easy/Arc-Challenge ( Clark et al., 2018 ) HellaSwag ( Zellers et al., 2019 ) PIQA ( Bisk et al., 2020 ) OpenBookQA ( Mihaylov et al., 2018 ) WinoGrande ( Sakaguchi et al., 2021 ) SFT PEFT-Arena ( Huang et al., 2026 ) Llama-3.2-3B ( Grattafiori et al., 2024 ) MetaMath ( Yu et al., 2024 ) CodeFeedback ( Zheng et al., 2024 ) Math: GSM8k ( Cobbe et al., 2021 ) Math500 ( Yu et al., 2024 ) Code: HumanEval ( Chen et al., 2021 ) Mbpp ( Austin et al., 2021 ) RL PeRL ( Yin et al., 2025 ) DeepSeek-R1-Distill-Qwen1.5B ( Liu et al., 2024a ) open-r1/DAPO-Math-17k-Processed ( Yu et al., 2026 ) AIME24 ( Zhang and Math-AI, 2025 ) ( Avg ​ @ ​ 32 \\mathrm{Avg}@32 ) AIME25 ( Zhang and Math-AI, 2025 ) ( Avg ​ @ ​ 32 \\mathrm{Avg}@32 ) MATH500 ( Lightman et al., 2024 ) ( Avg ​ @ ​ 4 \\mathrm{Avg}@4 ) Minerva ( Lewkowycz et al., 2022 ) ( Avg ​ @ ​ 4 \\mathrm{Avg}@4 ) AMC ( Li et al., 2024 ) ( Avg ​ @ ​ 32 \\mathrm{Avg}@32 ) HMMT ( Balunović et al., 2025 ) ( Avg ​ @ ​ 32 \\mathrm{Avg}@32 ) Table 2: Overview of all the training settings in our experiments.",
+      "truncated": true,
+      "available_chars": 60542,
+      "note": "Retrieved passages, not an answer. Missing matches do not establish that the paper lacks the requested experiment. Extracted HTML text; equations and table formatting may be imperfect. No PDF extraction was attempted."
+    }
+  },
+  "last_error": null
+}

@@ -1,0 +1,118 @@
+Research digest for dmitrii
+2026-11-03 to 2026-11-16 (inclusive, UTC)
+Categories: cs.LG, cs.CL, stat.ML, cs.AI, cs.IR
+
+15 recommended papers
+
+1. DisMUSE: An Efficient Distributed Singular-Spectrum-Based Optimization Approach with Theoretical Convergence Guarantee
+https://arxiv.org/abs/2611.10212v1
+
+DisMUSE develops distributed singular-spectrum optimization with Muon-style orthogonalized momentum, convergence guarantees, and a low-rank momentum-transmission variant for communication efficiency.
+
+Why it matters to you: Direct fit for spectral optimization, Newton-Schulz/Muon methods, convergence, and communication-quality tradeoffs.
+
+2. Finite Spectral Depth Controls Gaussian Entrance Rank and Avoidance of the First Gradient-Flow Saddle
+https://arxiv.org/abs/2611.05022v1
+
+Studies matrix-factorization gradient flow with finite Newton-Schulz depth and shows that depth affects early rank selection and can change which stationary point the trajectory reaches.
+
+Why it matters to you: Directly addresses Newton-Schulz dynamics, rank selection, and optimization geometry.
+
+3. ResQAdam: Residual-Preserving Adaptive Optimization for Memory-Efficient Quantization Aware Training
+https://arxiv.org/abs/2611.08924v1
+
+ResQAdam combines low-rank adaptive updates with a sign residual for QAT, reducing optimizer-state memory while preserving quality and throughput across several LLM scales and QAT settings.
+
+Why it matters to you: Strongest direct match for memory-efficient LLM optimization, low-rank optimizer states, model quality, peak memory, and throughput.
+
+4. From What Is Used to What Is Missing: Rethinking Dynamic Rank in LoRA
+https://arxiv.org/abs/2611.07349v1
+
+GEAR uses tangent-normal geometry and normal-spectrum estimates to expand LoRA rank in directions predicted to provide the largest local gain.
+
+Why it matters to you: Direct fit for dynamic LoRA rank evolution, spectral information, and low-rank optimization geometry.
+
+5. Spectral and Subspace Dynamics of LoRA in Supervised Fine-Tuning and Reinforcement Learning
+https://arxiv.org/abs/2611.08414v1
+
+Analyzes singular spectra and subspace motion of LoRA updates in supervised fine-tuning versus reinforcement learning, attributing differences partly to group-mean baseline subtraction.
+
+Why it matters to you: Directly matches interests in LoRA spectral dynamics, optimization behavior, and differences between training regimes.
+
+6. Train High, Ship Low: Efficient LoRA Synchronization for Distributed On-Policy Post-Training
+https://arxiv.org/abs/2611.13306v1
+
+HiLo replaces adapter transmission with compressed gradient dissemination and local optimizer replay, while Spar uses spectral truncation, adaptive rank allocation, and error feedback.
+
+Why it matters to you: Strong fit for low-rank synchronization, communication cost, bandwidth-constrained training, and quality tradeoffs.
+
+7. BiMuon: A Geometry-Aware Stochastic Bilevel Optimization Approach
+https://arxiv.org/abs/2611.10188v2
+
+BiMuon applies Muon-style orthogonalized matrix updates to stochastic bilevel optimization and analyzes spectral imbalance and iteration complexity.
+
+Why it matters to you: Relevant to matrix-aware optimization, Muon, spectral geometry, and theoretical convergence.
+
+8. SaMA: Morpho Adaptation via Asymmetric Expansion of Kronecker Product
+https://arxiv.org/abs/2611.04462v1
+
+SaMA generalizes Kronecker-based PEFT to obtain rank scaling beyond standard LoRA and analyzes how its invariance geometry affects optimizer behavior.
+
+Why it matters to you: Directly concerns low-rank PEFT, effective rank, optimizer-friendly geometry, and parameter-efficiency tradeoffs.
+
+9. Efficient LLM Adaptation with Forward-Only Passes
+https://arxiv.org/abs/2611.10610v1
+
+Presents a forward-only LLM adaptation method that uses SVD-component activation geometry to select matrices and components for rank reduction.
+
+Why it matters to you: Relevant to SVD-based compressibility, rank reduction, adaptation memory, and speed at LLM scale.
+
+10. Direction or Magnitude? Learning Scalars over Task-Calibrated Directions
+https://arxiv.org/abs/2611.17784v1
+
+SCALAR learns scalar coefficients over fixed task-calibrated directions, achieving LoRA-comparable performance with fewer trainable parameters, lower memory, and higher throughput.
+
+Why it matters to you: Strong fit for parameter-efficient adaptation and practical memory-throughput tradeoffs.
+
+11. The Behavioral Rate of Fine-Tuning: Compression as a Measure of Useful Information
+https://arxiv.org/abs/2611.06598v1
+
+Defines behavioral rate as the compressed adapter size needed to preserve fine-tuning behavior and studies how it depends on the dataset-receiver pair and correction spectra.
+
+Why it matters to you: Directly addresses behavioral compressibility, adapter compression, singular directions, and noisy-data effects.
+
+12. Delayed Effects of Temporary Weight Decay in Muon Pretraining
+https://arxiv.org/abs/2611.17876v1
+
+Studies temporary weight decay in Muon-trained Transformers across model scales and shows delayed, scale-dependent effects mediated by persistent weight-norm changes.
+
+Why it matters to you: Direct fit for regularization, Muon optimization, norm dynamics, and training-scale tradeoffs.
+
+13. DictLLM: Post-training Compression of Large Language Model with Dictionary Kernels
+https://arxiv.org/abs/2611.08082v1
+
+DictLLM performs post-training LLM compression using shared SVD dictionaries, sparse coefficients, and component-specific quantization.
+
+Why it matters to you: Strong fit for low-rank weight compressibility, SVD structure, quantization, and memory-quality tradeoffs.
+
+14. Theoretical Analysis of Muon on Transformers for Next-Token Prediction
+https://arxiv.org/abs/2611.04465v1
+
+Provides a theoretical analysis of Muon for Transformer next-token prediction, including spectral margins, convergence rates, learned weight structure, and generalization.
+
+Why it matters to you: Directly matches spectral optimization theory for LLM training and generalization.
+
+15. LIRA: A More Interpretable Dynamic Loss-Informed Rank Allocation for Low-Rank Adaptation
+https://arxiv.org/abs/2611.04239v1
+
+LIRA allocates LoRA rank dynamically using second-order loss-perturbation estimates and displacement-based rank reallocation under matched budgets.
+
+Why it matters to you: Direct fit for interpretable dynamic rank allocation, low-rank parameterizations, and optimization-aware rank behavior.
+
+Limitations:
+- X analysis was disabled, so no attention signal is included.
+- Most evidence is abstract-level, and several abstracts are truncated.
+- Repository availability and practical reproducibility were not checked except for the code URL reported in the inspected ResQAdam passages.
+- inspect:2611.08924: only question-relevant HTML passages were inspected, not the whole paper.
+
+Fetched 4655 papers; screened 30.

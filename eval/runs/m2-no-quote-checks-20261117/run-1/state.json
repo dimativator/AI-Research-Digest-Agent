@@ -1,0 +1,843 @@
+{
+  "pipeline_version": "react-v2",
+  "profile": {
+    "user_id": "dmitrii",
+    "summary": "LLM research focused on optimization, low-rank and memory-efficient training, spectral regularization, parameter-efficient fine-tuning, and an AI research-digest agent.",
+    "topics": [
+      {
+        "name": "Low-rank pretraining and compressibility",
+        "keywords": [
+          "low-rank pretraining",
+          "low-rank factorization",
+          "model compressibility",
+          "effective rank",
+          "singular-value spectrum"
+        ],
+        "source_id": "description",
+        "evidence_quote": "A central question is whether training can make a model easier to compress with low-rank factorization while preserving its quality."
+      },
+      {
+        "name": "Spectral regularization and matrix optimization",
+        "keywords": [
+          "spectral regularization",
+          "spectral weight decay",
+          "nuclear-norm regularization",
+          "proximal methods",
+          "Newton-Schulz approximation"
+        ],
+        "source_id": "description",
+        "evidence_quote": "I am interested in spectral weight decay, nuclear-norm regularization, proximal methods, and Newton-Schulz approximations."
+      },
+      {
+        "name": "Generalization and memorization under label noise",
+        "keywords": [
+          "generalization",
+          "memorization",
+          "label noise",
+          "noisy labels",
+          "neural network training"
+        ],
+        "source_id": "description",
+        "evidence_quote": "Related questions concern generalization and memorization under label noise."
+      },
+      {
+        "name": "Optimization for LoRA and low-rank parameterizations",
+        "keywords": [
+          "LoRA",
+          "low-rank adaptation",
+          "Muon optimizer",
+          "factorized weights",
+          "rebalancing",
+          "convergence analysis"
+        ],
+        "source_id": "description",
+        "evidence_quote": "Another research direction is optimization for LoRA and other low-rank parameterizations."
+      },
+      {
+        "name": "Memory-efficient LLM pretraining",
+        "keywords": [
+          "memory-efficient LLM pretraining",
+          "low-rank gradients",
+          "optimizer-state compression",
+          "GaLore",
+          "Frugal",
+          "FP8 optimizer states"
+        ],
+        "source_id": "description",
+        "evidence_quote": "I also work on memory-efficient LLM pretraining."
+      },
+      {
+        "name": "Training-efficiency tradeoffs at scale",
+        "keywords": [
+          "training memory",
+          "throughput",
+          "communication cost",
+          "model quality",
+          "scaling behavior",
+          "LLM scale"
+        ],
+        "source_id": "description",
+        "evidence_quote": "I am interested in their tradeoffs between model quality, training memory, throughput, and communication cost, including how those tradeoffs change with model scale."
+      },
+      {
+        "name": "AI research digest agents and paper retrieval",
+        "keywords": [
+          "research digest agent",
+          "context management",
+          "structured LLM decisions",
+          "tool orchestration",
+          "paper retrieval",
+          "relevance ranking"
+        ],
+        "source_id": "description",
+        "evidence_quote": "Relevant work includes explicit context management, structured LLM decisions, application-controlled tools, and paper retrieval and relevance ranking using lexical or embedding-based methods."
+      }
+    ],
+    "goals": [
+      "Understand how optimization and regularization affect singular-value spectra and the effective rank of weight matrices.",
+      "Determine whether training can improve low-rank compressibility while preserving model quality.",
+      "Understand the geometry and practical language-model fine-tuning behavior of LoRA and other low-rank updates.",
+      "Evaluate tradeoffs among model quality, memory, throughput, and communication cost across model scales.",
+      "Build an AI research digest agent with a handwritten harness."
+    ],
+    "exclusions": [],
+    "arxiv_categories": [
+      "cs.LG",
+      "cs.CL",
+      "stat.ML",
+      "cs.AI",
+      "cs.IR"
+    ],
+    "open_questions": [],
+    "sources": {
+      "description": "I am an LLM researcher working on optimization and efficient training of neural networks. My current research includes low-rank pretraining, spectral regularization, parameter-efficient fine-tuning, and reducing the memory cost of language-model training.\n\nI study how optimization and regularization affect the singular-value spectra and effective rank of weight matrices. I am interested in spectral weight decay, nuclear-norm regularization, proximal methods, and Newton-Schulz approximations. A central question is whether training can make a model easier to compress with low-rank factorization while preserving its quality. Related questions concern generalization and memorization under label noise.\n\nAnother research direction is optimization for LoRA and other low-rank parameterizations. Relevant topics include Muon-style matrix updates, optimization of factorized weights, rebalancing, spectral constraints, and convergence analysis. I want to understand both the geometry of these updates and their practical behavior when fine-tuning language models.\n\nI also work on memory-efficient LLM pretraining. Relevant methods include low-rank gradient and optimizer-state representations, GaLore, Frugal-style methods, and low-precision optimizer states such as FP8. I am interested in their tradeoffs between model quality, training memory, throughput, and communication cost, including how those tradeoffs change with model scale.\n\nAs a secondary current interest, I am building an AI research digest agent with a handwritten harness. Relevant work includes explicit context management, structured LLM decisions, application-controlled tools, and paper retrieval and relevance ranking using lexical or embedding-based methods.\n\nI have not specified hard topic exclusions for this digest."
+    },
+    "model": null,
+    "schema_version": 1
+  },
+  "config": {
+    "categories": [
+      "cs.AI",
+      "cs.CG",
+      "cs.CL",
+      "cs.CR",
+      "cs.CV",
+      "cs.DB",
+      "cs.DC",
+      "cs.DS",
+      "cs.GR",
+      "cs.HC",
+      "cs.IR",
+      "cs.LG",
+      "cs.LO",
+      "cs.MA",
+      "cs.NE",
+      "cs.NI",
+      "cs.RO",
+      "cs.SD",
+      "cs.SE",
+      "eess.AS",
+      "eess.IV",
+      "eess.SP",
+      "eess.SY",
+      "math.AP",
+      "math.OC",
+      "math.PR",
+      "nlin.CD",
+      "q-bio.NC",
+      "stat.ML"
+    ],
+    "date_from": "2018-02-27",
+    "date_to": "2026-10-22",
+    "model": "gpt-5.6-luna",
+    "shortlist_size": 30,
+    "batch_size": 10,
+    "expansion_size": 10,
+    "max_candidates": 100,
+    "digest_size": 5,
+    "max_steps": null,
+    "max_llm_calls": null,
+    "max_inspections": null,
+    "max_expansions": null,
+    "page_size": 100,
+    "refresh_metadata": false,
+    "max_context_chars": null,
+    "new_only": false,
+    "x_enabled": false,
+    "variant": "react"
+  },
+  "phase": "react",
+  "screened": {
+    "2610.11730": {
+      "paper_id": "2610.11730",
+      "label": "relevant",
+      "reason": "Directly addresses spectral regularization, nuclear-norm updates, effective rank, compression, and label-noise robustness.",
+      "evidence_quote": "spectral weight decay lowers effective rank and improves SVD-LLM compression"
+    },
+    "2609.40127": {
+      "paper_id": "2609.40127",
+      "label": "relevant",
+      "reason": "Studies learnable low-rank factorization for neural-network compression and evaluates quality, speed, and memory tradeoffs.",
+      "evidence_quote": "Low-rank weight factorization reduces both while keeping the matrices dense"
+    },
+    "2608.14492": {
+      "paper_id": "2608.14492",
+      "label": "relevant",
+      "reason": "Directly develops an optimizer for LoRA and low-rank parameterizations, including ReLoRA pretraining.",
+      "evidence_quote": "Our method, sMuon (small Muon), performs favourably across SFT and a ReLoRA pretraining experiment."
+    },
+    "2608.31036": {
+      "paper_id": "2608.31036",
+      "label": "relevant",
+      "reason": "Analyzes and regularizes LoRA training dynamics, with effects on convergence, stability, and performance.",
+      "evidence_quote": "we introduce Normalized Low-Rank Adaptation (NoRA), a simple yet effective method that normalizes the down-projection matrices during training"
+    },
+    "2010.01412": {
+      "paper_id": "2010.01412",
+      "label": "relevant",
+      "reason": "Directly studies generalization and robustness to label noise through an optimization and regularization method.",
+      "evidence_quote": "SAM natively provides robustness to label noise"
+    },
+    "2510.05491": {
+      "paper_id": "2510.05491",
+      "label": "relevant",
+      "reason": "Develops a Muon-based optimizer with distributed scaling, training-efficiency, and memory comparisons across model scales.",
+      "evidence_quote": "we develop an efficient distributed implementation under the FSDP2 framework"
+    },
+    "2610.29357": {
+      "paper_id": "2610.29357",
+      "label": "uncertain",
+      "reason": "Concerns continual learning and memory management for AI agents, which overlaps with agent context and memory but not specifically research-digest agents or paper retrieval.",
+      "evidence_quote": "Whether memory can drive genuine continual learning remains an open question."
+    },
+    "2610.30646": {
+      "paper_id": "2610.30646",
+      "label": "irrelevant",
+      "reason": "Focuses on federated unsupervised domain adaptation and knowledge distillation, without a clear connection to the listed low-rank, spectral, optimization, LLM-efficiency, or research-agent topics.",
+      "evidence_quote": "Federated unsupervised domain adaptation (FUDA) addresses the challenge of adapting models to an unlabeled target domain"
+    },
+    "2610.28500": {
+      "paper_id": "2610.28500",
+      "label": "relevant",
+      "reason": "Studies system and algorithm co-design for low-bit LLM efficiency, including memory traffic, throughput, decoding speed, and model-scale tradeoffs.",
+      "evidence_quote": "methods of ultra-low-bit backbones reduce weight storage, memory traffic, and linear-layer execution cost"
+    },
+    "2610.31098": {
+      "paper_id": "2610.31098",
+      "label": "relevant",
+      "reason": "Addresses compressibility-driven training and memory-efficient LLM generation through KV-cache compression, with explicit quality and efficiency tradeoffs.",
+      "evidence_quote": "we propose an adaptive KV refresh strategy that reduces the number of score calculations while retaining the drafter's quality"
+    },
+    "2610.30344": {
+      "paper_id": "2610.30344",
+      "label": "relevant",
+      "reason": "Studies RS-LoRA adapters and partial-parameter continual pretraining, with explicit training-efficiency and quality tradeoffs for LLM adaptation.",
+      "evidence_quote": "trains RS-LoRA adapters across the network"
+    },
+    "2610.27674": {
+      "paper_id": "2610.27674",
+      "label": "relevant",
+      "reason": "Directly studies optimization for deep learning and proposes HyMUON using Newton--Schulz orthogonalization, closely matching the user's optimizer interests.",
+      "evidence_quote": "HyMUON, which applies Newton--Schulz orthogonalization to the hybrid direction"
+    },
+    "2610.08975": {
+      "paper_id": "2610.08975",
+      "label": "relevant",
+      "reason": "Analyzes optimizer behavior, batch-size scaling, curvature, gradient noise, and language-model pretraining, directly addressing optimization and training-efficiency tradeoffs.",
+      "evidence_quote": "the best optimizer for language model pretraining changes with batch size"
+    },
+    "2610.29326": {
+      "paper_id": "2610.29326",
+      "label": "relevant",
+      "reason": "Presents an embedding-based relevance filter that reduces downstream LLM evaluation cost, directly relevant to paper retrieval and research-digest agent design.",
+      "evidence_quote": "a lightweight first-stage relevance filter"
+    },
+    "2610.29298": {
+      "paper_id": "2610.29298",
+      "label": "irrelevant",
+      "reason": "Focuses on long-tail item memorization in generative recommendation systems rather than the user's target areas of LLM optimization, low-rank training, or research agents.",
+      "evidence_quote": "Generative recommenders Forget the Long Tail"
+    },
+    "2610.30478": {
+      "paper_id": "2610.30478",
+      "label": "uncertain",
+      "reason": "Investigates LoRA student policies and compares memory stored in weights versus external retrieval, offering a potentially useful perspective on low-rank fine-tuning and memory, but in embodied control rather than LLMs.",
+      "evidence_quote": "we distil LoRA student policies"
+    },
+    "2610.30933": {
+      "paper_id": "2610.30933",
+      "label": "uncertain",
+      "reason": "Studies policy optimization and error recovery for long-horizon LLM agents, which may inform agent training but is not specifically about the user's optimization, low-rank, or research-digest concerns.",
+      "evidence_quote": "Reflection-Guided Policy Optimization"
+    },
+    "2610.28851": {
+      "paper_id": "2610.28851",
+      "label": "irrelevant",
+      "reason": "Addresses differentiable low-fidelity optimization models for power, gas, and pooling systems, not neural-network or LLM optimization and regularization.",
+      "evidence_quote": "Low-fidelity (LF) optimization models are widely used in large-scale operations"
+    },
+    "2610.25858": {
+      "paper_id": "2610.25858",
+      "label": "relevant",
+      "reason": "Directly examines self-evolving agents, prompt and memory modification, retrieval, continual learning, and harness design, matching the research-digest agent interest.",
+      "evidence_quote": "they adapt by rewriting their own harness"
+    },
+    "2610.27952": {
+      "paper_id": "2610.27952",
+      "label": "irrelevant",
+      "reason": "Studies federated split-computing personalization for mobile inference and communication reduction, without a focus on LLMs, low-rank methods, or the user's agent workflow.",
+      "evidence_quote": "Unsupervised Head Network Personalization for Split Computing"
+    },
+    "2610.29720": {
+      "paper_id": "2610.29720",
+      "label": "irrelevant",
+      "reason": "Focuses on spiking speech-recognition architectures and inference efficiency, not the user's research areas.",
+      "evidence_quote": "Bio-Inspired Auditory Processing"
+    },
+    "2610.29192": {
+      "paper_id": "2610.29192",
+      "label": "relevant",
+      "reason": "Develops and analyzes a new optimization method with convergence guarantees, directly matching the user's interest in optimization and regularization.",
+      "evidence_quote": "We then establish a necessary condition for uniform distortion control"
+    },
+    "2610.31305": {
+      "paper_id": "2610.31305",
+      "label": "uncertain",
+      "reason": "Studies continuous semantic compression in language models, but does not address low-rank factorization, effective rank, or memory-efficient training.",
+      "evidence_quote": "learn compact, predictive latent representations"
+    },
+    "2610.29577": {
+      "paper_id": "2610.29577",
+      "label": "irrelevant",
+      "reason": "Analyzes spectral thresholds in multi-agent performative prediction rather than spectral regularization, matrix optimization, or LLM training.",
+      "evidence_quote": "The threshold occurs when the spectral radius of this matrix crosses one."
+    },
+    "2610.30825": {
+      "paper_id": "2610.30825",
+      "label": "irrelevant",
+      "reason": "Applies an LLM-assisted method to cross-domain recommendation, without targeting the user's optimization, compression, or research-agent goals.",
+      "evidence_quote": "user profiles inferred by a large language model (LLM)"
+    },
+    "2609.37725": {
+      "paper_id": "2609.37725",
+      "label": "relevant",
+      "reason": "Directly addresses context management in LLM agents and evaluates model-controlled context strategies, matching the research-digest agent and context-management interests.",
+      "evidence_quote": "language models that natively manage their own context"
+    },
+    "2610.28945": {
+      "paper_id": "2610.28945",
+      "label": "irrelevant",
+      "reason": "Studies predictive-control agents for interactive environments, not paper retrieval, relevance ranking, or the user's training and optimization topics.",
+      "evidence_quote": "combines multi-branch predictive analysis with experience-based adaptation"
+    },
+    "2610.27628": {
+      "paper_id": "2610.27628",
+      "label": "irrelevant",
+      "reason": "Focuses on recurrent depth extrapolation for sequential state tracking, without addressing low-rank training, spectral regularization, or research agents.",
+      "evidence_quote": "Progress-Aligned Recurrence (PAR)"
+    },
+    "2610.29189": {
+      "paper_id": "2610.29189",
+      "label": "relevant",
+      "reason": "Reviews interactive reasoning and retrieval loops for LLM systems, closely matching paper retrieval, structured decisions, and tool orchestration for a research-digest agent.",
+      "evidence_quote": "interleaving planning, querying, retrieval, integration, verification, and stopping"
+    },
+    "2610.31642": {
+      "paper_id": "2610.31642",
+      "label": "relevant",
+      "reason": "Analyzes numerical behavior of softmax and cross-entropy during optimization, including memorization, weight decay, Adam, and distillation.",
+      "evidence_quote": "after memorization, logit growth is bounded by an equilibrium between weight decay and Adam's $ε$ hyperparameter"
+    }
+  },
+  "admitted_ids": [
+    "2610.11730",
+    "2609.40127",
+    "2608.14492",
+    "2608.31036",
+    "2010.01412",
+    "2510.05491",
+    "2610.29357",
+    "2610.30646",
+    "2610.28500",
+    "2610.31098",
+    "2610.30344",
+    "2610.27674",
+    "2610.08975",
+    "2610.29326",
+    "2610.29298",
+    "2610.30478",
+    "2610.30933",
+    "2610.28851",
+    "2610.25858",
+    "2610.27952",
+    "2610.29720",
+    "2610.29192",
+    "2610.31305",
+    "2610.29577",
+    "2610.30825",
+    "2609.37725",
+    "2610.28945",
+    "2610.27628",
+    "2610.29189",
+    "2610.31642"
+  ],
+  "observations": {
+    "inspect:2610.11730": {
+      "status": "ok",
+      "question": "Retrieve passages on experimental setup and controls for LLaMA compression: baselines, effective-rank measurement, matched validation-loss protocol, compression and inference-speed measurements, training overhead, and label-noise comparison details.",
+      "source": "https://arxiv.org/html/2610.11730v1",
+      "passages": [
+        {
+          "chunk_id": "chunk-0001",
+          "section": "Article",
+          "text": "BRAIn Lab Spectral Weight Decay: Inducing Low-Rank Structure in Neural Network Weights Dmitrii Andriianov 1 , Andrey Veprikov 1,2 , Aleksandr Beznosikov 1,3 1 Basic Research of Artificial Intelligence Laboratory (BRAIn Lab) 2 SB AI Lab 3 Innopolis University Standard weight decay treats each weight matrix as a vector and ignores its spectral structure. We introduce spectral weight decay, a post-step decoupled nuclear-norm update that applies additive rather than multiplicative spectral shrinkage. We connect the update to approximate proximal descent and show that its sensitivity to update order can exceed that of conventional ℓ 2 \\ell_{2} weight decay near rank deficiency. Across LLaMA models with 124 124 M to 500 500 M parameters, spectral weight decay lowers effective rank and improves SVD-LLM compression at matched validation loss. At 500 500 M and a 4 % 4\\% distortion budget, it reaches 1.89 × 1.89\\times compression and 1.18 × 1.18\\times GPU inference speedup, compared with 1.14 × 1.14\\times and 1.01 × 1.01\\times after standard weight decay. Under fixed-horizon training with 60 % 60\\% label noise, it also improves final mean clean-test accuracy over matched ℓ 2 \\ell_{2} regularization by up to 17.8 17.8 points on MNIST and 4.6 4.6 points across four BERT-base tasks. Code is available at https://github.com/brain-lab-research/SpectralWD .",
+          "source": "https://arxiv.org/html/2610.11730v1",
+          "offset": 0,
+          "score": 14.674097464869563
+        },
+        {
+          "chunk_id": "chunk-0003",
+          "section": "1 Introduction",
+          "text": "To make the regularizer matrix-aware, we begin with the proximal interpretation of decoupled weight decay. To first order, its update is a proximal gradient step for the squared Frobenius penalty [ Parikh and Boyd, 2014 ; Zhuang et al., 2022 ] . We replace this penalty with the nuclear norm, a convex surrogate for rank whose proximal operator soft-thresholds singular values [ Recht et al., 2010 ; Cai et al., 2010 ] . This construction is the matrix analogue of replacing ridge shrinkage with coefficient selection by the lasso [ Hoerl and Kennard, 1970 ; Tibshirani, 1996 ] . Given the loss-only optimizer direction Δ \\Delta , let Z = W ( k ) − η ​ Δ = U Z ​ Σ Z ​ V Z ⊤ Z=W^{(k)}-\\eta\\Delta=U_{Z}\\Sigma_{Z}V_{Z}^{\\top} . Spectral weight decay applies the post-step correction W ( k + 1 ) = Z − η ​ λ ​ U Z ​ V Z ⊤ , W^{(k+1)}=Z-\\eta\\lambda U_{Z}V_{Z}^{\\top}, (1) where η \\eta is the learning rate and λ \\lambda the regularization coefficient. This correction acts additively in the singular basis of Z Z , whereas conventional weight decay scales the spectrum uniformly. SLORR-Nuc also approximates the nuclear-norm polar factor [ González-Martínez and Liu, 2026 ] . Its decoupled extension would use the pre-step correction Z − η ​ λ ​ U W ​ V W ⊤ Z-\\eta\\lambda U_{W}V_{W}^{\\top} for W ( k ) = U W ​ Σ W ​ V W ⊤ W^{(k)}=U_{W}\\Sigma_{W}V_{W}^{\\top} , rather than ( 1 ).",
+          "source": "https://arxiv.org/html/2610.11730v1",
+          "offset": 0,
+          "score": 1.112353008828388
+        },
+        {
+          "chunk_id": "chunk-0004",
+          "section": "1 Introduction",
+          "text": "The additive shrinkage acts more strongly on smaller singular values and concentrates the spectrum. The resulting low-effective-rank weights admit efficient truncated SVD compression. Replacing a dense m × n m\\times n matrix with rank- r r factors reduces its parameter count and multiplication cost from m ​ n mn to r ⁡ ( m + n ) r(m+n) . This factorization lowers storage and inference memory and can reduce latency when the retained rank is sufficiently small. Beyond compression, we test whether the same low-rank bias limits memorization under label noise. We evaluate spectral weight decay in LLaMA [ Touvron et al., 2023 ] pretraining, post-training compression, and fixed-horizon noisy-label classification. Across models with 124 124 M to 500 500 M parameters, it lowers effective rank [ Roy and Vetterli, 2007 ] and improves compression and inference speed at matched validation loss. At 500 500 M and a 4 % 4\\% distortion budget, it reaches 1.89 × 1.89\\times compression and a 1.18 × 1.18\\times GPU inference speedup. At 60 % 60\\% label noise, mean clean-test accuracy gains over matched ℓ 2 \\ell_{2} regularization reach 17.78 17.78 points on MNIST and 4.59 4.59 points on four BERT-base tasks.",
+          "source": "https://arxiv.org/html/2610.11730v1",
+          "offset": 0,
+          "score": 22.570147293631994
+        },
+        {
+          "chunk_id": "chunk-0005",
+          "section": "Contributions",
+          "text": "• We formulate spectral weight decay as decoupled nuclear-norm regularization, derive its additive singular-value shrinkage, and connect the update to approximate proximal descent. • Across LLaMA models with 124 124 M to 500 500 M parameters, spectral weight decay improves low-rank compression and inference speed over standard weight decay at matched validation loss. It also outperforms Cuttlefish and Prehab in matched compression comparisons. • On image and text classification tasks, spectral weight decay improves fixed-horizon robustness to label noise over matched ℓ 2 \\ell_{2} regularization.",
+          "source": "https://arxiv.org/html/2610.11730v1",
+          "offset": 0,
+          "score": 22.02925358710369
+        },
+        {
+          "chunk_id": "chunk-0041",
+          "section": "Proposition 2 .",
+          "text": "Let h = h F h=h_{F} , τ = η ​ λ \\tau=\\eta\\lambda , and Z ( k ) = W ( k ) − η ∇ ℒ ( W ( k ) ) Z^{(k)}=W^{(k)}-\\eta\\nabla\\mathcal{L}(W^{(k)}) . For fixed λ \\lambda and bounded W ( k ) W^{(k)} and ∇ ℒ ​ ( W ( k ) ) \\nabla\\mathcal{L}(W^{(k)}) , the pre-step update W ℓ 2 pre W_{\\ell_{2}}^{\\mathrm{pre}} in ( 7 ) differs from the proximal iteration ( 14 ) by O ⁡ ( η 2 ​ λ ) O(\\eta^{2}\\lambda) as η → 0 \\eta\\to 0 . For the nuclear norm, the proximal map instead performs singular-value soft-thresholding [ Cai et al., 2010 ] . Given Z = U ​ diag ⁡ ( σ i ) ​ V ⊤ Z=U\\operatorname{diag}(\\sigma_{i})V^{\\top} , prox τ , ∥ ⋅ ∥ ∗ ( Z ) = U diag ( max ( σ i − τ , 0 ) ) V ⊤ . \\operatorname{prox}_{\\tau,\\|\\cdot\\|_{*}}(Z)=U\\operatorname{diag}\\!\\big(\\max(\\sigma_{i}-\\tau,0)\\big)V^{\\top}. (15) Equivalently, prox τ , ∥ ⋅ ∥ ∗ ( Z ) \\displaystyle\\operatorname{prox}_{\\tau,\\|\\cdot\\|_{*}}(Z) = Z − U ​ diag ⁡ ( γ i ) ​ V ⊤ , \\displaystyle=Z-U\\operatorname{diag}(\\gamma_{i})V^{\\top}, γ i \\displaystyle\\gamma_{i} = { τ , σ i ≥ τ , σ i , σ i < τ . \\displaystyle=\\begin{cases}\\tau,&\\sigma_{i}\\geq\\tau,\\\\ \\sigma_{i},&\\sigma_{i}<\\tau.\\end{cases} (16) The post-step spectral update ( 1 ) uses τ ​ U ​ V ⊤ \\tau UV^{\\top} for every active singular direction. It matches the proximal correction when σ i ≥ τ \\sigma_{i}\\geq\\tau . For 0 < σ i < τ 0<\\sigma_{i}<\\tau , the exact update instead subtracts only σ i \\sigma_{i} and sets that direction to zero. With an exact polar factor, spectral weight decay is thus an approximate nuclear-norm proximal step whose discrepancy is confined to the sub-threshold tail.",
+          "source": "https://arxiv.org/html/2610.11730v1",
+          "offset": 0,
+          "score": 0.0
+        },
+        {
+          "chunk_id": "chunk-0042",
+          "section": "Proposition 2 .",
+          "text": "Figure 7 : Exact singular-value thresholding and its Newton–Schulz U ​ V ⊤ UV^{\\top} approximation at a matched spectral coefficient on a 124 124 M-parameter LLaMA model. Left: validation loss. Right: mean effective rank of the weight matrices. Both updates reach similar effective rank, while the exact update ends with higher validation loss. To assess how this difference in the sub-threshold tail affects training, Figure 7 compares exact nuclear-norm proximal updates with post-step spectral weight decay on a 124 124 M-parameter LLaMA trained on FineWeb-Edu with λ = 1 \\lambda=1 . In this comparison, spectral weight decay approximates the polar factor using Newton–Schulz iterations, while the exact proximal update computes singular-value thresholding from a full SVD at every step. Both updates follow nearly identical effective-rank trajectories, but exact thresholding does not improve validation loss. Its loss initially follows the Newton–Schulz update, then rises late in training and ends higher. Applying the exact update once every s s steps ( s = 10 s=10 to 50 50 ) leaves these results unchanged. We therefore use the less expensive Newton–Schulz update in the main text.",
+          "source": "https://arxiv.org/html/2610.11730v1",
+          "offset": 0,
+          "score": 13.390256596357732
+        }
+      ],
+      "text": "BRAIn Lab Spectral Weight Decay: Inducing Low-Rank Structure in Neural Network Weights Dmitrii Andriianov 1 , Andrey Veprikov 1,2 , Aleksandr Beznosikov 1,3 1 Basic Research of Artificial Intelligence Laboratory (BRAIn Lab) 2 SB AI Lab 3 Innopolis University Standard weight decay treats each weight matrix as a vector and ignores its spectral structure. We introduce spectral weight decay, a post-step decoupled nuclear-norm update that applies additive rather than multiplicative spectral shrinkage. We connect the update to approximate proximal descent and show that its sensitivity to update order can exceed that of conventional ℓ 2 \\ell_{2} weight decay near rank deficiency. Across LLaMA models with 124 124 M to 500 500 M parameters, spectral weight decay lowers effective rank and improves SVD-LLM compression at matched validation loss. At 500 500 M and a 4 % 4\\% distortion budget, it reaches 1.89 × 1.89\\times compression and 1.18 × 1.18\\times GPU inference speedup, compared with 1.14 × 1.14\\times and 1.01 × 1.01\\times after standard weight decay. Under fixed-horizon training with 60 % 60\\% label noise, it also improves final mean clean-test accuracy over matched ℓ 2 \\ell_{2} regularization by up to 17.8 17.8 points on MNIST and 4.6 4.6 points across four BERT-base tasks. Code is available at https://github.com/brain-lab-research/SpectralWD .\n\nTo make the regularizer matrix-aware, we begin with the proximal interpretation of decoupled weight decay. To first order, its update is a proximal gradient step for the squared Frobenius penalty [ Parikh and Boyd, 2014 ; Zhuang et al., 2022 ] . We replace this penalty with the nuclear norm, a convex surrogate for rank whose proximal operator soft-thresholds singular values [ Recht et al., 2010 ; Cai et al., 2010 ] . This construction is the matrix analogue of replacing ridge shrinkage with coefficient selection by the lasso [ Hoerl and Kennard, 1970 ; Tibshirani, 1996 ] . Given the loss-only optimizer direction Δ \\Delta , let Z = W ( k ) − η ​ Δ = U Z ​ Σ Z ​ V Z ⊤ Z=W^{(k)}-\\eta\\Delta=U_{Z}\\Sigma_{Z}V_{Z}^{\\top} . Spectral weight decay applies the post-step correction W ( k + 1 ) = Z − η ​ λ ​ U Z ​ V Z ⊤ , W^{(k+1)}=Z-\\eta\\lambda U_{Z}V_{Z}^{\\top}, (1) where η \\eta is the learning rate and λ \\lambda the regularization coefficient. This correction acts additively in the singular basis of Z Z , whereas conventional weight decay scales the spectrum uniformly. SLORR-Nuc also approximates the nuclear-norm polar factor [ González-Martínez and Liu, 2026 ] . Its decoupled extension would use the pre-step correction Z − η ​ λ ​ U W ​ V W ⊤ Z-\\eta\\lambda U_{W}V_{W}^{\\top} for W ( k ) = U W ​ Σ W ​ V W ⊤ W^{(k)}=U_{W}\\Sigma_{W}V_{W}^{\\top} , rather than ( 1 ).\n\nThe additive shrinkage acts more strongly on smaller singular values and concentrates the spectrum. The resulting low-effective-rank weights admit efficient truncated SVD compression. Replacing a dense m × n m\\times n matrix with rank- r r factors reduces its parameter count and multiplication cost from m ​ n mn to r ⁡ ( m + n ) r(m+n) . This factorization lowers storage and inference memory and can reduce latency when the retained rank is sufficiently small. Beyond compression, we test whether the same low-rank bias limits memorization under label noise. We evaluate spectral weight decay in LLaMA [ Touvron et al., 2023 ] pretraining, post-training compression, and fixed-horizon noisy-label classification. Across models with 124 124 M to 500 500 M parameters, it lowers effective rank [ Roy and Vetterli, 2007 ] and improves compression and inference speed at matched validation loss. At 500 500 M and a 4 % 4\\% distortion budget, it reaches 1.89 × 1.89\\times compression and a 1.18 × 1.18\\times GPU inference speedup. At 60 % 60\\% label noise, mean clean-test accuracy gains over matched ℓ 2 \\ell_{2} regularization reach 17.78 17.78 points on MNIST and 4.59 4.59 points on four BERT-base tasks.\n\n• We formulate spectral weight decay as decoupled nuclear-norm regularization, derive its additive singular-value shrinkage, and connect the update to approximate proximal descent. • Across LLaMA models with 124 124 M to 500 500 M parameters, spectral weight decay improves low-rank compression and inference speed over standard weight decay at matched validation loss. It also outperforms Cuttlefish and Prehab in matched compression comparisons. • On image and text classification tasks, spectral weight decay improves fixed-horizon robustness to label noise over matched ℓ 2 \\ell_{2} regularization.\n\nLet h = h F h=h_{F} , τ = η ​ λ \\tau=\\eta\\lambda , and Z ( k ) = W ( k ) − η ∇ ℒ ( W ( k ) ) Z^{(k)}=W^{(k)}-\\eta\\nabla\\mathcal{L}(W^{(k)}) . For fixed λ \\lambda and bounded W ( k ) W^{(k)} and ∇ ℒ ​ ( W ( k ) ) \\nabla\\mathcal{L}(W^{(k)}) , the pre-step update W ℓ 2 pre W_{\\ell_{2}}^{\\mathrm{pre}} in ( 7 ) differs from the proximal iteration ( 14 ) by O ⁡ ( η 2 ​ λ ) O(\\eta^{2}\\lambda) as η → 0 \\eta\\to 0 . For the nuclear norm, the proximal map instead performs singular-value soft-thresholding [ Cai et al., 2010 ] . Given Z = U ​ diag ⁡ ( σ i ) ​ V ⊤ Z=U\\operatorname{diag}(\\sigma_{i})V^{\\top} , prox τ , ∥ ⋅ ∥ ∗ ( Z ) = U diag ( max ( σ i − τ , 0 ) ) V ⊤ . \\operatorname{prox}_{\\tau,\\|\\cdot\\|_{*}}(Z)=U\\operatorname{diag}\\!\\big(\\max(\\sigma_{i}-\\tau,0)\\big)V^{\\top}. (15) Equivalently, prox τ , ∥ ⋅ ∥ ∗ ( Z ) \\displaystyle\\operatorname{prox}_{\\tau,\\|\\cdot\\|_{*}}(Z) = Z − U ​ diag ⁡ ( γ i ) ​ V ⊤ , \\displaystyle=Z-U\\operatorname{diag}(\\gamma_{i})V^{\\top}, γ i \\displaystyle\\gamma_{i} = { τ , σ i ≥ τ , σ i , σ i < τ . \\displaystyle=\\begin{cases}\\tau,&\\sigma_{i}\\geq\\tau,\\\\ \\sigma_{i},&\\sigma_{i}<\\tau.\\end{cases} (16) The post-step spectral update ( 1 ) uses τ ​ U ​ V ⊤ \\tau UV^{\\top} for every active singular direction. It matches the proximal correction when σ i ≥ τ \\sigma_{i}\\geq\\tau . For 0 < σ i < τ 0<\\sigma_{i}<\\tau , the exact update instead subtracts only σ i \\sigma_{i} and sets that direction to zero. With an exact polar factor, spectral weight decay is thus an approximate nuclear-norm proximal step whose discrepancy is confined to the sub-threshold tail.\n\nFigure 7 : Exact singular-value thresholding and its Newton–Schulz U ​ V ⊤ UV^{\\top} approximation at a matched spectral coefficient on a 124 124 M-parameter LLaMA model. Left: validation loss. Right: mean effective rank of the weight matrices. Both updates reach similar effective rank, while the exact update ends with higher validation loss. To assess how this difference in the sub-threshold tail affects training, Figure 7 compares exact nuclear-norm proximal updates with post-step spectral weight decay on a 124 124 M-parameter LLaMA trained on FineWeb-Edu with λ = 1 \\lambda=1 . In this comparison, spectral weight decay approximates the polar factor using Newton–Schulz iterations, while the exact proximal update computes singular-value thresholding from a full SVD at every step. Both updates follow nearly identical effective-rank trajectories, but exact thresholding does not improve validation loss. Its loss initially follows the Newton–Schulz update, then rises late in training and ends higher. Applying the exact update once every s s steps ( s = 10 s=10 to 50 50 ) leaves these results unchanged. We therefore use the less expensive Newton–Schulz update in the main text.",
+      "truncated": true,
+      "available_chars": 68851,
+      "note": "Retrieved passages, not an answer. Missing matches do not establish that the paper lacks the requested experiment. Extracted HTML text; equations and table formatting may be imperfect. No PDF extraction was attempted.",
+      "questions": [
+        "Retrieve passages on experimental setup and controls for LLaMA compression: baselines, effective-rank measurement, matched validation-loss protocol, compression and inference-speed measurements, training overhead, and label-noise comparison details."
+      ]
+    },
+    "inspect:2608.14492": {
+      "status": "ok",
+      "question": "Retrieve experimental passages on SFT and ReLoRA setups, model sizes, baselines, quantitative performance differences, ablations, and computational or memory costs.",
+      "source": "https://arxiv.org/html/2608.14492v1",
+      "passages": [
+        {
+          "chunk_id": "chunk-0002",
+          "section": "Abstract",
+          "text": "The Muon optimizer shows clear benefits versus alternatives when pretraining neural networks. However, it is used less frequently for parameter-efficient fine-tuning (PEFT). One potential reason is that the most common PEFT method, LoRA, does not naturally combine with Muon since it is not mathematically possible to orthogonalize the weight update given by a low-rank parameterization. In this paper, we address this issue by approximating the solution to a relaxed Muon objective in the low-rank setting via linearization and then least-squares. We provide an efficient implementation that uses matmul operations only, as opposed to more complex linear algebra decomposition routines. Our method, sMuon (small Muon), performs favourably across SFT and a ReLoRA pretraining experiment. While results are model- and eval-dependent, we find overall that using Muon for low-rank fine-tuning provides moderate performance improvements.",
+          "source": "https://arxiv.org/html/2608.14492v1",
+          "offset": 0,
+          "score": 9.188702025286965
+        },
+        {
+          "chunk_id": "chunk-0004",
+          "section": "1 Introduction",
+          "text": "However, Muon is less commonly used for fine-tuning (FT), particularly PEFT (Parameter-Efficient Fine-Tuning, which reduces compute resource requirements). There are various reasons for this, including the fact that Muon FT has been shown to perform better with Muon-pretrained base models ( Liu et al., 2025 ; Qu et al., 2026 ) , which are currently less common than AdamW-pretrained models. Perhaps the most glaring issue is that Muon does not straightforwardly combine with LoRA ( Hu et al., 2021 ) , the dominant PEFT method. In principle, Muon requires that we orthogonalize the descent step for the whole layer, but this is not generally realizable in the LoRA parameterization. Some approximation is therefore inevitable. The simplest and most common workaround is ‘per-factor Muon’, which ignores the geometry of the whole layer and orthogonalizes changes to B B and A A separately ( Qu et al., 2026 ; Janson et al., 2026 ; Kang et al., 2026 ) . Other works retain the whole layer’s geometry and introduce an approximation elsewhere, with Cesista et al. (2026) relaxing the Muon objective using the triangle inequality, and Bogachev et al. (2026) recasting the problem as Riemannian optimization on a low-rank manifold. Figure 1: Spectra of the weight change for different LoRA optimizers. We show the average singular values of the weight updates (attention weight, layer 6 of 12), during ReLoRA pretraining ( r = 32 r=32 ). We normalize by σ ¯ 1 \\overline{\\sigma}_{1} , and denote the LoRA rank by the dashed grey line. However, we feel that alternative approaches that more closely fit with Muon’s original ‘steepest descent under the spectral norm’ motivation are still underexplored.",
+          "source": "https://arxiv.org/html/2608.14492v1",
+          "offset": 0,
+          "score": 1.6113809301874622
+        },
+        {
+          "chunk_id": "chunk-0005",
+          "section": "1 Introduction",
+          "text": "In this paper, we linearize the low-rank Muon objective to find the optimal descent step within the available parameter space. This solution effectively orthogonalizes the full layer’s gradient and projects it onto the appropriate low-rank subspace. Empirically, we find this retains a more uniform spectrum than alternatives such as per-factor Muon (Fig. 1 ) and LoRA-Muon ( Cesista et al., 2026 ) . Furthermore, unlike Riemannion ( Bogachev et al., 2026 ) , our approach avoids expensive matrix decompositions. While our solution to the low-rank Muon problem is clean (Alg. 1 ), a naive implementation is computationally inefficient, as it requires orthogonalizing a large matrix. To address this, we introduce a mathematically equivalent formulation (Alg. 2 ) that is both fast and memory-efficient. By relying entirely on matrix multiplications, we are able to avoid the overhead from QR and SVD. Finally, we show that our optimizer, sMuon, achieves competitive performance across a range of commonsense and coding SFT benchmarks, as well as in ReLoRA pretraining experiments. Our contributions are as follows: • We derive a method for training LoRA adapters with Muon by taking a first-order approximation of the spectral-norm-regularized steepest descent objective. The method is available in closed form, and requires less optimizer state than AdamW. • We provide a matmul-only algorithm of the method, sMuon, that is efficient for modern hardware, with comparable speed to other Muon methods such as per-factor Muon and LoRA-Muon, while being significantly faster than Riemannion for larger LoRA rank.",
+          "source": "https://arxiv.org/html/2608.14492v1",
+          "offset": 0,
+          "score": 7.977232938579423
+        },
+        {
+          "chunk_id": "chunk-0006",
+          "section": "1 Introduction",
+          "text": "• We run SFT experiments on four base models, three AdamW-pretrained and one Muon-pretrained, over eleven benchmarks to compare low-rank Muon optimizers. While results are model-dependent, we find that our optimizer gives strong performance, performing best on the Muon-pretrained model with the top accuracy in six out of eleven tasks with Moonlight-16B-A3B. • In the ReLoRA pretraining setting, we illustrate that Muon LoRA methods are generally stronger than AdamW LoRA. Specifically we find that our method attains the lowest final validation loss, tying with Riemannion, but being ∼ 30 % \\sim\\!30\\% faster.",
+          "source": "https://arxiv.org/html/2608.14492v1",
+          "offset": 0,
+          "score": 10.858251174343826
+        },
+        {
+          "chunk_id": "chunk-0027",
+          "section": "5 Experiments",
+          "text": "Table 2: Code pass@1 (%), grouped by base model. Each column is an optimizer (best run by validation loss); per row the best optimizer is bolded and cells are shaded green (best) to white (worst). Eval AdamW Per-factor Muon LoRA-Muon Riemannion sMuon (ours) Qwen2.5-3B HumanEval 54.9 20.1 43.3 31.1 51.8 HumanEval+ 48.8 17.1 39.0 25.6 43.9 MBPP 65.9 69.3 68.0 65.9 62.7 MBPP+ 57.1 60.6 58.7 56.9 53.4 Llama-3.2-3B HumanEval 22.0 18.3 29.9 30.5 29.9 HumanEval+ 19.5 16.5 25.0 26.8 27.4 MBPP 43.1 35.7 42.1 46.3 45.2 MBPP+ 35.4 30.4 34.1 38.1 38.6 DeepSeek-V2-Lite HumanEval 36.6 29.3 22.0 23.2 26.8 HumanEval+ 28.7 23.8 18.3 19.5 23.2 MBPP 52.6 53.7 48.4 49.5 51.3 MBPP+ 45.5 45.0 43.4 43.7 44.7 Moonlight-16B-A3B HumanEval 49.4 57.9 53.7 40.2 54.9 HumanEval+ 42.7 48.8 47.0 35.4 48.8 MBPP 71.7 71.2 71.2 68.8 71.2 MBPP+ 60.1 60.1 61.4 58.7 60.3 Table 3: ReLoRA pretraining: final validation loss at each optimizer’s optimal learning rate, where the optimal LR minimises the validation loss at the final logged step. Lower is better; the best optimizer is bolded and cells are shaded green (best) to white (worst). AdamW Per-factor Muon LoRA-Muon Riemannion sMuon (ours) Final val loss 3.83 3.70 3.68 3.66 3.66 Optimal LR 0.001 0.006 0.001 0.0006 0.0006",
+          "source": "https://arxiv.org/html/2608.14492v1",
+          "offset": 0,
+          "score": 2.774143332413953
+        },
+        {
+          "chunk_id": "chunk-0028",
+          "section": "5 Experiments",
+          "text": "We compare sMuon to regular LoRA with AdamW, per-factor Muon (LoRA with Muon applied to each adapter weight B B and A A individually), LoRA-Muon ( Cesista et al., 2026 ) , and Riemannion ( Bogachev et al., 2026 ) . We evaluated on standard commonsense ( Clark et al., 2018 ; Clark et al., 2019 ; Zellers et al., 2019 ; Mihaylov et al., 2018 ; Bisk et al., 2020 ; Sakaguchi et al., 2021 ) and coding ( Chen et al., 2021 ; Austin et al., 2021 ) benchmarks after training with SFT. We experimented with four models, Llama-3.2-3B ( Grattafiori et al., 2024 ) , Qwen2.5-3B ( Qwen Team, 2025 ) , DeepSeek-V2-Lite ( DeepSeek-AI, 2024 ) , and Moonlight-16B-A3B ( Liu et al., 2025 ) . The first two models are dense models; the last two are sparse MoE models. The Moonlight model is of particular note because it was pretrained with Muon, whereas the others are all AdamW-pretrained. We also tested the methods in a pretraining setting using ReLoRA ( Lialin et al., 2023 ) which periodically merges and refreshes the adapter. We tuned the learning rate for each method and model, with example learning rate sweeps for the commonsense tasks shown in Appendix E . While our results are both model- and eval-dependent, sMuon performs strongly overall, especially when combined with the Moonlight-16B-A3B base model, a Muon-pretrained model (Tables 1 and 2 ). sMuon also achieved the joint-best validation loss in the ReLoRA pretraining setting (Table 3 ). We attribute performance gains, particularly over AdamW and per-factor Muon, to more accurately approximating the Muon objective.",
+          "source": "https://arxiv.org/html/2608.14492v1",
+          "offset": 0,
+          "score": 9.322322545039526
+        }
+      ],
+      "text": "The Muon optimizer shows clear benefits versus alternatives when pretraining neural networks. However, it is used less frequently for parameter-efficient fine-tuning (PEFT). One potential reason is that the most common PEFT method, LoRA, does not naturally combine with Muon since it is not mathematically possible to orthogonalize the weight update given by a low-rank parameterization. In this paper, we address this issue by approximating the solution to a relaxed Muon objective in the low-rank setting via linearization and then least-squares. We provide an efficient implementation that uses matmul operations only, as opposed to more complex linear algebra decomposition routines. Our method, sMuon (small Muon), performs favourably across SFT and a ReLoRA pretraining experiment. While results are model- and eval-dependent, we find overall that using Muon for low-rank fine-tuning provides moderate performance improvements.\n\nHowever, Muon is less commonly used for fine-tuning (FT), particularly PEFT (Parameter-Efficient Fine-Tuning, which reduces compute resource requirements). There are various reasons for this, including the fact that Muon FT has been shown to perform better with Muon-pretrained base models ( Liu et al., 2025 ; Qu et al., 2026 ) , which are currently less common than AdamW-pretrained models. Perhaps the most glaring issue is that Muon does not straightforwardly combine with LoRA ( Hu et al., 2021 ) , the dominant PEFT method. In principle, Muon requires that we orthogonalize the descent step for the whole layer, but this is not generally realizable in the LoRA parameterization. Some approximation is therefore inevitable. The simplest and most common workaround is ‘per-factor Muon’, which ignores the geometry of the whole layer and orthogonalizes changes to B B and A A separately ( Qu et al., 2026 ; Janson et al., 2026 ; Kang et al., 2026 ) . Other works retain the whole layer’s geometry and introduce an approximation elsewhere, with Cesista et al. (2026) relaxing the Muon objective using the triangle inequality, and Bogachev et al. (2026) recasting the problem as Riemannian optimization on a low-rank manifold. Figure 1: Spectra of the weight change for different LoRA optimizers. We show the average singular values of the weight updates (attention weight, layer 6 of 12), during ReLoRA pretraining ( r = 32 r=32 ). We normalize by σ ¯ 1 \\overline{\\sigma}_{1} , and denote the LoRA rank by the dashed grey line. However, we feel that alternative approaches that more closely fit with Muon’s original ‘steepest descent under the spectral norm’ motivation are still underexplored.\n\nIn this paper, we linearize the low-rank Muon objective to find the optimal descent step within the available parameter space. This solution effectively orthogonalizes the full layer’s gradient and projects it onto the appropriate low-rank subspace. Empirically, we find this retains a more uniform spectrum than alternatives such as per-factor Muon (Fig. 1 ) and LoRA-Muon ( Cesista et al., 2026 ) . Furthermore, unlike Riemannion ( Bogachev et al., 2026 ) , our approach avoids expensive matrix decompositions. While our solution to the low-rank Muon problem is clean (Alg. 1 ), a naive implementation is computationally inefficient, as it requires orthogonalizing a large matrix. To address this, we introduce a mathematically equivalent formulation (Alg. 2 ) that is both fast and memory-efficient. By relying entirely on matrix multiplications, we are able to avoid the overhead from QR and SVD. Finally, we show that our optimizer, sMuon, achieves competitive performance across a range of commonsense and coding SFT benchmarks, as well as in ReLoRA pretraining experiments. Our contributions are as follows: • We derive a method for training LoRA adapters with Muon by taking a first-order approximation of the spectral-norm-regularized steepest descent objective. The method is available in closed form, and requires less optimizer state than AdamW. • We provide a matmul-only algorithm of the method, sMuon, that is efficient for modern hardware, with comparable speed to other Muon methods such as per-factor Muon and LoRA-Muon, while being significantly faster than Riemannion for larger LoRA rank.\n\n• We run SFT experiments on four base models, three AdamW-pretrained and one Muon-pretrained, over eleven benchmarks to compare low-rank Muon optimizers. While results are model-dependent, we find that our optimizer gives strong performance, performing best on the Muon-pretrained model with the top accuracy in six out of eleven tasks with Moonlight-16B-A3B. • In the ReLoRA pretraining setting, we illustrate that Muon LoRA methods are generally stronger than AdamW LoRA. Specifically we find that our method attains the lowest final validation loss, tying with Riemannion, but being ∼ 30 % \\sim\\!30\\% faster.\n\nTable 2: Code pass@1 (%), grouped by base model. Each column is an optimizer (best run by validation loss); per row the best optimizer is bolded and cells are shaded green (best) to white (worst). Eval AdamW Per-factor Muon LoRA-Muon Riemannion sMuon (ours) Qwen2.5-3B HumanEval 54.9 20.1 43.3 31.1 51.8 HumanEval+ 48.8 17.1 39.0 25.6 43.9 MBPP 65.9 69.3 68.0 65.9 62.7 MBPP+ 57.1 60.6 58.7 56.9 53.4 Llama-3.2-3B HumanEval 22.0 18.3 29.9 30.5 29.9 HumanEval+ 19.5 16.5 25.0 26.8 27.4 MBPP 43.1 35.7 42.1 46.3 45.2 MBPP+ 35.4 30.4 34.1 38.1 38.6 DeepSeek-V2-Lite HumanEval 36.6 29.3 22.0 23.2 26.8 HumanEval+ 28.7 23.8 18.3 19.5 23.2 MBPP 52.6 53.7 48.4 49.5 51.3 MBPP+ 45.5 45.0 43.4 43.7 44.7 Moonlight-16B-A3B HumanEval 49.4 57.9 53.7 40.2 54.9 HumanEval+ 42.7 48.8 47.0 35.4 48.8 MBPP 71.7 71.2 71.2 68.8 71.2 MBPP+ 60.1 60.1 61.4 58.7 60.3 Table 3: ReLoRA pretraining: final validation loss at each optimizer’s optimal learning rate, where the optimal LR minimises the validation loss at the final logged step. Lower is better; the best optimizer is bolded and cells are shaded green (best) to white (worst). AdamW Per-factor Muon LoRA-Muon Riemannion sMuon (ours) Final val loss 3.83 3.70 3.68 3.66 3.66 Optimal LR 0.001 0.006 0.001 0.0006 0.0006\n\nWe compare sMuon to regular LoRA with AdamW, per-factor Muon (LoRA with Muon applied to each adapter weight B B and A A individually), LoRA-Muon ( Cesista et al., 2026 ) , and Riemannion ( Bogachev et al., 2026 ) . We evaluated on standard commonsense ( Clark et al., 2018 ; Clark et al., 2019 ; Zellers et al., 2019 ; Mihaylov et al., 2018 ; Bisk et al., 2020 ; Sakaguchi et al., 2021 ) and coding ( Chen et al., 2021 ; Austin et al., 2021 ) benchmarks after training with SFT. We experimented with four models, Llama-3.2-3B ( Grattafiori et al., 2024 ) , Qwen2.5-3B ( Qwen Team, 2025 ) , DeepSeek-V2-Lite ( DeepSeek-AI, 2024 ) , and Moonlight-16B-A3B ( Liu et al., 2025 ) . The first two models are dense models; the last two are sparse MoE models. The Moonlight model is of particular note because it was pretrained with Muon, whereas the others are all AdamW-pretrained. We also tested the methods in a pretraining setting using ReLoRA ( Lialin et al., 2023 ) which periodically merges and refreshes the adapter. We tuned the learning rate for each method and model, with example learning rate sweeps for the commonsense tasks shown in Appendix E . While our results are both model- and eval-dependent, sMuon performs strongly overall, especially when combined with the Moonlight-16B-A3B base model, a Muon-pretrained model (Tables 1 and 2 ). sMuon also achieved the joint-best validation loss in the ReLoRA pretraining setting (Table 3 ). We attribute performance gains, particularly over AdamW and per-factor Muon, to more accurately approximating the Muon objective.",
+      "truncated": true,
+      "available_chars": 70899,
+      "note": "Retrieved passages, not an answer. Missing matches do not establish that the paper lacks the requested experiment. Extracted HTML text; equations and table formatting may be imperfect. No PDF extraction was attempted.",
+      "questions": [
+        "Retrieve experimental passages on SFT and ReLoRA setups, model sizes, baselines, quantitative performance differences, ablations, and computational or memory costs."
+      ]
+    }
+  },
+  "x_collector": "arc-v2",
+  "pending": {
+    "action": "finish",
+    "paper_id": "",
+    "reason": "The shortlist is sufficiently supported by two detailed inspections and strong abstracts. Remaining uncertainty concerns uninspected candidates' experimental controls and reproducibility; further inspection could refine ranking but is unlikely to change the core selection.",
+    "question": "",
+    "query": "",
+    "limit": 10,
+    "selections": [
+      {
+        "paper_id": "2610.11730",
+        "summary": "Introduces spectral weight decay as a decoupled nuclear-norm update that shrinks singular values additively. It lowers effective rank and improves compression, inference speed, and robustness to label noise relative to standard weight decay.",
+        "relevance": "Direct match for spectral regularization, effective rank, low-rank compressibility, and memorization under label noise.",
+        "evidence": [
+          {
+            "source": "inspection",
+            "quote": "Across LLaMA models with 124 M to 500 M parameters, spectral weight decay lowers effective rank and improves SVD-LLM compression at matched validation loss."
+          },
+          {
+            "source": "inspection",
+            "quote": "At 500 M and a 4% distortion budget, it reaches 1.89× compression and a 1.18× GPU inference speedup, compared with 1.14× and 1.01× after standard weight decay."
+          }
+        ]
+      },
+      {
+        "paper_id": "2608.14492",
+        "summary": "Proposes sMuon, a matmul-only approximation of Muon for LoRA updates. It evaluates the method across four models and eleven SFT benchmarks, plus ReLoRA pretraining, finding model-dependent gains and a joint-best validation loss with Riemannion.",
+        "relevance": "Directly addresses optimization geometry for LoRA, Muon, spectral behavior, and efficient low-rank pretraining.",
+        "evidence": [
+          {
+            "source": "inspection",
+            "quote": "We provide a matmul-only algorithm of the method, sMuon, that is efficient for modern hardware, with comparable speed to other Muon methods ... while being significantly faster than Riemannion for larger LoRA rank."
+          },
+          {
+            "source": "inspection",
+            "quote": "In the ReLoRA pretraining setting, we illustrate that Muon LoRA methods are generally stronger than AdamW LoRA."
+          }
+        ]
+      },
+      {
+        "paper_id": "2608.31036",
+        "summary": "Introduces NoRA, which normalizes LoRA down-projection matrices during training or only at initialization. The abstract reports improved convergence, performance, stability, and reduced catastrophic forgetting across pretraining, supervised fine-tuning, and reinforcement learning.",
+        "relevance": "Strong match for LoRA training dynamics, regularization, convergence, and practical parameter-efficient fine-tuning.",
+        "evidence": [
+          {
+            "source": "abstract",
+            "quote": "We introduce Normalized Low-Rank Adaptation (NoRA), a simple yet effective method that normalizes the down-projection matrices during training."
+          },
+          {
+            "source": "abstract",
+            "quote": "Across pretraining, supervised finetuning, and reinforcement learning, NoRA consistently accelerates convergence, improves performance and training stability, and mitigates catastrophic forgetting."
+          }
+        ]
+      },
+      {
+        "paper_id": "2510.05491",
+        "summary": "Proposes NorMuon, combining Muon's orthogonalization with neuron-wise adaptive normalization and an efficient distributed FSDP2 implementation. It targets optimizer conditioning, balanced parameter updates, and scalable training.",
+        "relevance": "Relevant to optimizer design, Newton-Schulz-style orthogonalization, distributed implementation, and training-efficiency tradeoffs at scale.",
+        "evidence": [
+          {
+            "source": "abstract",
+            "quote": "NorMuon addresses this imbalance by maintaining second-order momentum statistics for each neuron and applying row-wise normalization after orthogonalization."
+          },
+          {
+            "source": "abstract",
+            "quote": "To enable practical deployment at scale, we develop an efficient distributed implementation under the FSDP2 framework."
+          }
+        ]
+      },
+      {
+        "paper_id": "2609.37725",
+        "summary": "Introduces Context Language Models that manage context as an editable file and evaluates model-controlled context management across browsing, long-horizon, and multi-agent tasks. The abstract reports improved accuracy and lower compute than external context-management strategies.",
+        "relevance": "Directly relevant to the user's research-digest agent, context management, and application-controlled orchestration interests.",
+        "evidence": [
+          {
+            "source": "abstract",
+            "quote": "We introduce Context Language Models (CLMs), language models that natively manage their own context."
+          },
+          {
+            "source": "abstract",
+            "quote": "Building CLMs zero-shot with existing models outperforms SOTA context management strategies across a variety of tasks: 11.4% higher accuracy with 21.5% fewer FLOPs on BrowseComp-Plus."
+          }
+        ]
+      }
+    ],
+    "limitations": [
+      "X analysis is disabled, so no attention signal is available.",
+      "Detailed inspection was performed only for 2610.11730 and 2608.14492; claims for the other selections rely on abstracts, some of which may be truncated.",
+      "Repository availability and reproducibility were not checked for the selected papers."
+    ]
+  },
+  "screen_target": 30,
+  "llm_calls": 6,
+  "steps": 3,
+  "inspections": 2,
+  "expansions": 0,
+  "fetched_count": 100,
+  "candidate_count": 100,
+  "llm_usage": [
+    {
+      "model": "gpt-5.6-luna",
+      "status": "completed",
+      "input_tokens": 9572,
+      "output_tokens": 821,
+      "latency_seconds": 20.585218292006175,
+      "estimated_api_cost_usd": 0.0028996
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "status": "completed",
+      "input_tokens": 9435,
+      "output_tokens": 816,
+      "latency_seconds": 19.652361999993445,
+      "estimated_api_cost_usd": 0.0028661999999999997
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "status": "completed",
+      "input_tokens": 9494,
+      "output_tokens": 807,
+      "latency_seconds": 18.985225083990372,
+      "estimated_api_cost_usd": 0.0028672000000000003
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "status": "completed",
+      "input_tokens": 18741,
+      "output_tokens": 207,
+      "latency_seconds": 7.796736417003558,
+      "estimated_api_cost_usd": 0.0039966
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "status": "completed",
+      "input_tokens": 28303,
+      "output_tokens": 226,
+      "latency_seconds": 9.238968124991516,
+      "estimated_api_cost_usd": 0.0059318
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "status": "completed",
+      "input_tokens": 33031,
+      "output_tokens": 1179,
+      "latency_seconds": 27.29278783299378,
+      "estimated_api_cost_usd": 0.008021
+    }
+  ],
+  "tool_calls": 2,
+  "inspection_queries": {
+    "2610.11730:40f0b09b4a3bf5648bf44ecd2ca3707ab14099df0a9910e146e00a362d1d60d8": {
+      "status": "ok",
+      "question": "Retrieve passages on experimental setup and controls for LLaMA compression: baselines, effective-rank measurement, matched validation-loss protocol, compression and inference-speed measurements, training overhead, and label-noise comparison details.",
+      "source": "https://arxiv.org/html/2610.11730v1",
+      "passages": [
+        {
+          "chunk_id": "chunk-0001",
+          "section": "Article",
+          "text": "BRAIn Lab Spectral Weight Decay: Inducing Low-Rank Structure in Neural Network Weights Dmitrii Andriianov 1 , Andrey Veprikov 1,2 , Aleksandr Beznosikov 1,3 1 Basic Research of Artificial Intelligence Laboratory (BRAIn Lab) 2 SB AI Lab 3 Innopolis University Standard weight decay treats each weight matrix as a vector and ignores its spectral structure. We introduce spectral weight decay, a post-step decoupled nuclear-norm update that applies additive rather than multiplicative spectral shrinkage. We connect the update to approximate proximal descent and show that its sensitivity to update order can exceed that of conventional ℓ 2 \\ell_{2} weight decay near rank deficiency. Across LLaMA models with 124 124 M to 500 500 M parameters, spectral weight decay lowers effective rank and improves SVD-LLM compression at matched validation loss. At 500 500 M and a 4 % 4\\% distortion budget, it reaches 1.89 × 1.89\\times compression and 1.18 × 1.18\\times GPU inference speedup, compared with 1.14 × 1.14\\times and 1.01 × 1.01\\times after standard weight decay. Under fixed-horizon training with 60 % 60\\% label noise, it also improves final mean clean-test accuracy over matched ℓ 2 \\ell_{2} regularization by up to 17.8 17.8 points on MNIST and 4.6 4.6 points across four BERT-base tasks. Code is available at https://github.com/brain-lab-research/SpectralWD .",
+          "source": "https://arxiv.org/html/2610.11730v1",
+          "offset": 0,
+          "score": 14.674097464869563
+        },
+        {
+          "chunk_id": "chunk-0003",
+          "section": "1 Introduction",
+          "text": "To make the regularizer matrix-aware, we begin with the proximal interpretation of decoupled weight decay. To first order, its update is a proximal gradient step for the squared Frobenius penalty [ Parikh and Boyd, 2014 ; Zhuang et al., 2022 ] . We replace this penalty with the nuclear norm, a convex surrogate for rank whose proximal operator soft-thresholds singular values [ Recht et al., 2010 ; Cai et al., 2010 ] . This construction is the matrix analogue of replacing ridge shrinkage with coefficient selection by the lasso [ Hoerl and Kennard, 1970 ; Tibshirani, 1996 ] . Given the loss-only optimizer direction Δ \\Delta , let Z = W ( k ) − η ​ Δ = U Z ​ Σ Z ​ V Z ⊤ Z=W^{(k)}-\\eta\\Delta=U_{Z}\\Sigma_{Z}V_{Z}^{\\top} . Spectral weight decay applies the post-step correction W ( k + 1 ) = Z − η ​ λ ​ U Z ​ V Z ⊤ , W^{(k+1)}=Z-\\eta\\lambda U_{Z}V_{Z}^{\\top}, (1) where η \\eta is the learning rate and λ \\lambda the regularization coefficient. This correction acts additively in the singular basis of Z Z , whereas conventional weight decay scales the spectrum uniformly. SLORR-Nuc also approximates the nuclear-norm polar factor [ González-Martínez and Liu, 2026 ] . Its decoupled extension would use the pre-step correction Z − η ​ λ ​ U W ​ V W ⊤ Z-\\eta\\lambda U_{W}V_{W}^{\\top} for W ( k ) = U W ​ Σ W ​ V W ⊤ W^{(k)}=U_{W}\\Sigma_{W}V_{W}^{\\top} , rather than ( 1 ).",
+          "source": "https://arxiv.org/html/2610.11730v1",
+          "offset": 0,
+          "score": 1.112353008828388
+        },
+        {
+          "chunk_id": "chunk-0004",
+          "section": "1 Introduction",
+          "text": "The additive shrinkage acts more strongly on smaller singular values and concentrates the spectrum. The resulting low-effective-rank weights admit efficient truncated SVD compression. Replacing a dense m × n m\\times n matrix with rank- r r factors reduces its parameter count and multiplication cost from m ​ n mn to r ⁡ ( m + n ) r(m+n) . This factorization lowers storage and inference memory and can reduce latency when the retained rank is sufficiently small. Beyond compression, we test whether the same low-rank bias limits memorization under label noise. We evaluate spectral weight decay in LLaMA [ Touvron et al., 2023 ] pretraining, post-training compression, and fixed-horizon noisy-label classification. Across models with 124 124 M to 500 500 M parameters, it lowers effective rank [ Roy and Vetterli, 2007 ] and improves compression and inference speed at matched validation loss. At 500 500 M and a 4 % 4\\% distortion budget, it reaches 1.89 × 1.89\\times compression and a 1.18 × 1.18\\times GPU inference speedup. At 60 % 60\\% label noise, mean clean-test accuracy gains over matched ℓ 2 \\ell_{2} regularization reach 17.78 17.78 points on MNIST and 4.59 4.59 points on four BERT-base tasks.",
+          "source": "https://arxiv.org/html/2610.11730v1",
+          "offset": 0,
+          "score": 22.570147293631994
+        },
+        {
+          "chunk_id": "chunk-0005",
+          "section": "Contributions",
+          "text": "• We formulate spectral weight decay as decoupled nuclear-norm regularization, derive its additive singular-value shrinkage, and connect the update to approximate proximal descent. • Across LLaMA models with 124 124 M to 500 500 M parameters, spectral weight decay improves low-rank compression and inference speed over standard weight decay at matched validation loss. It also outperforms Cuttlefish and Prehab in matched compression comparisons. • On image and text classification tasks, spectral weight decay improves fixed-horizon robustness to label noise over matched ℓ 2 \\ell_{2} regularization.",
+          "source": "https://arxiv.org/html/2610.11730v1",
+          "offset": 0,
+          "score": 22.02925358710369
+        },
+        {
+          "chunk_id": "chunk-0041",
+          "section": "Proposition 2 .",
+          "text": "Let h = h F h=h_{F} , τ = η ​ λ \\tau=\\eta\\lambda , and Z ( k ) = W ( k ) − η ∇ ℒ ( W ( k ) ) Z^{(k)}=W^{(k)}-\\eta\\nabla\\mathcal{L}(W^{(k)}) . For fixed λ \\lambda and bounded W ( k ) W^{(k)} and ∇ ℒ ​ ( W ( k ) ) \\nabla\\mathcal{L}(W^{(k)}) , the pre-step update W ℓ 2 pre W_{\\ell_{2}}^{\\mathrm{pre}} in ( 7 ) differs from the proximal iteration ( 14 ) by O ⁡ ( η 2 ​ λ ) O(\\eta^{2}\\lambda) as η → 0 \\eta\\to 0 . For the nuclear norm, the proximal map instead performs singular-value soft-thresholding [ Cai et al., 2010 ] . Given Z = U ​ diag ⁡ ( σ i ) ​ V ⊤ Z=U\\operatorname{diag}(\\sigma_{i})V^{\\top} , prox τ , ∥ ⋅ ∥ ∗ ( Z ) = U diag ( max ( σ i − τ , 0 ) ) V ⊤ . \\operatorname{prox}_{\\tau,\\|\\cdot\\|_{*}}(Z)=U\\operatorname{diag}\\!\\big(\\max(\\sigma_{i}-\\tau,0)\\big)V^{\\top}. (15) Equivalently, prox τ , ∥ ⋅ ∥ ∗ ( Z ) \\displaystyle\\operatorname{prox}_{\\tau,\\|\\cdot\\|_{*}}(Z) = Z − U ​ diag ⁡ ( γ i ) ​ V ⊤ , \\displaystyle=Z-U\\operatorname{diag}(\\gamma_{i})V^{\\top}, γ i \\displaystyle\\gamma_{i} = { τ , σ i ≥ τ , σ i , σ i < τ . \\displaystyle=\\begin{cases}\\tau,&\\sigma_{i}\\geq\\tau,\\\\ \\sigma_{i},&\\sigma_{i}<\\tau.\\end{cases} (16) The post-step spectral update ( 1 ) uses τ ​ U ​ V ⊤ \\tau UV^{\\top} for every active singular direction. It matches the proximal correction when σ i ≥ τ \\sigma_{i}\\geq\\tau . For 0 < σ i < τ 0<\\sigma_{i}<\\tau , the exact update instead subtracts only σ i \\sigma_{i} and sets that direction to zero. With an exact polar factor, spectral weight decay is thus an approximate nuclear-norm proximal step whose discrepancy is confined to the sub-threshold tail.",
+          "source": "https://arxiv.org/html/2610.11730v1",
+          "offset": 0,
+          "score": 0.0
+        },
+        {
+          "chunk_id": "chunk-0042",
+          "section": "Proposition 2 .",
+          "text": "Figure 7 : Exact singular-value thresholding and its Newton–Schulz U ​ V ⊤ UV^{\\top} approximation at a matched spectral coefficient on a 124 124 M-parameter LLaMA model. Left: validation loss. Right: mean effective rank of the weight matrices. Both updates reach similar effective rank, while the exact update ends with higher validation loss. To assess how this difference in the sub-threshold tail affects training, Figure 7 compares exact nuclear-norm proximal updates with post-step spectral weight decay on a 124 124 M-parameter LLaMA trained on FineWeb-Edu with λ = 1 \\lambda=1 . In this comparison, spectral weight decay approximates the polar factor using Newton–Schulz iterations, while the exact proximal update computes singular-value thresholding from a full SVD at every step. Both updates follow nearly identical effective-rank trajectories, but exact thresholding does not improve validation loss. Its loss initially follows the Newton–Schulz update, then rises late in training and ends higher. Applying the exact update once every s s steps ( s = 10 s=10 to 50 50 ) leaves these results unchanged. We therefore use the less expensive Newton–Schulz update in the main text.",
+          "source": "https://arxiv.org/html/2610.11730v1",
+          "offset": 0,
+          "score": 13.390256596357732
+        }
+      ],
+      "text": "BRAIn Lab Spectral Weight Decay: Inducing Low-Rank Structure in Neural Network Weights Dmitrii Andriianov 1 , Andrey Veprikov 1,2 , Aleksandr Beznosikov 1,3 1 Basic Research of Artificial Intelligence Laboratory (BRAIn Lab) 2 SB AI Lab 3 Innopolis University Standard weight decay treats each weight matrix as a vector and ignores its spectral structure. We introduce spectral weight decay, a post-step decoupled nuclear-norm update that applies additive rather than multiplicative spectral shrinkage. We connect the update to approximate proximal descent and show that its sensitivity to update order can exceed that of conventional ℓ 2 \\ell_{2} weight decay near rank deficiency. Across LLaMA models with 124 124 M to 500 500 M parameters, spectral weight decay lowers effective rank and improves SVD-LLM compression at matched validation loss. At 500 500 M and a 4 % 4\\% distortion budget, it reaches 1.89 × 1.89\\times compression and 1.18 × 1.18\\times GPU inference speedup, compared with 1.14 × 1.14\\times and 1.01 × 1.01\\times after standard weight decay. Under fixed-horizon training with 60 % 60\\% label noise, it also improves final mean clean-test accuracy over matched ℓ 2 \\ell_{2} regularization by up to 17.8 17.8 points on MNIST and 4.6 4.6 points across four BERT-base tasks. Code is available at https://github.com/brain-lab-research/SpectralWD .\n\nTo make the regularizer matrix-aware, we begin with the proximal interpretation of decoupled weight decay. To first order, its update is a proximal gradient step for the squared Frobenius penalty [ Parikh and Boyd, 2014 ; Zhuang et al., 2022 ] . We replace this penalty with the nuclear norm, a convex surrogate for rank whose proximal operator soft-thresholds singular values [ Recht et al., 2010 ; Cai et al., 2010 ] . This construction is the matrix analogue of replacing ridge shrinkage with coefficient selection by the lasso [ Hoerl and Kennard, 1970 ; Tibshirani, 1996 ] . Given the loss-only optimizer direction Δ \\Delta , let Z = W ( k ) − η ​ Δ = U Z ​ Σ Z ​ V Z ⊤ Z=W^{(k)}-\\eta\\Delta=U_{Z}\\Sigma_{Z}V_{Z}^{\\top} . Spectral weight decay applies the post-step correction W ( k + 1 ) = Z − η ​ λ ​ U Z ​ V Z ⊤ , W^{(k+1)}=Z-\\eta\\lambda U_{Z}V_{Z}^{\\top}, (1) where η \\eta is the learning rate and λ \\lambda the regularization coefficient. This correction acts additively in the singular basis of Z Z , whereas conventional weight decay scales the spectrum uniformly. SLORR-Nuc also approximates the nuclear-norm polar factor [ González-Martínez and Liu, 2026 ] . Its decoupled extension would use the pre-step correction Z − η ​ λ ​ U W ​ V W ⊤ Z-\\eta\\lambda U_{W}V_{W}^{\\top} for W ( k ) = U W ​ Σ W ​ V W ⊤ W^{(k)}=U_{W}\\Sigma_{W}V_{W}^{\\top} , rather than ( 1 ).\n\nThe additive shrinkage acts more strongly on smaller singular values and concentrates the spectrum. The resulting low-effective-rank weights admit efficient truncated SVD compression. Replacing a dense m × n m\\times n matrix with rank- r r factors reduces its parameter count and multiplication cost from m ​ n mn to r ⁡ ( m + n ) r(m+n) . This factorization lowers storage and inference memory and can reduce latency when the retained rank is sufficiently small. Beyond compression, we test whether the same low-rank bias limits memorization under label noise. We evaluate spectral weight decay in LLaMA [ Touvron et al., 2023 ] pretraining, post-training compression, and fixed-horizon noisy-label classification. Across models with 124 124 M to 500 500 M parameters, it lowers effective rank [ Roy and Vetterli, 2007 ] and improves compression and inference speed at matched validation loss. At 500 500 M and a 4 % 4\\% distortion budget, it reaches 1.89 × 1.89\\times compression and a 1.18 × 1.18\\times GPU inference speedup. At 60 % 60\\% label noise, mean clean-test accuracy gains over matched ℓ 2 \\ell_{2} regularization reach 17.78 17.78 points on MNIST and 4.59 4.59 points on four BERT-base tasks.\n\n• We formulate spectral weight decay as decoupled nuclear-norm regularization, derive its additive singular-value shrinkage, and connect the update to approximate proximal descent. • Across LLaMA models with 124 124 M to 500 500 M parameters, spectral weight decay improves low-rank compression and inference speed over standard weight decay at matched validation loss. It also outperforms Cuttlefish and Prehab in matched compression comparisons. • On image and text classification tasks, spectral weight decay improves fixed-horizon robustness to label noise over matched ℓ 2 \\ell_{2} regularization.\n\nLet h = h F h=h_{F} , τ = η ​ λ \\tau=\\eta\\lambda , and Z ( k ) = W ( k ) − η ∇ ℒ ( W ( k ) ) Z^{(k)}=W^{(k)}-\\eta\\nabla\\mathcal{L}(W^{(k)}) . For fixed λ \\lambda and bounded W ( k ) W^{(k)} and ∇ ℒ ​ ( W ( k ) ) \\nabla\\mathcal{L}(W^{(k)}) , the pre-step update W ℓ 2 pre W_{\\ell_{2}}^{\\mathrm{pre}} in ( 7 ) differs from the proximal iteration ( 14 ) by O ⁡ ( η 2 ​ λ ) O(\\eta^{2}\\lambda) as η → 0 \\eta\\to 0 . For the nuclear norm, the proximal map instead performs singular-value soft-thresholding [ Cai et al., 2010 ] . Given Z = U ​ diag ⁡ ( σ i ) ​ V ⊤ Z=U\\operatorname{diag}(\\sigma_{i})V^{\\top} , prox τ , ∥ ⋅ ∥ ∗ ( Z ) = U diag ( max ( σ i − τ , 0 ) ) V ⊤ . \\operatorname{prox}_{\\tau,\\|\\cdot\\|_{*}}(Z)=U\\operatorname{diag}\\!\\big(\\max(\\sigma_{i}-\\tau,0)\\big)V^{\\top}. (15) Equivalently, prox τ , ∥ ⋅ ∥ ∗ ( Z ) \\displaystyle\\operatorname{prox}_{\\tau,\\|\\cdot\\|_{*}}(Z) = Z − U ​ diag ⁡ ( γ i ) ​ V ⊤ , \\displaystyle=Z-U\\operatorname{diag}(\\gamma_{i})V^{\\top}, γ i \\displaystyle\\gamma_{i} = { τ , σ i ≥ τ , σ i , σ i < τ . \\displaystyle=\\begin{cases}\\tau,&\\sigma_{i}\\geq\\tau,\\\\ \\sigma_{i},&\\sigma_{i}<\\tau.\\end{cases} (16) The post-step spectral update ( 1 ) uses τ ​ U ​ V ⊤ \\tau UV^{\\top} for every active singular direction. It matches the proximal correction when σ i ≥ τ \\sigma_{i}\\geq\\tau . For 0 < σ i < τ 0<\\sigma_{i}<\\tau , the exact update instead subtracts only σ i \\sigma_{i} and sets that direction to zero. With an exact polar factor, spectral weight decay is thus an approximate nuclear-norm proximal step whose discrepancy is confined to the sub-threshold tail.\n\nFigure 7 : Exact singular-value thresholding and its Newton–Schulz U ​ V ⊤ UV^{\\top} approximation at a matched spectral coefficient on a 124 124 M-parameter LLaMA model. Left: validation loss. Right: mean effective rank of the weight matrices. Both updates reach similar effective rank, while the exact update ends with higher validation loss. To assess how this difference in the sub-threshold tail affects training, Figure 7 compares exact nuclear-norm proximal updates with post-step spectral weight decay on a 124 124 M-parameter LLaMA trained on FineWeb-Edu with λ = 1 \\lambda=1 . In this comparison, spectral weight decay approximates the polar factor using Newton–Schulz iterations, while the exact proximal update computes singular-value thresholding from a full SVD at every step. Both updates follow nearly identical effective-rank trajectories, but exact thresholding does not improve validation loss. Its loss initially follows the Newton–Schulz update, then rises late in training and ends higher. Applying the exact update once every s s steps ( s = 10 s=10 to 50 50 ) leaves these results unchanged. We therefore use the less expensive Newton–Schulz update in the main text.",
+      "truncated": true,
+      "available_chars": 68851,
+      "note": "Retrieved passages, not an answer. Missing matches do not establish that the paper lacks the requested experiment. Extracted HTML text; equations and table formatting may be imperfect. No PDF extraction was attempted."
+    },
+    "2608.14492:c12a02aa6c52282e8d8cc31d4a7d987181cdd849d2d3e1071ae366bd73a90284": {
+      "status": "ok",
+      "question": "Retrieve experimental passages on SFT and ReLoRA setups, model sizes, baselines, quantitative performance differences, ablations, and computational or memory costs.",
+      "source": "https://arxiv.org/html/2608.14492v1",
+      "passages": [
+        {
+          "chunk_id": "chunk-0002",
+          "section": "Abstract",
+          "text": "The Muon optimizer shows clear benefits versus alternatives when pretraining neural networks. However, it is used less frequently for parameter-efficient fine-tuning (PEFT). One potential reason is that the most common PEFT method, LoRA, does not naturally combine with Muon since it is not mathematically possible to orthogonalize the weight update given by a low-rank parameterization. In this paper, we address this issue by approximating the solution to a relaxed Muon objective in the low-rank setting via linearization and then least-squares. We provide an efficient implementation that uses matmul operations only, as opposed to more complex linear algebra decomposition routines. Our method, sMuon (small Muon), performs favourably across SFT and a ReLoRA pretraining experiment. While results are model- and eval-dependent, we find overall that using Muon for low-rank fine-tuning provides moderate performance improvements.",
+          "source": "https://arxiv.org/html/2608.14492v1",
+          "offset": 0,
+          "score": 9.188702025286965
+        },
+        {
+          "chunk_id": "chunk-0004",
+          "section": "1 Introduction",
+          "text": "However, Muon is less commonly used for fine-tuning (FT), particularly PEFT (Parameter-Efficient Fine-Tuning, which reduces compute resource requirements). There are various reasons for this, including the fact that Muon FT has been shown to perform better with Muon-pretrained base models ( Liu et al., 2025 ; Qu et al., 2026 ) , which are currently less common than AdamW-pretrained models. Perhaps the most glaring issue is that Muon does not straightforwardly combine with LoRA ( Hu et al., 2021 ) , the dominant PEFT method. In principle, Muon requires that we orthogonalize the descent step for the whole layer, but this is not generally realizable in the LoRA parameterization. Some approximation is therefore inevitable. The simplest and most common workaround is ‘per-factor Muon’, which ignores the geometry of the whole layer and orthogonalizes changes to B B and A A separately ( Qu et al., 2026 ; Janson et al., 2026 ; Kang et al., 2026 ) . Other works retain the whole layer’s geometry and introduce an approximation elsewhere, with Cesista et al. (2026) relaxing the Muon objective using the triangle inequality, and Bogachev et al. (2026) recasting the problem as Riemannian optimization on a low-rank manifold. Figure 1: Spectra of the weight change for different LoRA optimizers. We show the average singular values of the weight updates (attention weight, layer 6 of 12), during ReLoRA pretraining ( r = 32 r=32 ). We normalize by σ ¯ 1 \\overline{\\sigma}_{1} , and denote the LoRA rank by the dashed grey line. However, we feel that alternative approaches that more closely fit with Muon’s original ‘steepest descent under the spectral norm’ motivation are still underexplored.",
+          "source": "https://arxiv.org/html/2608.14492v1",
+          "offset": 0,
+          "score": 1.6113809301874622
+        },
+        {
+          "chunk_id": "chunk-0005",
+          "section": "1 Introduction",
+          "text": "In this paper, we linearize the low-rank Muon objective to find the optimal descent step within the available parameter space. This solution effectively orthogonalizes the full layer’s gradient and projects it onto the appropriate low-rank subspace. Empirically, we find this retains a more uniform spectrum than alternatives such as per-factor Muon (Fig. 1 ) and LoRA-Muon ( Cesista et al., 2026 ) . Furthermore, unlike Riemannion ( Bogachev et al., 2026 ) , our approach avoids expensive matrix decompositions. While our solution to the low-rank Muon problem is clean (Alg. 1 ), a naive implementation is computationally inefficient, as it requires orthogonalizing a large matrix. To address this, we introduce a mathematically equivalent formulation (Alg. 2 ) that is both fast and memory-efficient. By relying entirely on matrix multiplications, we are able to avoid the overhead from QR and SVD. Finally, we show that our optimizer, sMuon, achieves competitive performance across a range of commonsense and coding SFT benchmarks, as well as in ReLoRA pretraining experiments. Our contributions are as follows: • We derive a method for training LoRA adapters with Muon by taking a first-order approximation of the spectral-norm-regularized steepest descent objective. The method is available in closed form, and requires less optimizer state than AdamW. • We provide a matmul-only algorithm of the method, sMuon, that is efficient for modern hardware, with comparable speed to other Muon methods such as per-factor Muon and LoRA-Muon, while being significantly faster than Riemannion for larger LoRA rank.",
+          "source": "https://arxiv.org/html/2608.14492v1",
+          "offset": 0,
+          "score": 7.977232938579423
+        },
+        {
+          "chunk_id": "chunk-0006",
+          "section": "1 Introduction",
+          "text": "• We run SFT experiments on four base models, three AdamW-pretrained and one Muon-pretrained, over eleven benchmarks to compare low-rank Muon optimizers. While results are model-dependent, we find that our optimizer gives strong performance, performing best on the Muon-pretrained model with the top accuracy in six out of eleven tasks with Moonlight-16B-A3B. • In the ReLoRA pretraining setting, we illustrate that Muon LoRA methods are generally stronger than AdamW LoRA. Specifically we find that our method attains the lowest final validation loss, tying with Riemannion, but being ∼ 30 % \\sim\\!30\\% faster.",
+          "source": "https://arxiv.org/html/2608.14492v1",
+          "offset": 0,
+          "score": 10.858251174343826
+        },
+        {
+          "chunk_id": "chunk-0027",
+          "section": "5 Experiments",
+          "text": "Table 2: Code pass@1 (%), grouped by base model. Each column is an optimizer (best run by validation loss); per row the best optimizer is bolded and cells are shaded green (best) to white (worst). Eval AdamW Per-factor Muon LoRA-Muon Riemannion sMuon (ours) Qwen2.5-3B HumanEval 54.9 20.1 43.3 31.1 51.8 HumanEval+ 48.8 17.1 39.0 25.6 43.9 MBPP 65.9 69.3 68.0 65.9 62.7 MBPP+ 57.1 60.6 58.7 56.9 53.4 Llama-3.2-3B HumanEval 22.0 18.3 29.9 30.5 29.9 HumanEval+ 19.5 16.5 25.0 26.8 27.4 MBPP 43.1 35.7 42.1 46.3 45.2 MBPP+ 35.4 30.4 34.1 38.1 38.6 DeepSeek-V2-Lite HumanEval 36.6 29.3 22.0 23.2 26.8 HumanEval+ 28.7 23.8 18.3 19.5 23.2 MBPP 52.6 53.7 48.4 49.5 51.3 MBPP+ 45.5 45.0 43.4 43.7 44.7 Moonlight-16B-A3B HumanEval 49.4 57.9 53.7 40.2 54.9 HumanEval+ 42.7 48.8 47.0 35.4 48.8 MBPP 71.7 71.2 71.2 68.8 71.2 MBPP+ 60.1 60.1 61.4 58.7 60.3 Table 3: ReLoRA pretraining: final validation loss at each optimizer’s optimal learning rate, where the optimal LR minimises the validation loss at the final logged step. Lower is better; the best optimizer is bolded and cells are shaded green (best) to white (worst). AdamW Per-factor Muon LoRA-Muon Riemannion sMuon (ours) Final val loss 3.83 3.70 3.68 3.66 3.66 Optimal LR 0.001 0.006 0.001 0.0006 0.0006",
+          "source": "https://arxiv.org/html/2608.14492v1",
+          "offset": 0,
+          "score": 2.774143332413953
+        },
+        {
+          "chunk_id": "chunk-0028",
+          "section": "5 Experiments",
+          "text": "We compare sMuon to regular LoRA with AdamW, per-factor Muon (LoRA with Muon applied to each adapter weight B B and A A individually), LoRA-Muon ( Cesista et al., 2026 ) , and Riemannion ( Bogachev et al., 2026 ) . We evaluated on standard commonsense ( Clark et al., 2018 ; Clark et al., 2019 ; Zellers et al., 2019 ; Mihaylov et al., 2018 ; Bisk et al., 2020 ; Sakaguchi et al., 2021 ) and coding ( Chen et al., 2021 ; Austin et al., 2021 ) benchmarks after training with SFT. We experimented with four models, Llama-3.2-3B ( Grattafiori et al., 2024 ) , Qwen2.5-3B ( Qwen Team, 2025 ) , DeepSeek-V2-Lite ( DeepSeek-AI, 2024 ) , and Moonlight-16B-A3B ( Liu et al., 2025 ) . The first two models are dense models; the last two are sparse MoE models. The Moonlight model is of particular note because it was pretrained with Muon, whereas the others are all AdamW-pretrained. We also tested the methods in a pretraining setting using ReLoRA ( Lialin et al., 2023 ) which periodically merges and refreshes the adapter. We tuned the learning rate for each method and model, with example learning rate sweeps for the commonsense tasks shown in Appendix E . While our results are both model- and eval-dependent, sMuon performs strongly overall, especially when combined with the Moonlight-16B-A3B base model, a Muon-pretrained model (Tables 1 and 2 ). sMuon also achieved the joint-best validation loss in the ReLoRA pretraining setting (Table 3 ). We attribute performance gains, particularly over AdamW and per-factor Muon, to more accurately approximating the Muon objective.",
+          "source": "https://arxiv.org/html/2608.14492v1",
+          "offset": 0,
+          "score": 9.322322545039526
+        }
+      ],
+      "text": "The Muon optimizer shows clear benefits versus alternatives when pretraining neural networks. However, it is used less frequently for parameter-efficient fine-tuning (PEFT). One potential reason is that the most common PEFT method, LoRA, does not naturally combine with Muon since it is not mathematically possible to orthogonalize the weight update given by a low-rank parameterization. In this paper, we address this issue by approximating the solution to a relaxed Muon objective in the low-rank setting via linearization and then least-squares. We provide an efficient implementation that uses matmul operations only, as opposed to more complex linear algebra decomposition routines. Our method, sMuon (small Muon), performs favourably across SFT and a ReLoRA pretraining experiment. While results are model- and eval-dependent, we find overall that using Muon for low-rank fine-tuning provides moderate performance improvements.\n\nHowever, Muon is less commonly used for fine-tuning (FT), particularly PEFT (Parameter-Efficient Fine-Tuning, which reduces compute resource requirements). There are various reasons for this, including the fact that Muon FT has been shown to perform better with Muon-pretrained base models ( Liu et al., 2025 ; Qu et al., 2026 ) , which are currently less common than AdamW-pretrained models. Perhaps the most glaring issue is that Muon does not straightforwardly combine with LoRA ( Hu et al., 2021 ) , the dominant PEFT method. In principle, Muon requires that we orthogonalize the descent step for the whole layer, but this is not generally realizable in the LoRA parameterization. Some approximation is therefore inevitable. The simplest and most common workaround is ‘per-factor Muon’, which ignores the geometry of the whole layer and orthogonalizes changes to B B and A A separately ( Qu et al., 2026 ; Janson et al., 2026 ; Kang et al., 2026 ) . Other works retain the whole layer’s geometry and introduce an approximation elsewhere, with Cesista et al. (2026) relaxing the Muon objective using the triangle inequality, and Bogachev et al. (2026) recasting the problem as Riemannian optimization on a low-rank manifold. Figure 1: Spectra of the weight change for different LoRA optimizers. We show the average singular values of the weight updates (attention weight, layer 6 of 12), during ReLoRA pretraining ( r = 32 r=32 ). We normalize by σ ¯ 1 \\overline{\\sigma}_{1} , and denote the LoRA rank by the dashed grey line. However, we feel that alternative approaches that more closely fit with Muon’s original ‘steepest descent under the spectral norm’ motivation are still underexplored.\n\nIn this paper, we linearize the low-rank Muon objective to find the optimal descent step within the available parameter space. This solution effectively orthogonalizes the full layer’s gradient and projects it onto the appropriate low-rank subspace. Empirically, we find this retains a more uniform spectrum than alternatives such as per-factor Muon (Fig. 1 ) and LoRA-Muon ( Cesista et al., 2026 ) . Furthermore, unlike Riemannion ( Bogachev et al., 2026 ) , our approach avoids expensive matrix decompositions. While our solution to the low-rank Muon problem is clean (Alg. 1 ), a naive implementation is computationally inefficient, as it requires orthogonalizing a large matrix. To address this, we introduce a mathematically equivalent formulation (Alg. 2 ) that is both fast and memory-efficient. By relying entirely on matrix multiplications, we are able to avoid the overhead from QR and SVD. Finally, we show that our optimizer, sMuon, achieves competitive performance across a range of commonsense and coding SFT benchmarks, as well as in ReLoRA pretraining experiments. Our contributions are as follows: • We derive a method for training LoRA adapters with Muon by taking a first-order approximation of the spectral-norm-regularized steepest descent objective. The method is available in closed form, and requires less optimizer state than AdamW. • We provide a matmul-only algorithm of the method, sMuon, that is efficient for modern hardware, with comparable speed to other Muon methods such as per-factor Muon and LoRA-Muon, while being significantly faster than Riemannion for larger LoRA rank.\n\n• We run SFT experiments on four base models, three AdamW-pretrained and one Muon-pretrained, over eleven benchmarks to compare low-rank Muon optimizers. While results are model-dependent, we find that our optimizer gives strong performance, performing best on the Muon-pretrained model with the top accuracy in six out of eleven tasks with Moonlight-16B-A3B. • In the ReLoRA pretraining setting, we illustrate that Muon LoRA methods are generally stronger than AdamW LoRA. Specifically we find that our method attains the lowest final validation loss, tying with Riemannion, but being ∼ 30 % \\sim\\!30\\% faster.\n\nTable 2: Code pass@1 (%), grouped by base model. Each column is an optimizer (best run by validation loss); per row the best optimizer is bolded and cells are shaded green (best) to white (worst). Eval AdamW Per-factor Muon LoRA-Muon Riemannion sMuon (ours) Qwen2.5-3B HumanEval 54.9 20.1 43.3 31.1 51.8 HumanEval+ 48.8 17.1 39.0 25.6 43.9 MBPP 65.9 69.3 68.0 65.9 62.7 MBPP+ 57.1 60.6 58.7 56.9 53.4 Llama-3.2-3B HumanEval 22.0 18.3 29.9 30.5 29.9 HumanEval+ 19.5 16.5 25.0 26.8 27.4 MBPP 43.1 35.7 42.1 46.3 45.2 MBPP+ 35.4 30.4 34.1 38.1 38.6 DeepSeek-V2-Lite HumanEval 36.6 29.3 22.0 23.2 26.8 HumanEval+ 28.7 23.8 18.3 19.5 23.2 MBPP 52.6 53.7 48.4 49.5 51.3 MBPP+ 45.5 45.0 43.4 43.7 44.7 Moonlight-16B-A3B HumanEval 49.4 57.9 53.7 40.2 54.9 HumanEval+ 42.7 48.8 47.0 35.4 48.8 MBPP 71.7 71.2 71.2 68.8 71.2 MBPP+ 60.1 60.1 61.4 58.7 60.3 Table 3: ReLoRA pretraining: final validation loss at each optimizer’s optimal learning rate, where the optimal LR minimises the validation loss at the final logged step. Lower is better; the best optimizer is bolded and cells are shaded green (best) to white (worst). AdamW Per-factor Muon LoRA-Muon Riemannion sMuon (ours) Final val loss 3.83 3.70 3.68 3.66 3.66 Optimal LR 0.001 0.006 0.001 0.0006 0.0006\n\nWe compare sMuon to regular LoRA with AdamW, per-factor Muon (LoRA with Muon applied to each adapter weight B B and A A individually), LoRA-Muon ( Cesista et al., 2026 ) , and Riemannion ( Bogachev et al., 2026 ) . We evaluated on standard commonsense ( Clark et al., 2018 ; Clark et al., 2019 ; Zellers et al., 2019 ; Mihaylov et al., 2018 ; Bisk et al., 2020 ; Sakaguchi et al., 2021 ) and coding ( Chen et al., 2021 ; Austin et al., 2021 ) benchmarks after training with SFT. We experimented with four models, Llama-3.2-3B ( Grattafiori et al., 2024 ) , Qwen2.5-3B ( Qwen Team, 2025 ) , DeepSeek-V2-Lite ( DeepSeek-AI, 2024 ) , and Moonlight-16B-A3B ( Liu et al., 2025 ) . The first two models are dense models; the last two are sparse MoE models. The Moonlight model is of particular note because it was pretrained with Muon, whereas the others are all AdamW-pretrained. We also tested the methods in a pretraining setting using ReLoRA ( Lialin et al., 2023 ) which periodically merges and refreshes the adapter. We tuned the learning rate for each method and model, with example learning rate sweeps for the commonsense tasks shown in Appendix E . While our results are both model- and eval-dependent, sMuon performs strongly overall, especially when combined with the Moonlight-16B-A3B base model, a Muon-pretrained model (Tables 1 and 2 ). sMuon also achieved the joint-best validation loss in the ReLoRA pretraining setting (Table 3 ). We attribute performance gains, particularly over AdamW and per-factor Muon, to more accurately approximating the Muon objective.",
+      "truncated": true,
+      "available_chars": 70899,
+      "note": "Retrieved passages, not an answer. Missing matches do not establish that the paper lacks the requested experiment. Extracted HTML text; equations and table formatting may be imperfect. No PDF extraction was attempted."
+    }
+  },
+  "tool_latency_seconds": 0.022496666992083192,
+  "last_observation": {
+    "action": "inspect_paper",
+    "result": {
+      "status": "ok",
+      "question": "Retrieve experimental passages on SFT and ReLoRA setups, model sizes, baselines, quantitative performance differences, ablations, and computational or memory costs.",
+      "source": "https://arxiv.org/html/2608.14492v1",
+      "passages": [
+        {
+          "chunk_id": "chunk-0002",
+          "section": "Abstract",
+          "text": "The Muon optimizer shows clear benefits versus alternatives when pretraining neural networks. However, it is used less frequently for parameter-efficient fine-tuning (PEFT). One potential reason is that the most common PEFT method, LoRA, does not naturally combine with Muon since it is not mathematically possible to orthogonalize the weight update given by a low-rank parameterization. In this paper, we address this issue by approximating the solution to a relaxed Muon objective in the low-rank setting via linearization and then least-squares. We provide an efficient implementation that uses matmul operations only, as opposed to more complex linear algebra decomposition routines. Our method, sMuon (small Muon), performs favourably across SFT and a ReLoRA pretraining experiment. While results are model- and eval-dependent, we find overall that using Muon for low-rank fine-tuning provides moderate performance improvements.",
+          "source": "https://arxiv.org/html/2608.14492v1",
+          "offset": 0,
+          "score": 9.188702025286965
+        },
+        {
+          "chunk_id": "chunk-0004",
+          "section": "1 Introduction",
+          "text": "However, Muon is less commonly used for fine-tuning (FT), particularly PEFT (Parameter-Efficient Fine-Tuning, which reduces compute resource requirements). There are various reasons for this, including the fact that Muon FT has been shown to perform better with Muon-pretrained base models ( Liu et al., 2025 ; Qu et al., 2026 ) , which are currently less common than AdamW-pretrained models. Perhaps the most glaring issue is that Muon does not straightforwardly combine with LoRA ( Hu et al., 2021 ) , the dominant PEFT method. In principle, Muon requires that we orthogonalize the descent step for the whole layer, but this is not generally realizable in the LoRA parameterization. Some approximation is therefore inevitable. The simplest and most common workaround is ‘per-factor Muon’, which ignores the geometry of the whole layer and orthogonalizes changes to B B and A A separately ( Qu et al., 2026 ; Janson et al., 2026 ; Kang et al., 2026 ) . Other works retain the whole layer’s geometry and introduce an approximation elsewhere, with Cesista et al. (2026) relaxing the Muon objective using the triangle inequality, and Bogachev et al. (2026) recasting the problem as Riemannian optimization on a low-rank manifold. Figure 1: Spectra of the weight change for different LoRA optimizers. We show the average singular values of the weight updates (attention weight, layer 6 of 12), during ReLoRA pretraining ( r = 32 r=32 ). We normalize by σ ¯ 1 \\overline{\\sigma}_{1} , and denote the LoRA rank by the dashed grey line. However, we feel that alternative approaches that more closely fit with Muon’s original ‘steepest descent under the spectral norm’ motivation are still underexplored.",
+          "source": "https://arxiv.org/html/2608.14492v1",
+          "offset": 0,
+          "score": 1.6113809301874622
+        },
+        {
+          "chunk_id": "chunk-0005",
+          "section": "1 Introduction",
+          "text": "In this paper, we linearize the low-rank Muon objective to find the optimal descent step within the available parameter space. This solution effectively orthogonalizes the full layer’s gradient and projects it onto the appropriate low-rank subspace. Empirically, we find this retains a more uniform spectrum than alternatives such as per-factor Muon (Fig. 1 ) and LoRA-Muon ( Cesista et al., 2026 ) . Furthermore, unlike Riemannion ( Bogachev et al., 2026 ) , our approach avoids expensive matrix decompositions. While our solution to the low-rank Muon problem is clean (Alg. 1 ), a naive implementation is computationally inefficient, as it requires orthogonalizing a large matrix. To address this, we introduce a mathematically equivalent formulation (Alg. 2 ) that is both fast and memory-efficient. By relying entirely on matrix multiplications, we are able to avoid the overhead from QR and SVD. Finally, we show that our optimizer, sMuon, achieves competitive performance across a range of commonsense and coding SFT benchmarks, as well as in ReLoRA pretraining experiments. Our contributions are as follows: • We derive a method for training LoRA adapters with Muon by taking a first-order approximation of the spectral-norm-regularized steepest descent objective. The method is available in closed form, and requires less optimizer state than AdamW. • We provide a matmul-only algorithm of the method, sMuon, that is efficient for modern hardware, with comparable speed to other Muon methods such as per-factor Muon and LoRA-Muon, while being significantly faster than Riemannion for larger LoRA rank.",
+          "source": "https://arxiv.org/html/2608.14492v1",
+          "offset": 0,
+          "score": 7.977232938579423
+        },
+        {
+          "chunk_id": "chunk-0006",
+          "section": "1 Introduction",
+          "text": "• We run SFT experiments on four base models, three AdamW-pretrained and one Muon-pretrained, over eleven benchmarks to compare low-rank Muon optimizers. While results are model-dependent, we find that our optimizer gives strong performance, performing best on the Muon-pretrained model with the top accuracy in six out of eleven tasks with Moonlight-16B-A3B. • In the ReLoRA pretraining setting, we illustrate that Muon LoRA methods are generally stronger than AdamW LoRA. Specifically we find that our method attains the lowest final validation loss, tying with Riemannion, but being ∼ 30 % \\sim\\!30\\% faster.",
+          "source": "https://arxiv.org/html/2608.14492v1",
+          "offset": 0,
+          "score": 10.858251174343826
+        },
+        {
+          "chunk_id": "chunk-0027",
+          "section": "5 Experiments",
+          "text": "Table 2: Code pass@1 (%), grouped by base model. Each column is an optimizer (best run by validation loss); per row the best optimizer is bolded and cells are shaded green (best) to white (worst). Eval AdamW Per-factor Muon LoRA-Muon Riemannion sMuon (ours) Qwen2.5-3B HumanEval 54.9 20.1 43.3 31.1 51.8 HumanEval+ 48.8 17.1 39.0 25.6 43.9 MBPP 65.9 69.3 68.0 65.9 62.7 MBPP+ 57.1 60.6 58.7 56.9 53.4 Llama-3.2-3B HumanEval 22.0 18.3 29.9 30.5 29.9 HumanEval+ 19.5 16.5 25.0 26.8 27.4 MBPP 43.1 35.7 42.1 46.3 45.2 MBPP+ 35.4 30.4 34.1 38.1 38.6 DeepSeek-V2-Lite HumanEval 36.6 29.3 22.0 23.2 26.8 HumanEval+ 28.7 23.8 18.3 19.5 23.2 MBPP 52.6 53.7 48.4 49.5 51.3 MBPP+ 45.5 45.0 43.4 43.7 44.7 Moonlight-16B-A3B HumanEval 49.4 57.9 53.7 40.2 54.9 HumanEval+ 42.7 48.8 47.0 35.4 48.8 MBPP 71.7 71.2 71.2 68.8 71.2 MBPP+ 60.1 60.1 61.4 58.7 60.3 Table 3: ReLoRA pretraining: final validation loss at each optimizer’s optimal learning rate, where the optimal LR minimises the validation loss at the final logged step. Lower is better; the best optimizer is bolded and cells are shaded green (best) to white (worst). AdamW Per-factor Muon LoRA-Muon Riemannion sMuon (ours) Final val loss 3.83 3.70 3.68 3.66 3.66 Optimal LR 0.001 0.006 0.001 0.0006 0.0006",
+          "source": "https://arxiv.org/html/2608.14492v1",
+          "offset": 0,
+          "score": 2.774143332413953
+        },
+        {
+          "chunk_id": "chunk-0028",
+          "section": "5 Experiments",
+          "text": "We compare sMuon to regular LoRA with AdamW, per-factor Muon (LoRA with Muon applied to each adapter weight B B and A A individually), LoRA-Muon ( Cesista et al., 2026 ) , and Riemannion ( Bogachev et al., 2026 ) . We evaluated on standard commonsense ( Clark et al., 2018 ; Clark et al., 2019 ; Zellers et al., 2019 ; Mihaylov et al., 2018 ; Bisk et al., 2020 ; Sakaguchi et al., 2021 ) and coding ( Chen et al., 2021 ; Austin et al., 2021 ) benchmarks after training with SFT. We experimented with four models, Llama-3.2-3B ( Grattafiori et al., 2024 ) , Qwen2.5-3B ( Qwen Team, 2025 ) , DeepSeek-V2-Lite ( DeepSeek-AI, 2024 ) , and Moonlight-16B-A3B ( Liu et al., 2025 ) . The first two models are dense models; the last two are sparse MoE models. The Moonlight model is of particular note because it was pretrained with Muon, whereas the others are all AdamW-pretrained. We also tested the methods in a pretraining setting using ReLoRA ( Lialin et al., 2023 ) which periodically merges and refreshes the adapter. We tuned the learning rate for each method and model, with example learning rate sweeps for the commonsense tasks shown in Appendix E . While our results are both model- and eval-dependent, sMuon performs strongly overall, especially when combined with the Moonlight-16B-A3B base model, a Muon-pretrained model (Tables 1 and 2 ). sMuon also achieved the joint-best validation loss in the ReLoRA pretraining setting (Table 3 ). We attribute performance gains, particularly over AdamW and per-factor Muon, to more accurately approximating the Muon objective.",
+          "source": "https://arxiv.org/html/2608.14492v1",
+          "offset": 0,
+          "score": 9.322322545039526
+        }
+      ],
+      "text": "The Muon optimizer shows clear benefits versus alternatives when pretraining neural networks. However, it is used less frequently for parameter-efficient fine-tuning (PEFT). One potential reason is that the most common PEFT method, LoRA, does not naturally combine with Muon since it is not mathematically possible to orthogonalize the weight update given by a low-rank parameterization. In this paper, we address this issue by approximating the solution to a relaxed Muon objective in the low-rank setting via linearization and then least-squares. We provide an efficient implementation that uses matmul operations only, as opposed to more complex linear algebra decomposition routines. Our method, sMuon (small Muon), performs favourably across SFT and a ReLoRA pretraining experiment. While results are model- and eval-dependent, we find overall that using Muon for low-rank fine-tuning provides moderate performance improvements.\n\nHowever, Muon is less commonly used for fine-tuning (FT), particularly PEFT (Parameter-Efficient Fine-Tuning, which reduces compute resource requirements). There are various reasons for this, including the fact that Muon FT has been shown to perform better with Muon-pretrained base models ( Liu et al., 2025 ; Qu et al., 2026 ) , which are currently less common than AdamW-pretrained models. Perhaps the most glaring issue is that Muon does not straightforwardly combine with LoRA ( Hu et al., 2021 ) , the dominant PEFT method. In principle, Muon requires that we orthogonalize the descent step for the whole layer, but this is not generally realizable in the LoRA parameterization. Some approximation is therefore inevitable. The simplest and most common workaround is ‘per-factor Muon’, which ignores the geometry of the whole layer and orthogonalizes changes to B B and A A separately ( Qu et al., 2026 ; Janson et al., 2026 ; Kang et al., 2026 ) . Other works retain the whole layer’s geometry and introduce an approximation elsewhere, with Cesista et al. (2026) relaxing the Muon objective using the triangle inequality, and Bogachev et al. (2026) recasting the problem as Riemannian optimization on a low-rank manifold. Figure 1: Spectra of the weight change for different LoRA optimizers. We show the average singular values of the weight updates (attention weight, layer 6 of 12), during ReLoRA pretraining ( r = 32 r=32 ). We normalize by σ ¯ 1 \\overline{\\sigma}_{1} , and denote the LoRA rank by the dashed grey line. However, we feel that alternative approaches that more closely fit with Muon’s original ‘steepest descent under the spectral norm’ motivation are still underexplored.\n\nIn this paper, we linearize the low-rank Muon objective to find the optimal descent step within the available parameter space. This solution effectively orthogonalizes the full layer’s gradient and projects it onto the appropriate low-rank subspace. Empirically, we find this retains a more uniform spectrum than alternatives such as per-factor Muon (Fig. 1 ) and LoRA-Muon ( Cesista et al., 2026 ) . Furthermore, unlike Riemannion ( Bogachev et al., 2026 ) , our approach avoids expensive matrix decompositions. While our solution to the low-rank Muon problem is clean (Alg. 1 ), a naive implementation is computationally inefficient, as it requires orthogonalizing a large matrix. To address this, we introduce a mathematically equivalent formulation (Alg. 2 ) that is both fast and memory-efficient. By relying entirely on matrix multiplications, we are able to avoid the overhead from QR and SVD. Finally, we show that our optimizer, sMuon, achieves competitive performance across a range of commonsense and coding SFT benchmarks, as well as in ReLoRA pretraining experiments. Our contributions are as follows: • We derive a method for training LoRA adapters with Muon by taking a first-order approximation of the spectral-norm-regularized steepest descent objective. The method is available in closed form, and requires less optimizer state than AdamW. • We provide a matmul-only algorithm of the method, sMuon, that is efficient for modern hardware, with comparable speed to other Muon methods such as per-factor Muon and LoRA-Muon, while being significantly faster than Riemannion for larger LoRA rank.\n\n• We run SFT experiments on four base models, three AdamW-pretrained and one Muon-pretrained, over eleven benchmarks to compare low-rank Muon optimizers. While results are model-dependent, we find that our optimizer gives strong performance, performing best on the Muon-pretrained model with the top accuracy in six out of eleven tasks with Moonlight-16B-A3B. • In the ReLoRA pretraining setting, we illustrate that Muon LoRA methods are generally stronger than AdamW LoRA. Specifically we find that our method attains the lowest final validation loss, tying with Riemannion, but being ∼ 30 % \\sim\\!30\\% faster.\n\nTable 2: Code pass@1 (%), grouped by base model. Each column is an optimizer (best run by validation loss); per row the best optimizer is bolded and cells are shaded green (best) to white (worst). Eval AdamW Per-factor Muon LoRA-Muon Riemannion sMuon (ours) Qwen2.5-3B HumanEval 54.9 20.1 43.3 31.1 51.8 HumanEval+ 48.8 17.1 39.0 25.6 43.9 MBPP 65.9 69.3 68.0 65.9 62.7 MBPP+ 57.1 60.6 58.7 56.9 53.4 Llama-3.2-3B HumanEval 22.0 18.3 29.9 30.5 29.9 HumanEval+ 19.5 16.5 25.0 26.8 27.4 MBPP 43.1 35.7 42.1 46.3 45.2 MBPP+ 35.4 30.4 34.1 38.1 38.6 DeepSeek-V2-Lite HumanEval 36.6 29.3 22.0 23.2 26.8 HumanEval+ 28.7 23.8 18.3 19.5 23.2 MBPP 52.6 53.7 48.4 49.5 51.3 MBPP+ 45.5 45.0 43.4 43.7 44.7 Moonlight-16B-A3B HumanEval 49.4 57.9 53.7 40.2 54.9 HumanEval+ 42.7 48.8 47.0 35.4 48.8 MBPP 71.7 71.2 71.2 68.8 71.2 MBPP+ 60.1 60.1 61.4 58.7 60.3 Table 3: ReLoRA pretraining: final validation loss at each optimizer’s optimal learning rate, where the optimal LR minimises the validation loss at the final logged step. Lower is better; the best optimizer is bolded and cells are shaded green (best) to white (worst). AdamW Per-factor Muon LoRA-Muon Riemannion sMuon (ours) Final val loss 3.83 3.70 3.68 3.66 3.66 Optimal LR 0.001 0.006 0.001 0.0006 0.0006\n\nWe compare sMuon to regular LoRA with AdamW, per-factor Muon (LoRA with Muon applied to each adapter weight B B and A A individually), LoRA-Muon ( Cesista et al., 2026 ) , and Riemannion ( Bogachev et al., 2026 ) . We evaluated on standard commonsense ( Clark et al., 2018 ; Clark et al., 2019 ; Zellers et al., 2019 ; Mihaylov et al., 2018 ; Bisk et al., 2020 ; Sakaguchi et al., 2021 ) and coding ( Chen et al., 2021 ; Austin et al., 2021 ) benchmarks after training with SFT. We experimented with four models, Llama-3.2-3B ( Grattafiori et al., 2024 ) , Qwen2.5-3B ( Qwen Team, 2025 ) , DeepSeek-V2-Lite ( DeepSeek-AI, 2024 ) , and Moonlight-16B-A3B ( Liu et al., 2025 ) . The first two models are dense models; the last two are sparse MoE models. The Moonlight model is of particular note because it was pretrained with Muon, whereas the others are all AdamW-pretrained. We also tested the methods in a pretraining setting using ReLoRA ( Lialin et al., 2023 ) which periodically merges and refreshes the adapter. We tuned the learning rate for each method and model, with example learning rate sweeps for the commonsense tasks shown in Appendix E . While our results are both model- and eval-dependent, sMuon performs strongly overall, especially when combined with the Moonlight-16B-A3B base model, a Muon-pretrained model (Tables 1 and 2 ). sMuon also achieved the joint-best validation loss in the ReLoRA pretraining setting (Table 3 ). We attribute performance gains, particularly over AdamW and per-factor Muon, to more accurately approximating the Muon objective.",
+      "truncated": true,
+      "available_chars": 70899,
+      "note": "Retrieved passages, not an answer. Missing matches do not establish that the paper lacks the requested experiment. Extracted HTML text; equations and table formatting may be imperfect. No PDF extraction was attempted."
+    }
+  },
+  "last_error": null
+}

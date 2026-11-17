@@ -1,0 +1,23 @@
+Agent 3: debate
+
+BM25 top 200 -> E5 reranking -> top 30 -> shared LLM batch screening.
+Precision and coverage reviewers receive the same saved input independently.
+Python compares include/exclude/uncertain recommendations.
+Editor chooses retrieval/inspection, one targeted reconsideration per reviewer, or finish.
+Exactly digest_size papers are required. Agent 2 selection check is not run.
+All roles use the configured model and shared usage/step budgets.
+Completed initial reviews and reconsideration status persist across resume.
+An interrupted reconsideration is recorded as unavailable and cannot be retried.
+No context compaction or exact quote matching was added.
+
+Tools: inspect_paper, search_candidates, expand_shortlist, find_code,
+get_candidate_overview, search_similar, analyze_twitter (unless --no-X),
+and ask_reviewer (editor-only, one opportunity per role).
+
+Validation example (run from repository root in the project conda environment):
+python -m eval.run_corpus --variant debate --model gpt-6-sol --digest-size 10 --repetitions 3 --fixtures-from eval/runs/m2-exact10-20261117/fixtures --output eval/runs/agent3-debate-gpt6-sol
+
+This implementation has deterministic harness tests, not live performance results.
+Frozen Agent 1 and Agent 2 sources are in their source directories with SHA256 manifests.
+For an exact frozen run, overlay that source tree onto a separate copy of the repository,
+not the working checkout; keep the matching evaluation sample, profile and fixtures.

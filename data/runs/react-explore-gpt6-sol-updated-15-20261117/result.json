@@ -1,0 +1,404 @@
+{
+  "run_id": "bd89baefdc5f4389b1c7969f1e0d2b69",
+  "status": "completed",
+  "user_id": "dmitrii",
+  "profile_fingerprint": "a2480e0075ad9cdf236d40e30f74f9bfd87a08dd948530b42e6b57e4a123bfc0",
+  "pipeline_version": "react-v2",
+  "categories": [
+    "cs.LG",
+    "cs.CL",
+    "stat.ML",
+    "cs.AI",
+    "cs.IR"
+  ],
+  "date_from": "2026-11-03",
+  "date_to": "2026-11-16",
+  "papers": [
+    {
+      "paper_id": "2611.06598",
+      "summary": "Defines a behavior-based compression rate for LoRA adapters and finds that weight reconstruction error can misrepresent retained fine-tuning gains.",
+      "relevance": "Directly addresses low-rank compressibility, singular directions, and corrupted training data.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "near one bit per value, the adaptive code achieves lower relative weight RMSE than uniform quantization (0.54 versus 0.56), yet retains only 3% of the held-out gain, compared with 86% for the uniform code."
+        }
+      ],
+      "title": "The Behavioral Rate of Fine-Tuning: Compression as a Measure of Useful Information",
+      "url": "https://arxiv.org/abs/2611.06598v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.08414",
+      "summary": "Finds contrasting LoRA spectral and subspace dynamics in supervised fine-tuning and reinforcement learning, with controlled comparisons implicating group-mean baseline subtraction.",
+      "relevance": "Connects LoRA optimization to effective rank and singular-subspace motion.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "Controlled comparisons identify group-mean baseline subtraction as a key source of these differences."
+        }
+      ],
+      "title": "Spectral and Subspace Dynamics of LoRA in Supervised Fine-Tuning and Reinforcement Learning",
+      "url": "https://arxiv.org/abs/2611.08414v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.08924",
+      "summary": "ResQAdam preserves a QAT momentum residual while compressing optimizer state. Its reported peak-memory savings come with a small throughput decrease versus AdamW.",
+      "relevance": "Directly informs memory, quality, and speed tradeoffs for low-rank optimizer-state compression.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "This efficiency directly translates to a 15.3% to 19.5% reduction in total peak memory."
+        },
+        {
+          "source": "inspection",
+          "quote": "The training throughput decreases by less than 2% compared to standard AdamW in all evaluated cases."
+        }
+      ],
+      "title": "ResQAdam: Residual-Preserving Adaptive Optimization for Memory-Efficient Quantization Aware Training",
+      "url": "https://arxiv.org/abs/2611.08924v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.17191",
+      "summary": "Adds an SVD-free Rényi-2 effective-rank penalty to LoRA training and reports lower mean Wiki perplexity at tested ranks of at least 16.",
+      "relevance": "Tests whether spectral regularization can change adapter rank utilization without substantially worsening the training objective.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "a penalty weight of λ = 0.01 \\\\lambda=0.01 lowers mean Wiki perplexity at every tested rank of at least 16 16 relative to unpenalized LoRA."
+        }
+      ],
+      "title": "Maximizing Capacity Utilization of LoRA Adapters for Mitigating the Learning-Forgetting Trade-off",
+      "url": "https://arxiv.org/abs/2611.17191v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.07349",
+      "summary": "GEAR uses the normal spectrum to guide LoRA rank expansion and reports an improved LLaMA3-8B commonsense score with fewer trainable parameters.",
+      "relevance": "Addresses the geometry and practical behavior of dynamically ranked LoRA updates.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "On LLaMA3-8B, it raises the average commonsense score from 86.61 to 88.45 while reducing trainable parameters from 42.0M to 14.4M."
+        }
+      ],
+      "title": "From What Is Used to What Is Missing: Rethinking Dynamic Rank in LoRA",
+      "url": "https://arxiv.org/abs/2611.07349v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.11752",
+      "summary": "Shows that low stable rank need not mean that an LLM weight update is well represented by a small number of singular components.",
+      "relevance": "Clarifies which spectral rank measures are useful when judging low-rank compressibility.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "Three attention updates from proximal policy optimization (PPO) have stable ranks 9.6 9.6 – 18.3 18.3 but require 532 532 – 1,222 1{,}222 components for 80 % 80\\\\% of their energy."
+        }
+      ],
+      "title": "Spectral Rank and Step-Direction Dynamics in Language-Model Post-Training",
+      "url": "https://arxiv.org/abs/2611.11752v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.17876",
+      "summary": "Finds delayed validation-loss benefits from temporary weight decay in Muon pretraining across four tested model scales.",
+      "relevance": "Informs optimization-schedule evaluation and scale-dependent quality tradeoffs.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "Matched intervention and reference runs share initialization, data order, and learning-rate schedule."
+        },
+        {
+          "source": "inspection",
+          "quote": "A 10% decay window starting at initialization beats both no decay and the best sampled constant at every scale (Table 1 )."
+        }
+      ],
+      "title": "Delayed Effects of Temporary Weight Decay in Muon Pretraining",
+      "url": "https://arxiv.org/abs/2611.17876v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.05022",
+      "summary": "In a quadratic two-layer model, finite Newton–Schulz depth changes early rank selection and can bypass a gradient-flow stationary point.",
+      "relevance": "Provides a theoretical connection between Muon’s approximation depth and rank dynamics, not yet an LLM-training result.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "In a quadratic two-layer network, we have characterized the evolution from small-initialization escape near the origin to the first nonzero stationary stage."
+        }
+      ],
+      "title": "Finite Spectral Depth Controls Gaussian Entrance Rank and Avoidance of the First Gradient-Flow Saddle",
+      "url": "https://arxiv.org/abs/2611.05022v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.10212",
+      "summary": "Studies distributed Muon-style spectral updates, finite Newton–Schulz orthogonalization, and low-rank momentum communication. Its measured compression tradeoff is on a small vision benchmark.",
+      "relevance": "Addresses convergence and communication costs of matrix-valued optimization.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "rank- 32 32 compression reduces the simulated communication payload by 40.5 % 40.5\\\\% , from 385.39 to 229.34 GB."
+        },
+        {
+          "source": "inspection",
+          "quote": "𝖣𝗂𝗌𝖬𝖴𝖲𝖤 ​ - ​ 𝖫𝖱 \\\\mathsf{DisMUSE\\\\text{-}LR} and 𝖣𝗂𝗌𝖬𝖴𝖲𝖤 \\\\mathsf{DisMUSE} -Hybrid achieve test accuracies of 85.08 % 85.08\\\\% and 85.03 % 85.03\\\\% , respectively"
+        }
+      ],
+      "title": "DisMUSE: An Efficient Distributed Singular-Spectrum-Based Optimization Approach with Theoretical Convergence Guarantee",
+      "url": "https://arxiv.org/abs/2611.10212v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.17784",
+      "summary": "SCALAR trains scalar coefficients over fixed bases and reports lower peak memory and higher throughput than LoRA for Qwen2.5-7B fine-tuning.",
+      "relevance": "Offers a measured parameter-efficient fine-tuning alternative for memory and throughput comparisons.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "SCALAR achieves the lowest peak memory among the evaluated PEFT methods, using 20% less memory than LoRA, 15% less than NOLA, and 33% less than RandLoRA."
+        },
+        {
+          "source": "inspection",
+          "quote": "Training throughput increases by 6% over LoRA"
+        }
+      ],
+      "title": "Direction or Magnitude? Learning Scalars over Task-Calibrated Directions",
+      "url": "https://arxiv.org/abs/2611.17784v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.16488",
+      "summary": "Uses active learning to approximate LLM document reranking at a controlled evaluation budget; its strongest reported result is for verbose queries.",
+      "relevance": "Potentially useful for reducing LLM calls in a paper-retrieval pipeline.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "For verbose queries, LAAM achieves 87% of average P@10 achieved by DeepSeek’s reranking (0.459 vs. 0.526), while requiring only 3.3% of the per-query energy consumption."
+        }
+      ],
+      "title": "Active Learning of Approximate LLM Ranking for Energy-Efficient Retrieval of Long Queries",
+      "url": "https://arxiv.org/abs/2611.16488v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.05908",
+      "summary": "Studies query-specific reranking depth and reports that an LLM-assessed first-stage quality measure can reduce average depth while preserving effectiveness.",
+      "relevance": "Could inform how deeply a digest agent reranks candidate papers.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "IR-DCG@10 , can reduce the average re-ranking depth by up to a factor of 3 while preserving overall effectiveness, depending on the specific first- and second-stage rankers used."
+        }
+      ],
+      "title": "Optimal Re-Ranking Depth",
+      "url": "https://arxiv.org/abs/2611.05908v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.15600",
+      "summary": "Proposes selecting agent memories by estimated decision utility rather than semantic relevance alone.",
+      "relevance": "A possible design idea for context selection in the research-digest agent, though evaluated in other agent settings.",
+      "evidence": [
+        {
+          "source": "abstract",
+          "quote": "semantic relevance is used only for high-recall candidate generation, while predicted utility arbitrates which memories are retained under a fixed token budget"
+        }
+      ],
+      "title": "MemCredit: From Relevance to Utility for Decision-Time Memory in Long-Horizon Web Agents",
+      "url": "https://arxiv.org/abs/2611.15600v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.14149",
+      "summary": "Surveys information-seeking decisions in LLM systems, including retrieval routing, query refinement, tool exploration, and evidence use.",
+      "relevance": "Maps directly onto decisions required by a tool-using research-digest agent.",
+      "evidence": [
+        {
+          "source": "abstract",
+          "quote": "Existing studies report gains in retrieval routing, query refinement, multi-tool exploration, evidence-grounded reasoning, and resource-aware search"
+        }
+      ],
+      "title": "From Search to Decision: How Post-Training Shapes Information-Seeking Capabilities in Large Language Models",
+      "url": "https://arxiv.org/abs/2611.14149v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.04465",
+      "summary": "Analyzes Muon training dynamics for next-token prediction in Transformers and reports convergence and spectral-margin results.",
+      "relevance": "Connects matrix optimization theory to language-model training.",
+      "evidence": [
+        {
+          "source": "abstract",
+          "quote": "For the main phase, we establish nonasymptotic convergence rates for the training loss and the normalized margin gap under softmax attention."
+        }
+      ],
+      "title": "Theoretical Analysis of Muon on Transformers for Next-Token Prediction",
+      "url": "https://arxiv.org/abs/2611.04465v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    }
+  ],
+  "x_feature": null,
+  "limitations": [
+    "These are paper-reported findings from the supplied abstracts and retrieved passages, not independent replications.",
+    "GEAR’s measured resource comparison in the supplied passages is for ViT-B/16, not LLaMA3-8B; the effective-rank penalty’s measured runtime and memory overhead were not established here.",
+    "The retrieval and memory papers were not evaluated on research-paper digests in the supplied evidence. LAAM’s full-DeepSeek energy comparison uses an estimate rather than identical hardware measurement.",
+    "Code availability and reproducibility were not verified. X analysis was disabled.",
+    "inspect:2611.08924: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2611.08414: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2611.06598: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2611.11752: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2611.17191: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2611.07349: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2611.17876: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2611.10212: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2611.16488: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2611.17784: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2611.05908: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2611.05022: only question-relevant HTML passages were inspected, not the whole paper."
+  ],
+  "stats": {
+    "fetched_count": 4655,
+    "candidate_count": 4655,
+    "llm_calls": 25,
+    "steps": 18,
+    "inspections": 13,
+    "expansions": 4,
+    "screened": 51,
+    "usage": {
+      "recorded_calls": 25,
+      "llm_latency_seconds": 344.6146424608887,
+      "input_tokens": 1133620,
+      "output_tokens": 11586,
+      "estimated_api_cost_usd": null,
+      "calls_without_usage": 0,
+      "cost_note": "API-equivalent estimate using standard GPT-5.6-Luna rates checked 2026-11-17: $0.20/M input, $1.20/M output; above 272K input, $0.40/M and $1.80/M. Assumes all input is uncached; excludes cache writes and external tools. Not actual Codex subscription billing. Unknown usage/model yields null cost.",
+      "price_source": "https://developers.openai.com/api/docs/models/gpt-5.6-luna"
+    },
+    "tool_calls": 17,
+    "tool_latency_seconds": 59.56034433297464
+  }
+}

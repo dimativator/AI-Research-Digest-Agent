@@ -1,0 +1,1928 @@
+{
+  "status": "ok",
+  "source": "https://arxiv.org/html/2608.31036v1",
+  "extractor_version": "article-v1",
+  "chunks": [
+    {
+      "chunk_id": "chunk-0001",
+      "section": "Normalized Low-Rank Adaptation",
+      "text": "Jiale Kang Affiliation: Yuanshi Intelligence Affiliation: The Chinese University of Hong Kong Ziyin Yue Zheng Zhan Affiliation: Microsoft Research Yangyi Huang Affiliation: The Chinese University of Hong Kong Weiyang Liu Affiliation: The Chinese University of Hong Kong Affiliation: Shenzhen Loop Area Institute",
+      "source": "https://arxiv.org/html/2608.31036v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0002",
+      "section": "Abstract",
+      "text": "While low-rank adaptation (LoRA) is widely used for parameter-efficient model adaptation, how to regularize its training dynamics for stable and effective optimization remains underexplored. Because LoRA initializes the up-projection to zero, its early optimization dynamics are largely governed by the down-projection. Building on this observation, we introduce Normalized Low-Rank Adaptation (NoRA), a simple yet effective method that normalizes the down-projection matrices during training. We further show that the same normalization can be applied only at initialization, improving standard LoRA without requiring repeated normalization throughout training. Across pretraining, supervised finetuning, and reinforcement learning, NoRA consistently accelerates convergence, improves performance and training stability, and mitigates catastrophic forgetting. These benefits require neither additional trainable parameters nor inference-time computation, making NoRA a simple and broadly applicable enhancement to LoRA. spherelab.ai/NoRA",
+      "source": "https://arxiv.org/html/2608.31036v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0003",
+      "section": "1 Introduction",
+      "text": "As large language models (LLMs) continue to scale, their training costs grow rapidly, increasing the need for parameter-efficient learning. Among parameter-efficient finetuning (PEFT) approaches, Low-rank adaptation (LoRA) ( Hu et al., 2021 ) has become particularly popular due to its simplicity, efficiency, and strong empirical performance. By representing weight updates through low-rank factorization, LoRA greatly reduces the number of trainable parameters and has been successfully applied to supervised finetuning, pretraining, and reinforcement learning ( Wang et al., 2026 ; Shen et al., 2026 ) . Despite its effectiveness, LoRA’s optimization dynamics remain poorly understood. Standard LoRA parameterizes Δ ​ 𝑾 = α ​ 𝑩 ​ 𝑨 \\Delta\\bm{W}=\\alpha\\bm{B}\\bm{A} with randomly initialized 𝑨 \\bm{A} and zero-initialized 𝑩 \\bm{B} . Although this preserves the pretrained initialization, early optimization depends entirely on the random features induced by 𝑨 \\bm{A} . This observation motivates the question below:",
+      "source": "https://arxiv.org/html/2608.31036v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0004",
+      "section": "1 Introduction",
+      "text": "Does the regularization of the down-projection matrix 𝐀 \\bm{A} provide a useful design dimension for improving LoRA optimization? Existing work suggests that initialization can substantially affect low-rank optimization. Methods such as PiSSA ( Meng et al., 2024 ) and MiLoRA ( Wang et al., 2025 ) construct the initial low-rank subspace from the spectral structure of pretrained weights and often converge faster than random initialization. However, they require singular-value decomposition and modify the initial decomposition of the pretrained weights, making them less convenient for large-scale training and potentially fragile in reinforcement-learning settings ( Yin et al., 2025 ) . Other approaches improve LoRA through modified scaling ( Kalajdzievski, 2023 ) , constrained parameterizations ( Liu et al., 2024b ) , or fixed projections ( Kopiczko et al., 2024 ) . However, how the regularization of the down-projection matrix affects or improves LoRA’s optimization remains poorly understood.",
+      "source": "https://arxiv.org/html/2608.31036v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0005",
+      "section": "1 Introduction",
+      "text": "Our investigation begins with the observation that the normalized latent bottleneck used in Multi-head Latent Attention (MLA) substantially stabilizes training and also improves convergence. Similar observations have also been made in multiple training settings ( Liu et al., 2017 ; Liu et al., 2018 ; Loshchilov et al., 2025 ) . These phenomena suggest that the numerical structure of the normalized latent representation presented to the up-projection can play an important role in stable optimization. Directly introducing latent normalization into LoRA changes the standard linear update from 𝑩 ​ 𝑨 ​ 𝒙 \\bm{B}\\bm{A}\\bm{x} to 𝑩 ⋅ Norm ​ ( 𝑨 ​ 𝒙 ) \\bm{B}\\cdot\\text{Norm}(\\bm{A}\\bm{x}) . Because the normalization depends on the input, the resulting transformation is nonlinear with respect to 𝒙 \\bm{x} and can no longer be exactly merged into the pretrained weight matrix like LoRA. Inspired by MLA, we therefore study whether the useful numerical effect of latent normalization can instead be encoded as a regularization of the linear down-projection such that we can have both LoRA’s exact mergeability and MLA’s favorable optimization benefits.",
+      "source": "https://arxiv.org/html/2608.31036v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0006",
+      "section": "1 Introduction",
+      "text": "To this end, we adapt MLA’s normalization principle from the latent feature to the low-rank projection itself. Each column of 𝑨 ∈ ℝ r × k \\bm{A}\\in\\mathbb{R}^{r\\times k} represents how an input coordinate is projected into the r r -dimensional latent space. Guided by the normalization dimension in MLA, we propose to normalize these projection vectors along the rank dimension, yielding the linear form 𝑩 ⋅ Norm ​ ( 𝑨 ) ​ 𝒙 \\bm{B}\\cdot\\text{Norm}(\\bm{A})\\bm{x} . We refer to this formulation as Normalized LoRA (NoRA), which constrains the input-to-latent projection magnitudes throughout training while preserving exact weight mergeability. This normalization scheme also ensures that the gradient norm of NoRA can be better aligned with full finetuning, bridging the learnability gap between LoRA and full finetuning.",
+      "source": "https://arxiv.org/html/2608.31036v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0007",
+      "section": "1 Introduction",
+      "text": "NoRA requires the down-projection matrix 𝑨 \\bm{A} to be normalized along the output rank dimension. This principle motivates two ways of applying normalization: (1) as a training constraint ( i.e. , NoRA) and (2) as an initialization strategy ( i.e. , NoRA-init). In the former, NoRA continuously normalizes the down-projection matrix 𝑨 \\bm{A} along the low-rank dimension r r throughout training. In the latter, NoRA-init normalizes 𝑨 \\bm{A} only once at initialization and subsequently optimizes it without constraints during training. For NoRA-init, we propose two initialization variants: (1) random normalization, where 𝑨 \\bm{A} is randomly initialized and then normalized; and (2) Block Identity Matrix Initialization (BIMI), where 𝑨 \\bm{A} is constructed as a block-identity matrix that inherently satisfies the rank-dimensional normalization requirement. NoRA improves training by removing undesirable scale imbalance across the low-rank dimensions, providing a better-conditioned parameterization than standard LoRA. We evaluate both NoRA and NoRA-init across pretraining, supervised finetuning, and reinforcement learning with verifiable rewards. Across a diverse range of base models, tasks, and training configurations, both methods consistently accelerate convergence, improve training stability, and enhance downstream performance. They also mitigate catastrophic forgetting during supervised adaptation and remain robust in reinforcement-learning settings where other spectral initialization methods can be fragile. In general, we can conclude that these results establish rank-dimension normalization of the down-projection as an important design principle for improving LoRA optimization. Our contributions are summarized as follows:",
+      "source": "https://arxiv.org/html/2608.31036v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0008",
+      "section": "1 Introduction",
+      "text": "• We identify the down-projection matrix 𝑨 \\bm{A} as a previously underexplored yet important design dimension in LoRA, showing that its magnitude can play a critical role in shaping optimization dynamics and ultimately improving training efficiency and downstream performance. • We propose NoRA, which normalizes the down-projection matrix 𝑨 \\bm{A} along the rank dimension in the LoRA parameterization. We further introduce NoRA-init, an initialization-only variant that applies this normalization at initialization and requires no re-normalization during training, enabling seamless performance improvements without modifying the optimization procedure. • Extensive experiments across pretraining, SFT, and RLVR demonstrate NoRA’s improved convergence, stability, downstream performance, and resistance to catastrophic forgetting.",
+      "source": "https://arxiv.org/html/2608.31036v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0009",
+      "section": "2 Preliminaries",
+      "text": "LoRA parameterizes the weight update of a pretrained matrix as Δ ​ 𝑾 = 𝑾 − 𝑾 0 = α ​ 𝑩 ​ 𝑨 , \\Delta\\bm{W}=\\bm{W}-\\bm{W}_{0}=\\alpha\\bm{B}\\bm{A}, (1) where 𝑨 ∈ ℝ r × k \\bm{A}\\in\\mathbb{R}^{r\\times k} , 𝑩 ∈ ℝ d × r \\bm{B}\\in\\mathbb{R}^{d\\times r} , and r ≪ min ⁡ ( d , k ) r\\ll\\min(d,k) . Standard LoRA initializes 𝑩 ( 0 ) = 𝟎 \\bm{B}^{(0)}=\\bm{0} to preserve the pretrained model. Let 𝑮 = ∂ ℒ / ∂ 𝑾 \\bm{G}=\\partial\\mathcal{L}/\\partial\\bm{W} denote the gradient of the corresponding full weight matrix. At initialization, we have the following gradients with respect to 𝑩 \\bm{B} and 𝑨 \\bm{A} : ∂ ℒ ∂ 𝑩 | t = 0 = α ​ 𝑮 ​ ( 𝑨 ( 0 ) ) ⊤ , ∂ ℒ ∂ 𝑨 | t = 0 = 𝟎 . \\left.\\frac{\\partial\\mathcal{L}}{\\partial\\bm{B}}\\right|_{t=0}=\\alpha\\bm{G}(\\bm{A}^{(0)})^{\\top},\\qquad\\left.\\frac{\\partial\\mathcal{L}}{\\partial\\bm{A}}\\right|_{t=0}=\\bm{0}. (2) Therefore, the earliest optimization of LoRA is entirely determined by the latent representation induced by the initial projection 𝑨 ( 0 ) \\bm{A}^{(0)} . Motivated by this observation, we consider a unified latent-feature formulation: Δ ​ 𝒚 = α ​ 𝑩 ​ ϕ ​ ( 𝒙 ) , \\Delta\\bm{y}=\\alpha\\bm{B}\\bm{\\phi}(\\bm{x}), (3) where ϕ ⁡ ( 𝒙 ) ∈ ℝ r \\bm{\\phi}(\\bm{x})\\in\\mathbb{R}^{r} denotes the latent feature presented to the up-projection. Existing low-rank methods can be interpreted as constructing this latent feature in different ways: ϕ ⁡ ( 𝒙 ) = { 𝑨 ​ 𝒙 , random projection (LoRA) , 𝑨 init ​ 𝒙 , structured projection (e.g., PiSSA, MiLoRA) , Norm ​ ( 𝑨 ​ 𝒙 ) , normalized projection (e.g., MLA) . \\bm{\\phi}(\\bm{x})=\\begin{cases}\\bm{A}\\bm{x},&\\text{random projection (LoRA)},\\\\[5.69054pt] \\bm{A}_{\\rm init}\\bm{x},&\\text{structured projection (e.g., PiSSA, MiLoRA)},\\\\[5.69054pt] \\text{Norm}(\\bm{A}\\bm{x}),&\\text{normalized projection (e.g., MLA)}.\\end{cases} (4)",
+      "source": "https://arxiv.org/html/2608.31036v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0010",
+      "section": "2 Preliminaries",
+      "text": "Although these approaches adopt different implementations, they can all be viewed as designing the latent feature presented to the up-projection. This latent-projection perspective motivates us to revisit how to regularize the latent projection without losing the exact mergeability of LoRA.",
+      "source": "https://arxiv.org/html/2608.31036v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0011",
+      "section": "2 Preliminaries",
+      "text": "Method Forward Computation Initialization / Prior Full-Parameter and Standard Low-Rank Adaptation Full Finetuning y = 𝑾 0 ​ x y=\\bm{W}_{0}x N/A LoRA ( Hu et al., 2021 ) y = 𝑾 0 ​ x + 𝑩 ​ 𝑨 ​ x y=\\bm{W}_{0}x+\\bm{B}\\bm{A}x 𝑨 ∼ 𝒩 ⁡ ( 0 , σ 2 ) , 𝑩 = 0 \\bm{A}\\sim\\mathcal{N}(0,\\sigma^{2}),\\ \\bm{B}=0 Optimization-Strategy Variants LoRA+ ( Hayou et al., 2024 ) y = 𝑾 0 ​ x + 𝑩 ​ 𝑨 ​ x y=\\bm{W}_{0}x+\\bm{B}\\bm{A}x η 𝑩 = λ ​ η 𝑨 \\eta_{\\bm{B}}=\\lambda\\eta_{\\bm{A}} Structured or Constrained Low-Rank Parameterizations DoRA ( Liu et al., 2024b ) y = 𝒎 ⁡ ( 𝑾 0 ​ x + 𝑩 ​ 𝑨 ​ x ‖ 𝑾 0 + 𝑩 ​ 𝑨 ‖ c ) y=\\bm{m}\\!\\left(\\frac{\\bm{W}_{0}x+\\bm{B}\\bm{A}x}{\\|\\bm{W}_{0}+\\bm{B}\\bm{A}\\|_{c}}\\right) Kaiming init, 𝑩 = 0 \\bm{B}=0 MiSS ( Kang and Yin, 2026 ) y = 𝑾 0 ​ x + expand ⁡ ( 𝑫 ) ​ x y=\\bm{W}_{0}x+\\operatorname{expand}(\\bm{D})x Fixed structured projection AdaLoRA ( Zhang et al., 2023b ) y = 𝑾 0 ​ x + 𝑷 ​ 𝚲 ​ 𝑸 ​ x y=\\bm{W}_{0}x+\\bm{P}\\bm{\\Lambda}\\bm{Q}x 𝚲 = 0 , 𝑷 , 𝑸 ∼ 𝒩 ⁡ ( 0 , σ 2 ) \\bm{\\Lambda}=0,\\ \\bm{P},\\bm{Q}\\sim\\mathcal{N}(0,\\sigma^{2}) LoRA-FA ( Zhang et al., 2023a ) y = 𝑾 0 ​ x + 𝑩 ​ 𝑨 ​ x y=\\bm{W}_{0}x+\\bm{B}\\bm{A}x Frozen random 𝑨 , 𝑩 = 0 \\bm{A},\\ \\bm{B}=0 VeRA ( Ye et al., 2025 ) y = 𝑾 0 ​ x + 𝚲 b ​ 𝑩 ​ 𝚲 d ​ 𝑨 ​ x y=\\bm{W}_{0}x+\\bm{\\Lambda}_{b}\\bm{B}\\bm{\\Lambda}_{d}\\bm{A}x Frozen random 𝑨 , 𝑩 \\bm{A},\\bm{B} Initialization-Based Low-Rank Adaptation PiSSA ( Meng et al., 2024 ) y = ( 𝑾 0 − 𝑩 ​ 𝑨 ) ​ x + 𝑩 ​ 𝑨 ​ x y=(\\bm{W}_{0}-\\bm{B}\\bm{A})x+\\bm{B}\\bm{A}x Top- r r SVD initialization MiLoRA ( Wang et al., 2025 ) y = ( 𝑾 0 − 𝑩 ​ 𝑨 ) ​ x + 𝑩 ​ 𝑨 ​ x y=(\\bm{W}_{0}-\\bm{B}\\bm{A})x+\\bm{B}\\bm{A}x Minor-component SVD init NoRA-init y = 𝑾 0 ​ x + 𝑩 ​ 𝑨 ​ x y=\\bm{W}_{0}x+\\bm{B}\\bm{A}x 𝑨 = Norm ​ ( 𝑨 ) , 𝑩 = 0 \\bm{A}=\\text{Norm}(\\bm{A}),\\ \\bm{B}=0 NoRA y = 𝑾 0 ​ x + 𝑩 ​ Norm ⁡ ( 𝑨 ) ​ 𝒙",
+      "source": "https://arxiv.org/html/2608.31036v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0012",
+      "section": "2 Preliminaries",
+      "text": "{B}\\bm{A}x Minor-component SVD init NoRA-init y = 𝑾 0 ​ x + 𝑩 ​ 𝑨 ​ x y=\\bm{W}_{0}x+\\bm{B}\\bm{A}x 𝑨 = Norm ​ ( 𝑨 ) , 𝑩 = 0 \\bm{A}=\\text{Norm}(\\bm{A}),\\ \\bm{B}=0 NoRA y = 𝑾 0 ​ x + 𝑩 ​ Norm ⁡ ( 𝑨 ) ​ 𝒙 y=\\bm{W}_{0}x+\\bm{B}\\operatorname{Norm}(\\bm{A})\\bm{x} 𝑩 = 0 \\bm{B}=0",
+      "source": "https://arxiv.org/html/2608.31036v1",
+      "offset": 1585
+    },
+    {
+      "chunk_id": "chunk-0013",
+      "section": "2 Preliminaries",
+      "text": "Table 1: Overview of representative PEFT methods categorized by their primary mechanism, including forward parameterization and initialization strategy.",
+      "source": "https://arxiv.org/html/2608.31036v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0014",
+      "section": "3.1 From Normalized Latent Features to Normalized Low-Rank Projection",
+      "text": "The normalized latent projection in MLA suggests that the representation presented to the up-projection plays an important role in training dynamics. Specifically, MLA constructs the low-dimensional latent feature as ϕ ​ ( 𝒙 ) = Norm ​ ( 𝑨 ​ 𝒙 ) , \\bm{\\phi}(\\bm{x})=\\text{Norm}(\\bm{A}\\bm{x}), (5) where the normalization operator explicitly regulates the projected feature before it is mapped back to the output space. Directly introducing this operation into LoRA changes the standard linear update from 𝑩 ​ 𝑨 ​ 𝒙 \\bm{B}\\bm{A}\\bm{x} to 𝑩 ​ Norm ​ ( 𝑨 ​ 𝒙 ) \\bm{B}\\text{Norm}(\\bm{A}\\bm{x}) . Since the normalization depends on the input, this transformation becomes nonlinear with respect to 𝒙 \\bm{x} and can no longer be exactly merged into the pretrained weight matrix. We therefore seek to transfer the scale-control effect from the latent feature to the down-projection matrix itself. Modern Transformer architectures are typically pre-normalized, such that the magnitude of the input 𝒙 \\bm{x} to each linear layer is already well controlled by LayerNorm. In this setting, variations in the column norms of 𝑨 \\bm{A} introduce additional scale imbalance in how different input coordinates are projected into the low-rank latent space. We therefore normalize each column of 𝑨 \\bm{A} along the LoRA rank dimension. For 𝑨 ∈ ℝ r × k \\bm{A}\\in\\mathbb{R}^{r\\times k} , we write 𝑨 = [ 𝒂 1 , 𝒂 2 , … , 𝒂 k ] , 𝒂 j ∈ ℝ r , \\bm{A}=\\left[\\bm{a}_{1},\\,\\bm{a}_{2},\\,\\dots,\\,\\bm{a}_{k}\\right],\\qquad\\bm{a}_{j}\\in\\mathbb{R}^{r}, (6) where 𝒂 j \\bm{a}_{j} denotes the latent projection vector associated with the j j -th input coordinate. We define",
+      "source": "https://arxiv.org/html/2608.31036v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0015",
+      "section": "3.1 From Normalized Latent Features to Normalized Low-Rank Projection",
+      "text": "Norm ​ ( 𝑨 ) = [ 𝒂 1 max ⁡ ( ∥ 𝒂 1 ∥ 2 , ϵ ) , … , 𝒂 k max ⁡ ( ∥ 𝒂 k ∥ 2 , ϵ ) ] , \\text{Norm}(\\bm{A})=\\left[\\frac{\\bm{a}_{1}}{\\max(\\lVert\\bm{a}_{1}\\rVert_{2},\\epsilon)},\\,\\dots,\\,\\frac{\\bm{a}_{k}}{\\max(\\lVert\\bm{a}_{k}\\rVert_{2},\\epsilon)}\\right], (7) where ϵ \\epsilon is a small constant for numerical stability. Thus, we have that ‖ [ Norm ( 𝑨 ) ] : , j ‖ 2 = 1 , j = 1 , … , k . \\left\\|\\left[\\text{Norm}(\\bm{A})\\right]_{:,j}\\right\\|_{2}=1,\\qquad j=1,\\dots,k. (8) Based on this rank-dimension normalization, we introduce normalized low-rank adaptation, which parameterizes the low-rank update as the following form: Δ ​ 𝒚 = α ​ 𝑩 ​ Norm ​ ( 𝑨 ) ​ 𝒙 . \\Delta\\bm{y}=\\alpha\\bm{B}\\text{Norm}(\\bm{A})\\bm{x}. (9) Unlike latent-feature normalization in MLA, Norm ​ ( ⋅ ) \\text{Norm}(\\cdot) depends only on the LoRA parameters rather than the input. NoRA therefore imposes a normalization constraint on the down-projection throughout training while remaining linear with respect to 𝒙 \\bm{x} . After training, the normalized down-projection can be absorbed into the low-rank update, preserving exact weight mergeability. In this way, every input coordinate is continuously projected through a unit-norm latent direction, removing arbitrary column-wise scale variation in 𝑨 \\bm{A} . The resulting transition can be summarized as 𝑩 ​ Norm ​ ( 𝑨 ​ 𝒙 ) ⏟ MLA : input-dependent latent normalization → 𝑩 ​ Norm ​ ( 𝑨 ) ​ 𝒙 ⏟ NoRA : normalized low-rank projection . \\underbrace{\\bm{B}\\text{Norm}(\\bm{A}\\bm{x})}_{\\text{{MLA}: input-dependent latent normalization}}\\quad\\rightarrow\\quad\\underbrace{\\bm{B}\\text{Norm}(\\bm{A})\\bm{x}}_{\\text{{NoRA}: normalized low-rank projection}}. (10)",
+      "source": "https://arxiv.org/html/2608.31036v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0016",
+      "section": "3.1 From Normalized Latent Features to Normalized Low-Rank Projection",
+      "text": "Our initialization and gradient-norm analyses further suggest that much of the benefit of NoRA is already established at the beginning of optimization. This motivates a simpler initialization-only variant, which we denote as NoRA-init. Specifically, we initialize 𝑨 ( 0 ) = Norm ​ ( 𝑨 init ) , 𝑩 ( 0 ) = 𝟎 , \\bm{A}^{(0)}=\\text{Norm}(\\bm{A}_{\\text{init}}),\\qquad\\bm{B}^{(0)}=\\bm{0}, (11) and subsequently optimize 𝑨 \\bm{A} and 𝑩 \\bm{B} using the standard LoRA parameterization without performing normalization throughout training. 𝑨 init \\bm{A}_{\\text{init}} denotes the random initialization in LoRA. Despite removing the persistent constraint during training, NoRA-Init retains most of the optimization benefit of NoRA in our experiments. This observation suggests that controlling the scale of the input-to-latent projection at initialization is particularly important for the early optimization of low-rank adaptation. 8 16 32 64 0 4 8 12 Matrix rank initial grad norm Finetune LoRA PiSSA MiSS NoRA Figure 1: Illustration and optimization behavior NoRA. Left: Each input-to-latent projection vector is normalized along the LoRA rank dimension. Right: Gradient-norm dynamics of different initialization methods and LoRA ranks on LLaMA-3.2-3B trained on the Math dataset.",
+      "source": "https://arxiv.org/html/2608.31036v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0017",
+      "section": "3.2 Connection to MiSS and Block Identity Matrix Initialization",
+      "text": "Having established the effectiveness of rank-dimension normalization, we further investigate alternative approaches for achieving this form of normalization. MiSS ( Kang and Yin, 2026 ) is a recent PEFT method that improves parameter efficiency through a matrix-shard sharing strategy. Consider an input 𝒙 ∈ ℝ k \\bm{x}\\in\\mathbb{R}^{k} with k = b ​ r k=br , partitioned into b b blocks 𝒙 ( i ) ∈ ℝ r \\bm{x}^{(i)}\\in\\mathbb{R}^{r} . The MiSS update is written as Δ ​ 𝒚 MiSS = Δ ​ 𝑾 ​ 𝒙 = α ⋅ expand ⁡ ( 𝑩 ) ​ 𝒙 = α ​ 𝑩 ​ ∑ i = 1 b 𝒙 ( i ) = α ​ 𝑩 ​ [ 𝑰 r , … , 𝑰 r ] ⏟ 𝑨 fix ​ 𝒙 . \\Delta\\bm{y}_{\\mathrm{MiSS}}=\\Delta\\bm{W}\\bm{x}=\\alpha\\cdot\\operatorname{expand}(\\bm{B})\\bm{x}=\\alpha\\bm{B}\\sum_{i=1}^{b}\\bm{x}^{(i)}=\\alpha\\bm{B}\\underbrace{\\left[\\bm{I}_{r},\\,\\dots,\\,\\bm{I}_{r}\\right]}_{\\bm{A}_{\\mathrm{fix}}}\\bm{x}. (12) Thus, MiSS is equivalent to a LoRA-style update with a fixed down-projection 𝑨 fix \\bm{A}_{\\mathrm{fix}} composed of repeated identity matrices. Importantly, each column of this projection has unit norm: ‖ ( 𝑨 fix ) : , j ‖ 2 = 1 , ∀ j . \\left\\|(\\bm{A}_{\\mathrm{fix}})_{:,j}\\right\\|_{2}=1,\\qquad\\forall j. (13) MiSS therefore can be interpreted as a special case of NoRA, as its down-projection matrix is normalized by a block-identity construction ( i.e. , 𝑨 \\bm{A} is fixed to the constant 𝑨 fix \\bm{A}_{\\text{fix}} ). As shown in Figure 1 , NoRA produces substantially stronger early gradients than standard LoRA, with gradient norms approaching those of full finetuning. Interestingly, MiSS also exhibits a highly similar pattern. These results well justifies the empirical effectiveness of NoRA and its special case MiSS.",
+      "source": "https://arxiv.org/html/2608.31036v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0018",
+      "section": "3.2 Connection to MiSS and Block Identity Matrix Initialization",
+      "text": "Motivated by the connection to MiSS, we introduce Block Identity Matrix Initialization (BIMI) as a simple structured realization of NoRA-init. Rather than fixing the block-identity projection throughout training, BIMI uses it only to initialize the LoRA down-projection matrix and allows it to remain fully trainable afterward. Specifically, for k = b ​ r + q k=br+q , where 0 ≤ q < r 0\\leq q<r , we initialize 𝑨 bimi = [ 𝑰 r , 𝑰 r , … , 𝑰 r ⏟ b ​ blocks , 𝑬 q ] ∈ ℝ r × k , \\bm{A}_{\\text{bimi}}=\\left[\\underbrace{\\bm{I}_{r},\\,\\bm{I}_{r},\\,\\dots,\\,\\bm{I}_{r}}_{b\\ \\text{blocks}},\\bm{E}_{q}\\right]\\in\\mathbb{R}^{r\\times k}, (14) where 𝑬 q ∈ ℝ r × q \\bm{E}_{q}\\in\\mathbb{R}^{r\\times q} contains the first q q columns of 𝑰 r \\bm{I}_{r} and is omitted when q = 0 q=0 . By construction, we have ∥ ( 𝑨 bimi ) : , j ∥ 2 = 1 , ∀ j , \\|(\\bm{A}_{\\text{bimi}})_{:,j}\\|_{2}=1,\\forall j, , making BIMI directly a special case of NoRA-init. The resulting update retains the standard LoRA form, Δ ​ 𝒚 = α ​ 𝑩 ​ 𝑨 ​ 𝒙 \\Delta\\bm{y}=\\alpha\\bm{B}\\bm{A}\\bm{x} , with both 𝑨 \\bm{A} and 𝑩 \\bm{B} optimized during training.",
+      "source": "https://arxiv.org/html/2608.31036v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0019",
+      "section": "3.3 Why Does NoRA Work? A Preconditioning Perspective",
+      "text": "The early optimization of LoRA is dictated by the initialization of the down-projection matrix 𝑨 \\bm{A} . This is because LoRA can be viewed as performing full-finetuning gradient descent under a hidden preconditioner that is determined by 𝑨 \\bm{A} and acts on the input coordinates. Let 𝑮 = ∂ ℒ / ∂ 𝑾 ∈ ℝ d × k \\bm{G}=\\partial\\mathcal{L}/\\partial\\bm{W}\\in\\mathbb{R}^{d\\times k} be the full-finetuning gradient. A gradient step of size η \\eta on 𝑩 \\bm{B} at initialization is Δ ​ 𝑩 = − η ​ α ​ 𝑮 ​ 𝑨 ⊤ \\Delta\\bm{B}=-\\eta\\alpha\\,\\bm{G}\\bm{A}^{\\top} , while 𝑨 \\bm{A} receives no gradient and stays fixed. The induced change of the merged weight is therefore Δ ​ 𝑾 = α ​ Δ ​ 𝑩 ​ 𝑨 = − η ​ 𝑮 ​ 𝑷 , 𝑷 = α 2 ​ 𝑨 ⊤ ​ 𝑨 ∈ ℝ k × k . \\Delta\\bm{W}=\\alpha\\,\\Delta\\bm{B}\\,\\bm{A}=-\\eta\\,\\bm{G}\\,\\bm{P},\\qquad\\bm{P}=\\alpha^{2}\\bm{A}^{\\top}\\bm{A}\\in\\mathbb{R}^{k\\times k}. (15) Full finetuning takes the step Δ ​ 𝑾 = − η ​ 𝑮 \\Delta{\\bm{W}}=-\\eta\\,{\\bm{G}} , i.e. , equation 15 with 𝑷 = 𝑰 {\\bm{P}}={\\bm{I}} . Hence, at initialization, and approximately for as long as 𝑩 {\\bm{B}} remains small (the neglected term α ​ 𝑩 ​ Δ ​ 𝑨 = − η ​ α 2 ​ 𝑩 ​ 𝑩 ⊤ ​ 𝑮 \\alpha{\\bm{B}}\\,\\Delta{\\bm{A}}=-\\eta\\alpha^{2}{\\bm{B}}{\\bm{B}}^{\\top}{\\bm{G}} is second order in 𝑩 {\\bm{B}} ), LoRA is full finetuning with the gradient right-multiplied by a positive semidefinite matrix of rank r r that acts on the input coordinates. Right-multiplication by a k × k k\\times k matrix is exactly where curvature-based methods ( Martens and Grosse, 2015 ) place an input-side preconditioner. Moreover, we observe that column norms are per-coordinate learning rates:",
+      "source": "https://arxiv.org/html/2608.31036v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0020",
+      "section": "3.3 Why Does NoRA Work? A Preconditioning Perspective",
+      "text": "Δ 𝑾 : , j = − η [ α 2 ∥ 𝒂 j ∥ 2 2 𝑮 : , j ⏟ coordinate j ’s own update + ∑ i ≠ j α 2 ( 𝒂 i ⊤ 𝒂 j ) 𝑮 : , i ⏟ crosstalk from the rank bottleneck ] . \\Delta{\\bm{W}}_{:,j}=-\\eta\\Big[\\;\\underbrace{\\alpha^{2}\\|{\\bm{a}}_{j}\\|_{2}^{2}\\;{\\bm{G}}_{:,j}}_{\\text{coordinate $j$'s own update}}\\;+\\;\\underbrace{\\sum\\nolimits_{i\\neq j}\\alpha^{2}({\\bm{a}}_{i}^{\\top}{\\bm{a}}_{j})\\,{\\bm{G}}_{:,i}}_{\\text{crosstalk from the rank bottleneck}}\\Big]. (16) The first term is the full-finetuning update of the weight column with respect to input coordinate j j , scaled by the squared length of its latent 𝒂 j \\bm{a}_{j} . The second term is crosstalk between input coordinates induced by the rank bottleneck, and its coefficients are inner products of latent directions. Random initialization of A \\bm{A} makes learning rates unbalanced at each coordinate. For example, when 𝑨 ( 0 ) {\\bm{A}}^{(0)} has zero-mean i.i.d. entries of variance σ 2 ∝ 1 / k \\sigma^{2}\\propto 1/k , 𝔼 ​ ‖ 𝒂 j ‖ 2 2 = r ​ σ 2 ∝ r / k ≪ 1 \\mathbb{E}\\|{\\bm{a}}_{j}\\|_{2}^{2}=r\\sigma^{2}\\propto r/k\\ll 1 . Therefore, at any moderate α \\alpha , every learning rate is far too small, so gradient flows through the adapter at a small fraction of the full-finetuning rate. This is empirically verified by the small gradient norm of LoRA in Figure 1 . The learning rates are also unbalanced. ‖ 𝒂 j ‖ 2 2 \\|{\\bm{a}}_{j}\\|_{2}^{2} fluctuates around its mean with relative spread of order 1 / r 1/\\sqrt{r} , so at small rank each coordinate gets its learning rate randomly, unrelated to data or curvature. A preconditioner should remove distortion, not add its own.",
+      "source": "https://arxiv.org/html/2608.31036v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0021",
+      "section": "3.3 Why Does NoRA Work? A Preconditioning Perspective",
+      "text": "Normalization is exactly the fix. Setting every ‖ 𝒂 j ‖ 2 = 1 \\|{\\bm{a}}_{j}\\|_{2}=1 at unit scaling (rank-dimension normalization in NoRA), α = 1 \\alpha=1 (equivalently α = r \\alpha=r under the α / r \\alpha/r implementation convention), fixes the problems. Specifically, this leads to Diag ​ ( 𝑷 ) = 𝑰 \\text{Diag}(\\bm{P})={\\bm{I}} deterministically, 𝔼 ⁡ [ 𝑷 ] = 𝑰 \\mathbb{E}[\\bm{P}]=\\bm{I} over the random directions, and the adapter’s gradient norm can match full finetuning’s gradient norm in expectation, independently of r r . Therefore, we can get the flat NoRA curve in Figure 1 . In contrast, row normalization ( Norm k \\text{Norm}_{k} ) leaves Diag ​ ( 𝑷 ) \\text{Diag}(\\bm{P}) random of order r / k r/k , and brings no empirical gain (see Table 3 ). Moreover, BIMI uses unit basis vectors as columns (the same diagonal through a completely different crosstalk pattern) and performs similarly to rank-dimension normalization of random initializations (see Table 3 ), which points to the diagonal of 𝑷 \\bm{P} as the decisive quantity.",
+      "source": "https://arxiv.org/html/2608.31036v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0022",
+      "section": "3.3 Why Does NoRA Work? A Preconditioning Perspective",
+      "text": "Initialization does most of the work; the constraint adds stability. Since 𝑨 {\\bm{A}} ’s gradient, α ​ 𝑩 ⊤ ​ 𝑮 \\alpha{\\bm{B}}^{\\top}{\\bm{G}} , vanishes with 𝑩 {\\bm{B}} , 𝑨 ( 0 ) {\\bm{A}}^{(0)} alone fixes the learning rates and the input subspace during the decisive early phase, correcting the rates once at initialization thus captures most of the benefit. This is exactly what NoRA-init does. Performing Norm ​ ( 𝑨 ) \\text{Norm}({\\bm{A}}) in the forward pass adds two things: (1) the loss becomes invariant to each column’s scale, so gradients are tangential and, under gradient descent, norms can only grow while the effective step anneals automatically, as in weight-normalized training ( Liu et al., 2017 ; Salimans and Kingma, 2016 ; Liu et al., 2018 ) ; and (2) Diag ​ ( 𝑷 ) = 𝑰 \\text{Diag}({\\bm{P}})={\\bm{I}} is enforced for the whole run on a compact set of directions, so the latent scale can neither collapse nor explode and the update stays linear in 𝒙 {\\bm{x}} and can be merged exactly. To summarize, NoRA sets the diagonal gains of LoRA’s hidden preconditioner to one, and keeps them throughout training.",
+      "source": "https://arxiv.org/html/2608.31036v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0023",
+      "section": "4 Experiments and Results",
+      "text": "To thoroughly evaluate our method, we conduct experiments across pretraining, supervised finetuning (SFT), and reinforcement learning. We further perform ablation studies to investigate the effect of the normalization dimension and initialization distribution. Evaluation settings are in Table 2 . Ablation Study. We investigate the effect of the normalization dimension of the down-projection matrix 𝑨 \\bm{A} by comparing column-wise and row-wise normalization, and further evaluate the effectiveness of NoRA across different random or deterministic initialization schemes. Pretraining. We begin with controlled studies on the MLA architecture under the L24-D1024 setting to examine the effect of intermediate normalization within low-rank latent representations. Building on these observations, we further evaluate NoRA on standard multi-head attention (MHA), where all attention projection layers are adapted with NoRA. Supervised finetuning. We evaluate NoRA on Llama 3.2-3B across a diverse set of downstream tasks, including mathematical reasoning and code generation, as well as its robustness against catastrophic forgetting ( Huang et al., 2026 ) . More detailed settings are given in Appendix B . Reinforcement learning with verifiable rewards. To assess its effectiveness in post-training optimization, we additionally evaluate NoRA under reinforcement learning using the ReRL framework.",
+      "source": "https://arxiv.org/html/2608.31036v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0024",
+      "section": "4 Experiments and Results",
+      "text": "Stage Repository Model Train Data Benchmark Pretrain FLA ( Yang and Zhang, 2024 ) MLA ( Liu et al., 2024a ) MHA ( Vaswani et al., 2017 ) SlimPajama ( Soboleva et al., 2023 ) LAMBADA ( Paperno et al., 2016 ) WikiText ( Merity et al., 2016 ) Arc-Easy/Arc-Challenge ( Clark et al., 2018 ) HellaSwag ( Zellers et al., 2019 ) PIQA ( Bisk et al., 2020 ) OpenBookQA ( Mihaylov et al., 2018 ) WinoGrande ( Sakaguchi et al., 2021 ) SFT PEFT-Arena ( Huang et al., 2026 ) Llama-3.2-3B ( Grattafiori et al., 2024 ) MetaMath ( Yu et al., 2024 ) CodeFeedback ( Zheng et al., 2024 ) Math: GSM8k ( Cobbe et al., 2021 ) Math500 ( Yu et al., 2024 ) Code: HumanEval ( Chen et al., 2021 ) Mbpp ( Austin et al., 2021 ) RL PeRL ( Yin et al., 2025 ) DeepSeek-R1-Distill-Qwen1.5B ( Liu et al., 2024a ) open-r1/DAPO-Math-17k-Processed ( Yu et al., 2026 ) AIME24 ( Zhang and Math-AI, 2025 ) ( Avg ​ @ ​ 32 \\mathrm{Avg}@32 ) AIME25 ( Zhang and Math-AI, 2025 ) ( Avg ​ @ ​ 32 \\mathrm{Avg}@32 ) MATH500 ( Lightman et al., 2024 ) ( Avg ​ @ ​ 4 \\mathrm{Avg}@4 ) Minerva ( Lewkowycz et al., 2022 ) ( Avg ​ @ ​ 4 \\mathrm{Avg}@4 ) AMC ( Li et al., 2024 ) ( Avg ​ @ ​ 32 \\mathrm{Avg}@32 ) HMMT ( Balunović et al., 2025 ) ( Avg ​ @ ​ 32 \\mathrm{Avg}@32 ) Table 2: Overview of all the training settings in our experiments.",
+      "source": "https://arxiv.org/html/2608.31036v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0025",
+      "section": "4.1 Effect of the Normalization Dimension",
+      "text": "Initialization Method GSM8K Math Avg. 𝒰 ( − 1 / k , 1 / k ) \\mathcal{U}(-1/\\sqrt{k},1/\\sqrt{k}) None 47.68 10.86 29.27 Norm k \\text{Norm}_{k} 48.67 10.82 29.75 Norm r \\text{Norm}_{r} 60.12 14.20 37.16 𝒩 ⁡ ( 0 , 1 / r 2 ) \\mathcal{N}(0,1/r^{2}) None 50.41 11.68 31.05 Norm k \\text{Norm}_{k} 49.73 11.34 30.54 Norm r \\text{Norm}_{r} 59.96 13.93 36.95 𝒰 ⁡ ( − 1 , 1 ) \\mathcal{U}(-1,1) None 48.19 11.02 29.61 Norm k \\text{Norm}_{k} 48.29 10.86 29.58 Norm r \\text{Norm}_{r} 58.98 14.34 36.66 [ 𝑰 r , … , 𝑰 r ] \\left[\\bm{I}_{r},\\,\\dots,\\,\\bm{I}_{r}\\right] BIMI 59.89 14.24 37.07 Table 3: Effect of different normalization dimensions under supervised finetuning. The average is computed over accuracies on GSM8K and Math. We first study whether the effect of the normalization dimension under different initialization schemes. Given 𝑨 ∈ ℝ r × k \\bm{A}\\in\\mathbb{R}^{r\\times k} , Norm k \\text{Norm}_{k} normalizes each row, while Norm r \\text{Norm}_{r} normalizes each column 𝑨 : , j ∈ ℝ r \\bm{A}_{:,j}\\in\\mathbb{R}^{r} . As shown in Table 3 , Norm k \\text{Norm}_{k} provides little improvement, whereas Norm k \\text{Norm}_{k} consistently improves Random Uniform, Gaussian, and Kaiming Uniform initializations. After applying NoRA, all three initialization schemes achieve similar performance, indicating that its benefit is largely independent of the initialization distribution. BIMI achieves comparable performance and satisfies NoRA by construction, serving as a structured and deterministic instance of NoRA.",
+      "source": "https://arxiv.org/html/2608.31036v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0026",
+      "section": "4.2 LLM Pretraining",
+      "text": "We first conduct LLM pretraining experiments using the standard MLA architecture. Normalizing the latent representation 𝑨 ​ 𝒙 \\bm{A}\\bm{x} consistently improves model performance and accelerates convergence during pretraining. Motivated by these results, we extend the same normalization principle to the linear low-rank formulation by applying normalization to the down-projection 𝑨 \\bm{A} , yielding NoRA. To evaluate the effectiveness of NoRA for LLM pretraining, we adopt NoRA-init and compare it with the standard low-rank parameterization. As shown in Table 4 , NoRA-init achieves faster convergence and better downstream performance. Although its performance remains slightly below that of directly normalizing 𝑨 ​ 𝒙 \\bm{A}\\bm{x} , NoRA-init preserves the linear structure 𝑩 ​ 𝑨 ​ 𝒙 \\bm{B}\\bm{A}\\bm{x} , thereby retaining the parameter mergeability and deployment efficiency of conventional low-rank parameterizations.",
+      "source": "https://arxiv.org/html/2608.31036v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0027",
+      "section": "4.2 LLM Pretraining",
+      "text": "We further evaluate NoRA-init under the standard MHA architecture for LLM pretraining. Specifically, we parameterize all linear projections in the attention module, including 𝒒 proj \\bm{q}_{\\mathrm{proj}} , 𝒌 proj \\bm{k}_{\\mathrm{proj}} , 𝒗 proj \\bm{v}_{\\mathrm{proj}} , and 𝒐 proj \\bm{o}_{\\mathrm{proj}} , using low-rank factors with rank r = 64 r=64 . As shown in Table 4 , the standard low-rank parameterization exhibits a severe performance collapse on LAMBADA, along with substantial degradation on several other benchmarks. An examination of the optimization dynamics reveals that its gradient norms diminish to abnormally low levels during training, suggesting insufficient optimization. In contrast, NoRA-init achieves significantly better performance than standard low-rank parameterization and preserves well-scaled gradient magnitudes throughout training, thereby avoiding such optimization collapse and yielding more stable loss trajectories and downstream performance. This observation is related to the capacity-limited behavior of low-rank adaptation discussed in Schulman and Lab (2025) , where insufficient low-rank capacity can largely constrain the flexibility of optimization trajectory. Our results further show that capacity alone does not fully determine optimization behavior. Under the same rank constraint, modifying the initialization of the low-rank projection substantially changes the training dynamics. This suggests that controlling the scale and structure of the input-to-latent projection provides a more favorable optimization geometry under limited-rank parameterizations, thereby alleviating performance degradation in pretraining.",
+      "source": "https://arxiv.org/html/2608.31036v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0028",
+      "section": "4.2 LLM Pretraining",
+      "text": "Model & Scale Parameters Lamb. † \\dagger Wiki. Lamb. ARC e ARC c Hella. PIQA Wino. OBQA Avg. ppl ↓ ppl ↓ acc ↑ acc ↑ acc n ↑ {}_{\\text{n}\\uparrow} acc n ↑ {}_{\\text{n}\\uparrow} acc ↑ acc ↑ acc ↑ acc ↑ MLA with 10B training tokens and 0.5M batchsize tokens 𝑩 ​ Norm ​ ( 𝑨 ​ 𝒙 ) \\bm{B}\\text{Norm}(\\bm{A}\\bm{x}) 342.4M 48.73 32.24 30.62 56.99 27.56 36.26 63.49 51.30 22.00 41.17 𝑩 ​ 𝑨 ​ 𝒙 \\bm{B}\\bm{A}\\bm{x} 342.4M 61.83 32.89 28.70 54.63 26.02 35.88 63.66 51.62 22.00 40.36 𝑩 ​ 𝑨 NoRA-init ​ 𝒙 \\bm{B}\\bm{A}_{\\text{NoRA-init}}\\bm{x} 342.4M 50.77 32.42 29.87 54.04 26.37 36.11 63.76 52.72 21.60 40.64 MHA with 10B training tokens and 0.5M batchsize tokens 𝑾 ​ 𝒙 \\bm{W}\\bm{x} 348.7M 47.95 31.31 30.55 54.59 26.45 36.95 65.07 51.22 22.60 41.06 𝑩 ​ 𝑨 ​ 𝒙 \\bm{B}\\bm{A}\\bm{x} 289.3M - - 0.00 25.17 28.07 25.97 49.78 49.49 16.20 27.81 𝑩 ​ 𝑨 NoRA-init ​ 𝒙 \\bm{B}\\bm{A}_{\\text{NoRA-init}}\\bm{x} 289.3M 63.45 34.39 28.29 54.38 26.02 35.10 63.49 50.91 19.60 39.69 Table 4: Zero-shot performance of 340M models trained on SlimPajama ( Soboleva et al., 2023 ) . Commonsense reasoning tasks are evaluated with lm-evaluation-harness ( Gao et al., 2024 ) ; the recall-intensive task follows prefix-linear-attention ( Arora et al., 2024 ) with 2K input tokens. “-” indicates a collapse in perplexity.",
+      "source": "https://arxiv.org/html/2608.31036v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0029",
+      "section": "4.2 LLM Pretraining",
+      "text": "Method Supervised Finetuning Forgetting Trainable GSM8K Math HumanEval MBPP Avg MMLU AGIEval ARC-C Avg Δ \\Delta Base Model - – – – – – 55.10 +0.00 23.99 +0.00 42.92 +0.00 0.00 Full 3B 65.12 17.96 36.15 49.05 42.07 54.17 -0.93 26.25 +2.26 41.64 -1.28 +0.02 PiSSA 48.6M 54.66 12.08 39.00 55.30 40.26 54.43 -0.67 23.99 +0.00 42.75 -0.17 -0.28 OFT 53.7M 56.10 13.02 38.40 54.20 40.43 54.72 -0.38 25.23 +1.25 43.60 +0.68 +0.52 RSLoRA 48.6M 57.05 12.32 39.65 56.10 41.28 54.07 -1.03 24.58 +0.60 41.81 -1.11 -0.51 MiSS 49.5M 60.80 14.60 39.60 55.80 42.70 53.40 -1.50 24.33 +0.34 41.98 -0.94 -0.70 LoRA-style Parameterization LoRA 48.6M 50.94 10.38 37.20 53.20 37.93 54.27 -0.83 24.40 +0.42 41.64 -1.28 -0.56 NoRA-init 48.6M 59.89 14.24 39.60 55.80 42.38 54.09 -1.01 25.10 +1.11 42.24 -0.68 -0.19 NoRA 48.6M 61.63 14.46 42.10 55.30 43.37 54.00 -1.10 25.32 +1.33 42.75 -0.17 +0.02 DoRA-style Parameterization DoRA 49.4M 51.63 11.36 37.80 52.40 38.30 54.20 -0.90 24.09 +0.10 41.81 -1.11 -0.64 NoRA-init 49.4M 59.59 14.10 38.70 53.20 41.40 53.65 -1.45 24.84 +0.86 42.32 -0.60 -0.40 NoRA 49.4M 61.33 14.44 42.10 55.60 43.34 54.00 -1.10 24.59 +0.58 42.15 -0.77 -0.43 Table 5: Comparison of PEFT methods under supervised finetuning and retained benchmark settings.",
+      "source": "https://arxiv.org/html/2608.31036v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0030",
+      "section": "4.3 Supervised Finetuning",
+      "text": "Table 5 compares NoRA with representative PEFT methods under supervised finetuning. NoRA achieves the best overall SFT performance among the compared methods, improving the average score from 37.93 with standard LoRA to 43.37, a gain of 5.44 points. In particular, NoRA substantially improves performance on GSM8K and HumanEval, reaching 61.63 and 42.10, respectively, while also outperforming PiSSA ( Meng et al., 2024 ) , OFT ( Qiu et al., 2023 ; Qiu et al., 2025 ; Liu et al., 2024c ) , RSLoRA ( Kalajdzievski, 2023 ) , and MiSS ( Kang and Yin, 2026 ) in average performance. These results demonstrate the effectiveness of rank-dimension normalization for improving LoRA. We further compare NoRA with its initialization-only variant, NoRA-init. NoRA-init applies normalization constraint only to the initial down-projection and then follows standard LoRA training, whereas NoRA continuously enforces the normalization constraint throughout training. NoRA-init already improves the SFT average from 37.93 to 42.38, capturing a large portion of the gain achieved by NoRA. With the normalization constraint maintained throughout training, NoRA further improves the average score to 43.37. The comparison indicates that controlling the input-to-latent projection magnitude at initialization accounts for a large portion of the gain, while persistent normalization provides additional improvements. Comparison of training dynamics is given in Figure 2 . NoRA shows stronger learnability than LoRA without introducing extra parameters.",
+      "source": "https://arxiv.org/html/2608.31036v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0031",
+      "section": "4.3 Supervised Finetuning",
+      "text": "NoRA also outperforms MiSS, which achieves an average score of 42.70. Recall that MiSS can be reformulated as a fixed block-identity down-projection satisfying the normalization constraint. The strong performance of both MiSS and NoRA-init therefore provides further evidence that normalized low-rank projections play an important role in their optimization. Notably, NoRA-init achieves comparable performance to MiSS while keeping the down-projection fully trainable, avoiding the constraint of fixing the projection throughout training. Finally, we examine whether the NoRA principle generalizes beyond the standard LoRA parameterization. We apply Norm r \\text{Norm}_{r} -based normalization to DoRA and obtain consistent improvements: NoRA-init-DoRA improves the SFT average from 38.30 for DoRA to 41.40. This result demonstrates that the benefit of rank-dimension normalization is not specific to LoRA, but can also be transferred to other low-rank adaptation variants. Together with the improvements observed for LoRA, this suggests that NoRA captures a general optimization principle for low-rank adaptation. NoRA also exhibits favorable knowledge retention, achieving an average change of +0.02 on MMLU, AGIEval, and ARC-C, compared with − 0.56 -0.56 for LoRA and -0.70 for MiSS. Thus, NoRA improves adaptation performance while maintaining the pretrained model’s retained knowledge. Figure 2: Training dynamics comparison of full finetuning, LoRA, PiSSA, and NoRA on the SFT task.",
+      "source": "https://arxiv.org/html/2608.31036v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0032",
+      "section": "4.4 RLVR on Mathematical Reasoning",
+      "text": "We further evaluate NoRA under reinforcement learning with verifiable rewards (RLVR) on challenging mathematical reasoning benchmarks. As shown in Table 6 , standard LoRA improves the overall average score from 41.0 for the base model to 42.8, while NoRA further increases it to 44.4, outperforming the base model and standard LoRA by 3.4 and 1.6 points, respectively. NoRA yields broad improvements across the evaluated benchmarks, with particularly clear gains on AMC, MATH500, and Minerva. These results suggest that rank-dimension normalization remains effective under RLVR and facilitates more effective optimization of low-rank adapters. A notable difference emerges for initialization methods based on pretrained-weight spectral decomposition. Although PiSSA ( Meng et al., 2024 ) and MiLoRA ( Wang et al., 2025 ) are effective under supervised finetuning, their performance degrades substantially in the RLVR setting. This behavior is consistent with prior observations that spectral initialization methods can suffer from optimization instability during reinforcement learning ( Yin et al., 2025 ) . In contrast, NoRA remains stable and consistently improves the overall performance of standard LoRA without relying on singular-value decomposition of the pretrained weights. These results highlight the robustness of NoRA across different optimization regimes. Unlike PiSSA and MiLoRA, NoRA does not depend on the spectral structure of pretrained weights, while preserving the lightweight low-rank parameterization and deployment efficiency of standard LoRA. Together with the supervised finetuning results, the RLVR experiments suggest that controlling the scale of the input-to-latent projection provides a simple and broadly effective mechanism for improving low-rank optimization.",
+      "source": "https://arxiv.org/html/2608.31036v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0033",
+      "section": "4.4 RLVR on Mathematical Reasoning",
+      "text": "Method AIME24@32 AIME25@32 AMC@32 HMMT@32 MATH500@4 Minerva@4 Avg. Avg. Pass Avg. Pass Avg. Pass Avg. Pass Avg. Pass Avg. Pass Base 24.3 70.0 20.4 53.3 64.8 95.0 9.9 36.7 80.9 92.8 27.8 43.0 41.0 MiLoRA 4.2 6.7 0.0 0.0 19.6 47.5 0.0 0.0 44.5 63.4 11.7 19.9 18.0 PiSSA 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.0 0.6 1.0 0.1 0.4 0.2 LoRA 28.0 60.0 23.1 53.3 68.0 97.5 10.3 35.0 81.3 92.2 30.1 46.3 42.8 NoRA 26.7 66.7 23.5 46.7 72.7 97.5 10.3 35.0 84.5 92.8 32.0 47.8 44.4 Table 6: Comparison of accuracy and pass rate on the RLVR task. All numbers are reported in percentages.",
+      "source": "https://arxiv.org/html/2608.31036v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0034",
+      "section": "5 Related Work and Concluding Remarks",
+      "text": "Parameter-efficient finetuning. As LLMs continue to grow in scale and capability, there has been increasing interest in adapting them to downstream tasks in a parameter-efficient manner ( Houlsby et al., 2019 ; Aghajanyan et al., 2020 ; Hu et al., 2021 ; Edalati et al., 2022 ; Wang et al., 2022 ; Gheini et al., 2021 ; Zaken et al., 2022 ; Guo et al., 2020 ; Sung et al., 2021 ; Ansell et al., 2022 ; Lester et al., 2021 ; Li and Liang, 2021 ; Vu et al., 2022 ; He et al., 2021 ; Mao et al., 2021 ; Karimi Mahabadi et al., 2021 ; Liu et al., 2022 ; Sung et al., 2022 ; Chen et al., 2023 ; Jia et al., 2022 ; Chen et al., 2022 ; Zhang et al., 2022 ; Jie and Deng, 2023 ; Lian et al., 2022 ; Qiu et al., 2023 ; Qiu et al., 2025 ; Liu et al., 2024c ; Wu et al., 2024 ; Zi et al., 2023 ) . Among them, LoRA ( Hu et al., 2021 ) is widely adopted due to its simplicity, efficiency, and mergeability at inference time. Subsequent variants improve LoRA from different perspectives, such as adaptive rank allocation ( Zhang et al., 2023b ) , low-bit quantization ( Dettmers et al., 2023 ) and weight-decomposed low-rank updates (DoRA) ( Liu et al., 2024b ) . While these methods improve the capacity, efficiency, or stability of low-rank adaptation, our work focuses on a complementary question: how the low-rank subspace should be initialized for better optimization.",
+      "source": "https://arxiv.org/html/2608.31036v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0035",
+      "section": "5 Related Work and Concluding Remarks",
+      "text": "LoRA initialization and optimization. Recent studies show that LoRA is sensitive to initialization, scaling, and early-stage optimization dynamics. PiSSA initializes LoRA from principal singular components of pretrained weights ( Meng et al., 2024 ) , OLoRA ( Büyükakyüz, 2024 ) adopts orthogonal initialization, LoRA-GA ( Wang et al., 2024 ) uses gradient information to guide initialization, EVA leverages activation statistics, and rsLoRA improves stability through rank-dependent scaling ( Kalajdzievski, 2023 ) . These methods demonstrate the importance of initialization, but often rely on SVD, gradient estimation, activation statistics, or scaling heuristics. In contrast, NoRA requires no additional data, SVD, or test-time overhead while preserving the mergeability of LoRA. Concluding remarks. This work shows that LoRA’s effectiveness depends not only on its rank, but also critically on the geometry and scale of its down-projection. Inspired by the normalized latent representations in MLA, we ask whether the benefits of latent normalization can be transferred to LoRA without sacrificing its linear structure and exact mergeability. This leads to NoRA, which normalizes the down-projection along the rank dimension and thereby controls the scale of the input-to-latent mapping. From a preconditioning perspective, LoRA can be viewed as full finetuning under an implicit low-rank, input-side preconditioner determined by the down-projection; NoRA’s rank-dimension normalization corrects undesirable scale imbalance in this preconditioner and yields a better-conditioned optimization geometry. NoRA can consistently improve convergence, training stability and downstream performance across pretraining, supervised finetuning, and RLVR.",
+      "source": "https://arxiv.org/html/2608.31036v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0036",
+      "section": "References",
+      "text": "Aghajanyan et al. (2020) A. Aghajanyan, L. Zettlemoyer, and S. Gupta Intrinsic dimensionality explains the effectiveness of language model fine-tuning . arXiv preprint arXiv:2012.13255 . Cited by: §5 . Ansell et al. (2022) A. Ansell, E. Ponti, A. Korhonen, and I. Vulić Composable sparse fine-tuning for cross-lingual transfer . In ACL , Cited by: §5 . Arora et al. (2024) S. Arora, A. Timalsina, A. Singhal, B. Spector, S. Eyuboglu, X. Zhao, A. Rao, A. Rudra, and C. Ré Just read twice: closing the recall gap for recurrent language models . arXiv preprint arXiv:2407.05483 . Cited by: Table 4 . Austin et al. (2021) J. Austin, A. Odena, M. Nye, M. Bosma, H. Michalewski, D. Dohan, E. Jiang, C. Cai, M. Terry, Q. Le, et al. Program synthesis with large language models . arXiv preprint arXiv:2108.07732 . Cited by: Table 2 . Balunović et al. (2025) M. Balunović, J. Dekoninck, I. Petrov, N. Jovanović, and M. Vechev Matharena: evaluating llms on uncontaminated math competitions . arXiv preprint arXiv:2505.23281 . Cited by: Table 2 . Bisk et al. (2020) Y. Bisk, R. Zellers, J. Gao, Y. Choi, et al. Piqa: reasoning about physical commonsense in natural language . In AAAI , Cited by: Table 2 . Büyükakyüz (2024) K. Büyükakyüz Olora: orthonormal low-rank adaptation of large language models . arXiv preprint arXiv:2406.01775 . Cited by: §5 . Chen et al. (2023) J. Chen, A. Zhang, X. Shi, M. Li, A. Smola, and D. Yang Parameter-efficient fine-tuning design spaces . In ICLR , Cited by: §5 . Chen et al. (2021) M. Chen, J. Tworek, H. Jun, Q. Yuan, H. P. D. O. Pinto, J. Kaplan, H. Edwards, Y. Burda, N. Joseph, G. Brockman, et al. Evaluating large language models trained on code . arXiv preprint arXiv:2107.03374 . Cited by: Table 2 .",
+      "source": "https://arxiv.org/html/2608.31036v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0037",
+      "section": "References",
+      "text": "Chen et al. (2022) S. Chen, C. Ge, Z. Tong, J. Wang, Y. Song, J. Wang, and P. Luo Adaptformer: adapting vision transformers for scalable visual recognition . In NeurIPS , Cited by: §5 . Clark et al. (2018) P. Clark, I. Cowhey, O. Etzioni, T. Khot, A. Sabharwal, C. Schoenick, and O. Tafjord Think you have solved question answering? try arc, the ai2 reasoning challenge . arXiv preprint arXiv:1803.05457 . Cited by: Table 2 . Cobbe et al. (2021) K. Cobbe, V. Kosaraju, M. Bavarian, M. Chen, H. Jun, L. Kaiser, M. Plappert, J. Tworek, J. Hilton, R. Nakano, et al. Training verifiers to solve math word problems . arXiv preprint arXiv:2110.14168 . Cited by: Table 2 . Dettmers et al. (2023) T. Dettmers, A. Pagnoni, A. Holtzman, and L. Zettlemoyer Qlora: efficient finetuning of quantized llms . In NeurIPS , Cited by: §5 . Edalati et al. (2022) A. Edalati, M. Tahaei, I. Kobyzev, V. P. Nia, J. J. Clark, and M. Rezagholizadeh Krona: parameter efficient tuning with kronecker adapter . arXiv preprint arXiv:2212.10650 . Cited by: §5 . Gao et al. (2024) L. Gao, J. Tow, B. Abbasi, S. Biderman, S. Black, A. DiPofi, C. Foster, L. Golding, J. Hsu, A. Le Noac’h, H. Li, K. McDonell, N. Muennighoff, C. Ociepa, J. Phang, L. Reynolds, H. Schoelkopf, A. Skowron, L. Sutawika, E. Tang, A. Thite, B. Wang, K. Wang, and A. Zou The language model evaluation harness . Zenodo . External Links: Document , Link Cited by: Table 4 . Gheini et al. (2021) M. Gheini, X. Ren, and J. May Cross-attention is all you need: adapting pretrained transformers for machine translation . In EMNLP , Cited by: §5 .",
+      "source": "https://arxiv.org/html/2608.31036v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0038",
+      "section": "References",
+      "text": "Grattafiori et al. (2024) A. Grattafiori, A. Dubey, A. Jauhri, A. Pandey, A. Kadian, A. Al-Dahle, A. Letman, A. Mathur, A. Schelten, A. Vaughan, et al. The llama 3 herd of models . arXiv preprint arXiv:2407.21783 . Cited by: Table 2 . Guo et al. (2020) D. Guo, A. M. Rush, and Y. Kim Parameter-efficient transfer learning with diff pruning . arXiv preprint arXiv:2012.07463 . Cited by: §5 . Hayou et al. (2024) S. Hayou, N. Ghosh, and B. Yu Lora+: efficient low rank adaptation of large models . arXiv preprint arXiv:2402.12354 . Cited by: Table 1 . He et al. (2021) J. He, C. Zhou, X. Ma, T. Berg-Kirkpatrick, and G. Neubig Towards a unified view of parameter-efficient transfer learning . arXiv preprint arXiv:2110.04366 . Cited by: §5 . Houlsby et al. (2019) N. Houlsby, A. Giurgiu, S. Jastrzebski, B. Morrone, Q. De Laroussilhe, A. Gesmundo, M. Attariyan, and S. Gelly Parameter-efficient transfer learning for nlp . In ICML , Cited by: §5 . Hu et al. (2021) E. J. Hu, Y. Shen, P. Wallis, Z. Allen-Zhu, Y. Li, S. Wang, L. Wang, and W. Chen Lora: low-rank adaptation of large language models . arXiv preprint arXiv:2106.09685 . Cited by: §1 , Table 1 , §5 . Huang et al. (2026) Y. Huang, R. Peng, Z. Qiu, J. Kang, Y. Wen, B. Schölkopf, and W. Liu PEFT-arena: understanding parameter-efficient finetuning from a stability-plasticity perspective . arXiv preprint arXiv:2605.28819 . Cited by: Table 2 , §4 . Jia et al. (2022) M. Jia, L. Tang, B. Chen, C. Cardie, S. Belongie, B. Hariharan, and S. Lim Visual prompt tuning . In ECCV , Cited by: §5 . Jie and Deng (2023) S. Jie and Z. Deng Fact: factor-tuning for lightweight adaptation on vision transformer . In AAAI , Cited by: §5 .",
+      "source": "https://arxiv.org/html/2608.31036v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0039",
+      "section": "References",
+      "text": "Kalajdzievski (2023) D. Kalajdzievski A rank stabilization scaling factor for fine-tuning with lora . arXiv preprint arXiv:2312.03732 . Cited by: §1 , §4.3 , §5 . Kang and Yin (2026) J. Kang and Q. Yin Miss: revisiting the trade-off in lora with an efficient shard-sharing structure . In ICLR , Cited by: Table 1 , §3.2 , §4.3 . Karimi Mahabadi et al. (2021) R. Karimi Mahabadi, J. Henderson, and S. Ruder Compacter: efficient low-rank hypercomplex adapter layers . In NeurIPS , Cited by: §5 . Kopiczko et al. (2024) D. Kopiczko, T. Blankevoort, and Y. Asano Vera: vector-based random matrix adaptation . In ICLR , Cited by: §1 . Lester et al. (2021) B. Lester, R. Al-Rfou, and N. Constant The power of scale for parameter-efficient prompt tuning . In EMNLP , Cited by: §5 . Lewkowycz et al. (2022) A. Lewkowycz, A. Andreassen, D. Dohan, E. Dyer, H. Michalewski, V. Ramasesh, A. Slone, C. Anil, I. Schlag, T. Gutman-Solo, et al. Solving quantitative reasoning problems with language models . In NeurIPS , Cited by: Table 2 . Li et al. (2024) J. Li, E. Beeching, L. Tunstall, B. Lipkin, R. Soletskyi, S. Huang, K. Rasul, L. Yu, A. Q. Jiang, Z. Shen, et al. Numinamath: the largest public dataset in ai4maths with 860k pairs of competition math problems and solutions . Hugging Face repository 13 ( 9 ), pp. 9 . Cited by: Table 2 . Li and Liang (2021) X. L. Li and P. Liang Prefix-tuning: optimizing continuous prompts for generation . In ACL , Cited by: §5 . Lian et al. (2022) D. Lian, D. Zhou, J. Feng, and X. Wang Scaling & shifting your features: a new baseline for efficient model tuning . In NeurIPS , Cited by: §5 .",
+      "source": "https://arxiv.org/html/2608.31036v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0040",
+      "section": "References",
+      "text": "Lightman et al. (2024) H. Lightman, V. Kosaraju, Y. Burda, H. Edwards, B. Baker, T. Lee, J. Leike, J. Schulman, I. Sutskever, and K. Cobbe Let’s verify step by step . In ICLR , Cited by: Table 2 . Liu et al. (2024a) A. Liu, B. Feng, B. Wang, B. Wang, B. Liu, C. Zhao, C. Dengr, C. Ruan, D. Dai, D. Guo, et al. Deepseek-v2: a strong, economical, and efficient mixture-of-experts language model . arXiv preprint arXiv:2405.04434 . Cited by: Table 2 , Table 2 . Liu et al. (2022) H. Liu, D. Tam, M. Muqeeth, J. Mohta, T. Huang, M. Bansal, and C. A. Raffel Few-shot parameter-efficient fine-tuning is better and cheaper than in-context learning . In NeurIPS , Cited by: §5 . Liu et al. (2024b) S. Liu, C. Wang, H. Yin, P. Molchanov, Y. F. Wang, K. Cheng, and M. Chen Dora: weight-decomposed low-rank adaptation . arXiv preprint arXiv:2402.09353 . Cited by: §1 , Table 1 , §5 . Liu et al. (2018) W. Liu, Z. Liu, Z. Yu, B. Dai, R. Lin, Y. Wang, J. M. Rehg, and L. Song Decoupled networks . In CVPR , Cited by: §1 , §3.3 . Liu et al. (2024c) W. Liu, Z. Qiu, Y. Feng, Y. Xiu, Y. Xue, L. Yu, H. Feng, Z. Liu, J. Heo, S. Peng, Y. Wen, M. J. Black, A. Weller, and B. Schölkopf Parameter-efficient orthogonal finetuning via butterfly factorization . In ICLR , Cited by: §4.3 , §5 . Liu et al. (2017) W. Liu, Y. Zhang, X. Li, Z. Yu, B. Dai, T. Zhao, and L. Song Deep hyperspherical learning . In NeurIPS , Cited by: §1 , §3.3 . Loshchilov et al. (2025) I. Loshchilov, C. Hsieh, S. Sun, and B. Ginsburg Ngpt: normalized transformer with representation learning on the hypersphere . In ICLR , Cited by: §1 .",
+      "source": "https://arxiv.org/html/2608.31036v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0041",
+      "section": "References",
+      "text": "Mao et al. (2021) Y. Mao, L. Mathias, R. Hou, A. Almahairi, H. Ma, J. Han, W. Yih, and M. Khabsa Unipelt: a unified framework for parameter-efficient language model tuning . arXiv preprint arXiv:2110.07577 . Cited by: §5 . Martens and Grosse (2015) J. Martens and R. Grosse Optimizing neural networks with kronecker-factored approximate curvature . In ICML , Cited by: §3.3 . Meng et al. (2024) F. Meng, Z. Wang, and M. Zhang Pissa: principal singular values and singular vectors adaptation of large language models . In NeurIPS , Cited by: §1 , Table 1 , §4.3 , §4.4 , §5 . Merity et al. (2016) S. Merity, C. Xiong, J. Bradbury, and R. Socher Pointer sentinel mixture models . arXiv preprint arXiv:1609.07843 . Cited by: Table 2 . Mihaylov et al. (2018) T. Mihaylov, P. Clark, T. Khot, and A. Sabharwal Can a suit of armor conduct electricity? a new dataset for open book question answering . In EMNLP , Cited by: Table 2 . Paperno et al. (2016) D. Paperno, G. Kruszewski, A. Lazaridou, N. Pham, R. Bernardi, S. Pezzelle, M. Baroni, G. Boleda, and R. Fernández The lambada dataset: word prediction requiring a broad discourse context . In ACL , Cited by: Table 2 . Qiu et al. (2023) Z. Qiu, W. Liu, H. Feng, Y. Xue, Y. Feng, Z. Liu, D. Zhang, A. Weller, and B. Schölkopf Controlling text-to-image diffusion by orthogonal finetuning . In NeurIPS , Cited by: §4.3 , §5 . Qiu et al. (2025) Z. Qiu, W. Liu, A. Weller, and B. Schölkopf Orthogonal finetuning made scalable . In EMNLP , Cited by: §4.3 , §5 . Sakaguchi et al. (2021) K. Sakaguchi, R. L. Bras, C. Bhagavatula, and Y. Choi Winogrande: an adversarial winograd schema challenge at scale . Communications of the ACM 64 ( 9 ), pp. 99–106 . Cited by: Table 2 .",
+      "source": "https://arxiv.org/html/2608.31036v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0042",
+      "section": "References",
+      "text": "Salimans and Kingma (2016) T. Salimans and D. P. Kingma Weight normalization: a simple reparameterization to accelerate training of deep neural networks . In NeurIPS , Cited by: §3.3 . Schulman and Lab (2025) J. Schulman and T. M. Lab LoRA without regret . Thinking Machines Lab: Connectionism . Note: https://thinkingmachines.ai/blog/lora/ External Links: Document Cited by: §4.2 . Shen et al. (2026) Z. Shen, Y. Li, Q. Yin, C. T. Leong, Z. Wang, Y. Chen, R. Han, S. Lee, and Y. R. Fung On the geometry of on-policy distillation . arXiv preprint arXiv:2606.07082 . Cited by: §1 . Soboleva et al. (2023) D. Soboleva, F. Al-Khateeb, R. Myers, J. R. Steeves, J. Hestness, and N. Dey SlimPajama: A 627B token cleaned and deduplicated version of RedPajama . Cited by: Table 2 , Table 4 . Sung et al. (2022) Y. Sung, J. Cho, and M. Bansal Lst: ladder side-tuning for parameter and memory efficient transfer learning . In NeurIPS , Cited by: §5 . Sung et al. (2021) Y. Sung, V. Nair, and C. A. Raffel Training neural networks with fixed sparse masks . NeurIPS . Cited by: §5 . Vaswani et al. (2017) A. Vaswani, N. Shazeer, N. Parmar, J. Uszkoreit, L. Jones, A. N. Gomez, Ł. Kaiser, and I. Polosukhin Attention is all you need . Advances in neural information processing systems 30 . Cited by: Table 2 . Vu et al. (2022) T. Vu, B. Lester, N. Constant, R. Al-Rfou, and D. Cer SPoT: better frozen model adaptation through soft prompt transfer . In ACL , Cited by: §5 . Wang et al. (2025) H. Wang, Y. Li, S. Wang, G. Chen, and Y. Chen Milora: harnessing minor singular components for parameter-efficient llm finetuning . In NAACL-HLT , Cited by: §1 , Table 1 , §4.4 .",
+      "source": "https://arxiv.org/html/2608.31036v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0043",
+      "section": "References",
+      "text": "Wang et al. (2026) S. Wang, J. Asilis, Ö. F. Akgül, E. Bilgin, O. Liu, and W. Neiswanger Tina: tiny reasoning models via lora . In ICLR , Cited by: §1 . Wang et al. (2024) S. Wang, L. Yu, and J. Li Lora-ga: low-rank adaptation with gradient approximation . In NeurIPS , Cited by: §5 . Wang et al. (2022) Y. Wang, S. Mukherjee, X. Liu, J. Gao, A. H. Awadallah, and J. Gao Adamix: mixture-of-adapter for parameter-efficient tuning of large language models . In EMNLP , Cited by: §5 . Wu et al. (2024) T. Wu, J. Wang, Z. Zhao, and N. Wong Mixture-of-subspaces in low-rank adaptation . arXiv preprint arXiv:2406.11909 . Cited by: §5 . Yang and Zhang (2024) FLA: a triton-based library for hardware-efficient implementations of linear attention mechanism External Links: Link Cited by: Table 2 . Ye et al. (2025) M. Ye, W. Liu, and P. He Vera: explainable video anomaly detection via verbalized learning of vision-language models . In CVPR , Cited by: Table 1 . Yin et al. (2025) Q. Yin, Y. Wu, Z. Shen, S. Li, Z. Wang, Y. Li, C. T. Leong, J. Kang, and J. Gu Evaluating parameter efficient methods for rlvr . arXiv preprint arXiv:2512.23165 . Cited by: §1 , §4.4 , Table 2 . Yu et al. (2024) L. Yu, W. Jiang, H. Shi, J. Yu, Z. Liu, Y. Zhang, J. Kwok, Z. Li, A. Weller, and W. Liu Metamath: bootstrap your own mathematical questions for large language models . In ICLR , Cited by: Table 2 , Table 2 . Yu et al. (2026) Q. Yu, Z. Zhang, R. Zhu, Y. Yuan, X. Zuo, Y. Yue, W. Dai, T. Fan, G. Liu, L. Liu, et al. Dapo: an open-source llm reinforcement learning system at scale . In NeurIPS , Cited by: Table 2 . Zaken et al. (2022) E. B. Zaken, Y. Goldberg, and S. Ravfogel BitFit: Simple Parameter-efficient Fine-tuning for Transformer-based Masked Language-models . In ACL , Cited by: §5 .",
+      "source": "https://arxiv.org/html/2608.31036v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0044",
+      "section": "References",
+      "text": "Zellers et al. (2019) R. Zellers, A. Holtzman, Y. Bisk, A. Farhadi, and Y. Choi Hellaswag: can a machine really finish your sentence? . In ACL , Cited by: Table 2 . Zhang et al. (2023a) L. Zhang, L. Zhang, S. Shi, X. Chu, and B. Li LoRA-fa: efficient and effective low rank representation fine-tuning . arXiv preprint arXiv:2308.03303 . Cited by: Table 1 . Zhang et al. (2023b) Q. Zhang, M. Chen, A. Bukharin, N. Karampatziakis, P. He, Y. Cheng, W. Chen, and T. Zhao Adalora: adaptive budget allocation for parameter-efficient fine-tuning . arXiv preprint arXiv:2303.10512 . Cited by: Table 1 , §5 . Zhang and Math-AI (2025) Y. Zhang and T. Math-AI American invitational mathematics examination (aime) 2025 . Cited by: Table 2 . Zhang et al. (2022) Y. Zhang, K. Zhou, and Z. Liu Neural prompt search . arXiv preprint arXiv:2206.04673 . Cited by: §5 . Zheng et al. (2024) T. Zheng, G. Zhang, T. Shen, X. Liu, B. Y. Lin, J. Fu, W. Chen, and X. Yue Opencodeinterpreter: integrating code generation with execution and refinement . In Findings of ACL , Cited by: Table 2 . Zi et al. (2023) B. Zi, X. Qi, L. Wang, J. Wang, K. Wong, and L. Zhang Delta-lora: fine-tuning high-rank parameters with the delta of low-rank matrices . arXiv preprint arXiv:2309.02411 . Cited by: §5 .",
+      "source": "https://arxiv.org/html/2608.31036v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0045",
+      "section": "Appendix A Pretraining Settings",
+      "text": "We conduct the pre-training experiments on FineWeb-10BT. Unless otherwise specified, all models are trained for 20,480 optimization steps with a sequence length of 2,048 and a global batch size of 256. We use AdamW with a peak learning rate of 3 × 10 − 4 3\\times 10^{-4} and ϵ = 10 − 15 \\epsilon=10^{-15} . The learning rate is warmed up for the first 1,024 steps and then decayed using a cosine schedule to 10 % 10\\% of the peak learning rate. The gradient norm is clipped at 1.0. All experiments use the same training configuration and random seed for controlled comparison. Hyperparameter Value Dataset FineWeb-10BT Optimizer AdamW Learning rate 3 × 10 − 4 3\\times 10^{-4} Adam ϵ \\epsilon 10 − 15 10^{-15} LR scheduler Cosine decay Warmup steps 1,024 Minimum LR ratio 0.1 Global batch size 256 Sequence length 2,048 Training steps 20,480 Gradient clipping 1.0 Random seed 42 Table 7: Hyperparameter settings for the pretraining experiments.",
+      "source": "https://arxiv.org/html/2608.31036v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0046",
+      "section": "Appendix B Supervised Finetuning Settings",
+      "text": "For the SFT experiments, we tune the hyperparameters of each method individually to ensure competitive performance. For NoRA, we recommend using α = r \\alpha=r as the default setting, under which the early gradient norm is close to that of full finetuning. Although a larger scaling factor, such as α = 2 ​ r \\alpha=2r , can yield better loss fitting in some cases, we observe that it may also lead to increased forgetting of the pretrained knowledge. Considering this trade-off between adaptation and retention, we use and recommend α : r = 1 : 1 \\alpha:r=1:1 as the default configuration. Hyperparameters LoRA DoRA PiSSA rsLoRA OFT NoRA rank 32 32 32 32 32 32 α \\alpha 64 64 32 64 - 32 dropout 0.0 optimizer AdamW lr 2e-5 lr scheduler Cosine decay batch size 128 warmup ratio 0.3 epochs 1 target_modules Q,K,V,O,Up,Down,Gate Table 8: Hyperparameter settings for the Llama-3.2-3B supervised finetuning experiments.",
+      "source": "https://arxiv.org/html/2608.31036v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0047",
+      "section": "Appendix C Reinforcement Learning Settings",
+      "text": "We conduct reinforcement learning experiments on DeepSeek-R1-Distill-Qwen-1.5B using the DAPO objective and the DAPO-Math-17K dataset. All experiments are performed with 8 GPUs using bfloat16 precision. We train for 1,024 optimization steps with a global batch size of 128 and a learning rate of 1 × 10 − 5 1\\times 10^{-5} under a cosine learning-rate schedule without warmup. For each prompt, we sample 8 responses with a maximum completion length of 16,384 tokens. The maximum prompt length is set to 512 tokens. For parameter-efficient training, we use a rank of 32 and set α = 64 \\alpha=64 . The low-rank modules are applied to all attention projections ( q q , k k , v v , and o o ) and MLP projections (up, down, and gate). We use the same training configuration across different methods to ensure a controlled comparison. Hyperparameter Value Model DeepSeek-R1-Distill-Qwen-1.5B Dataset DAPO-Math-17K RL objective DAPO Precision bfloat16 Learning rate 1 × 10 − 5 1\\times 10^{-5} LR scheduler Cosine decay Warmup ratio 0 Global batch size 128 Training steps 1,024 LoRA rank r r 32 LoRA α \\alpha 64 LoRA dropout 0.05 Responses per prompt 8 Maximum prompt length 512 Maximum completion length 16,384 ϵ high \\epsilon_{\\mathrm{high}} 0.28 β \\beta 0.0 Random seed 42 Table 9: Hyperparameter settings for the reinforcement learning experiments.",
+      "source": "https://arxiv.org/html/2608.31036v1",
+      "offset": 0
+    }
+  ],
+  "links": [
+    {
+      "href": "https://spherelab.ai/NoRA",
+      "text": "spherelab.ai/NoRA",
+      "section": "Abstract",
+      "context": "spherelab.ai/NoRA",
+      "url": "https://spherelab.ai/NoRA"
+    },
+    {
+      "href": "#bib.bib1",
+      "text": "Hu et al., 2021",
+      "section": "1 Introduction",
+      "context": "As large language models (LLMs) continue to scale, their training costs grow rapidly, increasing the need for parameter-efficient learning. Among parameter-efficient finetuning (PEFT) approaches, Low-rank adaptation (LoRA) ( Hu et al., 2021",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib1"
+    },
+    {
+      "href": "#bib.bib38",
+      "text": "Wang et al., 2026",
+      "section": "1 Introduction",
+      "context": "As large language models (LLMs) continue to scale, their training costs grow rapidly, increasing the need for parameter-efficient learning. Among parameter-efficient finetuning (PEFT) approaches, Low-rank adaptation (LoRA) ( Hu et al., 2021 ) has become particularly popular due to its simplicity, efficiency, and strong empirical performance. By representing weight updates through low-rank factorization, LoRA greatly reduces the number of trainable parameters and has been successfully applied to supervised finetuning, pretraining, and reinforcement learning ( Wang et al., 2026",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib38"
+    },
+    {
+      "href": "#bib.bib47",
+      "text": "Shen et al., 2026",
+      "section": "1 Introduction",
+      "context": " large language models (LLMs) continue to scale, their training costs grow rapidly, increasing the need for parameter-efficient learning. Among parameter-efficient finetuning (PEFT) approaches, Low-rank adaptation (LoRA) ( Hu et al., 2021 ) has become particularly popular due to its simplicity, efficiency, and strong empirical performance. By representing weight updates through low-rank factorization, LoRA greatly reduces the number of trainable parameters and has been successfully applied to supervised finetuning, pretraining, and reinforcement learning ( Wang et al., 2026 ; Shen et al., 2026",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib47"
+    },
+    {
+      "href": "#bib.bib3",
+      "text": "Meng et al., 2024",
+      "section": "1 Introduction",
+      "context": "Does the regularization of the down-projection matrix 𝐀 \\bm{A} provide a useful design dimension for improving LoRA optimization? Existing work suggests that initialization can substantially affect low-rank optimization. Methods such as PiSSA ( Meng et al., 2024",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib3"
+    },
+    {
+      "href": "#bib.bib4",
+      "text": "Wang et al., 2025",
+      "section": "1 Introduction",
+      "context": "Does the regularization of the down-projection matrix 𝐀 \\bm{A} provide a useful design dimension for improving LoRA optimization? Existing work suggests that initialization can substantially affect low-rank optimization. Methods such as PiSSA ( Meng et al., 2024 ) and MiLoRA ( Wang et al., 2025",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib4"
+    },
+    {
+      "href": "#bib.bib7",
+      "text": "Yin et al., 2025",
+      "section": "1 Introduction",
+      "context": "dimension for improving LoRA optimization? Existing work suggests that initialization can substantially affect low-rank optimization. Methods such as PiSSA ( Meng et al., 2024 ) and MiLoRA ( Wang et al., 2025 ) construct the initial low-rank subspace from the spectral structure of pretrained weights and often converge faster than random initialization. However, they require singular-value decomposition and modify the initial decomposition of the pretrained weights, making them less convenient for large-scale training and potentially fragile in reinforcement-learning settings ( Yin et al., 2025",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib7"
+    },
+    {
+      "href": "#bib.bib42",
+      "text": "Kalajdzievski, 2023",
+      "section": "1 Introduction",
+      "context": "tion can substantially affect low-rank optimization. Methods such as PiSSA ( Meng et al., 2024 ) and MiLoRA ( Wang et al., 2025 ) construct the initial low-rank subspace from the spectral structure of pretrained weights and often converge faster than random initialization. However, they require singular-value decomposition and modify the initial decomposition of the pretrained weights, making them less convenient for large-scale training and potentially fragile in reinforcement-learning settings ( Yin et al., 2025 ) . Other approaches improve LoRA through modified scaling ( Kalajdzievski, 2023",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib42"
+    },
+    {
+      "href": "#bib.bib2",
+      "text": "Liu et al., 2024b",
+      "section": "1 Introduction",
+      "context": "ethods such as PiSSA ( Meng et al., 2024 ) and MiLoRA ( Wang et al., 2025 ) construct the initial low-rank subspace from the spectral structure of pretrained weights and often converge faster than random initialization. However, they require singular-value decomposition and modify the initial decomposition of the pretrained weights, making them less convenient for large-scale training and potentially fragile in reinforcement-learning settings ( Yin et al., 2025 ) . Other approaches improve LoRA through modified scaling ( Kalajdzievski, 2023 ) , constrained parameterizations ( Liu et al., 2024b",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib2"
+    },
+    {
+      "href": "#bib.bib43",
+      "text": "Kopiczko et al., 2024",
+      "section": "1 Introduction",
+      "context": "LoRA ( Wang et al., 2025 ) construct the initial low-rank subspace from the spectral structure of pretrained weights and often converge faster than random initialization. However, they require singular-value decomposition and modify the initial decomposition of the pretrained weights, making them less convenient for large-scale training and potentially fragile in reinforcement-learning settings ( Yin et al., 2025 ) . Other approaches improve LoRA through modified scaling ( Kalajdzievski, 2023 ) , constrained parameterizations ( Liu et al., 2024b ) , or fixed projections ( Kopiczko et al., 2024",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib43"
+    },
+    {
+      "href": "#bib.bib44",
+      "text": "Liu et al., 2017",
+      "section": "1 Introduction",
+      "context": "Our investigation begins with the observation that the normalized latent bottleneck used in Multi-head Latent Attention (MLA) substantially stabilizes training and also improves convergence. Similar observations have also been made in multiple training settings ( Liu et al., 2017",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib44"
+    },
+    {
+      "href": "#bib.bib45",
+      "text": "Liu et al., 2018",
+      "section": "1 Introduction",
+      "context": "Our investigation begins with the observation that the normalized latent bottleneck used in Multi-head Latent Attention (MLA) substantially stabilizes training and also improves convergence. Similar observations have also been made in multiple training settings ( Liu et al., 2017 ; Liu et al., 2018",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib45"
+    },
+    {
+      "href": "#bib.bib46",
+      "text": "Loshchilov et al., 2025",
+      "section": "1 Introduction",
+      "context": "Our investigation begins with the observation that the normalized latent bottleneck used in Multi-head Latent Attention (MLA) substantially stabilizes training and also improves convergence. Similar observations have also been made in multiple training settings ( Liu et al., 2017 ; Liu et al., 2018 ; Loshchilov et al., 2025",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib46"
+    },
+    {
+      "href": "#bib.bib1",
+      "text": "Hu et al., 2021",
+      "section": "2 Preliminaries",
+      "context": "Method Forward Computation Initialization / Prior Full-Parameter and Standard Low-Rank Adaptation Full Finetuning y = 𝑾 0 ​ x y=\\bm{W}_{0}x N/A LoRA ( Hu et al., 2021",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib1"
+    },
+    {
+      "href": "#bib.bib35",
+      "text": "Hayou et al., 2024",
+      "section": "2 Preliminaries",
+      "context": "Method Forward Computation Initialization / Prior Full-Parameter and Standard Low-Rank Adaptation Full Finetuning y = 𝑾 0 ​ x y=\\bm{W}_{0}x N/A LoRA ( Hu et al., 2021 ) y = 𝑾 0 ​ x + 𝑩 ​ 𝑨 ​ x y=\\bm{W}_{0}x+\\bm{B}\\bm{A}x 𝑨 ∼ 𝒩 ⁡ ( 0 , σ 2 ) , 𝑩 = 0 \\bm{A}\\sim\\mathcal{N}(0,\\sigma^{2}),\\ \\bm{B}=0 Optimization-Strategy Variants LoRA+ ( Hayou et al., 2024",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib35"
+    },
+    {
+      "href": "#bib.bib2",
+      "text": "Liu et al., 2024b",
+      "section": "2 Preliminaries",
+      "context": "Method Forward Computation Initialization / Prior Full-Parameter and Standard Low-Rank Adaptation Full Finetuning y = 𝑾 0 ​ x y=\\bm{W}_{0}x N/A LoRA ( Hu et al., 2021 ) y = 𝑾 0 ​ x + 𝑩 ​ 𝑨 ​ x y=\\bm{W}_{0}x+\\bm{B}\\bm{A}x 𝑨 ∼ 𝒩 ⁡ ( 0 , σ 2 ) , 𝑩 = 0 \\bm{A}\\sim\\mathcal{N}(0,\\sigma^{2}),\\ \\bm{B}=0 Optimization-Strategy Variants LoRA+ ( Hayou et al., 2024 ) y = 𝑾 0 ​ x + 𝑩 ​ 𝑨 ​ x y=\\bm{W}_{0}x+\\bm{B}\\bm{A}x η 𝑩 = λ ​ η 𝑨 \\eta_{\\bm{B}}=\\lambda\\eta_{\\bm{A}} Structured or Constrained Low-Rank Parameterizations DoRA ( Liu et al., 2024b",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib2"
+    },
+    {
+      "href": "#bib.bib5",
+      "text": "Kang and Yin, 2026",
+      "section": "2 Preliminaries",
+      "context": "m{W}_{0}x N/A LoRA ( Hu et al., 2021 ) y = 𝑾 0 ​ x + 𝑩 ​ 𝑨 ​ x y=\\bm{W}_{0}x+\\bm{B}\\bm{A}x 𝑨 ∼ 𝒩 ⁡ ( 0 , σ 2 ) , 𝑩 = 0 \\bm{A}\\sim\\mathcal{N}(0,\\sigma^{2}),\\ \\bm{B}=0 Optimization-Strategy Variants LoRA+ ( Hayou et al., 2024 ) y = 𝑾 0 ​ x + 𝑩 ​ 𝑨 ​ x y=\\bm{W}_{0}x+\\bm{B}\\bm{A}x η 𝑩 = λ ​ η 𝑨 \\eta_{\\bm{B}}=\\lambda\\eta_{\\bm{A}} Structured or Constrained Low-Rank Parameterizations DoRA ( Liu et al., 2024b ) y = 𝒎 ⁡ ( 𝑾 0 ​ x + 𝑩 ​ 𝑨 ​ x ‖ 𝑾 0 + 𝑩 ​ 𝑨 ‖ c ) y=\\bm{m}\\!\\left(\\frac{\\bm{W}_{0}x+\\bm{B}\\bm{A}x}{\\|\\bm{W}_{0}+\\bm{B}\\bm{A}\\|_{c}}\\right) Kaiming init, 𝑩 = 0 \\bm{B}=0 MiSS ( Kang and Yin, 2026",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib5"
+    },
+    {
+      "href": "#bib.bib34",
+      "text": "Zhang et al., 2023b",
+      "section": "2 Preliminaries",
+      "context": "N}(0,\\sigma^{2}),\\ \\bm{B}=0 Optimization-Strategy Variants LoRA+ ( Hayou et al., 2024 ) y = 𝑾 0 ​ x + 𝑩 ​ 𝑨 ​ x y=\\bm{W}_{0}x+\\bm{B}\\bm{A}x η 𝑩 = λ ​ η 𝑨 \\eta_{\\bm{B}}=\\lambda\\eta_{\\bm{A}} Structured or Constrained Low-Rank Parameterizations DoRA ( Liu et al., 2024b ) y = 𝒎 ⁡ ( 𝑾 0 ​ x + 𝑩 ​ 𝑨 ​ x ‖ 𝑾 0 + 𝑩 ​ 𝑨 ‖ c ) y=\\bm{m}\\!\\left(\\frac{\\bm{W}_{0}x+\\bm{B}\\bm{A}x}{\\|\\bm{W}_{0}+\\bm{B}\\bm{A}\\|_{c}}\\right) Kaiming init, 𝑩 = 0 \\bm{B}=0 MiSS ( Kang and Yin, 2026 ) y = 𝑾 0 ​ x + expand ⁡ ( 𝑫 ) ​ x y=\\bm{W}_{0}x+\\operatorname{expand}(\\bm{D})x Fixed structured projection AdaLoRA ( Zhang et al., 2023b",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib34"
+    },
+    {
+      "href": "#bib.bib36",
+      "text": "Zhang et al., 2023a",
+      "section": "2 Preliminaries",
+      "context": "uctured or Constrained Low-Rank Parameterizations DoRA ( Liu et al., 2024b ) y = 𝒎 ⁡ ( 𝑾 0 ​ x + 𝑩 ​ 𝑨 ​ x ‖ 𝑾 0 + 𝑩 ​ 𝑨 ‖ c ) y=\\bm{m}\\!\\left(\\frac{\\bm{W}_{0}x+\\bm{B}\\bm{A}x}{\\|\\bm{W}_{0}+\\bm{B}\\bm{A}\\|_{c}}\\right) Kaiming init, 𝑩 = 0 \\bm{B}=0 MiSS ( Kang and Yin, 2026 ) y = 𝑾 0 ​ x + expand ⁡ ( 𝑫 ) ​ x y=\\bm{W}_{0}x+\\operatorname{expand}(\\bm{D})x Fixed structured projection AdaLoRA ( Zhang et al., 2023b ) y = 𝑾 0 ​ x + 𝑷 ​ 𝚲 ​ 𝑸 ​ x y=\\bm{W}_{0}x+\\bm{P}\\bm{\\Lambda}\\bm{Q}x 𝚲 = 0 , 𝑷 , 𝑸 ∼ 𝒩 ⁡ ( 0 , σ 2 ) \\bm{\\Lambda}=0,\\ \\bm{P},\\bm{Q}\\sim\\mathcal{N}(0,\\sigma^{2}) LoRA-FA ( Zhang et al., 2023a",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib36"
+    },
+    {
+      "href": "#bib.bib37",
+      "text": "Ye et al., 2025",
+      "section": "2 Preliminaries",
+      "context": "𝑨 ‖ c ) y=\\bm{m}\\!\\left(\\frac{\\bm{W}_{0}x+\\bm{B}\\bm{A}x}{\\|\\bm{W}_{0}+\\bm{B}\\bm{A}\\|_{c}}\\right) Kaiming init, 𝑩 = 0 \\bm{B}=0 MiSS ( Kang and Yin, 2026 ) y = 𝑾 0 ​ x + expand ⁡ ( 𝑫 ) ​ x y=\\bm{W}_{0}x+\\operatorname{expand}(\\bm{D})x Fixed structured projection AdaLoRA ( Zhang et al., 2023b ) y = 𝑾 0 ​ x + 𝑷 ​ 𝚲 ​ 𝑸 ​ x y=\\bm{W}_{0}x+\\bm{P}\\bm{\\Lambda}\\bm{Q}x 𝚲 = 0 , 𝑷 , 𝑸 ∼ 𝒩 ⁡ ( 0 , σ 2 ) \\bm{\\Lambda}=0,\\ \\bm{P},\\bm{Q}\\sim\\mathcal{N}(0,\\sigma^{2}) LoRA-FA ( Zhang et al., 2023a ) y = 𝑾 0 ​ x + 𝑩 ​ 𝑨 ​ x y=\\bm{W}_{0}x+\\bm{B}\\bm{A}x Frozen random 𝑨 , 𝑩 = 0 \\bm{A},\\ \\bm{B}=0 VeRA ( Ye et al., 2025",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib37"
+    },
+    {
+      "href": "#bib.bib3",
+      "text": "Meng et al., 2024",
+      "section": "2 Preliminaries",
+      "context": "x+\\operatorname{expand}(\\bm{D})x Fixed structured projection AdaLoRA ( Zhang et al., 2023b ) y = 𝑾 0 ​ x + 𝑷 ​ 𝚲 ​ 𝑸 ​ x y=\\bm{W}_{0}x+\\bm{P}\\bm{\\Lambda}\\bm{Q}x 𝚲 = 0 , 𝑷 , 𝑸 ∼ 𝒩 ⁡ ( 0 , σ 2 ) \\bm{\\Lambda}=0,\\ \\bm{P},\\bm{Q}\\sim\\mathcal{N}(0,\\sigma^{2}) LoRA-FA ( Zhang et al., 2023a ) y = 𝑾 0 ​ x + 𝑩 ​ 𝑨 ​ x y=\\bm{W}_{0}x+\\bm{B}\\bm{A}x Frozen random 𝑨 , 𝑩 = 0 \\bm{A},\\ \\bm{B}=0 VeRA ( Ye et al., 2025 ) y = 𝑾 0 ​ x + 𝚲 b ​ 𝑩 ​ 𝚲 d ​ 𝑨 ​ x y=\\bm{W}_{0}x+\\bm{\\Lambda}_{b}\\bm{B}\\bm{\\Lambda}_{d}\\bm{A}x Frozen random 𝑨 , 𝑩 \\bm{A},\\bm{B} Initialization-Based Low-Rank Adaptation PiSSA ( Meng et al., 2024",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib3"
+    },
+    {
+      "href": "#bib.bib4",
+      "text": "Wang et al., 2025",
+      "section": "2 Preliminaries",
+      "context": "bm{P}\\bm{\\Lambda}\\bm{Q}x 𝚲 = 0 , 𝑷 , 𝑸 ∼ 𝒩 ⁡ ( 0 , σ 2 ) \\bm{\\Lambda}=0,\\ \\bm{P},\\bm{Q}\\sim\\mathcal{N}(0,\\sigma^{2}) LoRA-FA ( Zhang et al., 2023a ) y = 𝑾 0 ​ x + 𝑩 ​ 𝑨 ​ x y=\\bm{W}_{0}x+\\bm{B}\\bm{A}x Frozen random 𝑨 , 𝑩 = 0 \\bm{A},\\ \\bm{B}=0 VeRA ( Ye et al., 2025 ) y = 𝑾 0 ​ x + 𝚲 b ​ 𝑩 ​ 𝚲 d ​ 𝑨 ​ x y=\\bm{W}_{0}x+\\bm{\\Lambda}_{b}\\bm{B}\\bm{\\Lambda}_{d}\\bm{A}x Frozen random 𝑨 , 𝑩 \\bm{A},\\bm{B} Initialization-Based Low-Rank Adaptation PiSSA ( Meng et al., 2024 ) y = ( 𝑾 0 − 𝑩 ​ 𝑨 ) ​ x + 𝑩 ​ 𝑨 ​ x y=(\\bm{W}_{0}-\\bm{B}\\bm{A})x+\\bm{B}\\bm{A}x Top- r r SVD initialization MiLoRA ( Wang et al., 2025",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib4"
+    },
+    {
+      "href": "#bib.bib5",
+      "text": "Kang and Yin, 2026",
+      "section": "3.2 Connection to MiSS and Block Identity Matrix Initialization",
+      "context": "Having established the effectiveness of rank-dimension normalization, we further investigate alternative approaches for achieving this form of normalization. MiSS ( Kang and Yin, 2026",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib5"
+    },
+    {
+      "href": "#S3.F1",
+      "text": "1",
+      "section": "3.2 Connection to MiSS and Block Identity Matrix Initialization",
+      "context": "MiSS therefore can be interpreted as a special case of NoRA, as its down-projection matrix is normalized by a block-identity construction ( i.e. , 𝑨 \\bm{A} is fixed to the constant 𝑨 fix \\bm{A}_{\\text{fix}} ). As shown in Figure 1",
+      "url": "https://arxiv.org/html/2608.31036v1#S3.F1"
+    },
+    {
+      "href": "#S3.E15",
+      "text": "15",
+      "section": "3.3 Why Does NoRA Work? A Preconditioning Perspective",
+      "context": "Full finetuning takes the step Δ ​ 𝑾 = − η ​ 𝑮 \\Delta{\\bm{W}}=-\\eta\\,{\\bm{G}} , i.e. , equation 15",
+      "url": "https://arxiv.org/html/2608.31036v1#S3.E15"
+    },
+    {
+      "href": "#bib.bib49",
+      "text": "Martens and Grosse, 2015",
+      "section": "3.3 Why Does NoRA Work? A Preconditioning Perspective",
+      "context": " ​ 𝑮 \\Delta{\\bm{W}}=-\\eta\\,{\\bm{G}} , i.e. , equation 15 with 𝑷 = 𝑰 {\\bm{P}}={\\bm{I}} . Hence, at initialization, and approximately for as long as 𝑩 {\\bm{B}} remains small (the neglected term α ​ 𝑩 ​ Δ ​ 𝑨 = − η ​ α 2 ​ 𝑩 ​ 𝑩 ⊤ ​ 𝑮 \\alpha{\\bm{B}}\\,\\Delta{\\bm{A}}=-\\eta\\alpha^{2}{\\bm{B}}{\\bm{B}}^{\\top}{\\bm{G}} is second order in 𝑩 {\\bm{B}} ), LoRA is full finetuning with the gradient right-multiplied by a positive semidefinite matrix of rank r r that acts on the input coordinates. Right-multiplication by a k × k k\\times k matrix is exactly where curvature-based methods ( Martens and Grosse, 2015",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib49"
+    },
+    {
+      "href": "#S3.F1",
+      "text": "1",
+      "section": "3.3 Why Does NoRA Work? A Preconditioning Perspective",
+      "context": "Random initialization of A \\bm{A} makes learning rates unbalanced at each coordinate. For example, when 𝑨 ( 0 ) {\\bm{A}}^{(0)} has zero-mean i.i.d. entries of variance σ 2 ∝ 1 / k \\sigma^{2}\\propto 1/k , 𝔼 ​ ‖ 𝒂 j ‖ 2 2 = r ​ σ 2 ∝ r / k ≪ 1 \\mathbb{E}\\|{\\bm{a}}_{j}\\|_{2}^{2}=r\\sigma^{2}\\propto r/k\\ll 1 . Therefore, at any moderate α \\alpha , every learning rate is far too small, so gradient flows through the adapter at a small fraction of the full-finetuning rate. This is empirically verified by the small gradient norm of LoRA in Figure 1",
+      "url": "https://arxiv.org/html/2608.31036v1#S3.F1"
+    },
+    {
+      "href": "#S3.F1",
+      "text": "1",
+      "section": "3.3 Why Does NoRA Work? A Preconditioning Perspective",
+      "context": "Normalization is exactly the fix. Setting every ‖ 𝒂 j ‖ 2 = 1 \\|{\\bm{a}}_{j}\\|_{2}=1 at unit scaling (rank-dimension normalization in NoRA), α = 1 \\alpha=1 (equivalently α = r \\alpha=r under the α / r \\alpha/r implementation convention), fixes the problems. Specifically, this leads to Diag ​ ( 𝑷 ) = 𝑰 \\text{Diag}(\\bm{P})={\\bm{I}} deterministically, 𝔼 ⁡ [ 𝑷 ] = 𝑰 \\mathbb{E}[\\bm{P}]=\\bm{I} over the random directions, and the adapter’s gradient norm can match full finetuning’s gradient norm in expectation, independently of r r . Therefore, we can get the flat NoRA curve in Figure 1",
+      "url": "https://arxiv.org/html/2608.31036v1#S3.F1"
+    },
+    {
+      "href": "#S4.T3",
+      "text": "3",
+      "section": "3.3 Why Does NoRA Work? A Preconditioning Perspective",
+      "context": " (equivalently α = r \\alpha=r under the α / r \\alpha/r implementation convention), fixes the problems. Specifically, this leads to Diag ​ ( 𝑷 ) = 𝑰 \\text{Diag}(\\bm{P})={\\bm{I}} deterministically, 𝔼 ⁡ [ 𝑷 ] = 𝑰 \\mathbb{E}[\\bm{P}]=\\bm{I} over the random directions, and the adapter’s gradient norm can match full finetuning’s gradient norm in expectation, independently of r r . Therefore, we can get the flat NoRA curve in Figure 1 . In contrast, row normalization ( Norm k \\text{Norm}_{k} ) leaves Diag ​ ( 𝑷 ) \\text{Diag}(\\bm{P}) random of order r / k r/k , and brings no empirical gain (see Table 3",
+      "url": "https://arxiv.org/html/2608.31036v1#S4.T3"
+    },
+    {
+      "href": "#S4.T3",
+      "text": "3",
+      "section": "3.3 Why Does NoRA Work? A Preconditioning Perspective",
+      "context": "b{E}[\\bm{P}]=\\bm{I} over the random directions, and the adapter’s gradient norm can match full finetuning’s gradient norm in expectation, independently of r r . Therefore, we can get the flat NoRA curve in Figure 1 . In contrast, row normalization ( Norm k \\text{Norm}_{k} ) leaves Diag ​ ( 𝑷 ) \\text{Diag}(\\bm{P}) random of order r / k r/k , and brings no empirical gain (see Table 3 ). Moreover, BIMI uses unit basis vectors as columns (the same diagonal through a completely different crosstalk pattern) and performs similarly to rank-dimension normalization of random initializations (see Table 3",
+      "url": "https://arxiv.org/html/2608.31036v1#S4.T3"
+    },
+    {
+      "href": "#bib.bib44",
+      "text": "Liu et al., 2017",
+      "section": "3.3 Why Does NoRA Work? A Preconditioning Perspective",
+      "context": " \\alpha{\\bm{B}}^{\\top}{\\bm{G}} , vanishes with 𝑩 {\\bm{B}} , 𝑨 ( 0 ) {\\bm{A}}^{(0)} alone fixes the learning rates and the input subspace during the decisive early phase, correcting the rates once at initialization thus captures most of the benefit. This is exactly what NoRA-init does. Performing Norm ​ ( 𝑨 ) \\text{Norm}({\\bm{A}}) in the forward pass adds two things: (1) the loss becomes invariant to each column’s scale, so gradients are tangential and, under gradient descent, norms can only grow while the effective step anneals automatically, as in weight-normalized training ( Liu et al., 2017",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib44"
+    },
+    {
+      "href": "#bib.bib50",
+      "text": "Salimans and Kingma, 2016",
+      "section": "3.3 Why Does NoRA Work? A Preconditioning Perspective",
+      "context": "}} , vanishes with 𝑩 {\\bm{B}} , 𝑨 ( 0 ) {\\bm{A}}^{(0)} alone fixes the learning rates and the input subspace during the decisive early phase, correcting the rates once at initialization thus captures most of the benefit. This is exactly what NoRA-init does. Performing Norm ​ ( 𝑨 ) \\text{Norm}({\\bm{A}}) in the forward pass adds two things: (1) the loss becomes invariant to each column’s scale, so gradients are tangential and, under gradient descent, norms can only grow while the effective step anneals automatically, as in weight-normalized training ( Liu et al., 2017 ; Salimans and Kingma, 2016",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib50"
+    },
+    {
+      "href": "#bib.bib45",
+      "text": "Liu et al., 2018",
+      "section": "3.3 Why Does NoRA Work? A Preconditioning Perspective",
+      "context": "𝑩 {\\bm{B}} , 𝑨 ( 0 ) {\\bm{A}}^{(0)} alone fixes the learning rates and the input subspace during the decisive early phase, correcting the rates once at initialization thus captures most of the benefit. This is exactly what NoRA-init does. Performing Norm ​ ( 𝑨 ) \\text{Norm}({\\bm{A}}) in the forward pass adds two things: (1) the loss becomes invariant to each column’s scale, so gradients are tangential and, under gradient descent, norms can only grow while the effective step anneals automatically, as in weight-normalized training ( Liu et al., 2017 ; Salimans and Kingma, 2016 ; Liu et al., 2018",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib45"
+    },
+    {
+      "href": "#S4.T2",
+      "text": "2",
+      "section": "4 Experiments and Results",
+      "context": "To thoroughly evaluate our method, we conduct experiments across pretraining, supervised finetuning (SFT), and reinforcement learning. We further perform ablation studies to investigate the effect of the normalization dimension and initialization distribution. Evaluation settings are in Table 2",
+      "url": "https://arxiv.org/html/2608.31036v1#S4.T2"
+    },
+    {
+      "href": "#bib.bib19",
+      "text": "Huang et al., 2026",
+      "section": "4 Experiments and Results",
+      "context": "Supervised finetuning. We evaluate NoRA on Llama 3.2-3B across a diverse set of downstream tasks, including mathematical reasoning and code generation, as well as its robustness against catastrophic forgetting ( Huang et al., 2026",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib19"
+    },
+    {
+      "href": "#A2",
+      "text": "B",
+      "section": "4 Experiments and Results",
+      "context": "Supervised finetuning. We evaluate NoRA on Llama 3.2-3B across a diverse set of downstream tasks, including mathematical reasoning and code generation, as well as its robustness against catastrophic forgetting ( Huang et al., 2026 ) . More detailed settings are given in Appendix B",
+      "url": "https://arxiv.org/html/2608.31036v1#A2"
+    },
+    {
+      "href": "#bib.bib9",
+      "text": "Yang and Zhang, 2024",
+      "section": "4 Experiments and Results",
+      "context": "Stage Repository Model Train Data Benchmark Pretrain FLA ( Yang and Zhang, 2024",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib9"
+    },
+    {
+      "href": "#bib.bib6",
+      "text": "Liu et al., 2024a",
+      "section": "4 Experiments and Results",
+      "context": "Stage Repository Model Train Data Benchmark Pretrain FLA ( Yang and Zhang, 2024 ) MLA ( Liu et al., 2024a",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib6"
+    },
+    {
+      "href": "#bib.bib10",
+      "text": "Vaswani et al., 2017",
+      "section": "4 Experiments and Results",
+      "context": "Stage Repository Model Train Data Benchmark Pretrain FLA ( Yang and Zhang, 2024 ) MLA ( Liu et al., 2024a ) MHA ( Vaswani et al., 2017",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib10"
+    },
+    {
+      "href": "#bib.bib11",
+      "text": "Soboleva et al., 2023",
+      "section": "4 Experiments and Results",
+      "context": "Stage Repository Model Train Data Benchmark Pretrain FLA ( Yang and Zhang, 2024 ) MLA ( Liu et al., 2024a ) MHA ( Vaswani et al., 2017 ) SlimPajama ( Soboleva et al., 2023",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib11"
+    },
+    {
+      "href": "#bib.bib12",
+      "text": "Paperno et al., 2016",
+      "section": "4 Experiments and Results",
+      "context": "Stage Repository Model Train Data Benchmark Pretrain FLA ( Yang and Zhang, 2024 ) MLA ( Liu et al., 2024a ) MHA ( Vaswani et al., 2017 ) SlimPajama ( Soboleva et al., 2023 ) LAMBADA ( Paperno et al., 2016",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib12"
+    },
+    {
+      "href": "#bib.bib13",
+      "text": "Merity et al., 2016",
+      "section": "4 Experiments and Results",
+      "context": "Stage Repository Model Train Data Benchmark Pretrain FLA ( Yang and Zhang, 2024 ) MLA ( Liu et al., 2024a ) MHA ( Vaswani et al., 2017 ) SlimPajama ( Soboleva et al., 2023 ) LAMBADA ( Paperno et al., 2016 ) WikiText ( Merity et al., 2016",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib13"
+    },
+    {
+      "href": "#bib.bib16",
+      "text": "Clark et al., 2018",
+      "section": "4 Experiments and Results",
+      "context": "Stage Repository Model Train Data Benchmark Pretrain FLA ( Yang and Zhang, 2024 ) MLA ( Liu et al., 2024a ) MHA ( Vaswani et al., 2017 ) SlimPajama ( Soboleva et al., 2023 ) LAMBADA ( Paperno et al., 2016 ) WikiText ( Merity et al., 2016 ) Arc-Easy/Arc-Challenge ( Clark et al., 2018",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib16"
+    },
+    {
+      "href": "#bib.bib14",
+      "text": "Zellers et al., 2019",
+      "section": "4 Experiments and Results",
+      "context": "Stage Repository Model Train Data Benchmark Pretrain FLA ( Yang and Zhang, 2024 ) MLA ( Liu et al., 2024a ) MHA ( Vaswani et al., 2017 ) SlimPajama ( Soboleva et al., 2023 ) LAMBADA ( Paperno et al., 2016 ) WikiText ( Merity et al., 2016 ) Arc-Easy/Arc-Challenge ( Clark et al., 2018 ) HellaSwag ( Zellers et al., 2019",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib14"
+    },
+    {
+      "href": "#bib.bib15",
+      "text": "Bisk et al., 2020",
+      "section": "4 Experiments and Results",
+      "context": "Stage Repository Model Train Data Benchmark Pretrain FLA ( Yang and Zhang, 2024 ) MLA ( Liu et al., 2024a ) MHA ( Vaswani et al., 2017 ) SlimPajama ( Soboleva et al., 2023 ) LAMBADA ( Paperno et al., 2016 ) WikiText ( Merity et al., 2016 ) Arc-Easy/Arc-Challenge ( Clark et al., 2018 ) HellaSwag ( Zellers et al., 2019 ) PIQA ( Bisk et al., 2020",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib15"
+    },
+    {
+      "href": "#bib.bib18",
+      "text": "Mihaylov et al., 2018",
+      "section": "4 Experiments and Results",
+      "context": "Stage Repository Model Train Data Benchmark Pretrain FLA ( Yang and Zhang, 2024 ) MLA ( Liu et al., 2024a ) MHA ( Vaswani et al., 2017 ) SlimPajama ( Soboleva et al., 2023 ) LAMBADA ( Paperno et al., 2016 ) WikiText ( Merity et al., 2016 ) Arc-Easy/Arc-Challenge ( Clark et al., 2018 ) HellaSwag ( Zellers et al., 2019 ) PIQA ( Bisk et al., 2020 ) OpenBookQA ( Mihaylov et al., 2018",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib18"
+    },
+    {
+      "href": "#bib.bib17",
+      "text": "Sakaguchi et al., 2021",
+      "section": "4 Experiments and Results",
+      "context": "Stage Repository Model Train Data Benchmark Pretrain FLA ( Yang and Zhang, 2024 ) MLA ( Liu et al., 2024a ) MHA ( Vaswani et al., 2017 ) SlimPajama ( Soboleva et al., 2023 ) LAMBADA ( Paperno et al., 2016 ) WikiText ( Merity et al., 2016 ) Arc-Easy/Arc-Challenge ( Clark et al., 2018 ) HellaSwag ( Zellers et al., 2019 ) PIQA ( Bisk et al., 2020 ) OpenBookQA ( Mihaylov et al., 2018 ) WinoGrande ( Sakaguchi et al., 2021",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib17"
+    },
+    {
+      "href": "#bib.bib19",
+      "text": "Huang et al., 2026",
+      "section": "4 Experiments and Results",
+      "context": "Stage Repository Model Train Data Benchmark Pretrain FLA ( Yang and Zhang, 2024 ) MLA ( Liu et al., 2024a ) MHA ( Vaswani et al., 2017 ) SlimPajama ( Soboleva et al., 2023 ) LAMBADA ( Paperno et al., 2016 ) WikiText ( Merity et al., 2016 ) Arc-Easy/Arc-Challenge ( Clark et al., 2018 ) HellaSwag ( Zellers et al., 2019 ) PIQA ( Bisk et al., 2020 ) OpenBookQA ( Mihaylov et al., 2018 ) WinoGrande ( Sakaguchi et al., 2021 ) SFT PEFT-Arena ( Huang et al., 2026",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib19"
+    },
+    {
+      "href": "#bib.bib48",
+      "text": "Grattafiori et al., 2024",
+      "section": "4 Experiments and Results",
+      "context": "Stage Repository Model Train Data Benchmark Pretrain FLA ( Yang and Zhang, 2024 ) MLA ( Liu et al., 2024a ) MHA ( Vaswani et al., 2017 ) SlimPajama ( Soboleva et al., 2023 ) LAMBADA ( Paperno et al., 2016 ) WikiText ( Merity et al., 2016 ) Arc-Easy/Arc-Challenge ( Clark et al., 2018 ) HellaSwag ( Zellers et al., 2019 ) PIQA ( Bisk et al., 2020 ) OpenBookQA ( Mihaylov et al., 2018 ) WinoGrande ( Sakaguchi et al., 2021 ) SFT PEFT-Arena ( Huang et al., 2026 ) Llama-3.2-3B ( Grattafiori et al., 2024",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib48"
+    },
+    {
+      "href": "#bib.bib21",
+      "text": "Yu et al., 2024",
+      "section": "4 Experiments and Results",
+      "context": "Stage Repository Model Train Data Benchmark Pretrain FLA ( Yang and Zhang, 2024 ) MLA ( Liu et al., 2024a ) MHA ( Vaswani et al., 2017 ) SlimPajama ( Soboleva et al., 2023 ) LAMBADA ( Paperno et al., 2016 ) WikiText ( Merity et al., 2016 ) Arc-Easy/Arc-Challenge ( Clark et al., 2018 ) HellaSwag ( Zellers et al., 2019 ) PIQA ( Bisk et al., 2020 ) OpenBookQA ( Mihaylov et al., 2018 ) WinoGrande ( Sakaguchi et al., 2021 ) SFT PEFT-Arena ( Huang et al., 2026 ) Llama-3.2-3B ( Grattafiori et al., 2024 ) MetaMath ( Yu et al., 2024",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib21"
+    },
+    {
+      "href": "#bib.bib20",
+      "text": "Zheng et al., 2024",
+      "section": "4 Experiments and Results",
+      "context": "Stage Repository Model Train Data Benchmark Pretrain FLA ( Yang and Zhang, 2024 ) MLA ( Liu et al., 2024a ) MHA ( Vaswani et al., 2017 ) SlimPajama ( Soboleva et al., 2023 ) LAMBADA ( Paperno et al., 2016 ) WikiText ( Merity et al., 2016 ) Arc-Easy/Arc-Challenge ( Clark et al., 2018 ) HellaSwag ( Zellers et al., 2019 ) PIQA ( Bisk et al., 2020 ) OpenBookQA ( Mihaylov et al., 2018 ) WinoGrande ( Sakaguchi et al., 2021 ) SFT PEFT-Arena ( Huang et al., 2026 ) Llama-3.2-3B ( Grattafiori et al., 2024 ) MetaMath ( Yu et al., 2024 ) CodeFeedback ( Zheng et al., 2024",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib20"
+    },
+    {
+      "href": "#bib.bib22",
+      "text": "Cobbe et al., 2021",
+      "section": "4 Experiments and Results",
+      "context": "Stage Repository Model Train Data Benchmark Pretrain FLA ( Yang and Zhang, 2024 ) MLA ( Liu et al., 2024a ) MHA ( Vaswani et al., 2017 ) SlimPajama ( Soboleva et al., 2023 ) LAMBADA ( Paperno et al., 2016 ) WikiText ( Merity et al., 2016 ) Arc-Easy/Arc-Challenge ( Clark et al., 2018 ) HellaSwag ( Zellers et al., 2019 ) PIQA ( Bisk et al., 2020 ) OpenBookQA ( Mihaylov et al., 2018 ) WinoGrande ( Sakaguchi et al., 2021 ) SFT PEFT-Arena ( Huang et al., 2026 ) Llama-3.2-3B ( Grattafiori et al., 2024 ) MetaMath ( Yu et al., 2024 ) CodeFeedback ( Zheng et al., 2024 ) Math: GSM8k ( Cobbe et al., 2021",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib22"
+    },
+    {
+      "href": "#bib.bib21",
+      "text": "Yu et al., 2024",
+      "section": "4 Experiments and Results",
+      "context": " Data Benchmark Pretrain FLA ( Yang and Zhang, 2024 ) MLA ( Liu et al., 2024a ) MHA ( Vaswani et al., 2017 ) SlimPajama ( Soboleva et al., 2023 ) LAMBADA ( Paperno et al., 2016 ) WikiText ( Merity et al., 2016 ) Arc-Easy/Arc-Challenge ( Clark et al., 2018 ) HellaSwag ( Zellers et al., 2019 ) PIQA ( Bisk et al., 2020 ) OpenBookQA ( Mihaylov et al., 2018 ) WinoGrande ( Sakaguchi et al., 2021 ) SFT PEFT-Arena ( Huang et al., 2026 ) Llama-3.2-3B ( Grattafiori et al., 2024 ) MetaMath ( Yu et al., 2024 ) CodeFeedback ( Zheng et al., 2024 ) Math: GSM8k ( Cobbe et al., 2021 ) Math500 ( Yu et al., 2024",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib21"
+    },
+    {
+      "href": "#bib.bib24",
+      "text": "Chen et al., 2021",
+      "section": "4 Experiments and Results",
+      "context": "d Zhang, 2024 ) MLA ( Liu et al., 2024a ) MHA ( Vaswani et al., 2017 ) SlimPajama ( Soboleva et al., 2023 ) LAMBADA ( Paperno et al., 2016 ) WikiText ( Merity et al., 2016 ) Arc-Easy/Arc-Challenge ( Clark et al., 2018 ) HellaSwag ( Zellers et al., 2019 ) PIQA ( Bisk et al., 2020 ) OpenBookQA ( Mihaylov et al., 2018 ) WinoGrande ( Sakaguchi et al., 2021 ) SFT PEFT-Arena ( Huang et al., 2026 ) Llama-3.2-3B ( Grattafiori et al., 2024 ) MetaMath ( Yu et al., 2024 ) CodeFeedback ( Zheng et al., 2024 ) Math: GSM8k ( Cobbe et al., 2021 ) Math500 ( Yu et al., 2024 ) Code: HumanEval ( Chen et al., 2021",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib24"
+    },
+    {
+      "href": "#bib.bib23",
+      "text": "Austin et al., 2021",
+      "section": "4 Experiments and Results",
+      "context": "al., 2024a ) MHA ( Vaswani et al., 2017 ) SlimPajama ( Soboleva et al., 2023 ) LAMBADA ( Paperno et al., 2016 ) WikiText ( Merity et al., 2016 ) Arc-Easy/Arc-Challenge ( Clark et al., 2018 ) HellaSwag ( Zellers et al., 2019 ) PIQA ( Bisk et al., 2020 ) OpenBookQA ( Mihaylov et al., 2018 ) WinoGrande ( Sakaguchi et al., 2021 ) SFT PEFT-Arena ( Huang et al., 2026 ) Llama-3.2-3B ( Grattafiori et al., 2024 ) MetaMath ( Yu et al., 2024 ) CodeFeedback ( Zheng et al., 2024 ) Math: GSM8k ( Cobbe et al., 2021 ) Math500 ( Yu et al., 2024 ) Code: HumanEval ( Chen et al., 2021 ) Mbpp ( Austin et al., 2021",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib23"
+    },
+    {
+      "href": "#bib.bib7",
+      "text": "Yin et al., 2025",
+      "section": "4 Experiments and Results",
+      "context": " al., 2017 ) SlimPajama ( Soboleva et al., 2023 ) LAMBADA ( Paperno et al., 2016 ) WikiText ( Merity et al., 2016 ) Arc-Easy/Arc-Challenge ( Clark et al., 2018 ) HellaSwag ( Zellers et al., 2019 ) PIQA ( Bisk et al., 2020 ) OpenBookQA ( Mihaylov et al., 2018 ) WinoGrande ( Sakaguchi et al., 2021 ) SFT PEFT-Arena ( Huang et al., 2026 ) Llama-3.2-3B ( Grattafiori et al., 2024 ) MetaMath ( Yu et al., 2024 ) CodeFeedback ( Zheng et al., 2024 ) Math: GSM8k ( Cobbe et al., 2021 ) Math500 ( Yu et al., 2024 ) Code: HumanEval ( Chen et al., 2021 ) Mbpp ( Austin et al., 2021 ) RL PeRL ( Yin et al., 2025",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib7"
+    },
+    {
+      "href": "#bib.bib6",
+      "text": "Liu et al., 2024a",
+      "section": "4 Experiments and Results",
+      "context": "AMBADA ( Paperno et al., 2016 ) WikiText ( Merity et al., 2016 ) Arc-Easy/Arc-Challenge ( Clark et al., 2018 ) HellaSwag ( Zellers et al., 2019 ) PIQA ( Bisk et al., 2020 ) OpenBookQA ( Mihaylov et al., 2018 ) WinoGrande ( Sakaguchi et al., 2021 ) SFT PEFT-Arena ( Huang et al., 2026 ) Llama-3.2-3B ( Grattafiori et al., 2024 ) MetaMath ( Yu et al., 2024 ) CodeFeedback ( Zheng et al., 2024 ) Math: GSM8k ( Cobbe et al., 2021 ) Math500 ( Yu et al., 2024 ) Code: HumanEval ( Chen et al., 2021 ) Mbpp ( Austin et al., 2021 ) RL PeRL ( Yin et al., 2025 ) DeepSeek-R1-Distill-Qwen1.5B ( Liu et al., 2024a",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib6"
+    },
+    {
+      "href": "#bib.bib25",
+      "text": "Yu et al., 2026",
+      "section": "4 Experiments and Results",
+      "context": " al., 2016 ) Arc-Easy/Arc-Challenge ( Clark et al., 2018 ) HellaSwag ( Zellers et al., 2019 ) PIQA ( Bisk et al., 2020 ) OpenBookQA ( Mihaylov et al., 2018 ) WinoGrande ( Sakaguchi et al., 2021 ) SFT PEFT-Arena ( Huang et al., 2026 ) Llama-3.2-3B ( Grattafiori et al., 2024 ) MetaMath ( Yu et al., 2024 ) CodeFeedback ( Zheng et al., 2024 ) Math: GSM8k ( Cobbe et al., 2021 ) Math500 ( Yu et al., 2024 ) Code: HumanEval ( Chen et al., 2021 ) Mbpp ( Austin et al., 2021 ) RL PeRL ( Yin et al., 2025 ) DeepSeek-R1-Distill-Qwen1.5B ( Liu et al., 2024a ) open-r1/DAPO-Math-17k-Processed ( Yu et al., 2026",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib25"
+    },
+    {
+      "href": "#bib.bib26",
+      "text": "Zhang and Math-AI, 2025",
+      "section": "4 Experiments and Results",
+      "context": " ( Clark et al., 2018 ) HellaSwag ( Zellers et al., 2019 ) PIQA ( Bisk et al., 2020 ) OpenBookQA ( Mihaylov et al., 2018 ) WinoGrande ( Sakaguchi et al., 2021 ) SFT PEFT-Arena ( Huang et al., 2026 ) Llama-3.2-3B ( Grattafiori et al., 2024 ) MetaMath ( Yu et al., 2024 ) CodeFeedback ( Zheng et al., 2024 ) Math: GSM8k ( Cobbe et al., 2021 ) Math500 ( Yu et al., 2024 ) Code: HumanEval ( Chen et al., 2021 ) Mbpp ( Austin et al., 2021 ) RL PeRL ( Yin et al., 2025 ) DeepSeek-R1-Distill-Qwen1.5B ( Liu et al., 2024a ) open-r1/DAPO-Math-17k-Processed ( Yu et al., 2026 ) AIME24 ( Zhang and Math-AI, 2025",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib26"
+    },
+    {
+      "href": "#bib.bib26",
+      "text": "Zhang and Math-AI, 2025",
+      "section": "4 Experiments and Results",
+      "context": "sk et al., 2020 ) OpenBookQA ( Mihaylov et al., 2018 ) WinoGrande ( Sakaguchi et al., 2021 ) SFT PEFT-Arena ( Huang et al., 2026 ) Llama-3.2-3B ( Grattafiori et al., 2024 ) MetaMath ( Yu et al., 2024 ) CodeFeedback ( Zheng et al., 2024 ) Math: GSM8k ( Cobbe et al., 2021 ) Math500 ( Yu et al., 2024 ) Code: HumanEval ( Chen et al., 2021 ) Mbpp ( Austin et al., 2021 ) RL PeRL ( Yin et al., 2025 ) DeepSeek-R1-Distill-Qwen1.5B ( Liu et al., 2024a ) open-r1/DAPO-Math-17k-Processed ( Yu et al., 2026 ) AIME24 ( Zhang and Math-AI, 2025 ) ( Avg ​ @ ​ 32 \\mathrm{Avg}@32 ) AIME25 ( Zhang and Math-AI, 2025",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib26"
+    },
+    {
+      "href": "#bib.bib27",
+      "text": "Lightman et al., 2024",
+      "section": "4 Experiments and Results",
+      "context": " Sakaguchi et al., 2021 ) SFT PEFT-Arena ( Huang et al., 2026 ) Llama-3.2-3B ( Grattafiori et al., 2024 ) MetaMath ( Yu et al., 2024 ) CodeFeedback ( Zheng et al., 2024 ) Math: GSM8k ( Cobbe et al., 2021 ) Math500 ( Yu et al., 2024 ) Code: HumanEval ( Chen et al., 2021 ) Mbpp ( Austin et al., 2021 ) RL PeRL ( Yin et al., 2025 ) DeepSeek-R1-Distill-Qwen1.5B ( Liu et al., 2024a ) open-r1/DAPO-Math-17k-Processed ( Yu et al., 2026 ) AIME24 ( Zhang and Math-AI, 2025 ) ( Avg ​ @ ​ 32 \\mathrm{Avg}@32 ) AIME25 ( Zhang and Math-AI, 2025 ) ( Avg ​ @ ​ 32 \\mathrm{Avg}@32 ) MATH500 ( Lightman et al., 2024",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib27"
+    },
+    {
+      "href": "#bib.bib28",
+      "text": "Lewkowycz et al., 2022",
+      "section": "4 Experiments and Results",
+      "context": "ama-3.2-3B ( Grattafiori et al., 2024 ) MetaMath ( Yu et al., 2024 ) CodeFeedback ( Zheng et al., 2024 ) Math: GSM8k ( Cobbe et al., 2021 ) Math500 ( Yu et al., 2024 ) Code: HumanEval ( Chen et al., 2021 ) Mbpp ( Austin et al., 2021 ) RL PeRL ( Yin et al., 2025 ) DeepSeek-R1-Distill-Qwen1.5B ( Liu et al., 2024a ) open-r1/DAPO-Math-17k-Processed ( Yu et al., 2026 ) AIME24 ( Zhang and Math-AI, 2025 ) ( Avg ​ @ ​ 32 \\mathrm{Avg}@32 ) AIME25 ( Zhang and Math-AI, 2025 ) ( Avg ​ @ ​ 32 \\mathrm{Avg}@32 ) MATH500 ( Lightman et al., 2024 ) ( Avg ​ @ ​ 4 \\mathrm{Avg}@4 ) Minerva ( Lewkowycz et al., 2022",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib28"
+    },
+    {
+      "href": "#bib.bib29",
+      "text": "Li et al., 2024",
+      "section": "4 Experiments and Results",
+      "context": "t al., 2024 ) CodeFeedback ( Zheng et al., 2024 ) Math: GSM8k ( Cobbe et al., 2021 ) Math500 ( Yu et al., 2024 ) Code: HumanEval ( Chen et al., 2021 ) Mbpp ( Austin et al., 2021 ) RL PeRL ( Yin et al., 2025 ) DeepSeek-R1-Distill-Qwen1.5B ( Liu et al., 2024a ) open-r1/DAPO-Math-17k-Processed ( Yu et al., 2026 ) AIME24 ( Zhang and Math-AI, 2025 ) ( Avg ​ @ ​ 32 \\mathrm{Avg}@32 ) AIME25 ( Zhang and Math-AI, 2025 ) ( Avg ​ @ ​ 32 \\mathrm{Avg}@32 ) MATH500 ( Lightman et al., 2024 ) ( Avg ​ @ ​ 4 \\mathrm{Avg}@4 ) Minerva ( Lewkowycz et al., 2022 ) ( Avg ​ @ ​ 4 \\mathrm{Avg}@4 ) AMC ( Li et al., 2024",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib29"
+    },
+    {
+      "href": "#bib.bib30",
+      "text": "Balunović et al., 2025",
+      "section": "4 Experiments and Results",
+      "context": "obbe et al., 2021 ) Math500 ( Yu et al., 2024 ) Code: HumanEval ( Chen et al., 2021 ) Mbpp ( Austin et al., 2021 ) RL PeRL ( Yin et al., 2025 ) DeepSeek-R1-Distill-Qwen1.5B ( Liu et al., 2024a ) open-r1/DAPO-Math-17k-Processed ( Yu et al., 2026 ) AIME24 ( Zhang and Math-AI, 2025 ) ( Avg ​ @ ​ 32 \\mathrm{Avg}@32 ) AIME25 ( Zhang and Math-AI, 2025 ) ( Avg ​ @ ​ 32 \\mathrm{Avg}@32 ) MATH500 ( Lightman et al., 2024 ) ( Avg ​ @ ​ 4 \\mathrm{Avg}@4 ) Minerva ( Lewkowycz et al., 2022 ) ( Avg ​ @ ​ 4 \\mathrm{Avg}@4 ) AMC ( Li et al., 2024 ) ( Avg ​ @ ​ 32 \\mathrm{Avg}@32 ) HMMT ( Balunović et al., 2025",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib30"
+    },
+    {
+      "href": "#S4.T3",
+      "text": "3",
+      "section": "4.1 Effect of the Normalization Dimension",
+      "context": "We first study whether the effect of the normalization dimension under different initialization schemes. Given 𝑨 ∈ ℝ r × k \\bm{A}\\in\\mathbb{R}^{r\\times k} , Norm k \\text{Norm}_{k} normalizes each row, while Norm r \\text{Norm}_{r} normalizes each column 𝑨 : , j ∈ ℝ r \\bm{A}_{:,j}\\in\\mathbb{R}^{r} . As shown in Table 3",
+      "url": "https://arxiv.org/html/2608.31036v1#S4.T3"
+    },
+    {
+      "href": "#S4.T4",
+      "text": "4",
+      "section": "4.2 LLM Pretraining",
+      "context": "We first conduct LLM pretraining experiments using the standard MLA architecture. Normalizing the latent representation 𝑨 ​ 𝒙 \\bm{A}\\bm{x} consistently improves model performance and accelerates convergence during pretraining. Motivated by these results, we extend the same normalization principle to the linear low-rank formulation by applying normalization to the down-projection 𝑨 \\bm{A} , yielding NoRA. To evaluate the effectiveness of NoRA for LLM pretraining, we adopt NoRA-init and compare it with the standard low-rank parameterization. As shown in Table 4",
+      "url": "https://arxiv.org/html/2608.31036v1#S4.T4"
+    },
+    {
+      "href": "#S4.T4",
+      "text": "4",
+      "section": "4.2 LLM Pretraining",
+      "context": "We further evaluate NoRA-init under the standard MHA architecture for LLM pretraining. Specifically, we parameterize all linear projections in the attention module, including 𝒒 proj \\bm{q}_{\\mathrm{proj}} , 𝒌 proj \\bm{k}_{\\mathrm{proj}} , 𝒗 proj \\bm{v}_{\\mathrm{proj}} , and 𝒐 proj \\bm{o}_{\\mathrm{proj}} , using low-rank factors with rank r = 64 r=64 . As shown in Table 4",
+      "url": "https://arxiv.org/html/2608.31036v1#S4.T4"
+    },
+    {
+      "href": "#bib.bib51",
+      "text": "Schulman and Lab (2025)",
+      "section": "4.2 LLM Pretraining",
+      "context": "This observation is related to the capacity-limited behavior of low-rank adaptation discussed in Schulman and Lab (2025)",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib51"
+    },
+    {
+      "href": "#bib.bib11",
+      "text": "Soboleva et al., 2023",
+      "section": "4.2 LLM Pretraining",
+      "context": "Table 4: Zero-shot performance of 340M models trained on SlimPajama ( Soboleva et al., 2023",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib11"
+    },
+    {
+      "href": "#bib.bib8",
+      "text": "Gao et al., 2024",
+      "section": "4.2 LLM Pretraining",
+      "context": "Table 4: Zero-shot performance of 340M models trained on SlimPajama ( Soboleva et al., 2023 ) . Commonsense reasoning tasks are evaluated with lm-evaluation-harness ( Gao et al., 2024",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib8"
+    },
+    {
+      "href": "#bib.bib39",
+      "text": "Arora et al., 2024",
+      "section": "4.2 LLM Pretraining",
+      "context": "Table 4: Zero-shot performance of 340M models trained on SlimPajama ( Soboleva et al., 2023 ) . Commonsense reasoning tasks are evaluated with lm-evaluation-harness ( Gao et al., 2024 ) ; the recall-intensive task follows prefix-linear-attention ( Arora et al., 2024",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib39"
+    },
+    {
+      "href": "#S4.T5",
+      "text": "5",
+      "section": "4.3 Supervised Finetuning",
+      "context": "Table 5",
+      "url": "https://arxiv.org/html/2608.31036v1#S4.T5"
+    },
+    {
+      "href": "#bib.bib3",
+      "text": "Meng et al., 2024",
+      "section": "4.3 Supervised Finetuning",
+      "context": "Table 5 compares NoRA with representative PEFT methods under supervised finetuning. NoRA achieves the best overall SFT performance among the compared methods, improving the average score from 37.93 with standard LoRA to 43.37, a gain of 5.44 points. In particular, NoRA substantially improves performance on GSM8K and HumanEval, reaching 61.63 and 42.10, respectively, while also outperforming PiSSA ( Meng et al., 2024",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib3"
+    },
+    {
+      "href": "#bib.bib52",
+      "text": "Qiu et al., 2023",
+      "section": "4.3 Supervised Finetuning",
+      "context": "Table 5 compares NoRA with representative PEFT methods under supervised finetuning. NoRA achieves the best overall SFT performance among the compared methods, improving the average score from 37.93 with standard LoRA to 43.37, a gain of 5.44 points. In particular, NoRA substantially improves performance on GSM8K and HumanEval, reaching 61.63 and 42.10, respectively, while also outperforming PiSSA ( Meng et al., 2024 ) , OFT ( Qiu et al., 2023",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib52"
+    },
+    {
+      "href": "#bib.bib54",
+      "text": "Qiu et al., 2025",
+      "section": "4.3 Supervised Finetuning",
+      "context": "Table 5 compares NoRA with representative PEFT methods under supervised finetuning. NoRA achieves the best overall SFT performance among the compared methods, improving the average score from 37.93 with standard LoRA to 43.37, a gain of 5.44 points. In particular, NoRA substantially improves performance on GSM8K and HumanEval, reaching 61.63 and 42.10, respectively, while also outperforming PiSSA ( Meng et al., 2024 ) , OFT ( Qiu et al., 2023 ; Qiu et al., 2025",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib54"
+    },
+    {
+      "href": "#bib.bib53",
+      "text": "Liu et al., 2024c",
+      "section": "4.3 Supervised Finetuning",
+      "context": "Table 5 compares NoRA with representative PEFT methods under supervised finetuning. NoRA achieves the best overall SFT performance among the compared methods, improving the average score from 37.93 with standard LoRA to 43.37, a gain of 5.44 points. In particular, NoRA substantially improves performance on GSM8K and HumanEval, reaching 61.63 and 42.10, respectively, while also outperforming PiSSA ( Meng et al., 2024 ) , OFT ( Qiu et al., 2023 ; Qiu et al., 2025 ; Liu et al., 2024c",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib53"
+    },
+    {
+      "href": "#bib.bib42",
+      "text": "Kalajdzievski, 2023",
+      "section": "4.3 Supervised Finetuning",
+      "context": "Table 5 compares NoRA with representative PEFT methods under supervised finetuning. NoRA achieves the best overall SFT performance among the compared methods, improving the average score from 37.93 with standard LoRA to 43.37, a gain of 5.44 points. In particular, NoRA substantially improves performance on GSM8K and HumanEval, reaching 61.63 and 42.10, respectively, while also outperforming PiSSA ( Meng et al., 2024 ) , OFT ( Qiu et al., 2023 ; Qiu et al., 2025 ; Liu et al., 2024c ) , RSLoRA ( Kalajdzievski, 2023",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib42"
+    },
+    {
+      "href": "#bib.bib5",
+      "text": "Kang and Yin, 2026",
+      "section": "4.3 Supervised Finetuning",
+      "context": "Table 5 compares NoRA with representative PEFT methods under supervised finetuning. NoRA achieves the best overall SFT performance among the compared methods, improving the average score from 37.93 with standard LoRA to 43.37, a gain of 5.44 points. In particular, NoRA substantially improves performance on GSM8K and HumanEval, reaching 61.63 and 42.10, respectively, while also outperforming PiSSA ( Meng et al., 2024 ) , OFT ( Qiu et al., 2023 ; Qiu et al., 2025 ; Liu et al., 2024c ) , RSLoRA ( Kalajdzievski, 2023 ) , and MiSS ( Kang and Yin, 2026",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib5"
+    },
+    {
+      "href": "#S4.F2",
+      "text": "2",
+      "section": "4.3 Supervised Finetuning",
+      "context": "ard LoRA training, whereas NoRA continuously enforces the normalization constraint throughout training. NoRA-init already improves the SFT average from 37.93 to 42.38, capturing a large portion of the gain achieved by NoRA. With the normalization constraint maintained throughout training, NoRA further improves the average score to 43.37. The comparison indicates that controlling the input-to-latent projection magnitude at initialization accounts for a large portion of the gain, while persistent normalization provides additional improvements. Comparison of training dynamics is given in Figure 2",
+      "url": "https://arxiv.org/html/2608.31036v1#S4.F2"
+    },
+    {
+      "href": "#S4.T6",
+      "text": "6",
+      "section": "4.4 RLVR on Mathematical Reasoning",
+      "context": "We further evaluate NoRA under reinforcement learning with verifiable rewards (RLVR) on challenging mathematical reasoning benchmarks. As shown in Table 6",
+      "url": "https://arxiv.org/html/2608.31036v1#S4.T6"
+    },
+    {
+      "href": "#bib.bib3",
+      "text": "Meng et al., 2024",
+      "section": "4.4 RLVR on Mathematical Reasoning",
+      "context": "A notable difference emerges for initialization methods based on pretrained-weight spectral decomposition. Although PiSSA ( Meng et al., 2024",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib3"
+    },
+    {
+      "href": "#bib.bib4",
+      "text": "Wang et al., 2025",
+      "section": "4.4 RLVR on Mathematical Reasoning",
+      "context": "A notable difference emerges for initialization methods based on pretrained-weight spectral decomposition. Although PiSSA ( Meng et al., 2024 ) and MiLoRA ( Wang et al., 2025",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib4"
+    },
+    {
+      "href": "#bib.bib7",
+      "text": "Yin et al., 2025",
+      "section": "4.4 RLVR on Mathematical Reasoning",
+      "context": "A notable difference emerges for initialization methods based on pretrained-weight spectral decomposition. Although PiSSA ( Meng et al., 2024 ) and MiLoRA ( Wang et al., 2025 ) are effective under supervised finetuning, their performance degrades substantially in the RLVR setting. This behavior is consistent with prior observations that spectral initialization methods can suffer from optimization instability during reinforcement learning ( Yin et al., 2025",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib7"
+    },
+    {
+      "href": "#bib.bib31",
+      "text": "Houlsby et al., 2019",
+      "section": "5 Related Work and Concluding Remarks",
+      "context": "Parameter-efficient finetuning. As LLMs continue to grow in scale and capability, there has been increasing interest in adapting them to downstream tasks in a parameter-efficient manner ( Houlsby et al., 2019",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib31"
+    },
+    {
+      "href": "#bib.bib55",
+      "text": "Aghajanyan et al., 2020",
+      "section": "5 Related Work and Concluding Remarks",
+      "context": "Parameter-efficient finetuning. As LLMs continue to grow in scale and capability, there has been increasing interest in adapting them to downstream tasks in a parameter-efficient manner ( Houlsby et al., 2019 ; Aghajanyan et al., 2020",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib55"
+    },
+    {
+      "href": "#bib.bib1",
+      "text": "Hu et al., 2021",
+      "section": "5 Related Work and Concluding Remarks",
+      "context": "Parameter-efficient finetuning. As LLMs continue to grow in scale and capability, there has been increasing interest in adapting them to downstream tasks in a parameter-efficient manner ( Houlsby et al., 2019 ; Aghajanyan et al., 2020 ; Hu et al., 2021",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib1"
+    },
+    {
+      "href": "#bib.bib56",
+      "text": "Edalati et al., 2022",
+      "section": "5 Related Work and Concluding Remarks",
+      "context": "Parameter-efficient finetuning. As LLMs continue to grow in scale and capability, there has been increasing interest in adapting them to downstream tasks in a parameter-efficient manner ( Houlsby et al., 2019 ; Aghajanyan et al., 2020 ; Hu et al., 2021 ; Edalati et al., 2022",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib56"
+    },
+    {
+      "href": "#bib.bib57",
+      "text": "Wang et al., 2022",
+      "section": "5 Related Work and Concluding Remarks",
+      "context": "Parameter-efficient finetuning. As LLMs continue to grow in scale and capability, there has been increasing interest in adapting them to downstream tasks in a parameter-efficient manner ( Houlsby et al., 2019 ; Aghajanyan et al., 2020 ; Hu et al., 2021 ; Edalati et al., 2022 ; Wang et al., 2022",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib57"
+    },
+    {
+      "href": "#bib.bib58",
+      "text": "Gheini et al., 2021",
+      "section": "5 Related Work and Concluding Remarks",
+      "context": "Parameter-efficient finetuning. As LLMs continue to grow in scale and capability, there has been increasing interest in adapting them to downstream tasks in a parameter-efficient manner ( Houlsby et al., 2019 ; Aghajanyan et al., 2020 ; Hu et al., 2021 ; Edalati et al., 2022 ; Wang et al., 2022 ; Gheini et al., 2021",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib58"
+    },
+    {
+      "href": "#bib.bib59",
+      "text": "Zaken et al., 2022",
+      "section": "5 Related Work and Concluding Remarks",
+      "context": "Parameter-efficient finetuning. As LLMs continue to grow in scale and capability, there has been increasing interest in adapting them to downstream tasks in a parameter-efficient manner ( Houlsby et al., 2019 ; Aghajanyan et al., 2020 ; Hu et al., 2021 ; Edalati et al., 2022 ; Wang et al., 2022 ; Gheini et al., 2021 ; Zaken et al., 2022",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib59"
+    },
+    {
+      "href": "#bib.bib73",
+      "text": "Guo et al., 2020",
+      "section": "5 Related Work and Concluding Remarks",
+      "context": "Parameter-efficient finetuning. As LLMs continue to grow in scale and capability, there has been increasing interest in adapting them to downstream tasks in a parameter-efficient manner ( Houlsby et al., 2019 ; Aghajanyan et al., 2020 ; Hu et al., 2021 ; Edalati et al., 2022 ; Wang et al., 2022 ; Gheini et al., 2021 ; Zaken et al., 2022 ; Guo et al., 2020",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib73"
+    },
+    {
+      "href": "#bib.bib60",
+      "text": "Sung et al., 2021",
+      "section": "5 Related Work and Concluding Remarks",
+      "context": "Parameter-efficient finetuning. As LLMs continue to grow in scale and capability, there has been increasing interest in adapting them to downstream tasks in a parameter-efficient manner ( Houlsby et al., 2019 ; Aghajanyan et al., 2020 ; Hu et al., 2021 ; Edalati et al., 2022 ; Wang et al., 2022 ; Gheini et al., 2021 ; Zaken et al., 2022 ; Guo et al., 2020 ; Sung et al., 2021",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib60"
+    },
+    {
+      "href": "#bib.bib61",
+      "text": "Ansell et al., 2022",
+      "section": "5 Related Work and Concluding Remarks",
+      "context": "Parameter-efficient finetuning. As LLMs continue to grow in scale and capability, there has been increasing interest in adapting them to downstream tasks in a parameter-efficient manner ( Houlsby et al., 2019 ; Aghajanyan et al., 2020 ; Hu et al., 2021 ; Edalati et al., 2022 ; Wang et al., 2022 ; Gheini et al., 2021 ; Zaken et al., 2022 ; Guo et al., 2020 ; Sung et al., 2021 ; Ansell et al., 2022",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib61"
+    },
+    {
+      "href": "#bib.bib33",
+      "text": "Lester et al., 2021",
+      "section": "5 Related Work and Concluding Remarks",
+      "context": "Parameter-efficient finetuning. As LLMs continue to grow in scale and capability, there has been increasing interest in adapting them to downstream tasks in a parameter-efficient manner ( Houlsby et al., 2019 ; Aghajanyan et al., 2020 ; Hu et al., 2021 ; Edalati et al., 2022 ; Wang et al., 2022 ; Gheini et al., 2021 ; Zaken et al., 2022 ; Guo et al., 2020 ; Sung et al., 2021 ; Ansell et al., 2022 ; Lester et al., 2021",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib33"
+    },
+    {
+      "href": "#bib.bib32",
+      "text": "Li and Liang, 2021",
+      "section": "5 Related Work and Concluding Remarks",
+      "context": "Parameter-efficient finetuning. As LLMs continue to grow in scale and capability, there has been increasing interest in adapting them to downstream tasks in a parameter-efficient manner ( Houlsby et al., 2019 ; Aghajanyan et al., 2020 ; Hu et al., 2021 ; Edalati et al., 2022 ; Wang et al., 2022 ; Gheini et al., 2021 ; Zaken et al., 2022 ; Guo et al., 2020 ; Sung et al., 2021 ; Ansell et al., 2022 ; Lester et al., 2021 ; Li and Liang, 2021",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib32"
+    },
+    {
+      "href": "#bib.bib62",
+      "text": "Vu et al., 2022",
+      "section": "5 Related Work and Concluding Remarks",
+      "context": "Parameter-efficient finetuning. As LLMs continue to grow in scale and capability, there has been increasing interest in adapting them to downstream tasks in a parameter-efficient manner ( Houlsby et al., 2019 ; Aghajanyan et al., 2020 ; Hu et al., 2021 ; Edalati et al., 2022 ; Wang et al., 2022 ; Gheini et al., 2021 ; Zaken et al., 2022 ; Guo et al., 2020 ; Sung et al., 2021 ; Ansell et al., 2022 ; Lester et al., 2021 ; Li and Liang, 2021 ; Vu et al., 2022",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib62"
+    },
+    {
+      "href": "#bib.bib74",
+      "text": "He et al., 2021",
+      "section": "5 Related Work and Concluding Remarks",
+      "context": "Parameter-efficient finetuning. As LLMs continue to grow in scale and capability, there has been increasing interest in adapting them to downstream tasks in a parameter-efficient manner ( Houlsby et al., 2019 ; Aghajanyan et al., 2020 ; Hu et al., 2021 ; Edalati et al., 2022 ; Wang et al., 2022 ; Gheini et al., 2021 ; Zaken et al., 2022 ; Guo et al., 2020 ; Sung et al., 2021 ; Ansell et al., 2022 ; Lester et al., 2021 ; Li and Liang, 2021 ; Vu et al., 2022 ; He et al., 2021",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib74"
+    },
+    {
+      "href": "#bib.bib75",
+      "text": "Mao et al., 2021",
+      "section": "5 Related Work and Concluding Remarks",
+      "context": "Parameter-efficient finetuning. As LLMs continue to grow in scale and capability, there has been increasing interest in adapting them to downstream tasks in a parameter-efficient manner ( Houlsby et al., 2019 ; Aghajanyan et al., 2020 ; Hu et al., 2021 ; Edalati et al., 2022 ; Wang et al., 2022 ; Gheini et al., 2021 ; Zaken et al., 2022 ; Guo et al., 2020 ; Sung et al., 2021 ; Ansell et al., 2022 ; Lester et al., 2021 ; Li and Liang, 2021 ; Vu et al., 2022 ; He et al., 2021 ; Mao et al., 2021",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib75"
+    },
+    {
+      "href": "#bib.bib76",
+      "text": "Karimi Mahabadi et al., 2021",
+      "section": "5 Related Work and Concluding Remarks",
+      "context": "Parameter-efficient finetuning. As LLMs continue to grow in scale and capability, there has been increasing interest in adapting them to downstream tasks in a parameter-efficient manner ( Houlsby et al., 2019 ; Aghajanyan et al., 2020 ; Hu et al., 2021 ; Edalati et al., 2022 ; Wang et al., 2022 ; Gheini et al., 2021 ; Zaken et al., 2022 ; Guo et al., 2020 ; Sung et al., 2021 ; Ansell et al., 2022 ; Lester et al., 2021 ; Li and Liang, 2021 ; Vu et al., 2022 ; He et al., 2021 ; Mao et al., 2021 ; Karimi Mahabadi et al., 2021",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib76"
+    },
+    {
+      "href": "#bib.bib63",
+      "text": "Liu et al., 2022",
+      "section": "5 Related Work and Concluding Remarks",
+      "context": "Parameter-efficient finetuning. As LLMs continue to grow in scale and capability, there has been increasing interest in adapting them to downstream tasks in a parameter-efficient manner ( Houlsby et al., 2019 ; Aghajanyan et al., 2020 ; Hu et al., 2021 ; Edalati et al., 2022 ; Wang et al., 2022 ; Gheini et al., 2021 ; Zaken et al., 2022 ; Guo et al., 2020 ; Sung et al., 2021 ; Ansell et al., 2022 ; Lester et al., 2021 ; Li and Liang, 2021 ; Vu et al., 2022 ; He et al., 2021 ; Mao et al., 2021 ; Karimi Mahabadi et al., 2021 ; Liu et al., 2022",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib63"
+    },
+    {
+      "href": "#bib.bib64",
+      "text": "Sung et al., 2022",
+      "section": "5 Related Work and Concluding Remarks",
+      "context": "Parameter-efficient finetuning. As LLMs continue to grow in scale and capability, there has been increasing interest in adapting them to downstream tasks in a parameter-efficient manner ( Houlsby et al., 2019 ; Aghajanyan et al., 2020 ; Hu et al., 2021 ; Edalati et al., 2022 ; Wang et al., 2022 ; Gheini et al., 2021 ; Zaken et al., 2022 ; Guo et al., 2020 ; Sung et al., 2021 ; Ansell et al., 2022 ; Lester et al., 2021 ; Li and Liang, 2021 ; Vu et al., 2022 ; He et al., 2021 ; Mao et al., 2021 ; Karimi Mahabadi et al., 2021 ; Liu et al., 2022 ; Sung et al., 2022",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib64"
+    },
+    {
+      "href": "#bib.bib65",
+      "text": "Chen et al., 2023",
+      "section": "5 Related Work and Concluding Remarks",
+      "context": "Parameter-efficient finetuning. As LLMs continue to grow in scale and capability, there has been increasing interest in adapting them to downstream tasks in a parameter-efficient manner ( Houlsby et al., 2019 ; Aghajanyan et al., 2020 ; Hu et al., 2021 ; Edalati et al., 2022 ; Wang et al., 2022 ; Gheini et al., 2021 ; Zaken et al., 2022 ; Guo et al., 2020 ; Sung et al., 2021 ; Ansell et al., 2022 ; Lester et al., 2021 ; Li and Liang, 2021 ; Vu et al., 2022 ; He et al., 2021 ; Mao et al., 2021 ; Karimi Mahabadi et al., 2021 ; Liu et al., 2022 ; Sung et al., 2022 ; Chen et al., 2023",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib65"
+    },
+    {
+      "href": "#bib.bib67",
+      "text": "Jia et al., 2022",
+      "section": "5 Related Work and Concluding Remarks",
+      "context": "ter-efficient finetuning. As LLMs continue to grow in scale and capability, there has been increasing interest in adapting them to downstream tasks in a parameter-efficient manner ( Houlsby et al., 2019 ; Aghajanyan et al., 2020 ; Hu et al., 2021 ; Edalati et al., 2022 ; Wang et al., 2022 ; Gheini et al., 2021 ; Zaken et al., 2022 ; Guo et al., 2020 ; Sung et al., 2021 ; Ansell et al., 2022 ; Lester et al., 2021 ; Li and Liang, 2021 ; Vu et al., 2022 ; He et al., 2021 ; Mao et al., 2021 ; Karimi Mahabadi et al., 2021 ; Liu et al., 2022 ; Sung et al., 2022 ; Chen et al., 2023 ; Jia et al., 2022",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib67"
+    },
+    {
+      "href": "#bib.bib68",
+      "text": "Chen et al., 2022",
+      "section": "5 Related Work and Concluding Remarks",
+      "context": "ning. As LLMs continue to grow in scale and capability, there has been increasing interest in adapting them to downstream tasks in a parameter-efficient manner ( Houlsby et al., 2019 ; Aghajanyan et al., 2020 ; Hu et al., 2021 ; Edalati et al., 2022 ; Wang et al., 2022 ; Gheini et al., 2021 ; Zaken et al., 2022 ; Guo et al., 2020 ; Sung et al., 2021 ; Ansell et al., 2022 ; Lester et al., 2021 ; Li and Liang, 2021 ; Vu et al., 2022 ; He et al., 2021 ; Mao et al., 2021 ; Karimi Mahabadi et al., 2021 ; Liu et al., 2022 ; Sung et al., 2022 ; Chen et al., 2023 ; Jia et al., 2022 ; Chen et al., 2022",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib68"
+    },
+    {
+      "href": "#bib.bib69",
+      "text": "Zhang et al., 2022",
+      "section": "5 Related Work and Concluding Remarks",
+      "context": "e to grow in scale and capability, there has been increasing interest in adapting them to downstream tasks in a parameter-efficient manner ( Houlsby et al., 2019 ; Aghajanyan et al., 2020 ; Hu et al., 2021 ; Edalati et al., 2022 ; Wang et al., 2022 ; Gheini et al., 2021 ; Zaken et al., 2022 ; Guo et al., 2020 ; Sung et al., 2021 ; Ansell et al., 2022 ; Lester et al., 2021 ; Li and Liang, 2021 ; Vu et al., 2022 ; He et al., 2021 ; Mao et al., 2021 ; Karimi Mahabadi et al., 2021 ; Liu et al., 2022 ; Sung et al., 2022 ; Chen et al., 2023 ; Jia et al., 2022 ; Chen et al., 2022 ; Zhang et al., 2022",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib69"
+    },
+    {
+      "href": "#bib.bib70",
+      "text": "Jie and Deng, 2023",
+      "section": "5 Related Work and Concluding Remarks",
+      "context": "d capability, there has been increasing interest in adapting them to downstream tasks in a parameter-efficient manner ( Houlsby et al., 2019 ; Aghajanyan et al., 2020 ; Hu et al., 2021 ; Edalati et al., 2022 ; Wang et al., 2022 ; Gheini et al., 2021 ; Zaken et al., 2022 ; Guo et al., 2020 ; Sung et al., 2021 ; Ansell et al., 2022 ; Lester et al., 2021 ; Li and Liang, 2021 ; Vu et al., 2022 ; He et al., 2021 ; Mao et al., 2021 ; Karimi Mahabadi et al., 2021 ; Liu et al., 2022 ; Sung et al., 2022 ; Chen et al., 2023 ; Jia et al., 2022 ; Chen et al., 2022 ; Zhang et al., 2022 ; Jie and Deng, 2023",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib70"
+    },
+    {
+      "href": "#bib.bib71",
+      "text": "Lian et al., 2022",
+      "section": "5 Related Work and Concluding Remarks",
+      "context": "has been increasing interest in adapting them to downstream tasks in a parameter-efficient manner ( Houlsby et al., 2019 ; Aghajanyan et al., 2020 ; Hu et al., 2021 ; Edalati et al., 2022 ; Wang et al., 2022 ; Gheini et al., 2021 ; Zaken et al., 2022 ; Guo et al., 2020 ; Sung et al., 2021 ; Ansell et al., 2022 ; Lester et al., 2021 ; Li and Liang, 2021 ; Vu et al., 2022 ; He et al., 2021 ; Mao et al., 2021 ; Karimi Mahabadi et al., 2021 ; Liu et al., 2022 ; Sung et al., 2022 ; Chen et al., 2023 ; Jia et al., 2022 ; Chen et al., 2022 ; Zhang et al., 2022 ; Jie and Deng, 2023 ; Lian et al., 2022",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib71"
+    },
+    {
+      "href": "#bib.bib52",
+      "text": "Qiu et al., 2023",
+      "section": "5 Related Work and Concluding Remarks",
+      "context": " interest in adapting them to downstream tasks in a parameter-efficient manner ( Houlsby et al., 2019 ; Aghajanyan et al., 2020 ; Hu et al., 2021 ; Edalati et al., 2022 ; Wang et al., 2022 ; Gheini et al., 2021 ; Zaken et al., 2022 ; Guo et al., 2020 ; Sung et al., 2021 ; Ansell et al., 2022 ; Lester et al., 2021 ; Li and Liang, 2021 ; Vu et al., 2022 ; He et al., 2021 ; Mao et al., 2021 ; Karimi Mahabadi et al., 2021 ; Liu et al., 2022 ; Sung et al., 2022 ; Chen et al., 2023 ; Jia et al., 2022 ; Chen et al., 2022 ; Zhang et al., 2022 ; Jie and Deng, 2023 ; Lian et al., 2022 ; Qiu et al., 2023",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib52"
+    },
+    {
+      "href": "#bib.bib54",
+      "text": "Qiu et al., 2025",
+      "section": "5 Related Work and Concluding Remarks",
+      "context": "ng them to downstream tasks in a parameter-efficient manner ( Houlsby et al., 2019 ; Aghajanyan et al., 2020 ; Hu et al., 2021 ; Edalati et al., 2022 ; Wang et al., 2022 ; Gheini et al., 2021 ; Zaken et al., 2022 ; Guo et al., 2020 ; Sung et al., 2021 ; Ansell et al., 2022 ; Lester et al., 2021 ; Li and Liang, 2021 ; Vu et al., 2022 ; He et al., 2021 ; Mao et al., 2021 ; Karimi Mahabadi et al., 2021 ; Liu et al., 2022 ; Sung et al., 2022 ; Chen et al., 2023 ; Jia et al., 2022 ; Chen et al., 2022 ; Zhang et al., 2022 ; Jie and Deng, 2023 ; Lian et al., 2022 ; Qiu et al., 2023 ; Qiu et al., 2025",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib54"
+    },
+    {
+      "href": "#bib.bib53",
+      "text": "Liu et al., 2024c",
+      "section": "5 Related Work and Concluding Remarks",
+      "context": "m tasks in a parameter-efficient manner ( Houlsby et al., 2019 ; Aghajanyan et al., 2020 ; Hu et al., 2021 ; Edalati et al., 2022 ; Wang et al., 2022 ; Gheini et al., 2021 ; Zaken et al., 2022 ; Guo et al., 2020 ; Sung et al., 2021 ; Ansell et al., 2022 ; Lester et al., 2021 ; Li and Liang, 2021 ; Vu et al., 2022 ; He et al., 2021 ; Mao et al., 2021 ; Karimi Mahabadi et al., 2021 ; Liu et al., 2022 ; Sung et al., 2022 ; Chen et al., 2023 ; Jia et al., 2022 ; Chen et al., 2022 ; Zhang et al., 2022 ; Jie and Deng, 2023 ; Lian et al., 2022 ; Qiu et al., 2023 ; Qiu et al., 2025 ; Liu et al., 2024c",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib53"
+    },
+    {
+      "href": "#bib.bib72",
+      "text": "Wu et al., 2024",
+      "section": "5 Related Work and Concluding Remarks",
+      "context": "eter-efficient manner ( Houlsby et al., 2019 ; Aghajanyan et al., 2020 ; Hu et al., 2021 ; Edalati et al., 2022 ; Wang et al., 2022 ; Gheini et al., 2021 ; Zaken et al., 2022 ; Guo et al., 2020 ; Sung et al., 2021 ; Ansell et al., 2022 ; Lester et al., 2021 ; Li and Liang, 2021 ; Vu et al., 2022 ; He et al., 2021 ; Mao et al., 2021 ; Karimi Mahabadi et al., 2021 ; Liu et al., 2022 ; Sung et al., 2022 ; Chen et al., 2023 ; Jia et al., 2022 ; Chen et al., 2022 ; Zhang et al., 2022 ; Jie and Deng, 2023 ; Lian et al., 2022 ; Qiu et al., 2023 ; Qiu et al., 2025 ; Liu et al., 2024c ; Wu et al., 2024",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib72"
+    },
+    {
+      "href": "#bib.bib66",
+      "text": "Zi et al., 2023",
+      "section": "5 Related Work and Concluding Remarks",
+      "context": "ner ( Houlsby et al., 2019 ; Aghajanyan et al., 2020 ; Hu et al., 2021 ; Edalati et al., 2022 ; Wang et al., 2022 ; Gheini et al., 2021 ; Zaken et al., 2022 ; Guo et al., 2020 ; Sung et al., 2021 ; Ansell et al., 2022 ; Lester et al., 2021 ; Li and Liang, 2021 ; Vu et al., 2022 ; He et al., 2021 ; Mao et al., 2021 ; Karimi Mahabadi et al., 2021 ; Liu et al., 2022 ; Sung et al., 2022 ; Chen et al., 2023 ; Jia et al., 2022 ; Chen et al., 2022 ; Zhang et al., 2022 ; Jie and Deng, 2023 ; Lian et al., 2022 ; Qiu et al., 2023 ; Qiu et al., 2025 ; Liu et al., 2024c ; Wu et al., 2024 ; Zi et al., 2023",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib66"
+    },
+    {
+      "href": "#bib.bib1",
+      "text": "Hu et al., 2021",
+      "section": "5 Related Work and Concluding Remarks",
+      "context": " et al., 2020 ; Hu et al., 2021 ; Edalati et al., 2022 ; Wang et al., 2022 ; Gheini et al., 2021 ; Zaken et al., 2022 ; Guo et al., 2020 ; Sung et al., 2021 ; Ansell et al., 2022 ; Lester et al., 2021 ; Li and Liang, 2021 ; Vu et al., 2022 ; He et al., 2021 ; Mao et al., 2021 ; Karimi Mahabadi et al., 2021 ; Liu et al., 2022 ; Sung et al., 2022 ; Chen et al., 2023 ; Jia et al., 2022 ; Chen et al., 2022 ; Zhang et al., 2022 ; Jie and Deng, 2023 ; Lian et al., 2022 ; Qiu et al., 2023 ; Qiu et al., 2025 ; Liu et al., 2024c ; Wu et al., 2024 ; Zi et al., 2023 ) . Among them, LoRA ( Hu et al., 2021",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib1"
+    },
+    {
+      "href": "#bib.bib34",
+      "text": "Zhang et al., 2023b",
+      "section": "5 Related Work and Concluding Remarks",
+      "context": "d Liang, 2021 ; Vu et al., 2022 ; He et al., 2021 ; Mao et al., 2021 ; Karimi Mahabadi et al., 2021 ; Liu et al., 2022 ; Sung et al., 2022 ; Chen et al., 2023 ; Jia et al., 2022 ; Chen et al., 2022 ; Zhang et al., 2022 ; Jie and Deng, 2023 ; Lian et al., 2022 ; Qiu et al., 2023 ; Qiu et al., 2025 ; Liu et al., 2024c ; Wu et al., 2024 ; Zi et al., 2023 ) . Among them, LoRA ( Hu et al., 2021 ) is widely adopted due to its simplicity, efficiency, and mergeability at inference time. Subsequent variants improve LoRA from different perspectives, such as adaptive rank allocation ( Zhang et al., 2023b",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib34"
+    },
+    {
+      "href": "#bib.bib77",
+      "text": "Dettmers et al., 2023",
+      "section": "5 Related Work and Concluding Remarks",
+      "context": " ; Mao et al., 2021 ; Karimi Mahabadi et al., 2021 ; Liu et al., 2022 ; Sung et al., 2022 ; Chen et al., 2023 ; Jia et al., 2022 ; Chen et al., 2022 ; Zhang et al., 2022 ; Jie and Deng, 2023 ; Lian et al., 2022 ; Qiu et al., 2023 ; Qiu et al., 2025 ; Liu et al., 2024c ; Wu et al., 2024 ; Zi et al., 2023 ) . Among them, LoRA ( Hu et al., 2021 ) is widely adopted due to its simplicity, efficiency, and mergeability at inference time. Subsequent variants improve LoRA from different perspectives, such as adaptive rank allocation ( Zhang et al., 2023b ) , low-bit quantization ( Dettmers et al., 2023",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib77"
+    },
+    {
+      "href": "#bib.bib2",
+      "text": "Liu et al., 2024b",
+      "section": "5 Related Work and Concluding Remarks",
+      "context": "2 ; Sung et al., 2022 ; Chen et al., 2023 ; Jia et al., 2022 ; Chen et al., 2022 ; Zhang et al., 2022 ; Jie and Deng, 2023 ; Lian et al., 2022 ; Qiu et al., 2023 ; Qiu et al., 2025 ; Liu et al., 2024c ; Wu et al., 2024 ; Zi et al., 2023 ) . Among them, LoRA ( Hu et al., 2021 ) is widely adopted due to its simplicity, efficiency, and mergeability at inference time. Subsequent variants improve LoRA from different perspectives, such as adaptive rank allocation ( Zhang et al., 2023b ) , low-bit quantization ( Dettmers et al., 2023 ) and weight-decomposed low-rank updates (DoRA) ( Liu et al., 2024b",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib2"
+    },
+    {
+      "href": "#bib.bib3",
+      "text": "Meng et al., 2024",
+      "section": "5 Related Work and Concluding Remarks",
+      "context": "LoRA initialization and optimization. Recent studies show that LoRA is sensitive to initialization, scaling, and early-stage optimization dynamics. PiSSA initializes LoRA from principal singular components of pretrained weights ( Meng et al., 2024",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib3"
+    },
+    {
+      "href": "#bib.bib40",
+      "text": "Büyükakyüz, 2024",
+      "section": "5 Related Work and Concluding Remarks",
+      "context": "LoRA initialization and optimization. Recent studies show that LoRA is sensitive to initialization, scaling, and early-stage optimization dynamics. PiSSA initializes LoRA from principal singular components of pretrained weights ( Meng et al., 2024 ) , OLoRA ( Büyükakyüz, 2024",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib40"
+    },
+    {
+      "href": "#bib.bib41",
+      "text": "Wang et al., 2024",
+      "section": "5 Related Work and Concluding Remarks",
+      "context": "LoRA initialization and optimization. Recent studies show that LoRA is sensitive to initialization, scaling, and early-stage optimization dynamics. PiSSA initializes LoRA from principal singular components of pretrained weights ( Meng et al., 2024 ) , OLoRA ( Büyükakyüz, 2024 ) adopts orthogonal initialization, LoRA-GA ( Wang et al., 2024",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib41"
+    },
+    {
+      "href": "#bib.bib42",
+      "text": "Kalajdzievski, 2023",
+      "section": "5 Related Work and Concluding Remarks",
+      "context": "LoRA initialization and optimization. Recent studies show that LoRA is sensitive to initialization, scaling, and early-stage optimization dynamics. PiSSA initializes LoRA from principal singular components of pretrained weights ( Meng et al., 2024 ) , OLoRA ( Büyükakyüz, 2024 ) adopts orthogonal initialization, LoRA-GA ( Wang et al., 2024 ) uses gradient information to guide initialization, EVA leverages activation statistics, and rsLoRA improves stability through rank-dependent scaling ( Kalajdzievski, 2023",
+      "url": "https://arxiv.org/html/2608.31036v1#bib.bib42"
+    },
+    {
+      "href": "#S5.p1.1",
+      "text": "§5",
+      "section": "References",
+      "context": "Aghajanyan et al. (2020) A. Aghajanyan, L. Zettlemoyer, and S. Gupta Intrinsic dimensionality explains the effectiveness of language model fine-tuning . arXiv preprint arXiv:2012.13255 . Cited by: §5",
+      "url": "https://arxiv.org/html/2608.31036v1#S5.p1.1"
+    },
+    {
+      "href": "#S5.p1.1",
+      "text": "§5",
+      "section": "References",
+      "context": "Ansell et al. (2022) A. Ansell, E. Ponti, A. Korhonen, and I. Vulić Composable sparse fine-tuning for cross-lingual transfer . In ACL , Cited by: §5",
+      "url": "https://arxiv.org/html/2608.31036v1#S5.p1.1"
+    },
+    {
+      "href": "#S4.T4",
+      "text": "Table 4",
+      "section": "References",
+      "context": "Arora et al. (2024) S. Arora, A. Timalsina, A. Singhal, B. Spector, S. Eyuboglu, X. Zhao, A. Rao, A. Rudra, and C. Ré Just read twice: closing the recall gap for recurrent language models . arXiv preprint arXiv:2407.05483 . Cited by: Table 4",
+      "url": "https://arxiv.org/html/2608.31036v1#S4.T4"
+    },
+    {
+      "href": "#S4.T2.2.3.5.1.1",
+      "text": "Table 2",
+      "section": "References",
+      "context": "Austin et al. (2021) J. Austin, A. Odena, M. Nye, M. Bosma, H. Michalewski, D. Dohan, E. Jiang, C. Cai, M. Terry, Q. Le, et al. Program synthesis with large language models . arXiv preprint arXiv:2108.07732 . Cited by: Table 2",
+      "url": "https://arxiv.org/html/2608.31036v1#S4.T2.2.3.5.1.1"
+    },
+    {
+      "href": "#S4.T2.2.4.5.1.1",
+      "text": "Table 2",
+      "section": "References",
+      "context": "Balunović et al. (2025) M. Balunović, J. Dekoninck, I. Petrov, N. Jovanović, and M. Vechev Matharena: evaluating llms on uncontaminated math competitions . arXiv preprint arXiv:2505.23281 . Cited by: Table 2",
+      "url": "https://arxiv.org/html/2608.31036v1#S4.T2.2.4.5.1.1"
+    },
+    {
+      "href": "#S4.T2.2.2.5.1.1",
+      "text": "Table 2",
+      "section": "References",
+      "context": "Bisk et al. (2020) Y. Bisk, R. Zellers, J. Gao, Y. Choi, et al. Piqa: reasoning about physical commonsense in natural language . In AAAI , Cited by: Table 2",
+      "url": "https://arxiv.org/html/2608.31036v1#S4.T2.2.2.5.1.1"
+    },
+    {
+      "href": "#S5.p2.1",
+      "text": "§5",
+      "section": "References",
+      "context": "Büyükakyüz (2024) K. Büyükakyüz Olora: orthonormal low-rank adaptation of large language models . arXiv preprint arXiv:2406.01775 . Cited by: §5",
+      "url": "https://arxiv.org/html/2608.31036v1#S5.p2.1"
+    },
+    {
+      "href": "#S5.p1.1",
+      "text": "§5",
+      "section": "References",
+      "context": "Chen et al. (2023) J. Chen, A. Zhang, X. Shi, M. Li, A. Smola, and D. Yang Parameter-efficient fine-tuning design spaces . In ICLR , Cited by: §5",
+      "url": "https://arxiv.org/html/2608.31036v1#S5.p1.1"
+    },
+    {
+      "href": "#S4.T2.2.3.5.1.1",
+      "text": "Table 2",
+      "section": "References",
+      "context": "Chen et al. (2021) M. Chen, J. Tworek, H. Jun, Q. Yuan, H. P. D. O. Pinto, J. Kaplan, H. Edwards, Y. Burda, N. Joseph, G. Brockman, et al. Evaluating large language models trained on code . arXiv preprint arXiv:2107.03374 . Cited by: Table 2",
+      "url": "https://arxiv.org/html/2608.31036v1#S4.T2.2.3.5.1.1"
+    },
+    {
+      "href": "#S5.p1.1",
+      "text": "§5",
+      "section": "References",
+      "context": "Chen et al. (2022) S. Chen, C. Ge, Z. Tong, J. Wang, Y. Song, J. Wang, and P. Luo Adaptformer: adapting vision transformers for scalable visual recognition . In NeurIPS , Cited by: §5",
+      "url": "https://arxiv.org/html/2608.31036v1#S5.p1.1"
+    },
+    {
+      "href": "#S4.T2.2.2.5.1.1",
+      "text": "Table 2",
+      "section": "References",
+      "context": "Clark et al. (2018) P. Clark, I. Cowhey, O. Etzioni, T. Khot, A. Sabharwal, C. Schoenick, and O. Tafjord Think you have solved question answering? try arc, the ai2 reasoning challenge . arXiv preprint arXiv:1803.05457 . Cited by: Table 2",
+      "url": "https://arxiv.org/html/2608.31036v1#S4.T2.2.2.5.1.1"
+    },
+    {
+      "href": "#S4.T2.2.3.5.1.1",
+      "text": "Table 2",
+      "section": "References",
+      "context": "Cobbe et al. (2021) K. Cobbe, V. Kosaraju, M. Bavarian, M. Chen, H. Jun, L. Kaiser, M. Plappert, J. Tworek, J. Hilton, R. Nakano, et al. Training verifiers to solve math word problems . arXiv preprint arXiv:2110.14168 . Cited by: Table 2",
+      "url": "https://arxiv.org/html/2608.31036v1#S4.T2.2.3.5.1.1"
+    },
+    {
+      "href": "#S5.p1.1",
+      "text": "§5",
+      "section": "References",
+      "context": "Dettmers et al. (2023) T. Dettmers, A. Pagnoni, A. Holtzman, and L. Zettlemoyer Qlora: efficient finetuning of quantized llms . In NeurIPS , Cited by: §5",
+      "url": "https://arxiv.org/html/2608.31036v1#S5.p1.1"
+    },
+    {
+      "href": "#S5.p1.1",
+      "text": "§5",
+      "section": "References",
+      "context": "Edalati et al. (2022) A. Edalati, M. Tahaei, I. Kobyzev, V. P. Nia, J. J. Clark, and M. Rezagholizadeh Krona: parameter efficient tuning with kronecker adapter . arXiv preprint arXiv:2212.10650 . Cited by: §5",
+      "url": "https://arxiv.org/html/2608.31036v1#S5.p1.1"
+    },
+    {
+      "href": "https://dx.doi.org/10.5281/zenodo.12608602",
+      "text": "Document",
+      "section": "References",
+      "context": "Gao et al. (2024) L. Gao, J. Tow, B. Abbasi, S. Biderman, S. Black, A. DiPofi, C. Foster, L. Golding, J. Hsu, A. Le Noac’h, H. Li, K. McDonell, N. Muennighoff, C. Ociepa, J. Phang, L. Reynolds, H. Schoelkopf, A. Skowron, L. Sutawika, E. Tang, A. Thite, B. Wang, K. Wang, and A. Zou The language model evaluation harness . Zenodo . External Links: Document",
+      "url": "https://dx.doi.org/10.5281/zenodo.12608602"
+    },
+    {
+      "href": "https://zenodo.org/records/12608602",
+      "text": "Link",
+      "section": "References",
+      "context": "Gao et al. (2024) L. Gao, J. Tow, B. Abbasi, S. Biderman, S. Black, A. DiPofi, C. Foster, L. Golding, J. Hsu, A. Le Noac’h, H. Li, K. McDonell, N. Muennighoff, C. Ociepa, J. Phang, L. Reynolds, H. Schoelkopf, A. Skowron, L. Sutawika, E. Tang, A. Thite, B. Wang, K. Wang, and A. Zou The language model evaluation harness . Zenodo . External Links: Document , Link",
+      "url": "https://zenodo.org/records/12608602"
+    },
+    {
+      "href": "#S4.T4",
+      "text": "Table 4",
+      "section": "References",
+      "context": "Gao et al. (2024) L. Gao, J. Tow, B. Abbasi, S. Biderman, S. Black, A. DiPofi, C. Foster, L. Golding, J. Hsu, A. Le Noac’h, H. Li, K. McDonell, N. Muennighoff, C. Ociepa, J. Phang, L. Reynolds, H. Schoelkopf, A. Skowron, L. Sutawika, E. Tang, A. Thite, B. Wang, K. Wang, and A. Zou The language model evaluation harness . Zenodo . External Links: Document , Link Cited by: Table 4",
+      "url": "https://arxiv.org/html/2608.31036v1#S4.T4"
+    },
+    {
+      "href": "#S5.p1.1",
+      "text": "§5",
+      "section": "References",
+      "context": "Gheini et al. (2021) M. Gheini, X. Ren, and J. May Cross-attention is all you need: adapting pretrained transformers for machine translation . In EMNLP , Cited by: §5",
+      "url": "https://arxiv.org/html/2608.31036v1#S5.p1.1"
+    },
+    {
+      "href": "#S4.T2.2.3.3.1.1",
+      "text": "Table 2",
+      "section": "References",
+      "context": "Grattafiori et al. (2024) A. Grattafiori, A. Dubey, A. Jauhri, A. Pandey, A. Kadian, A. Al-Dahle, A. Letman, A. Mathur, A. Schelten, A. Vaughan, et al. The llama 3 herd of models . arXiv preprint arXiv:2407.21783 . Cited by: Table 2",
+      "url": "https://arxiv.org/html/2608.31036v1#S4.T2.2.3.3.1.1"
+    },
+    {
+      "href": "#S5.p1.1",
+      "text": "§5",
+      "section": "References",
+      "context": "Guo et al. (2020) D. Guo, A. M. Rush, and Y. Kim Parameter-efficient transfer learning with diff pruning . arXiv preprint arXiv:2012.07463 . Cited by: §5",
+      "url": "https://arxiv.org/html/2608.31036v1#S5.p1.1"
+    },
+    {
+      "href": "#S2.T1.2.6.1",
+      "text": "Table 1",
+      "section": "References",
+      "context": "Hayou et al. (2024) S. Hayou, N. Ghosh, and B. Yu Lora+: efficient low rank adaptation of large models . arXiv preprint arXiv:2402.12354 . Cited by: Table 1",
+      "url": "https://arxiv.org/html/2608.31036v1#S2.T1.2.6.1"
+    },
+    {
+      "href": "#S5.p1.1",
+      "text": "§5",
+      "section": "References",
+      "context": "He et al. (2021) J. He, C. Zhou, X. Ma, T. Berg-Kirkpatrick, and G. Neubig Towards a unified view of parameter-efficient transfer learning . arXiv preprint arXiv:2110.04366 . Cited by: §5",
+      "url": "https://arxiv.org/html/2608.31036v1#S5.p1.1"
+    },
+    {
+      "href": "#S5.p1.1",
+      "text": "§5",
+      "section": "References",
+      "context": "Houlsby et al. (2019) N. Houlsby, A. Giurgiu, S. Jastrzebski, B. Morrone, Q. De Laroussilhe, A. Gesmundo, M. Attariyan, and S. Gelly Parameter-efficient transfer learning for nlp . In ICML , Cited by: §5",
+      "url": "https://arxiv.org/html/2608.31036v1#S5.p1.1"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Hu et al. (2021) E. J. Hu, Y. Shen, P. Wallis, Z. Allen-Zhu, Y. Li, S. Wang, L. Wang, and W. Chen Lora: low-rank adaptation of large language models . arXiv preprint arXiv:2106.09685 . Cited by: §1",
+      "url": "https://arxiv.org/html/2608.31036v1#S1.p1.1"
+    },
+    {
+      "href": "#S2.T1.2.4.1",
+      "text": "Table 1",
+      "section": "References",
+      "context": "Hu et al. (2021) E. J. Hu, Y. Shen, P. Wallis, Z. Allen-Zhu, Y. Li, S. Wang, L. Wang, and W. Chen Lora: low-rank adaptation of large language models . arXiv preprint arXiv:2106.09685 . Cited by: §1 , Table 1",
+      "url": "https://arxiv.org/html/2608.31036v1#S2.T1.2.4.1"
+    },
+    {
+      "href": "#S5.p1.1",
+      "text": "§5",
+      "section": "References",
+      "context": "Hu et al. (2021) E. J. Hu, Y. Shen, P. Wallis, Z. Allen-Zhu, Y. Li, S. Wang, L. Wang, and W. Chen Lora: low-rank adaptation of large language models . arXiv preprint arXiv:2106.09685 . Cited by: §1 , Table 1 , §5",
+      "url": "https://arxiv.org/html/2608.31036v1#S5.p1.1"
+    },
+    {
+      "href": "#S4.T2.2.3.2.1.1",
+      "text": "Table 2",
+      "section": "References",
+      "context": "Huang et al. (2026) Y. Huang, R. Peng, Z. Qiu, J. Kang, Y. Wen, B. Schölkopf, and W. Liu PEFT-arena: understanding parameter-efficient finetuning from a stability-plasticity perspective . arXiv preprint arXiv:2605.28819 . Cited by: Table 2",
+      "url": "https://arxiv.org/html/2608.31036v1#S4.T2.2.3.2.1.1"
+    },
+    {
+      "href": "#S4.p4.1",
+      "text": "§4",
+      "section": "References",
+      "context": "Huang et al. (2026) Y. Huang, R. Peng, Z. Qiu, J. Kang, Y. Wen, B. Schölkopf, and W. Liu PEFT-arena: understanding parameter-efficient finetuning from a stability-plasticity perspective . arXiv preprint arXiv:2605.28819 . Cited by: Table 2 , §4",
+      "url": "https://arxiv.org/html/2608.31036v1#S4.p4.1"
+    },
+    {
+      "href": "#S5.p1.1",
+      "text": "§5",
+      "section": "References",
+      "context": "Jia et al. (2022) M. Jia, L. Tang, B. Chen, C. Cardie, S. Belongie, B. Hariharan, and S. Lim Visual prompt tuning . In ECCV , Cited by: §5",
+      "url": "https://arxiv.org/html/2608.31036v1#S5.p1.1"
+    },
+    {
+      "href": "#S5.p1.1",
+      "text": "§5",
+      "section": "References",
+      "context": "Jie and Deng (2023) S. Jie and Z. Deng Fact: factor-tuning for lightweight adaptation on vision transformer . In AAAI , Cited by: §5",
+      "url": "https://arxiv.org/html/2608.31036v1#S5.p1.1"
+    },
+    {
+      "href": "#S1.p3.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Kalajdzievski (2023) D. Kalajdzievski A rank stabilization scaling factor for fine-tuning with lora . arXiv preprint arXiv:2312.03732 . Cited by: §1",
+      "url": "https://arxiv.org/html/2608.31036v1#S1.p3.1"
+    },
+    {
+      "href": "#S4.SS3.p1.1",
+      "text": "§4.3",
+      "section": "References",
+      "context": "Kalajdzievski (2023) D. Kalajdzievski A rank stabilization scaling factor for fine-tuning with lora . arXiv preprint arXiv:2312.03732 . Cited by: §1 , §4.3",
+      "url": "https://arxiv.org/html/2608.31036v1#S4.SS3.p1.1"
+    },
+    {
+      "href": "#S5.p2.1",
+      "text": "§5",
+      "section": "References",
+      "context": "Kalajdzievski (2023) D. Kalajdzievski A rank stabilization scaling factor for fine-tuning with lora . arXiv preprint arXiv:2312.03732 . Cited by: §1 , §4.3 , §5",
+      "url": "https://arxiv.org/html/2608.31036v1#S5.p2.1"
+    },
+    {
+      "href": "#S2.T1.2.9.1",
+      "text": "Table 1",
+      "section": "References",
+      "context": "Kang and Yin (2026) J. Kang and Q. Yin Miss: revisiting the trade-off in lora with an efficient shard-sharing structure . In ICLR , Cited by: Table 1",
+      "url": "https://arxiv.org/html/2608.31036v1#S2.T1.2.9.1"
+    },
+    {
+      "href": "#S3.SS2.p1.1",
+      "text": "§3.2",
+      "section": "References",
+      "context": "Kang and Yin (2026) J. Kang and Q. Yin Miss: revisiting the trade-off in lora with an efficient shard-sharing structure . In ICLR , Cited by: Table 1 , §3.2",
+      "url": "https://arxiv.org/html/2608.31036v1#S3.SS2.p1.1"
+    },
+    {
+      "href": "#S4.SS3.p1.1",
+      "text": "§4.3",
+      "section": "References",
+      "context": "Kang and Yin (2026) J. Kang and Q. Yin Miss: revisiting the trade-off in lora with an efficient shard-sharing structure . In ICLR , Cited by: Table 1 , §3.2 , §4.3",
+      "url": "https://arxiv.org/html/2608.31036v1#S4.SS3.p1.1"
+    },
+    {
+      "href": "#S5.p1.1",
+      "text": "§5",
+      "section": "References",
+      "context": "Karimi Mahabadi et al. (2021) R. Karimi Mahabadi, J. Henderson, and S. Ruder Compacter: efficient low-rank hypercomplex adapter layers . In NeurIPS , Cited by: §5",
+      "url": "https://arxiv.org/html/2608.31036v1#S5.p1.1"
+    },
+    {
+      "href": "#S1.p3.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Kopiczko et al. (2024) D. Kopiczko, T. Blankevoort, and Y. Asano Vera: vector-based random matrix adaptation . In ICLR , Cited by: §1",
+      "url": "https://arxiv.org/html/2608.31036v1#S1.p3.1"
+    },
+    {
+      "href": "#S5.p1.1",
+      "text": "§5",
+      "section": "References",
+      "context": "Lester et al. (2021) B. Lester, R. Al-Rfou, and N. Constant The power of scale for parameter-efficient prompt tuning . In EMNLP , Cited by: §5",
+      "url": "https://arxiv.org/html/2608.31036v1#S5.p1.1"
+    },
+    {
+      "href": "#S4.T2.2.4.5.1.1",
+      "text": "Table 2",
+      "section": "References",
+      "context": "Lewkowycz et al. (2022) A. Lewkowycz, A. Andreassen, D. Dohan, E. Dyer, H. Michalewski, V. Ramasesh, A. Slone, C. Anil, I. Schlag, T. Gutman-Solo, et al. Solving quantitative reasoning problems with language models . In NeurIPS , Cited by: Table 2",
+      "url": "https://arxiv.org/html/2608.31036v1#S4.T2.2.4.5.1.1"
+    },
+    {
+      "href": "#S4.T2.2.4.5.1.1",
+      "text": "Table 2",
+      "section": "References",
+      "context": "Li et al. (2024) J. Li, E. Beeching, L. Tunstall, B. Lipkin, R. Soletskyi, S. Huang, K. Rasul, L. Yu, A. Q. Jiang, Z. Shen, et al. Numinamath: the largest public dataset in ai4maths with 860k pairs of competition math problems and solutions . Hugging Face repository 13 ( 9 ), pp. 9 . Cited by: Table 2",
+      "url": "https://arxiv.org/html/2608.31036v1#S4.T2.2.4.5.1.1"
+    },
+    {
+      "href": "#S5.p1.1",
+      "text": "§5",
+      "section": "References",
+      "context": "Li and Liang (2021) X. L. Li and P. Liang Prefix-tuning: optimizing continuous prompts for generation . In ACL , Cited by: §5",
+      "url": "https://arxiv.org/html/2608.31036v1#S5.p1.1"
+    },
+    {
+      "href": "#S5.p1.1",
+      "text": "§5",
+      "section": "References",
+      "context": "Lian et al. (2022) D. Lian, D. Zhou, J. Feng, and X. Wang Scaling & shifting your features: a new baseline for efficient model tuning . In NeurIPS , Cited by: §5",
+      "url": "https://arxiv.org/html/2608.31036v1#S5.p1.1"
+    },
+    {
+      "href": "#S4.T2.2.4.5.1.1",
+      "text": "Table 2",
+      "section": "References",
+      "context": "Lightman et al. (2024) H. Lightman, V. Kosaraju, Y. Burda, H. Edwards, B. Baker, T. Lee, J. Leike, J. Schulman, I. Sutskever, and K. Cobbe Let’s verify step by step . In ICLR , Cited by: Table 2",
+      "url": "https://arxiv.org/html/2608.31036v1#S4.T2.2.4.5.1.1"
+    },
+    {
+      "href": "#S4.T2.2.2.3.1.1",
+      "text": "Table 2",
+      "section": "References",
+      "context": "Liu et al. (2024a) A. Liu, B. Feng, B. Wang, B. Wang, B. Liu, C. Zhao, C. Dengr, C. Ruan, D. Dai, D. Guo, et al. Deepseek-v2: a strong, economical, and efficient mixture-of-experts language model . arXiv preprint arXiv:2405.04434 . Cited by: Table 2",
+      "url": "https://arxiv.org/html/2608.31036v1#S4.T2.2.2.3.1.1"
+    },
+    {
+      "href": "#S4.T2.2.4.3.1.1",
+      "text": "Table 2",
+      "section": "References",
+      "context": "Liu et al. (2024a) A. Liu, B. Feng, B. Wang, B. Wang, B. Liu, C. Zhao, C. Dengr, C. Ruan, D. Dai, D. Guo, et al. Deepseek-v2: a strong, economical, and efficient mixture-of-experts language model . arXiv preprint arXiv:2405.04434 . Cited by: Table 2 , Table 2",
+      "url": "https://arxiv.org/html/2608.31036v1#S4.T2.2.4.3.1.1"
+    },
+    {
+      "href": "#S5.p1.1",
+      "text": "§5",
+      "section": "References",
+      "context": "Liu et al. (2022) H. Liu, D. Tam, M. Muqeeth, J. Mohta, T. Huang, M. Bansal, and C. A. Raffel Few-shot parameter-efficient fine-tuning is better and cheaper than in-context learning . In NeurIPS , Cited by: §5",
+      "url": "https://arxiv.org/html/2608.31036v1#S5.p1.1"
+    },
+    {
+      "href": "#S1.p3.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Liu et al. (2024b) S. Liu, C. Wang, H. Yin, P. Molchanov, Y. F. Wang, K. Cheng, and M. Chen Dora: weight-decomposed low-rank adaptation . arXiv preprint arXiv:2402.09353 . Cited by: §1",
+      "url": "https://arxiv.org/html/2608.31036v1#S1.p3.1"
+    },
+    {
+      "href": "#S2.T1.2.8.1",
+      "text": "Table 1",
+      "section": "References",
+      "context": "Liu et al. (2024b) S. Liu, C. Wang, H. Yin, P. Molchanov, Y. F. Wang, K. Cheng, and M. Chen Dora: weight-decomposed low-rank adaptation . arXiv preprint arXiv:2402.09353 . Cited by: §1 , Table 1",
+      "url": "https://arxiv.org/html/2608.31036v1#S2.T1.2.8.1"
+    },
+    {
+      "href": "#S5.p1.1",
+      "text": "§5",
+      "section": "References",
+      "context": "Liu et al. (2024b) S. Liu, C. Wang, H. Yin, P. Molchanov, Y. F. Wang, K. Cheng, and M. Chen Dora: weight-decomposed low-rank adaptation . arXiv preprint arXiv:2402.09353 . Cited by: §1 , Table 1 , §5",
+      "url": "https://arxiv.org/html/2608.31036v1#S5.p1.1"
+    },
+    {
+      "href": "#S1.p4.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Liu et al. (2018) W. Liu, Z. Liu, Z. Yu, B. Dai, R. Lin, Y. Wang, J. M. Rehg, and L. Song Decoupled networks . In CVPR , Cited by: §1",
+      "url": "https://arxiv.org/html/2608.31036v1#S1.p4.1"
+    },
+    {
+      "href": "#S3.SS3.p4.1",
+      "text": "§3.3",
+      "section": "References",
+      "context": "Liu et al. (2018) W. Liu, Z. Liu, Z. Yu, B. Dai, R. Lin, Y. Wang, J. M. Rehg, and L. Song Decoupled networks . In CVPR , Cited by: §1 , §3.3",
+      "url": "https://arxiv.org/html/2608.31036v1#S3.SS3.p4.1"
+    },
+    {
+      "href": "#S4.SS3.p1.1",
+      "text": "§4.3",
+      "section": "References",
+      "context": "Liu et al. (2024c) W. Liu, Z. Qiu, Y. Feng, Y. Xiu, Y. Xue, L. Yu, H. Feng, Z. Liu, J. Heo, S. Peng, Y. Wen, M. J. Black, A. Weller, and B. Schölkopf Parameter-efficient orthogonal finetuning via butterfly factorization . In ICLR , Cited by: §4.3",
+      "url": "https://arxiv.org/html/2608.31036v1#S4.SS3.p1.1"
+    },
+    {
+      "href": "#S5.p1.1",
+      "text": "§5",
+      "section": "References",
+      "context": "Liu et al. (2024c) W. Liu, Z. Qiu, Y. Feng, Y. Xiu, Y. Xue, L. Yu, H. Feng, Z. Liu, J. Heo, S. Peng, Y. Wen, M. J. Black, A. Weller, and B. Schölkopf Parameter-efficient orthogonal finetuning via butterfly factorization . In ICLR , Cited by: §4.3 , §5",
+      "url": "https://arxiv.org/html/2608.31036v1#S5.p1.1"
+    },
+    {
+      "href": "#S1.p4.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Liu et al. (2017) W. Liu, Y. Zhang, X. Li, Z. Yu, B. Dai, T. Zhao, and L. Song Deep hyperspherical learning . In NeurIPS , Cited by: §1",
+      "url": "https://arxiv.org/html/2608.31036v1#S1.p4.1"
+    },
+    {
+      "href": "#S3.SS3.p4.1",
+      "text": "§3.3",
+      "section": "References",
+      "context": "Liu et al. (2017) W. Liu, Y. Zhang, X. Li, Z. Yu, B. Dai, T. Zhao, and L. Song Deep hyperspherical learning . In NeurIPS , Cited by: §1 , §3.3",
+      "url": "https://arxiv.org/html/2608.31036v1#S3.SS3.p4.1"
+    },
+    {
+      "href": "#S1.p4.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Loshchilov et al. (2025) I. Loshchilov, C. Hsieh, S. Sun, and B. Ginsburg Ngpt: normalized transformer with representation learning on the hypersphere . In ICLR , Cited by: §1",
+      "url": "https://arxiv.org/html/2608.31036v1#S1.p4.1"
+    },
+    {
+      "href": "#S5.p1.1",
+      "text": "§5",
+      "section": "References",
+      "context": "Mao et al. (2021) Y. Mao, L. Mathias, R. Hou, A. Almahairi, H. Ma, J. Han, W. Yih, and M. Khabsa Unipelt: a unified framework for parameter-efficient language model tuning . arXiv preprint arXiv:2110.07577 . Cited by: §5",
+      "url": "https://arxiv.org/html/2608.31036v1#S5.p1.1"
+    },
+    {
+      "href": "#S3.SS3.p1.2",
+      "text": "§3.3",
+      "section": "References",
+      "context": "Martens and Grosse (2015) J. Martens and R. Grosse Optimizing neural networks with kronecker-factored approximate curvature . In ICML , Cited by: §3.3",
+      "url": "https://arxiv.org/html/2608.31036v1#S3.SS3.p1.2"
+    },
+    {
+      "href": "#S1.p3.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Meng et al. (2024) F. Meng, Z. Wang, and M. Zhang Pissa: principal singular values and singular vectors adaptation of large language models . In NeurIPS , Cited by: §1",
+      "url": "https://arxiv.org/html/2608.31036v1#S1.p3.1"
+    },
+    {
+      "href": "#S2.T1.2.14.1",
+      "text": "Table 1",
+      "section": "References",
+      "context": "Meng et al. (2024) F. Meng, Z. Wang, and M. Zhang Pissa: principal singular values and singular vectors adaptation of large language models . In NeurIPS , Cited by: §1 , Table 1",
+      "url": "https://arxiv.org/html/2608.31036v1#S2.T1.2.14.1"
+    },
+    {
+      "href": "#S4.SS3.p1.1",
+      "text": "§4.3",
+      "section": "References",
+      "context": "Meng et al. (2024) F. Meng, Z. Wang, and M. Zhang Pissa: principal singular values and singular vectors adaptation of large language models . In NeurIPS , Cited by: §1 , Table 1 , §4.3",
+      "url": "https://arxiv.org/html/2608.31036v1#S4.SS3.p1.1"
+    },
+    {
+      "href": "#S4.SS4.p2.1",
+      "text": "§4.4",
+      "section": "References",
+      "context": "Meng et al. (2024) F. Meng, Z. Wang, and M. Zhang Pissa: principal singular values and singular vectors adaptation of large language models . In NeurIPS , Cited by: §1 , Table 1 , §4.3 , §4.4",
+      "url": "https://arxiv.org/html/2608.31036v1#S4.SS4.p2.1"
+    },
+    {
+      "href": "#S5.p2.1",
+      "text": "§5",
+      "section": "References",
+      "context": "Meng et al. (2024) F. Meng, Z. Wang, and M. Zhang Pissa: principal singular values and singular vectors adaptation of large language models . In NeurIPS , Cited by: §1 , Table 1 , §4.3 , §4.4 , §5",
+      "url": "https://arxiv.org/html/2608.31036v1#S5.p2.1"
+    },
+    {
+      "href": "#S4.T2.2.2.5.1.1",
+      "text": "Table 2",
+      "section": "References",
+      "context": "Merity et al. (2016) S. Merity, C. Xiong, J. Bradbury, and R. Socher Pointer sentinel mixture models . arXiv preprint arXiv:1609.07843 . Cited by: Table 2",
+      "url": "https://arxiv.org/html/2608.31036v1#S4.T2.2.2.5.1.1"
+    },
+    {
+      "href": "#S4.T2.2.2.5.1.1",
+      "text": "Table 2",
+      "section": "References",
+      "context": "Mihaylov et al. (2018) T. Mihaylov, P. Clark, T. Khot, and A. Sabharwal Can a suit of armor conduct electricity? a new dataset for open book question answering . In EMNLP , Cited by: Table 2",
+      "url": "https://arxiv.org/html/2608.31036v1#S4.T2.2.2.5.1.1"
+    },
+    {
+      "href": "#S4.T2.2.2.5.1.1",
+      "text": "Table 2",
+      "section": "References",
+      "context": "Paperno et al. (2016) D. Paperno, G. Kruszewski, A. Lazaridou, N. Pham, R. Bernardi, S. Pezzelle, M. Baroni, G. Boleda, and R. Fernández The lambada dataset: word prediction requiring a broad discourse context . In ACL , Cited by: Table 2",
+      "url": "https://arxiv.org/html/2608.31036v1#S4.T2.2.2.5.1.1"
+    },
+    {
+      "href": "#S4.SS3.p1.1",
+      "text": "§4.3",
+      "section": "References",
+      "context": "Qiu et al. (2023) Z. Qiu, W. Liu, H. Feng, Y. Xue, Y. Feng, Z. Liu, D. Zhang, A. Weller, and B. Schölkopf Controlling text-to-image diffusion by orthogonal finetuning . In NeurIPS , Cited by: §4.3",
+      "url": "https://arxiv.org/html/2608.31036v1#S4.SS3.p1.1"
+    },
+    {
+      "href": "#S5.p1.1",
+      "text": "§5",
+      "section": "References",
+      "context": "Qiu et al. (2023) Z. Qiu, W. Liu, H. Feng, Y. Xue, Y. Feng, Z. Liu, D. Zhang, A. Weller, and B. Schölkopf Controlling text-to-image diffusion by orthogonal finetuning . In NeurIPS , Cited by: §4.3 , §5",
+      "url": "https://arxiv.org/html/2608.31036v1#S5.p1.1"
+    },
+    {
+      "href": "#S4.SS3.p1.1",
+      "text": "§4.3",
+      "section": "References",
+      "context": "Qiu et al. (2025) Z. Qiu, W. Liu, A. Weller, and B. Schölkopf Orthogonal finetuning made scalable . In EMNLP , Cited by: §4.3",
+      "url": "https://arxiv.org/html/2608.31036v1#S4.SS3.p1.1"
+    },
+    {
+      "href": "#S5.p1.1",
+      "text": "§5",
+      "section": "References",
+      "context": "Qiu et al. (2025) Z. Qiu, W. Liu, A. Weller, and B. Schölkopf Orthogonal finetuning made scalable . In EMNLP , Cited by: §4.3 , §5",
+      "url": "https://arxiv.org/html/2608.31036v1#S5.p1.1"
+    },
+    {
+      "href": "#S4.T2.2.2.5.1.1",
+      "text": "Table 2",
+      "section": "References",
+      "context": "Sakaguchi et al. (2021) K. Sakaguchi, R. L. Bras, C. Bhagavatula, and Y. Choi Winogrande: an adversarial winograd schema challenge at scale . Communications of the ACM 64 ( 9 ), pp. 99–106 . Cited by: Table 2",
+      "url": "https://arxiv.org/html/2608.31036v1#S4.T2.2.2.5.1.1"
+    },
+    {
+      "href": "#S3.SS3.p4.1",
+      "text": "§3.3",
+      "section": "References",
+      "context": "Salimans and Kingma (2016) T. Salimans and D. P. Kingma Weight normalization: a simple reparameterization to accelerate training of deep neural networks . In NeurIPS , Cited by: §3.3",
+      "url": "https://arxiv.org/html/2608.31036v1#S3.SS3.p4.1"
+    },
+    {
+      "href": "https://dx.doi.org/10.64434/tml.20250929",
+      "text": "Document",
+      "section": "References",
+      "context": "Schulman and Lab (2025) J. Schulman and T. M. Lab LoRA without regret . Thinking Machines Lab: Connectionism . Note: https://thinkingmachines.ai/blog/lora/ External Links: Document",
+      "url": "https://dx.doi.org/10.64434/tml.20250929"
+    },
+    {
+      "href": "#S4.SS2.p3.1",
+      "text": "§4.2",
+      "section": "References",
+      "context": "Schulman and Lab (2025) J. Schulman and T. M. Lab LoRA without regret . Thinking Machines Lab: Connectionism . Note: https://thinkingmachines.ai/blog/lora/ External Links: Document Cited by: §4.2",
+      "url": "https://arxiv.org/html/2608.31036v1#S4.SS2.p3.1"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Shen et al. (2026) Z. Shen, Y. Li, Q. Yin, C. T. Leong, Z. Wang, Y. Chen, R. Han, S. Lee, and Y. R. Fung On the geometry of on-policy distillation . arXiv preprint arXiv:2606.07082 . Cited by: §1",
+      "url": "https://arxiv.org/html/2608.31036v1#S1.p1.1"
+    },
+    {
+      "href": "#S4.T2.2.2.4.1.1",
+      "text": "Table 2",
+      "section": "References",
+      "context": "Soboleva et al. (2023) D. Soboleva, F. Al-Khateeb, R. Myers, J. R. Steeves, J. Hestness, and N. Dey SlimPajama: A 627B token cleaned and deduplicated version of RedPajama . Cited by: Table 2",
+      "url": "https://arxiv.org/html/2608.31036v1#S4.T2.2.2.4.1.1"
+    },
+    {
+      "href": "#S4.T4",
+      "text": "Table 4",
+      "section": "References",
+      "context": "Soboleva et al. (2023) D. Soboleva, F. Al-Khateeb, R. Myers, J. R. Steeves, J. Hestness, and N. Dey SlimPajama: A 627B token cleaned and deduplicated version of RedPajama . Cited by: Table 2 , Table 4",
+      "url": "https://arxiv.org/html/2608.31036v1#S4.T4"
+    },
+    {
+      "href": "#S5.p1.1",
+      "text": "§5",
+      "section": "References",
+      "context": "Sung et al. (2022) Y. Sung, J. Cho, and M. Bansal Lst: ladder side-tuning for parameter and memory efficient transfer learning . In NeurIPS , Cited by: §5",
+      "url": "https://arxiv.org/html/2608.31036v1#S5.p1.1"
+    },
+    {
+      "href": "#S5.p1.1",
+      "text": "§5",
+      "section": "References",
+      "context": "Sung et al. (2021) Y. Sung, V. Nair, and C. A. Raffel Training neural networks with fixed sparse masks . NeurIPS . Cited by: §5",
+      "url": "https://arxiv.org/html/2608.31036v1#S5.p1.1"
+    },
+    {
+      "href": "#S4.T2.2.2.3.1.1",
+      "text": "Table 2",
+      "section": "References",
+      "context": "Vaswani et al. (2017) A. Vaswani, N. Shazeer, N. Parmar, J. Uszkoreit, L. Jones, A. N. Gomez, Ł. Kaiser, and I. Polosukhin Attention is all you need . Advances in neural information processing systems 30 . Cited by: Table 2",
+      "url": "https://arxiv.org/html/2608.31036v1#S4.T2.2.2.3.1.1"
+    },
+    {
+      "href": "#S5.p1.1",
+      "text": "§5",
+      "section": "References",
+      "context": "Vu et al. (2022) T. Vu, B. Lester, N. Constant, R. Al-Rfou, and D. Cer SPoT: better frozen model adaptation through soft prompt transfer . In ACL , Cited by: §5",
+      "url": "https://arxiv.org/html/2608.31036v1#S5.p1.1"
+    },
+    {
+      "href": "#S1.p3.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Wang et al. (2025) H. Wang, Y. Li, S. Wang, G. Chen, and Y. Chen Milora: harnessing minor singular components for parameter-efficient llm finetuning . In NAACL-HLT , Cited by: §1",
+      "url": "https://arxiv.org/html/2608.31036v1#S1.p3.1"
+    },
+    {
+      "href": "#S2.T1.2.15.1",
+      "text": "Table 1",
+      "section": "References",
+      "context": "Wang et al. (2025) H. Wang, Y. Li, S. Wang, G. Chen, and Y. Chen Milora: harnessing minor singular components for parameter-efficient llm finetuning . In NAACL-HLT , Cited by: §1 , Table 1",
+      "url": "https://arxiv.org/html/2608.31036v1#S2.T1.2.15.1"
+    },
+    {
+      "href": "#S4.SS4.p2.1",
+      "text": "§4.4",
+      "section": "References",
+      "context": "Wang et al. (2025) H. Wang, Y. Li, S. Wang, G. Chen, and Y. Chen Milora: harnessing minor singular components for parameter-efficient llm finetuning . In NAACL-HLT , Cited by: §1 , Table 1 , §4.4",
+      "url": "https://arxiv.org/html/2608.31036v1#S4.SS4.p2.1"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Wang et al. (2026) S. Wang, J. Asilis, Ö. F. Akgül, E. Bilgin, O. Liu, and W. Neiswanger Tina: tiny reasoning models via lora . In ICLR , Cited by: §1",
+      "url": "https://arxiv.org/html/2608.31036v1#S1.p1.1"
+    },
+    {
+      "href": "#S5.p2.1",
+      "text": "§5",
+      "section": "References",
+      "context": "Wang et al. (2024) S. Wang, L. Yu, and J. Li Lora-ga: low-rank adaptation with gradient approximation . In NeurIPS , Cited by: §5",
+      "url": "https://arxiv.org/html/2608.31036v1#S5.p2.1"
+    },
+    {
+      "href": "#S5.p1.1",
+      "text": "§5",
+      "section": "References",
+      "context": "Wang et al. (2022) Y. Wang, S. Mukherjee, X. Liu, J. Gao, A. H. Awadallah, and J. Gao Adamix: mixture-of-adapter for parameter-efficient tuning of large language models . In EMNLP , Cited by: §5",
+      "url": "https://arxiv.org/html/2608.31036v1#S5.p1.1"
+    },
+    {
+      "href": "#S5.p1.1",
+      "text": "§5",
+      "section": "References",
+      "context": "Wu et al. (2024) T. Wu, J. Wang, Z. Zhao, and N. Wong Mixture-of-subspaces in low-rank adaptation . arXiv preprint arXiv:2406.11909 . Cited by: §5",
+      "url": "https://arxiv.org/html/2608.31036v1#S5.p1.1"
+    },
+    {
+      "href": "https://github.com/fla-org/flash-linear-attention",
+      "text": "Link",
+      "section": "References",
+      "context": "Yang and Zhang (2024) FLA: a triton-based library for hardware-efficient implementations of linear attention mechanism External Links: Link",
+      "url": "https://github.com/fla-org/flash-linear-attention"
+    },
+    {
+      "href": "#S4.T2.2.2.2.1.1",
+      "text": "Table 2",
+      "section": "References",
+      "context": "Yang and Zhang (2024) FLA: a triton-based library for hardware-efficient implementations of linear attention mechanism External Links: Link Cited by: Table 2",
+      "url": "https://arxiv.org/html/2608.31036v1#S4.T2.2.2.2.1.1"
+    },
+    {
+      "href": "#S2.T1.2.12.1",
+      "text": "Table 1",
+      "section": "References",
+      "context": "Ye et al. (2025) M. Ye, W. Liu, and P. He Vera: explainable video anomaly detection via verbalized learning of vision-language models . In CVPR , Cited by: Table 1",
+      "url": "https://arxiv.org/html/2608.31036v1#S2.T1.2.12.1"
+    },
+    {
+      "href": "#S1.p3.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Yin et al. (2025) Q. Yin, Y. Wu, Z. Shen, S. Li, Z. Wang, Y. Li, C. T. Leong, J. Kang, and J. Gu Evaluating parameter efficient methods for rlvr . arXiv preprint arXiv:2512.23165 . Cited by: §1",
+      "url": "https://arxiv.org/html/2608.31036v1#S1.p3.1"
+    },
+    {
+      "href": "#S4.SS4.p2.1",
+      "text": "§4.4",
+      "section": "References",
+      "context": "Yin et al. (2025) Q. Yin, Y. Wu, Z. Shen, S. Li, Z. Wang, Y. Li, C. T. Leong, J. Kang, and J. Gu Evaluating parameter efficient methods for rlvr . arXiv preprint arXiv:2512.23165 . Cited by: §1 , §4.4",
+      "url": "https://arxiv.org/html/2608.31036v1#S4.SS4.p2.1"
+    },
+    {
+      "href": "#S4.T2.2.4.2.1.1",
+      "text": "Table 2",
+      "section": "References",
+      "context": "Yin et al. (2025) Q. Yin, Y. Wu, Z. Shen, S. Li, Z. Wang, Y. Li, C. T. Leong, J. Kang, and J. Gu Evaluating parameter efficient methods for rlvr . arXiv preprint arXiv:2512.23165 . Cited by: §1 , §4.4 , Table 2",
+      "url": "https://arxiv.org/html/2608.31036v1#S4.T2.2.4.2.1.1"
+    },
+    {
+      "href": "#S4.T2.2.3.4.1.1",
+      "text": "Table 2",
+      "section": "References",
+      "context": "Yu et al. (2024) L. Yu, W. Jiang, H. Shi, J. Yu, Z. Liu, Y. Zhang, J. Kwok, Z. Li, A. Weller, and W. Liu Metamath: bootstrap your own mathematical questions for large language models . In ICLR , Cited by: Table 2",
+      "url": "https://arxiv.org/html/2608.31036v1#S4.T2.2.3.4.1.1"
+    },
+    {
+      "href": "#S4.T2.2.3.5.1.1",
+      "text": "Table 2",
+      "section": "References",
+      "context": "Yu et al. (2024) L. Yu, W. Jiang, H. Shi, J. Yu, Z. Liu, Y. Zhang, J. Kwok, Z. Li, A. Weller, and W. Liu Metamath: bootstrap your own mathematical questions for large language models . In ICLR , Cited by: Table 2 , Table 2",
+      "url": "https://arxiv.org/html/2608.31036v1#S4.T2.2.3.5.1.1"
+    },
+    {
+      "href": "#S4.T2.2.4.4.1.1",
+      "text": "Table 2",
+      "section": "References",
+      "context": "Yu et al. (2026) Q. Yu, Z. Zhang, R. Zhu, Y. Yuan, X. Zuo, Y. Yue, W. Dai, T. Fan, G. Liu, L. Liu, et al. Dapo: an open-source llm reinforcement learning system at scale . In NeurIPS , Cited by: Table 2",
+      "url": "https://arxiv.org/html/2608.31036v1#S4.T2.2.4.4.1.1"
+    },
+    {
+      "href": "#S5.p1.1",
+      "text": "§5",
+      "section": "References",
+      "context": "Zaken et al. (2022) E. B. Zaken, Y. Goldberg, and S. Ravfogel BitFit: Simple Parameter-efficient Fine-tuning for Transformer-based Masked Language-models . In ACL , Cited by: §5",
+      "url": "https://arxiv.org/html/2608.31036v1#S5.p1.1"
+    },
+    {
+      "href": "#S4.T2.2.2.5.1.1",
+      "text": "Table 2",
+      "section": "References",
+      "context": "Zellers et al. (2019) R. Zellers, A. Holtzman, Y. Bisk, A. Farhadi, and Y. Choi Hellaswag: can a machine really finish your sentence? . In ACL , Cited by: Table 2",
+      "url": "https://arxiv.org/html/2608.31036v1#S4.T2.2.2.5.1.1"
+    },
+    {
+      "href": "#S2.T1.2.11.1",
+      "text": "Table 1",
+      "section": "References",
+      "context": "Zhang et al. (2023a) L. Zhang, L. Zhang, S. Shi, X. Chu, and B. Li LoRA-fa: efficient and effective low rank representation fine-tuning . arXiv preprint arXiv:2308.03303 . Cited by: Table 1",
+      "url": "https://arxiv.org/html/2608.31036v1#S2.T1.2.11.1"
+    },
+    {
+      "href": "#S2.T1.2.10.1",
+      "text": "Table 1",
+      "section": "References",
+      "context": "Zhang et al. (2023b) Q. Zhang, M. Chen, A. Bukharin, N. Karampatziakis, P. He, Y. Cheng, W. Chen, and T. Zhao Adalora: adaptive budget allocation for parameter-efficient fine-tuning . arXiv preprint arXiv:2303.10512 . Cited by: Table 1",
+      "url": "https://arxiv.org/html/2608.31036v1#S2.T1.2.10.1"
+    },
+    {
+      "href": "#S5.p1.1",
+      "text": "§5",
+      "section": "References",
+      "context": "Zhang et al. (2023b) Q. Zhang, M. Chen, A. Bukharin, N. Karampatziakis, P. He, Y. Cheng, W. Chen, and T. Zhao Adalora: adaptive budget allocation for parameter-efficient fine-tuning . arXiv preprint arXiv:2303.10512 . Cited by: Table 1 , §5",
+      "url": "https://arxiv.org/html/2608.31036v1#S5.p1.1"
+    },
+    {
+      "href": "#S4.T2.2.4.5.1.1",
+      "text": "Table 2",
+      "section": "References",
+      "context": "Zhang and Math-AI (2025) Y. Zhang and T. Math-AI American invitational mathematics examination (aime) 2025 . Cited by: Table 2",
+      "url": "https://arxiv.org/html/2608.31036v1#S4.T2.2.4.5.1.1"
+    },
+    {
+      "href": "#S5.p1.1",
+      "text": "§5",
+      "section": "References",
+      "context": "Zhang et al. (2022) Y. Zhang, K. Zhou, and Z. Liu Neural prompt search . arXiv preprint arXiv:2206.04673 . Cited by: §5",
+      "url": "https://arxiv.org/html/2608.31036v1#S5.p1.1"
+    },
+    {
+      "href": "#S4.T2.2.3.4.1.1",
+      "text": "Table 2",
+      "section": "References",
+      "context": "Zheng et al. (2024) T. Zheng, G. Zhang, T. Shen, X. Liu, B. Y. Lin, J. Fu, W. Chen, and X. Yue Opencodeinterpreter: integrating code generation with execution and refinement . In Findings of ACL , Cited by: Table 2",
+      "url": "https://arxiv.org/html/2608.31036v1#S4.T2.2.3.4.1.1"
+    },
+    {
+      "href": "#S5.p1.1",
+      "text": "§5",
+      "section": "References",
+      "context": "Zi et al. (2023) B. Zi, X. Qi, L. Wang, J. Wang, K. Wong, and L. Zhang Delta-lora: fine-tuning high-rank parameters with the delta of low-rank matrices . arXiv preprint arXiv:2309.02411 . Cited by: §5",
+      "url": "https://arxiv.org/html/2608.31036v1#S5.p1.1"
+    }
+  ],
+  "note": "Extracted HTML text; equations and table formatting may be imperfect. No PDF extraction was attempted."
+}

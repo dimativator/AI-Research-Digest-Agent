@@ -1,0 +1,337 @@
+{
+  "run_id": "e7c37f5af0ca4bdd9132464d3a5c9cbc",
+  "status": "completed",
+  "user_id": "dmitrii",
+  "profile_fingerprint": "a2480e0075ad9cdf236d40e30f74f9bfd87a08dd948530b42e6b57e4a123bfc0",
+  "pipeline_version": "react-v2",
+  "categories": [
+    "cs.AI",
+    "cs.CG",
+    "cs.CL",
+    "cs.CR",
+    "cs.CV",
+    "cs.DB",
+    "cs.DC",
+    "cs.DS",
+    "cs.GR",
+    "cs.HC",
+    "cs.IR",
+    "cs.LG",
+    "cs.LO",
+    "cs.MA",
+    "cs.NE",
+    "cs.NI",
+    "cs.RO",
+    "cs.SD",
+    "cs.SE",
+    "eess.AS",
+    "eess.IV",
+    "eess.SP",
+    "eess.SY",
+    "math.AP",
+    "math.OC",
+    "math.PR",
+    "nlin.CD",
+    "q-bio.NC",
+    "stat.ML"
+  ],
+  "date_from": "2018-02-27",
+  "date_to": "2026-10-22",
+  "papers": [
+    {
+      "paper_id": "2610.11730",
+      "summary": "Proposes a post-step nuclear-norm update and reports lower effective rank and improved SVD-LLM compression at matched validation loss.",
+      "relevance": "The closest match to the goals of spectral regularization, train-time compressibility, and label-noise generalization.",
+      "evidence": [
+        {
+          "source": "abstract",
+          "quote": "spectral weight decay lowers effective rank and improves SVD-LLM compression at matched validation loss"
+        },
+        {
+          "source": "abstract",
+          "quote": "Under fixed-horizon training with $60\\\\%$ label noise, it also improves final mean clean-test accuracy over matched $\\\\ell_2$ regularization"
+        }
+      ],
+      "title": "Spectral Weight Decay: Inducing Low-Rank Structure in Neural Network Weights",
+      "url": "https://arxiv.org/abs/2610.11730v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2609.40127",
+      "summary": "Learns low-rank projection subspaces end-to-end while freezing pretrained weights. Its inspected Llama-2-7B results compare inference efficiency with other factorizations at matched weight size.",
+      "relevance": "Directly informs the quality–compression tradeoff, though it studies post-training compression rather than training weights to become compressible.",
+      "evidence": [
+        {
+          "source": "abstract",
+          "quote": "All projectors are optimized jointly against a global objective--the KL divergence to the dense model's output distribution or the model's original training loss--while the pretrained weights remain frozen."
+        },
+        {
+          "source": "inspection",
+          "quote": "The factorized methods match on weights and FLOPs; LSP’s tied low-rank projector caches one narrow latent per layer instead of separate K and V"
+        },
+        {
+          "source": "inspection",
+          "quote": "Compression is also not free: LSP requires both the KL measurements and projection training"
+        }
+      ],
+      "title": "Learning Functional Subspaces for Neural Network Compression",
+      "url": "https://arxiv.org/abs/2609.40127v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2608.14492",
+      "summary": "Adapts a relaxed Muon objective to low-rank updates using linearization and least squares; reports model- and evaluation-dependent PEFT gains.",
+      "relevance": "Direct match for Muon optimization of LoRA and other factorized updates.",
+      "evidence": [
+        {
+          "source": "abstract",
+          "quote": "approximating the solution to a relaxed Muon objective in the low-rank setting via linearization and then least-squares"
+        },
+        {
+          "source": "abstract",
+          "quote": "While results are model- and eval-dependent, we find overall that using Muon for low-rank fine-tuning provides moderate performance improvements."
+        }
+      ],
+      "title": "Approximate Muon with low-rank adapters",
+      "url": "https://arxiv.org/abs/2608.14492v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2608.31036",
+      "summary": "Normalizes LoRA down-projection matrices during training, or only at initialization, to alter early optimization dynamics.",
+      "relevance": "Addresses stability and convergence in low-rank parameterizations.",
+      "evidence": [
+        {
+          "source": "abstract",
+          "quote": "Because LoRA initializes the up-projection to zero, its early optimization dynamics are largely governed by the down-projection."
+        },
+        {
+          "source": "abstract",
+          "quote": "Across pretraining, supervised finetuning, and reinforcement learning, NoRA consistently accelerates convergence, improves performance and training stability"
+        }
+      ],
+      "title": "Normalized Low-Rank Adaptation",
+      "url": "https://arxiv.org/abs/2608.31036v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2510.05491",
+      "summary": "Combines Muon orthogonalization with neuron-wise adaptive normalization for LLM optimization.",
+      "relevance": "Relevant to matrix-update geometry and distributed training efficiency; the supplied abstract is truncated before full results.",
+      "evidence": [
+        {
+          "source": "abstract",
+          "quote": "NorMuon addresses this imbalance by maintaining second-order momentum statistics for each neuron and applying row-wise normalization after orthogonalization"
+        },
+        {
+          "source": "abstract",
+          "quote": "To enable practical deployment at scale, we develop an efficient distributed implementation under the FSDP2 framework"
+        }
+      ],
+      "title": "NorMuon: Making Muon more efficient and scalable",
+      "url": "https://arxiv.org/abs/2510.05491v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.08975",
+      "summary": "Argues that optimizer rankings in language-model pretraining can change with batch size despite tuning, and analyzes a curvature–noise explanation.",
+      "relevance": "Useful for evaluating optimization claims and scaling tradeoffs across training regimes.",
+      "evidence": [
+        {
+          "source": "abstract",
+          "quote": "the best optimizer for language model pretraining changes with batch size even after extensive hyperparameter tuning"
+        },
+        {
+          "source": "abstract",
+          "quote": "gradient noise drives a bias-variance tradeoff in preconditioning that can reverse optimizer rankings across batch sizes"
+        }
+      ],
+      "title": "The Best Optimizer Depends on Batch Size",
+      "url": "https://arxiv.org/abs/2610.08975v2",
+      "version": 2,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.30191",
+      "summary": "Studies how constrained QLoRA updates and their placement relative to Adam affect retention in continual fine-tuning.",
+      "relevance": "Directly informs practical behavior of low-rank fine-tuning and subspace regularization.",
+      "evidence": [
+        {
+          "source": "abstract",
+          "quote": "Matched QLoRA interventions separate constraint granularity from placement before or after Adam: placement strongly affects retention across the studied code-label audits"
+        },
+        {
+          "source": "abstract",
+          "quote": "subspace regularization and projection improve average retention while trading off different old tasks"
+        }
+      ],
+      "title": "Why Constrained Updates Still Forget: A Functional-Path Analysis of Continual SFT",
+      "url": "https://arxiv.org/abs/2610.30191v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.30344",
+      "summary": "Compares partial-parameter RS-LoRA continual pretraining with full and adapter-only training on the same 5B-token data; AQL-Lite reports a 73.19 mean in 63 hours versus 73.58 in 121 hours for full training.",
+      "relevance": "A controlled quality–wall-clock example for PEFT at scale, although peak training memory is not established by the retrieved passages.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "Table 3: Controlled CPT experiment on 5B tokens. All methods use the same data, hardware, and evaluation protocol."
+        },
+        {
+          "source": "inspection",
+          "quote": "Full CPT 121h 68.92 77.33 89.22 58.85 73.58 LoRA-only 17h 66.43 71.11 87.75 55.68 70.24 RS-LoRA 24h 66.57 72.81 88.27 55.87 70.88 AQL-Lite (ours) 63h 68.26 78.00 89.15 57.36 73.19"
+        },
+        {
+          "source": "inspection",
+          "quote": "All results come from single training runs, so differences below about one point should not be over-interpreted."
+        }
+      ],
+      "title": "AQL-Lite: Enabling Efficient Knowledge Acquisition for Arabic LLMs via Data-Centric Continual Pretraining",
+      "url": "https://arxiv.org/abs/2610.30344v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.25858",
+      "summary": "Evaluates agents that adapt by changing prompts, memory, or skills, and reports a stability–plasticity tradeoff across drifting task streams.",
+      "relevance": "Relevant to maintaining a handwritten research-digest harness, though its tasks are not paper retrieval.",
+      "evidence": [
+        {
+          "source": "abstract",
+          "quote": "they adapt by rewriting their own harness, such as prompts, memory, and skills, from task feedback while the model weights stay frozen"
+        },
+        {
+          "source": "abstract",
+          "quote": "higher plasticity consistently comes at the cost of stability"
+        }
+      ],
+      "title": "Are Self-Evolving Agents Continual Learners?",
+      "url": "https://arxiv.org/abs/2610.25858v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.27674",
+      "summary": "Introduces hybrid momentum and a Muon variant that orthogonalizes its update direction with Newton–Schulz.",
+      "relevance": "Matches the explicit interest in Newton–Schulz matrix optimization, but is less specifically low-rank than the adapter papers.",
+      "evidence": [
+        {
+          "source": "abstract",
+          "quote": "we propose HyMUON, which applies Newton--Schulz orthogonalization to the hybrid direction"
+        }
+      ],
+      "title": "Hybrid Momentum Methods for Optimizing Deep Learning Models",
+      "url": "https://arxiv.org/abs/2610.27674v2",
+      "version": 2,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    }
+  ],
+  "x_feature": null,
+  "limitations": [
+    "Several supplied abstracts are truncated; unquoted results and implementation details were not inferred.",
+    "AQL-Lite's inspected comparison reports wall-clock time, not peak training GPU memory, and its authors say the efficiency comparison is validated only at 5B tokens.",
+    "LSP's inspected memory and throughput results concern inference, not training memory.",
+    "No code availability or reproducibility was verified. X analysis was disabled.",
+    "Selection is limited to the supplied screened corpus and observations.",
+    "inspect:2609.40127: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.30344: only question-relevant HTML passages were inspected, not the whole paper."
+  ],
+  "stats": {
+    "fetched_count": 100,
+    "candidate_count": 100,
+    "llm_calls": 11,
+    "steps": 7,
+    "inspections": 2,
+    "expansions": 2,
+    "screened": 32,
+    "usage": {
+      "recorded_calls": 11,
+      "llm_latency_seconds": 216.6250240399968,
+      "input_tokens": 268804,
+      "output_tokens": 8883,
+      "estimated_api_cost_usd": null,
+      "calls_without_usage": 0,
+      "cost_note": "API-equivalent estimate using standard GPT-5.6-Luna rates checked 2026-11-17: $0.20/M input, $1.20/M output; above 272K input, $0.40/M and $1.80/M. Assumes all input is uncached; excludes cache writes and external tools. Not actual Codex subscription billing. Unknown usage/model yields null cost.",
+      "price_source": "https://developers.openai.com/api/docs/models/gpt-5.6-luna"
+    },
+    "tool_calls": 4,
+    "tool_latency_seconds": 9.956040375021985
+  }
+}

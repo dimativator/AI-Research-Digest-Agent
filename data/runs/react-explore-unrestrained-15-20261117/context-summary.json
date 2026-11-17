@@ -1,0 +1,315 @@
+{
+  "status": "completed",
+  "run_id": "96e873e6d8bd479ab378c3a59dcdee15",
+  "selected": 15,
+  "stats": {
+    "fetched_count": 4655,
+    "candidate_count": 4655,
+    "llm_calls": 2,
+    "steps": 2,
+    "inspections": 1,
+    "expansions": 0,
+    "screened": 30,
+    "usage": {
+      "recorded_calls": 2,
+      "llm_latency_seconds": 54.58050829199783,
+      "input_tokens": 47709,
+      "output_tokens": 2501,
+      "estimated_api_cost_usd": 0.012543,
+      "calls_without_usage": 0,
+      "cost_note": "API-equivalent estimate using standard GPT-5.6-Luna rates checked 2026-11-17: $0.20/M input, $1.20/M output; above 272K input, $0.40/M and $1.80/M. Assumes all input is uncached; excludes cache writes and external tools. Not actual Codex subscription billing. Unknown usage/model yields null cost.",
+      "price_source": "https://developers.openai.com/api/docs/models/gpt-5.6-luna"
+    },
+    "tool_calls": 1,
+    "tool_latency_seconds": 0.038458333001472056
+  },
+  "calls": [
+    {
+      "call": 1,
+      "purpose": "agent_decision",
+      "instructions_chars": 3553,
+      "payload_chars": 62401,
+      "schema_chars": 1101,
+      "total_chars": 67055,
+      "payload_sections_chars": {
+        "profile": 3234,
+        "tools": 3813,
+        "candidates": 54900,
+        "featured_x_paper_id": 4,
+        "observations": 2,
+        "last_error": 4,
+        "last_observation": 4,
+        "bounds": 197,
+        "remaining": 95
+      },
+      "input_tokens": 19639,
+      "output_tokens": 270
+    },
+    {
+      "call": 2,
+      "purpose": "agent_decision",
+      "instructions_chars": 3553,
+      "payload_chars": 95978,
+      "schema_chars": 1101,
+      "total_chars": 100632,
+      "payload_sections_chars": {
+        "profile": 3234,
+        "tools": 3813,
+        "candidates": 54900,
+        "featured_x_paper_id": 4,
+        "observations": 16896,
+        "last_error": 4,
+        "last_observation": 16687,
+        "bounds": 197,
+        "remaining": 95
+      },
+      "input_tokens": 28070,
+      "output_tokens": 2231
+    }
+  ],
+  "actions": [
+    {
+      "action": "inspect_paper",
+      "paper_id": "2611.08924",
+      "reason": "ResQAdam is a particularly strong fit for memory-efficient LLM training and low-rank optimizer-state compression, but its recommendation depends on experimental baselines, measured memory and throughput, and whether quality remains close to AdamW across the reported QAT settings. I need those details before final selection. Other promising papers also have truncated abstracts, so the final digest may remain limited by incomplete evidence.",
+      "question": "What baselines, model sizes and QAT settings are used, and what are the measured optimizer-state memory savings, training throughput changes, and model-quality differences versus AdamW, GaLore, and LDAdam?",
+      "query": "",
+      "limit": 10,
+      "selections": [],
+      "limitations": []
+    },
+    {
+      "action": "finish",
+      "paper_id": "",
+      "reason": "Selected 15 papers with the strongest apparent fit to spectral and low-rank optimization, LoRA geometry, memory-efficient training, compressibility, and scale-dependent regularization. Unresolved uncertainty: most papers were not inspected beyond their abstracts, several abstracts are truncated, and code/reproducibility was not checked; fuller baselines or implementation details could change the ranking.",
+      "question": "",
+      "query": "",
+      "limit": 10,
+      "selections": [
+        {
+          "paper_id": "2611.10212",
+          "summary": "DisMUSE develops distributed singular-spectrum optimization with Muon-style orthogonalized momentum, convergence guarantees, and a low-rank momentum-transmission variant for communication efficiency.",
+          "relevance": "Direct fit for spectral optimization, Newton-Schulz/Muon methods, convergence, and communication-quality tradeoffs.",
+          "evidence": [
+            {
+              "source": "abstract",
+              "quote": "Distributed SSB optimization is still at an early stage, with open questions about convergence guarantees and communication efficiency."
+            },
+            {
+              "source": "abstract",
+              "quote": "communication-efficient variant based on low-rank (LR) momentum transmission"
+            }
+          ]
+        },
+        {
+          "paper_id": "2611.05022",
+          "summary": "Studies matrix-factorization gradient flow with finite Newton-Schulz depth and shows that depth affects early rank selection and can change which stationary point the trajectory reaches.",
+          "relevance": "Directly addresses Newton-Schulz dynamics, rank selection, and optimization geometry.",
+          "evidence": [
+            {
+              "source": "abstract",
+              "quote": "the number of Newton-Schulz steps can change the rank selected during the early stages of training"
+            }
+          ]
+        },
+        {
+          "paper_id": "2611.08924",
+          "summary": "ResQAdam combines low-rank adaptive updates with a sign residual for QAT, reducing optimizer-state memory while preserving quality and throughput across several LLM scales and QAT settings.",
+          "relevance": "Strongest direct match for memory-efficient LLM optimization, low-rank optimizer states, model quality, peak memory, and throughput.",
+          "evidence": [
+            {
+              "source": "inspection",
+              "quote": "It reduces optimizer-state memory by 71% to 74% relative to AdamW, stays close to AdamW in most settings, and lowers training throughput by less than 2%."
+            },
+            {
+              "source": "inspection",
+              "quote": "Total Peak Memory (GB) 33.33 / 28.24 (\u2193 15.3%) 43.93 / 37.19 (\u2193 15.3%) 99.14 / 79.77 (\u2193 19.5%)"
+            },
+            {
+              "source": "inspection",
+              "quote": "In from-scratch QAT, every baseline is far behind ResQAdam in both quantization settings"
+            }
+          ]
+        },
+        {
+          "paper_id": "2611.07349",
+          "summary": "GEAR uses tangent-normal geometry and normal-spectrum estimates to expand LoRA rank in directions predicted to provide the largest local gain.",
+          "relevance": "Direct fit for dynamic LoRA rank evolution, spectral information, and low-rank optimization geometry.",
+          "evidence": [
+            {
+              "source": "abstract",
+              "quote": "the leading normal singular directions yield the locally optimal rank expansion"
+            }
+          ]
+        },
+        {
+          "paper_id": "2611.08414",
+          "summary": "Analyzes singular spectra and subspace motion of LoRA updates in supervised fine-tuning versus reinforcement learning, attributing differences partly to group-mean baseline subtraction.",
+          "relevance": "Directly matches interests in LoRA spectral dynamics, optimization behavior, and differences between training regimes.",
+          "evidence": [
+            {
+              "source": "abstract",
+              "quote": "Tracking the singular spectrum and subspaces of LoRA updates"
+            }
+          ]
+        },
+        {
+          "paper_id": "2611.13306",
+          "summary": "HiLo replaces adapter transmission with compressed gradient dissemination and local optimizer replay, while Spar uses spectral truncation, adaptive rank allocation, and error feedback.",
+          "relevance": "Strong fit for low-rank synchronization, communication cost, bandwidth-constrained training, and quality tradeoffs.",
+          "evidence": [
+            {
+              "source": "abstract",
+              "quote": "decouple training rank from communication cost"
+            },
+            {
+              "source": "abstract",
+              "quote": "transmitting as little as 1.6% of the adapter bytes, and accelerates end-to-end updates by up to 2.2\u00d7 under bandwidth constraints"
+            }
+          ]
+        },
+        {
+          "paper_id": "2611.10188",
+          "summary": "BiMuon applies Muon-style orthogonalized matrix updates to stochastic bilevel optimization and analyzes spectral imbalance and iteration complexity.",
+          "relevance": "Relevant to matrix-aware optimization, Muon, spectral geometry, and theoretical convergence.",
+          "evidence": [
+            {
+              "source": "abstract",
+              "quote": "the lower-level (LL) problem curvature can induce significant spectral imbalance in the upper-level (UL) geometry"
+            },
+            {
+              "source": "abstract",
+              "quote": "an O(\u03b5^{-4}) iteration-complexity guarantee"
+            }
+          ]
+        },
+        {
+          "paper_id": "2611.04462",
+          "summary": "SaMA generalizes Kronecker-based PEFT to obtain rank scaling beyond standard LoRA and analyzes how its invariance geometry affects optimizer behavior.",
+          "relevance": "Directly concerns low-rank PEFT, effective rank, optimizer-friendly geometry, and parameter-efficiency tradeoffs.",
+          "evidence": [
+            {
+              "source": "abstract",
+              "quote": "its invariance manifold induces flat directions in the loss landscape, creating an optimization bottleneck for adaptive optimizers"
+            },
+            {
+              "source": "abstract",
+              "quote": "its effective rank scales only linearly with the parameter budget"
+            }
+          ]
+        },
+        {
+          "paper_id": "2611.10610",
+          "summary": "Presents a forward-only LLM adaptation method that uses SVD-component activation geometry to select matrices and components for rank reduction.",
+          "relevance": "Relevant to SVD-based compressibility, rank reduction, adaptation memory, and speed at LLM scale.",
+          "evidence": [
+            {
+              "source": "abstract",
+              "quote": "our forward-only search then efficiently identifies the weight matrix with the highest dispersion that merits rank reduction"
+            },
+            {
+              "source": "abstract",
+              "quote": "theoretical analysis shows lower peak memory and greater speedup than the gradient-based approach"
+            }
+          ]
+        },
+        {
+          "paper_id": "2611.17784",
+          "summary": "SCALAR learns scalar coefficients over fixed task-calibrated directions, achieving LoRA-comparable performance with fewer trainable parameters, lower memory, and higher throughput.",
+          "relevance": "Strong fit for parameter-efficient adaptation and practical memory-throughput tradeoffs.",
+          "evidence": [
+            {
+              "source": "abstract",
+              "quote": "SCALAR achieves performance comparable to LoRA with substantially fewer trainable parameters, lower peak training memory, and higher throughput."
+            },
+            {
+              "source": "abstract",
+              "quote": "On commonsense reasoning, SCALAR achieves accuracy comparable to LoRA with about 4% of its trainable parameters."
+            }
+          ]
+        },
+        {
+          "paper_id": "2611.06598",
+          "summary": "Defines behavioral rate as the compressed adapter size needed to preserve fine-tuning behavior and studies how it depends on the dataset-receiver pair and correction spectra.",
+          "relevance": "Directly addresses behavioral compressibility, adapter compression, singular directions, and noisy-data effects.",
+          "evidence": [
+            {
+              "source": "abstract",
+              "quote": "fine-tuning compressibility is a property of the dataset--receiver pair rather than of the dataset alone"
+            },
+            {
+              "source": "abstract",
+              "quote": "correction spectra measured on the data are able to rank these rates within a receiver"
+            }
+          ]
+        },
+        {
+          "paper_id": "2611.17876",
+          "summary": "Studies temporary weight decay in Muon-trained Transformers across model scales and shows delayed, scale-dependent effects mediated by persistent weight-norm changes.",
+          "relevance": "Direct fit for regularization, Muon optimization, norm dynamics, and training-scale tradeoffs.",
+          "evidence": [
+            {
+              "source": "abstract",
+              "quote": "temporary weight decay in Muon-trained decoder-only Transformers"
+            },
+            {
+              "source": "abstract",
+              "quote": "a schedule selected at 162M and transferred without retuning to 1.4B is 0.26 nats worse than no decay when removed"
+            }
+          ]
+        },
+        {
+          "paper_id": "2611.08082",
+          "summary": "DictLLM performs post-training LLM compression using shared SVD dictionaries, sparse coefficients, and component-specific quantization.",
+          "relevance": "Strong fit for low-rank weight compressibility, SVD structure, quantization, and memory-quality tradeoffs.",
+          "evidence": [
+            {
+              "source": "abstract",
+              "quote": "Post-training compression is an effective approach to managing this trade-off"
+            },
+            {
+              "source": "abstract",
+              "quote": "we obtain shared dictionaries via singular value decomposition (SVD) of input-scaled weight matrices"
+            }
+          ]
+        },
+        {
+          "paper_id": "2611.04465",
+          "summary": "Provides a theoretical analysis of Muon for Transformer next-token prediction, including spectral margins, convergence rates, learned weight structure, and generalization.",
+          "relevance": "Directly matches spectral optimization theory for LLM training and generalization.",
+          "evidence": [
+            {
+              "source": "abstract",
+              "quote": "we characterize the optimization trajectory exactly and show that the normalized spectral margin is optimal after each update"
+            },
+            {
+              "source": "abstract",
+              "quote": "we establish nonasymptotic convergence rates for the training loss and the normalized margin gap"
+            }
+          ]
+        },
+        {
+          "paper_id": "2611.04239",
+          "summary": "LIRA allocates LoRA rank dynamically using second-order loss-perturbation estimates and displacement-based rank reallocation under matched budgets.",
+          "relevance": "Direct fit for interpretable dynamic rank allocation, low-rank parameterizations, and optimization-aware rank behavior.",
+          "evidence": [
+            {
+              "source": "abstract",
+              "quote": "A More Interpretable Dynamic Loss-Informed Rank Allocation for Low-Rank Adaptation"
+            },
+            {
+              "source": "abstract",
+              "quote": "LIRA scores each layer by the estimated magnitude of the local loss perturbation associated with its recent LoRA-factor movements under a second-order approximation"
+            }
+          ]
+        }
+      ],
+      "limitations": [
+        "X analysis was disabled, so no attention signal is included.",
+        "Most evidence is abstract-level, and several abstracts are truncated.",
+        "Repository availability and practical reproducibility were not checked except for the code URL reported in the inspected ResQAdam passages."
+      ]
+    }
+  ],
+  "note": "Removed tool-restraint guidance from Agent 2; same dates/configuration. Cached metadata and screening reused. Single stochastic run, not a causal prompt comparison."
+}

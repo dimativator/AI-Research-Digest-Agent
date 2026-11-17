@@ -1,0 +1,28 @@
+M2 diagnostic rerun with both quote checks removed — 17-11-2026
+
+Setup: 100 manually labeled papers, saved M2 profile, GPT-5.6-Luna, BM25 top30, digest size5, X disabled, unlimited decision/call budgets. Same production ReAct prompts. Both final and screening exact quote-substring validation removed. Evidence fields, IDs, label values, source availability and completeness checks remain. Fresh run databases and captured tool fixtures reused; no new fixture capture in these three repetitions. Labels never supplied to model.
+
+Results:
+Run1: completed; labels [1,1,1,1,1]; nDCG@5=1.000; 6 calls, 3 steps, 2 inspections; 108576 input + 4056 output tokens; 103.67s; $0.0265824 API-equivalent.
+Run2: completed; labels [1,1,1,1,0]; nDCG@5=0.868795; 7 calls, 4 steps, 3 inspections; 154092 input + 4435 output tokens; 115.70s; $0.0361404 API-equivalent.
+Run3: completed; labels [1,1,1,1,1]; nDCG@5=1.000; 5 calls, 2 steps, 1 inspection; 74614 input + 3883 output tokens; 89.93s; $0.0195824 API-equivalent.
+
+No invalid_screening or invalid_action events. All final selections accepted on first finish attempt. Mean nDCG@5=0.956265. Completion 3/3. Total 337282 input and 12374 output tokens; estimated API-equivalent $0.0823052. Estimates use uncached standard API rates, not actual Codex subscription charges.
+
+Selection issues:
+Runs1/3 choose the identical set: 2610.11730, 2608.14492, 2608.31036, 2510.05491, 2609.37725.
+Run2 replaces 2510.05491 with gold-0 reasoning-search survey 2610.29189, ranked last. The two successful sets overlap on four of five papers. Topic overlap with the profile's agent project may overstate personal interest. A selection critic could challenge that fit and compare alternatives; this remains a hypothesis.
+
+Cost issues:
+All six tool calls were inspections. No search, expansion, or code calls. Run3 obtains the same selected set as Run1 using one rather than two inspections, but this uncontrolled stochastic comparison does not establish inspection causality. Selective investigation and an abstract-only baseline are appropriate next comparisons.
+
+Retrieval and screening:
+The unchanged BM25 top5 are all gold1 (nDCG=1) with no LLM calls. The top30 contain ten of fifteen interesting papers and four of sixteen potentially interesting papers. All ten admitted gold1 papers are screened relevant in all repetitions; three or four gold0 papers are also screened relevant. Every final choice comes from the initial top30. Broad profile matches and shortlist limits remain separate issues.
+
+Interpretation:
+Removing exact matching removed the observed abort/retry mechanism. It does not verify factual accuracy or quotation faithfulness; evidence text is now model-generated and unchecked against sources. Original extracted math remains imperfect. Improved completion is clear for these repetitions, while any selection improvement over previous runs cannot be attributed causally to the validator change because model outputs vary.
+
+Limitations:
+One profile and one convenience corpus with prior likes; three repetitions are not independent corpus tasks. No formal success threshold was preregistered for graded digest quality, so do not present a post-hoc pass^3 success claim. The original M2 20-paper comparison and a one-call LLM baseline were not rerun. Reused fixtures exclude live collection latency. BM25 performance may reflect sample construction.
+
+Artifacts: summary.json, aggregate.json, analysis.json; run-N/calls.jsonl, trace.jsonl, state.json, result.json and run.sqlite3; manifest.json, source/, sample.json, profile.json, bm25.json, fixtures/ and fixture_hashes.json.

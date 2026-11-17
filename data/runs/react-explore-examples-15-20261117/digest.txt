@@ -1,0 +1,119 @@
+Research digest for dmitrii
+2026-11-03 to 2026-11-16 (inclusive, UTC)
+Categories: cs.LG, cs.CL, stat.ML, cs.AI, cs.IR
+
+15 recommended papers
+
+1. DisMUSE: An Efficient Distributed Singular-Spectrum-Based Optimization Approach with Theoretical Convergence Guarantee
+https://arxiv.org/abs/2611.10212v1
+
+DisMUSE develops distributed singular-spectrum optimization with Muon-style orthogonalized momentum, variance reduction, Newton-Schulz approximation, and low-rank momentum communication.
+
+Why it matters to you: Directly matches spectral optimization, Newton-Schulz methods, distributed training, and communication-quality tradeoffs.
+
+2. Finite Spectral Depth Controls Gaussian Entrance Rank and Avoidance of the First Gradient-Flow Saddle
+https://arxiv.org/abs/2611.05022v1
+
+Analyzes how finite Newton-Schulz depth changes rank selection and can cause matrix-factorization trajectories to bypass early saddles.
+
+Why it matters to you: Strong theoretical match for Newton-Schulz optimization, rank dynamics, and low-rank training geometry.
+
+3. ResQAdam: Residual-Preserving Adaptive Optimization for Memory-Efficient Quantization Aware Training
+https://arxiv.org/abs/2611.08924v1
+
+ResQAdam combines BF16 residual momentum, low-rank adaptive states, and a sign residual update for quantization-aware LLM training.
+
+Why it matters to you: Directly addresses optimizer-state memory, throughput, quality, and comparisons with AdamW, GaLore, and LDAdam.
+
+4. From What Is Used to What Is Missing: Rethinking Dynamic Rank in LoRA
+https://arxiv.org/abs/2611.07349v1
+
+GEAR uses tangent-normal geometry and normal-spectrum estimates to evolve LoRA ranks toward task-relevant directions.
+
+Why it matters to you: Directly addresses dynamic rank allocation, spectral information, and the geometry of LoRA optimization.
+
+5. Spectral and Subspace Dynamics of LoRA in Supervised Fine-Tuning and Reinforcement Learning
+https://arxiv.org/abs/2611.08414v1
+
+Studies singular-spectrum and subspace dynamics of LoRA updates in supervised fine-tuning and reinforcement learning, attributing differences partly to group-mean baseline subtraction.
+
+Why it matters to you: Highly relevant to understanding how training objectives and optimization affect LoRA spectra and effective rank.
+
+6. Stochastic Projections and Rank-Aware Learning Rates for Federated LoRA
+https://arxiv.org/abs/2611.13331v2
+
+Analyzes frozen and periodically resampled LoRA factors as stochastic projections and relates adaptation rank to gradient signal-to-noise ratio.
+
+Why it matters to you: Relevant to LoRA optimization geometry, rank-dependent learning rates, convergence, and communication efficiency.
+
+7. Train High, Ship Low: Efficient LoRA Synchronization for Distributed On-Policy Post-Training
+https://arxiv.org/abs/2611.13306v1
+
+HiLo and Spar reduce distributed LoRA synchronization by disseminating compressed gradients and replaying local optimizer updates with spectral rank allocation.
+
+Why it matters to you: Directly studies communication cost, spectral compression, adaptive rank, and quality at scale.
+
+8. BiMuon: A Geometry-Aware Stochastic Bilevel Optimization Approach
+https://arxiv.org/abs/2611.10188v2
+
+BiMuon introduces Muon-style orthogonalized matrix updates into stochastic bilevel optimization and addresses spectral imbalance in bilevel geometry.
+
+Why it matters to you: Matches interests in matrix optimization, Muon, spectral geometry, and optimization complexity.
+
+9. Grokking Can Be Steered: Selecting Desirable Solutions By Choice Of Learning Rule
+https://arxiv.org/abs/2611.19477v1
+
+Studies how learning rules, weight decay, and optimizer choices steer grokking circuits between memorization and generalization, affecting circuit size and compressibility.
+
+Why it matters to you: Directly connects optimization and regularization to memorization, generalization, robustness, and effective structural complexity.
+
+10. SaMA: Morpho Adaptation via Asymmetric Expansion of Kronecker Product
+https://arxiv.org/abs/2611.04462v1
+
+SaMA generalizes Kronecker-based adaptation to obtain higher practical rank under a fixed parameter budget and reduce optimizer-unfriendly invariances.
+
+Why it matters to you: Relevant to low-rank PEFT, rank scaling, optimization geometry, and parameter-efficiency tradeoffs.
+
+11. Efficient LLM Adaptation with Forward-Only Passes
+https://arxiv.org/abs/2611.10610v1
+
+Uses activation-angle concentration and SVD components to select rank reductions in LLM adaptation using forward-only passes.
+
+Why it matters to you: Addresses singular-value-based compressibility, adaptation quality, peak memory, and speed without gradient-based search.
+
+12. FedLoVA: Value-Only Aggregation for Federated LoRA Fine-Tuning of Large Language Models
+https://arxiv.org/abs/2611.10248v1
+
+FedLoVA trains LoRA on query and value projections locally while communicating only value adapters to reduce federated communication.
+
+Why it matters to you: Directly covers LoRA, communication efficiency, convergence, and quality tradeoffs in LLM fine-tuning.
+
+13. Direction or Magnitude? Learning Scalars over Task-Calibrated Directions
+https://arxiv.org/abs/2611.17784v1
+
+SCALAR adapts LLMs using learned scalar coefficients over fixed task-calibrated directions, reducing trainable parameters, peak memory, and throughput cost relative to LoRA.
+
+Why it matters to you: Strong practical match for memory-efficient PEFT and quality-memory-throughput tradeoffs.
+
+14. The Behavioral Rate of Fine-Tuning: Compression as a Measure of Useful Information
+https://arxiv.org/abs/2611.06598v1
+
+Defines behavioral rate as the compressed adapter size needed to preserve fine-tuning behavior and studies how it varies across datasets and frozen base models.
+
+Why it matters to you: Directly addresses behavioral compressibility, adapter compression, singular directions, and robustness to corrupted training data.
+
+15. Delayed Effects of Temporary Weight Decay in Muon Pretraining
+https://arxiv.org/abs/2611.17876v1
+
+Studies temporary weight decay in Muon-trained Transformers across model scales and explains delayed effects through weight-norm dynamics.
+
+Why it matters to you: Relevant to spectral or norm-based regularization, Muon optimization, and scale-dependent training behavior.
+
+Limitations:
+- Most evidence comes from abstracts, several of which are truncated.
+- Only ResQAdam received detailed inspection; experimental controls and measured tradeoffs for the other papers remain unverified.
+- Code availability and reproducibility were not checked.
+- X analysis was disabled, so no attention signal is included.
+- inspect:2611.08924: only question-relevant HTML passages were inspected, not the whole paper.
+
+Fetched 4655 papers; screened 30.

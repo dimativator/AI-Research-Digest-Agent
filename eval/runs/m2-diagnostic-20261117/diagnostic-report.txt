@@ -1,0 +1,48 @@
+M2 corpus diagnostic — interim report — 17-11-2026
+
+STATUS
+Run 1 remains active with unlimited decision/call budgets, explicitly retained at the user's request. Runs 2 and 3 are queued. There is no completed digest, so final success, nDCG, and repeatability cannot yet be reported. Do not interpret rejected drafts as successful output.
+
+SETUP
+100 unique manually labeled papers: 69 not interesting, 16 potentially interesting, 15 interesting. GPT-5.6-Luna; saved M2 profile; BM25 shortlist 30; digest size 5; X disabled. The fixed corpus bypasses metadata harvesting and includes papers from multiple dates. This evaluates selection, not arXiv retrieval completeness. The sample includes prior likes and is not a random representative corpus.
+Production ReAct behavior is unchanged. Tool responses are captured on first use and replayed afterward; first-use network time is recorded separately. Fresh SQLite database per repetition. All model inputs/outputs and event traces are retained. Labels and selection provenance are withheld from model prompts.
+
+CURRENT ACCOUNTING
+Completed calls: 57
+Input tokens: 2080303
+Output tokens: 65334
+API-equivalent estimate: $0.494461
+API-equivalent estimate using standard GPT-5.6-Luna rates checked 2026-11-17: $0.20/M input, $1.20/M output; above 272K input, $0.40/M and $1.80/M. Assumes all input is uncached; excludes cache writes and external tools. Not actual Codex subscription billing. Unknown usage/model yields null cost.
+
+OBSERVED PROBLEMS
+1. Final-answer repair loop. 48 rejected actions so far. Rejected finishes return the generic message 'Final evidence was not shown to the decision model'. The agent repeatedly says evidence is sufficient, but cannot repair exact quotes. This is a reliability failure; a critic reviewing relevance alone would not fix it.
+Potential fix: paper/source/quote-specific errors; cite passage IDs and validated offsets with Python supplying exact text; keep any paraphrase separate from quoted evidence. Test repair independently of new scientific investigation.
+
+2. Extracted math is duplicated. Saved inspection passages contain '124 124 M' and duplicated math/LaTeX renderings. Rejected quotes often normalize these sequences, and some concatenate text with ellipses. Both extractor defects and model quoting behavior contribute; duplicated math alone does not explain every rejection.
+Potential fix: normalize duplicate HTML math representations once, before presenting evidence; preserve an auditable mapping to the source. Never silently relax all quote validation.
+
+3. Investigation is deeper than personal-interest selection needs. The first action inspects baselines, controls, matched validation loss, model sizes and label-noise comparisons for a paper the model already calls an unusually strong profile match. Five inspection actions have occurred; no search or expansion so far.
+Potential variant: gate inspection on a concrete ambiguity that could change whether the researcher wants to read the paper. Measure decisions changed per inspection, not number of tools used.
+
+4. Profile-fit overreach. Initial screening marks four gold-0 papers relevant: 2610.31098 (RIFT), 2610.30344 (AQL-Lite), 2610.29326 (Signals and Queries), and 2610.29189 (reasoning-search survey). Reasons match broad profile terms such as inference efficiency or agent orchestration. This may be a profile specification mismatch as well as a model-selection error; labels alone do not identify the exact cause.
+Potential variant: selection critic focused on direct profile fit and stronger unselected alternatives. Do not tune using validation labels hidden in prompts.
+
+5. Selection can degrade a strong initial ranking. BM25 top five are all gold-1, nDCG@5=1.0. The recurring rejected draft contains four gold-1 papers and gold-0 survey 2610.29189. This is provisional selection evidence only; no final digest exists. This convenience sample may favor BM25 through selection and profile overlap.
+Potential comparison: report deterministic BM25 top-five as a zero-LLM baseline, plus abstract-only selection. A new variant must earn its additional cost.
+
+6. Limited coverage and no recovery so far. Initial top30 include 10/15 interesting and 4/16 potentially interesting papers. All ten admitted interesting papers were screened relevant. Five interesting papers are outside the initial shortlist, and no search/expansion has yet recovered them. A five-paper digest need not include all interesting papers; low corpus coverage is not automatically a bad digest.
+Potential variant: targeted shortlist expansion only when existing candidates cannot fill a strong digest, or when a specific interest is missing. Evaluate the tradeoff separately from per-paper classification.
+
+NEXT STEPS
+Finish or explicitly stop the active run before claiming complete-run results. Preserve this trajectory as a real failure case. Fix deterministic extraction/validation feedback shared by all agents, then rerun the M2 reference under a documented new revision. Compare selection critic and selective investigation against that same corrected reference, keeping the historical failure intact.
+
+ARTIFACTS
+manifest.json: exact model, CLI version, budgets, revision and protocol.
+source/: source snapshot including uncommitted implementation.
+bm25.json: ranked corpus with labels for evaluator analysis only.
+run-1/calls.jsonl: all supplied model inputs and returned outputs.
+run-1/trace.jsonl: actions, observations, usage, validation errors.
+run-1/run.sqlite3: live resumable run state.
+run-1/state-snapshot.json: interim state used for this report.
+analysis.json: diagnostic counts and rejected quote examples.
+summary.json: written by runner after each repetition finishes; absent while first run remains active.

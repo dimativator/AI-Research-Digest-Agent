@@ -9,6 +9,7 @@ import time
 import xml.etree.ElementTree as ET
 from dataclasses import asdict, dataclass
 from datetime import date, datetime, timedelta, timezone
+from email.utils import parsedate_to_datetime
 from html.parser import HTMLParser
 from typing import TYPE_CHECKING, Any
 from urllib.error import HTTPError, URLError
@@ -21,6 +22,7 @@ if TYPE_CHECKING:
 
 MAX_WINDOW_RESULTS = 10_000
 REQUEST_INTERVAL_SECONDS = 3.0
+RATE_LIMIT_RETRY_SECONDS = 75.0
 NAMESPACES = {
     "a": "http://www.w3.org/2005/Atom",
     "o": "http://a9.com/-/spec/opensearch/1.1/",
@@ -213,14 +215,18 @@ class ArxivClient:
                         f"arXiv HTTP {exc.code}; retries exhausted"
                     ) from exc
 
+                minimum_wait = RATE_LIMIT_RETRY_SECONDS if exc.code == 429 else 3.0
+                header = exc.headers.get("Retry-After")
                 try:
-                    retry_after = min(
-                        60, max(3, int(exc.headers.get("Retry-After", "3")))
-                    )
+                    retry_after = float(int(header))
                 except (TypeError, ValueError):
-                    retry_after = 3
+                    try:
+                        retry_at = parsedate_to_datetime(header)
+                        retry_after = retry_at.timestamp() - time.time()
+                    except (TypeError, ValueError, OverflowError, AttributeError):
+                        retry_after = minimum_wait
 
-                time.sleep(max(retry_after, 3 * 2**attempt))
+                time.sleep(max(minimum_wait, retry_after, 3 * 2**attempt))
             except (URLError, TimeoutError, OSError) as exc:
                 if attempt == self.retries:
                     raise RetrievalError(f"arXiv request failed: {exc}") from exc

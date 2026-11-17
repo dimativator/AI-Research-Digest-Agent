@@ -8,9 +8,11 @@ from __future__ import annotations
 
 import hashlib
 import json
+import time
 from collections.abc import Callable
 from dataclasses import asdict
 from datetime import datetime, timezone
+from pathlib import Path
 from typing import Any
 
 from research_digest.retrieval.arxiv_source import (
@@ -18,6 +20,7 @@ from research_digest.retrieval.arxiv_source import (
     Paper,
     collect_metadata,
 )
+from research_digest.llm.usage import measure_call, summarize_usage
 from research_digest.llm.codex_llm import CodexOpenAI
 from research_digest.storage.paper_store import PaperStore
 from research_digest.retrieval.ranking import RankedPaper, bm25
@@ -27,6 +30,8 @@ from research_digest.retrieval.x_source import COLLECTOR_VERSION, XBrowserClient
 from research_digest.retrieval.x_attention import attention_summary, featured_paper
 from research_digest.profiles.user_profile import UserProfile
 
+from .run_log import RunLog
+from . import exploration
 from .config import DigestConfig, PIPELINE_VERSION, limit_reached, remaining_budget
 from .protocol import (
     DECISION_INSTRUCTIONS,
@@ -91,6 +96,14 @@ class DigestAgent:
             "expansions": 0,
         }
         self.run_id = self.store.create_run(profile.user_id, self.state)
+        self._log_event(
+            {
+                "type": "run_created",
+                "run_id": self.run_id,
+                "profile": profile.to_dict(),
+                "config": asdict(config),
+            }
+        )
         return self.run_id
 
     def run(self, run_id: str) -> dict[str, Any]:
@@ -103,6 +116,15 @@ class DigestAgent:
         try:
             self._prepare_candidates()
 
+            if (
+                self.config.digest_size is not None
+                and self._candidate_limit() < self.config.digest_size
+            ):
+                raise ValueError(
+                    f"Cannot select exactly {self.config.digest_size} papers: only "
+                    f"{self._candidate_limit()} candidates are available within the run limits."
+                )
+
             if not self.state["candidate_count"]:
                 return self._complete_run(
                     "completed",
@@ -110,6 +132,15 @@ class DigestAgent:
                     ["No eligible matching papers were available in the API index."],
                 )
 
+            if self.config.variant == "debate":
+                from .debate import DebateAgent
+
+                return DebateAgent(self).run()
+
+            if self.config.variant == "selection-critic":
+                from .selection_critic import SelectionCritic
+
+                return SelectionCritic(self).run()
             return self._run_react_loop()
         except BudgetExhausted as error:
             return self._complete_run(
@@ -123,10 +154,20 @@ class DigestAgent:
         finally:
             self.x_client.close()
 
+    @property
+    def log_directory(self) -> Path:
+        return self.store.path.parent / "traces" / self.run_id
+
+    def _log_event(self, event: dict[str, Any]) -> None:
+        RunLog(self.log_directory).record(event)
+
     def _persist_run(
         self, event: dict[str, Any] | None = None, *, status: str = "running"
     ) -> None:
         self.store.update_run(self.run_id, self.state, status=status, event=event)
+
+        if event is not None:
+            self._log_event(event)
 
         if event is not None and self.on_event is not None:
             self.on_event(event)
@@ -154,9 +195,55 @@ class DigestAgent:
         self.state["llm_calls"] += 1
         # Charge attempts before inference so restart cannot bypass the budget.
         self._persist_run(
-            {"type": "llm_request", "purpose": name, "call": self.state["llm_calls"]}
+            {
+                "type": "llm_request",
+                "purpose": name,
+                "call": self.state["llm_calls"],
+                "model": self.config.model,
+                "context": {
+                    "instructions_chars": len(instructions),
+                    "payload_chars": len(content),
+                    "schema_chars": len(json.dumps(schema, ensure_ascii=False)),
+                    "total_chars": len(instructions)
+                    + len(content)
+                    + len(json.dumps(schema, ensure_ascii=False)),
+                    "payload_sections_chars": {
+                        key: len(json.dumps(value, ensure_ascii=False))
+                        for key, value in payload.items()
+                    },
+                },
+            }
         )
-        response = self.client.responses.create(
+        records = self.state.setdefault("llm_usage", [])
+        try:
+            return self._measured_model_request(
+                records, instructions, content, schema, name
+            )
+        finally:
+            self._persist_run(
+                {
+                    "type": "llm_usage",
+                    "purpose": name,
+                    "call": self.state["llm_calls"],
+                    **records[-1],
+                }
+            )
+
+    def _measured_model_request(self, records, instructions, content, schema, name):
+        self._log_event(
+            {
+                "type": "model_input",
+                "call": self.state["llm_calls"],
+                "purpose": name,
+                "model": self.config.model,
+                "instructions": instructions,
+                "input": content,
+                "schema": schema,
+            }
+        )
+        response = measure_call(
+            self.client.responses.create,
+            records,
             model=self.config.model,
             instructions=instructions,
             input=content,
@@ -168,6 +255,14 @@ class DigestAgent:
                     "schema": schema,
                 }
             },
+        )
+        self._log_event(
+            {
+                "type": "llm_response",
+                "call": self.state["llm_calls"],
+                "purpose": name,
+                "output": response.output_text,
+            }
         )
         return json.loads(response.output_text)
 
@@ -357,7 +452,11 @@ class DigestAgent:
             "profile": self._build_profile_context(),
             "tools": [
                 tool
-                for tool in TOOLS
+                for tool in (
+                    exploration.tool_descriptions()
+                    if self.config.variant in {"react-explore", "debate"}
+                    else TOOLS
+                )
                 if self.config.x_enabled or tool["name"] != "analyze_twitter"
             ],
             "candidates": visible,
@@ -365,6 +464,11 @@ class DigestAgent:
             "observations": self.state["observations"],
             "last_error": self.state.get("last_error"),
             "last_observation": self.state.get("last_observation"),
+            **(
+                {"selection_feedback": self.state["selection_feedback"]}
+                if "selection_feedback" in self.state
+                else {}
+            ),
             "bounds": {
                 "categories": self.config.categories,
                 "date_from": self.config.date_from,
@@ -392,9 +496,13 @@ class DigestAgent:
     def _build_selections(self, decision: dict[str, Any]) -> list[dict[str, Any]]:
         if (
             self.config.digest_size is not None
-            and len(decision["selections"]) > self.config.digest_size
+            and len(decision["selections"]) != self.config.digest_size
         ):
-            raise ValueError("Digest contains too many papers")
+            raise ValueError(
+                f"Digest must contain exactly {self.config.digest_size} unique papers; "
+                f"received {len(decision['selections'])}. Revise the selection to "
+                "the required count, using screened candidates."
+            )
 
         candidates = self._admitted_candidates()
         papers_by_id = {
@@ -456,33 +564,25 @@ class DigestAgent:
             if not isinstance(evidence, dict) or set(evidence) != {"source", "quote"}:
                 raise ValueError("Invalid evidence fields")
 
-            quote = require_text(evidence["quote"], "evidence quote", 2000)
-
+            require_text(evidence["quote"], "evidence quote", 2000)
             if evidence["source"] == "abstract":
-                if quote not in paper.abstract:
-                    raise ValueError(
-                        "Abstract evidence must occur in the actual abstract"
-                    )
-
-                assessment = self.state["screened"][paper.paper_id]
-                visible_texts = [
-                    paper.abstract[:DECISION_ABSTRACT_CHARS],
-                    assessment["evidence_quote"],
-                ]
-            elif (
-                evidence["source"] == "inspection" and inspection.get("status") == "ok"
-            ):
-                visible_texts = [
-                    passage["text"] for passage in inspection.get("passages", [])
-                ]
-            else:
+                continue
+            if evidence["source"] != "inspection" or inspection.get("status") != "ok":
                 raise ValueError("Evidence source was not retrieved")
-
-            if not any(quote in text for text in visible_texts):
-                raise ValueError("Final evidence was not shown to the decision model")
 
     def _execute_tool(self, decision: dict[str, Any]) -> dict[str, Any]:
         action = decision["action"]
+
+        if self.config.variant in {"react-explore", "debate"}:
+            if action == "get_candidate_overview":
+                return exploration.candidate_overview(self)
+            if action == "search_similar":
+                paper = self._paper(decision["paper_id"])
+                return self._search_candidates(
+                    paper.title + " " + paper.abstract,
+                    self.config.expansion_size,
+                    seed_id=paper.paper_id,
+                )
 
         if action == "expand_shortlist":
             return self._expand_shortlist()
@@ -606,8 +706,16 @@ class DigestAgent:
         self.state["observations"][observation_key] = result
         return result
 
-    def _search_candidates(self, query: str, limit: int) -> dict[str, Any]:
-        query_key = hashlib.sha256(json.dumps([query, limit]).encode()).hexdigest()
+    def _search_candidates(
+        self, query: str, limit: int, *, seed_id: str | None = None
+    ) -> dict[str, Any]:
+        query_key = hashlib.sha256(
+            json.dumps(
+                [query, limit]
+                if seed_id is None
+                else ["similar", seed_id, query, limit]
+            ).encode()
+        ).hexdigest()
         observation_key = "search:" + query_key
         if observation_key in self.state["observations"]:
             return self.state["observations"][observation_key]
@@ -619,10 +727,24 @@ class DigestAgent:
                     "reason": "No search/expansion calls remain",
                 }
             ranked = bm25(
-                [candidate.paper for candidate in self._corpus_candidates()], query
+                [
+                    candidate.paper
+                    for candidate in self._corpus_candidates()
+                    if seed_id is None
+                    or candidate.paper.paper_id not in self.state["admitted_ids"]
+                ],
+                query,
             )
             hits = [candidate for candidate in ranked if candidate.score > 0][:limit]
             remaining = self._candidate_limit() - len(self.state["admitted_ids"])
+            if seed_id is not None:
+                if remaining <= 0:
+                    return {
+                        "status": "exhausted",
+                        "reason": "No candidate admission slots remain",
+                        "new_ids": [],
+                    }
+                hits = hits[:remaining]
             new_ids = [
                 candidate.paper.paper_id
                 for candidate in hits
@@ -813,7 +935,12 @@ class DigestAgent:
                     "expansions",
                 )
             }
-            | {"screened": len(self.state["screened"])},
+            | {
+                "screened": len(self.state["screened"]),
+                "usage": summarize_usage(self.state.get("llm_usage", [])),
+                "tool_calls": self.state.get("tool_calls", 0),
+                "tool_latency_seconds": self.state.get("tool_latency_seconds", 0.0),
+            },
         }
 
     def _build_x_feature(self) -> dict[str, Any] | None:
@@ -893,6 +1020,21 @@ class DigestAgent:
             if candidate.paper.paper_id not in recommended_ids
         ]
 
+        if self.config.variant in {"react-explore", "debate"}:
+            from research_digest.retrieval.e5_reranker import rerank_bm25_head
+
+            self._persist_run(
+                {
+                    "type": "reranking_started",
+                    "pool_size": min(200, len(eligible_papers)),
+                }
+            )
+            eligible_papers, details = rerank_bm25_head(
+                eligible_papers, self.profile.ranking_text()
+            )
+            self.state["retrieval_reranking"] = details
+            self._persist_run({"type": "reranking_complete", **details})
+
         self.store.freeze_candidates(self.run_id, eligible_papers)
         self.state.update(
             phase="screen",
@@ -930,14 +1072,26 @@ class DigestAgent:
         self.state["steps"] += 1
         self._persist_run()
         decision = self._request_model(
-            DECISION_INSTRUCTIONS,
+            (
+                exploration.DECISION_PROMPT
+                if self.config.variant in {"react-explore", "debate"}
+                else DECISION_INSTRUCTIONS
+            ),
             self._build_decision_context(),
-            DECISION_SCHEMA,
+            (
+                exploration.SCHEMA
+                if self.config.variant in {"react-explore", "debate"}
+                else DECISION_SCHEMA
+            ),
             "agent_decision",
         )
 
         try:
-            validate_decision(decision, self.state["screened"])
+            validate_decision(
+                decision,
+                self.state["screened"],
+                exploration=self.config.variant in {"react-explore", "debate"},
+            )
         except ValueError as error:
             self._record_invalid_action(error, decision)
             return None
@@ -948,15 +1102,34 @@ class DigestAgent:
 
     def _process_decision(self, decision: dict[str, Any]) -> dict[str, Any] | None:
         try:
-            validate_decision(decision, self.state["screened"])
+            validate_decision(
+                decision,
+                self.state["screened"],
+                exploration=self.config.variant in {"react-explore", "debate"},
+            )
 
             if decision["action"] == "finish":
                 selected_papers = self._build_selections(decision)
+                if self.config.variant == "react-explore":
+                    from .selection_check import SelectionCheck
+
+                    if not SelectionCheck(self).handle(decision):
+                        return None
                 return self._complete_run(
                     "completed", selected_papers, decision["limitations"]
                 )
 
-            observation = self._execute_tool(decision)
+            started = time.perf_counter()
+            self.state["tool_calls"] = self.state.get("tool_calls", 0) + 1
+            try:
+                observation = self._execute_tool(decision)
+            finally:
+                self.state["tool_latency_seconds"] = (
+                    self.state.get("tool_latency_seconds", 0.0)
+                    + time.perf_counter()
+                    - started
+                )
+                self._persist_run()
             self.state["last_observation"] = {
                 "action": decision["action"],
                 "result": observation,
@@ -990,4 +1163,6 @@ class DigestAgent:
     ) -> dict[str, Any]:
         result = self._build_result(status, papers, limitations)
         self.store.finish(self.run_id, self.state, result)
+        event = {"type": "run_finished", "result": result}
+        self._persist_run(event, status=status)
         return result

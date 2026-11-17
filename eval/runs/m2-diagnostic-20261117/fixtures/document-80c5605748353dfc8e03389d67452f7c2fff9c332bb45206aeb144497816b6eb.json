@@ -1,0 +1,1949 @@
+{
+  "status": "ok",
+  "source": "https://arxiv.org/html/2608.14492v1",
+  "extractor_version": "article-v1",
+  "chunks": [
+    {
+      "chunk_id": "chunk-0001",
+      "section": "Approximate Muon with low-rank adapters",
+      "text": "Ben Anson Affiliation: University of Bristol Affiliation: School of Mathematics Email: ben.lja@proton.me Conor Houghton Affiliation: University of Bristol Affiliation: School of Engineering Mathematics and Technology Email: conor.houghton@bristol.ac.uk Edward Milsom Affiliation: University of Bath Affiliation: Department of Computer Science Email: em846@bath.ac.uk",
+      "source": "https://arxiv.org/html/2608.14492v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0002",
+      "section": "Abstract",
+      "text": "The Muon optimizer shows clear benefits versus alternatives when pretraining neural networks. However, it is used less frequently for parameter-efficient fine-tuning (PEFT). One potential reason is that the most common PEFT method, LoRA, does not naturally combine with Muon since it is not mathematically possible to orthogonalize the weight update given by a low-rank parameterization. In this paper, we address this issue by approximating the solution to a relaxed Muon objective in the low-rank setting via linearization and then least-squares. We provide an efficient implementation that uses matmul operations only, as opposed to more complex linear algebra decomposition routines. Our method, sMuon (small Muon), performs favourably across SFT and a ReLoRA pretraining experiment. While results are model- and eval-dependent, we find overall that using Muon for low-rank fine-tuning provides moderate performance improvements.",
+      "source": "https://arxiv.org/html/2608.14492v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0003",
+      "section": "1 Introduction",
+      "text": "Muon ( Jordan et al., 2024b ) is a neural network optimizer which orthogonalizes updates at each layer, equalizing all singular values. This can be interpreted as steepest descent under the spectral norm ( Bernstein and Newhouse, 2024a ) , thereby controlling the worst-case change to the layer as a linear operator, rather than viewing it as a flattened vector. Muon has demonstrated excellent results in the pretraining of LLMs, often outperforming AdamW, leading to its increasing adoption ( Liu et al., 2025 ; Shah et al., 2025 ; Kimi Team, 2025 ; Team et al., 2026 ; Xu et al., 2026 ) .",
+      "source": "https://arxiv.org/html/2608.14492v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0004",
+      "section": "1 Introduction",
+      "text": "However, Muon is less commonly used for fine-tuning (FT), particularly PEFT (Parameter-Efficient Fine-Tuning, which reduces compute resource requirements). There are various reasons for this, including the fact that Muon FT has been shown to perform better with Muon-pretrained base models ( Liu et al., 2025 ; Qu et al., 2026 ) , which are currently less common than AdamW-pretrained models. Perhaps the most glaring issue is that Muon does not straightforwardly combine with LoRA ( Hu et al., 2021 ) , the dominant PEFT method. In principle, Muon requires that we orthogonalize the descent step for the whole layer, but this is not generally realizable in the LoRA parameterization. Some approximation is therefore inevitable. The simplest and most common workaround is ‘per-factor Muon’, which ignores the geometry of the whole layer and orthogonalizes changes to B B and A A separately ( Qu et al., 2026 ; Janson et al., 2026 ; Kang et al., 2026 ) . Other works retain the whole layer’s geometry and introduce an approximation elsewhere, with Cesista et al. (2026) relaxing the Muon objective using the triangle inequality, and Bogachev et al. (2026) recasting the problem as Riemannian optimization on a low-rank manifold. Figure 1: Spectra of the weight change for different LoRA optimizers. We show the average singular values of the weight updates (attention weight, layer 6 of 12), during ReLoRA pretraining ( r = 32 r=32 ). We normalize by σ ¯ 1 \\overline{\\sigma}_{1} , and denote the LoRA rank by the dashed grey line. However, we feel that alternative approaches that more closely fit with Muon’s original ‘steepest descent under the spectral norm’ motivation are still underexplored.",
+      "source": "https://arxiv.org/html/2608.14492v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0005",
+      "section": "1 Introduction",
+      "text": "In this paper, we linearize the low-rank Muon objective to find the optimal descent step within the available parameter space. This solution effectively orthogonalizes the full layer’s gradient and projects it onto the appropriate low-rank subspace. Empirically, we find this retains a more uniform spectrum than alternatives such as per-factor Muon (Fig. 1 ) and LoRA-Muon ( Cesista et al., 2026 ) . Furthermore, unlike Riemannion ( Bogachev et al., 2026 ) , our approach avoids expensive matrix decompositions. While our solution to the low-rank Muon problem is clean (Alg. 1 ), a naive implementation is computationally inefficient, as it requires orthogonalizing a large matrix. To address this, we introduce a mathematically equivalent formulation (Alg. 2 ) that is both fast and memory-efficient. By relying entirely on matrix multiplications, we are able to avoid the overhead from QR and SVD. Finally, we show that our optimizer, sMuon, achieves competitive performance across a range of commonsense and coding SFT benchmarks, as well as in ReLoRA pretraining experiments. Our contributions are as follows: • We derive a method for training LoRA adapters with Muon by taking a first-order approximation of the spectral-norm-regularized steepest descent objective. The method is available in closed form, and requires less optimizer state than AdamW. • We provide a matmul-only algorithm of the method, sMuon, that is efficient for modern hardware, with comparable speed to other Muon methods such as per-factor Muon and LoRA-Muon, while being significantly faster than Riemannion for larger LoRA rank.",
+      "source": "https://arxiv.org/html/2608.14492v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0006",
+      "section": "1 Introduction",
+      "text": "• We run SFT experiments on four base models, three AdamW-pretrained and one Muon-pretrained, over eleven benchmarks to compare low-rank Muon optimizers. While results are model-dependent, we find that our optimizer gives strong performance, performing best on the Muon-pretrained model with the top accuracy in six out of eleven tasks with Moonlight-16B-A3B. • In the ReLoRA pretraining setting, we illustrate that Muon LoRA methods are generally stronger than AdamW LoRA. Specifically we find that our method attains the lowest final validation loss, tying with Riemannion, but being ∼ 30 % \\sim\\!30\\% faster.",
+      "source": "https://arxiv.org/html/2608.14492v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0007",
+      "section": "Muon and spectral steepest descent",
+      "text": "Muon orthogonalizes the gradient descent step for each weight matrix, so that the singular values of weight updates are equal ( Jordan et al., 2024b ) . This update is exactly steepest descent under the spectral norm ( Bernstein and Newhouse, 2024b ; Bernstein, 2025 ) . Muon has been shown to scale to billion- and trillion-parameter models for LLM pretraining, with considerable efficiency gains over AdamW ( Liu et al., 2025 ; Kimi Team, 2025 ) .",
+      "source": "https://arxiv.org/html/2608.14492v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0008",
+      "section": "Muon for fine-tuning and optimizer mismatch",
+      "text": "Although Muon excels at pretraining, it is used far less for fine-tuning. Liu et al. (2025) note that fine-tuning an AdamW-pretrained model with Muon (or vice-versa) degrades performance. Qu et al. (2026) suggest that the differing implicit biases of Adam and Muon are to blame, but that constraining the update (e.g. via LoRA) narrows the gap between Muon and AdamW fine-tuning. Muon’s increasing adoption makes this question more important than ever, and so in this paper we evaluate on both AdamW- and Muon-pretrained base models.",
+      "source": "https://arxiv.org/html/2608.14492v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0009",
+      "section": "Geometry-aware and Muon-based LoRA optimizers",
+      "text": "The most closely related works are Cesista et al. (2026) and Bogachev et al. (2026) ; these both attempt to approximate a low-rank solution to the spectral-regularized gradient descent problem. LoRA-Muon ( Cesista et al., 2026 ) is derived by approximating the spectral steepest-descent optimization problem using the triangle inequality applied to the spectral norm regularizer, and then minimizing to first order. We similarly linearize (we expect second-order terms to be suitably small), but we avoid the triangle inequality, as this is not necessarily tight under the spectral norm. For their ‘Riemannion’ optimizer, Bogachev et al. (2026) present the problem as Riemannian optimization on a constrained low-rank manifold. While some key ideas of this method are similar to our method (projecting onto the low-rank space), Riemannian optimization also involves a ‘retract’ step. One issue with their retraction is requiring a truncated SVD, which cannot be efficiently replaced with an efficient matmul-only approximation. In practice this leads to Riemannion being slower than alternatives, especially for larger LoRA rank. By contrast, we obtain the step using least squares on the orthogonalized gradient direction, avoiding expensive manifold constraints that don’t appear to benefit model performance. The PoLoRA ( Ghosh et al., 2026 ) method is again similar to our work, but can be understood as a version of LoRA-Muon with additional preconditioning. LoRA-RITE ( Yen et al., 2025 ) and Riemannian-preconditioned LoRA ( Zhang and Pilanci, 2024 ) attempt to keep the adapters invariant to parameterization. Another popular approach is to simply apply Muon to B B and A A independently ( Qu et al., 2026 ; Janson et al., 2026 ; Mo et al., 2025 ) . This ignores the geometry of the linear",
+      "source": "https://arxiv.org/html/2608.14492v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0010",
+      "section": "Geometry-aware and Muon-based LoRA optimizers",
+      "text": "to parameterization. Another popular approach is to simply apply Muon to B B and A A independently ( Qu et al., 2026 ; Janson et al., 2026 ; Mo et al., 2025 ) . This ignores the geometry of the linear layer and causes the update to depend on the adapter parameterization, whereas our update is first-order parameterization-invariant (see App. A.3 ). Appendix C has a more detailed comparison of the various approaches.",
+      "source": "https://arxiv.org/html/2608.14492v1",
+      "offset": 1597
+    },
+    {
+      "chunk_id": "chunk-0011",
+      "section": "Low-rank optimization beyond LoRA fine-tuning",
+      "text": "Some works, such as Spectron ( Janson et al., 2026 ) , LORO ( Mo et al., 2025 ) , GaLore ( Zhao et al., 2024 ) , and LoRA-Pre ( Wang et al., 2026 ) target efficient low-rank pretraining, either through stabilization, or optimizer state compression. He et al. (2025) accelerate Muon itself with a low-rank orthogonalization routine that exploits the low-rank structure of the gradient, but operate on full dense weight matrices rather than in the LoRA adapter setting. In contrast to all of these, our goal is a simple, principled, memory-efficient Muon update for the composite LoRA adapter Δ ​ W = B ​ A \\Delta W=BA , rather than the full base weight W 0 W_{0} .",
+      "source": "https://arxiv.org/html/2608.14492v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0012",
+      "section": "3.1 Muon",
+      "text": "Given a gradient matrix G W ∈ ℝ d 1 × d 2 G_{W}\\in\\mathbb{R}^{d_{1}\\times d_{2}} for weight matrix W ∈ ℝ d 1 × d 2 W\\in\\mathbb{R}^{d_{1}\\times d_{2}} , Muon selects the step direction δ ​ W ⋆ ∈ ℝ d 1 × d 2 \\delta W^{\\star}\\in\\mathbb{R}^{d_{1}\\times d_{2}} through a regularized minimization under the spectral norm ∥ ⋅ ∥ 2 \\|\\cdot\\|_{2} (largest singular value) ( Bernstein and Newhouse, 2024b ) : δ ​ W ⋆ = arg ​ min δ ​ W ⁡ [ ⟨ G W , δ ​ W ⟩ + λ 2 ​ ‖ δ ​ W ‖ 2 2 ] . \\delta W^{\\star}=\\argmin_{\\delta W}\\;\\left[\\langle G_{W},\\delta W\\rangle+\\frac{\\lambda}{2}\\|\\delta W\\|_{2}^{2}\\right]. (1) The solution, assuming G W G_{W} is full rank, is proportional to − msign ⁡ ( G W ) -\\msign(G_{W}) , where msign ⁡ ( X ) = U ​ V ⊤ \\msign(X)=UV^{\\top} for singular value decomposition X = U ​ Σ ​ V ⊤ X=U\\Sigma V^{\\top} , thereby orthogonalizing the gradient (or, in practice, the momentum). The solution is not unique for low-rank G W G_{W} , though we use the convention that msign ⁡ ( X ) = U ​ sign ⁡ ( Σ ) ​ V ⊤ \\msign(X)=U\\operatorname{sign}(\\Sigma)V^{\\top} , so that non-zero singular values are promoted, and the rest remain equal to zero.",
+      "source": "https://arxiv.org/html/2608.14492v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0013",
+      "section": "3.2 LoRA",
+      "text": "LoRA ( Hu et al., 2021 ) is a parameter-efficient method for fine-tuning neural networks. LoRA adds adapters in the form Δ ​ W = B ​ A \\Delta W=BA to the pretrained base weight W 0 W_{0} of a layer, with B ∈ ℝ d 1 × r B\\in\\mathbb{R}^{d_{1}\\times r} and A ∈ ℝ r × d 2 A\\in\\mathbb{R}^{r\\times d_{2}} where r ≪ d 1 , d 2 r\\ll d_{1},d_{2} . Typically B B is initialized to zero to ensure that, initially, Δ ​ W = 0 \\Delta W=0 . The factors B , A B,A are usually chosen by minimizing the fine-tuning loss with the AdamW optimizer. We instead seek to find the analogue to Muon’s whitened update in the LoRA setting.",
+      "source": "https://arxiv.org/html/2608.14492v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0014",
+      "section": "4 Method",
+      "text": "Let Δ ​ W = B ​ A \\Delta W=BA be the adapter with gradient G Δ ​ W G_{\\Delta W} . Our goal is to find updates δ ​ B , δ ​ A \\delta B,\\delta A for the factors B , A B,A such that the implied update δ ​ Δ ​ W \\delta\\Delta W to the adapter Δ ​ W \\Delta W has an approximately flat spectrum. We emphasize that simply orthogonalizing the factor updates δ ​ B , δ ​ A \\delta B,\\delta A does not imply that δ ​ Δ ​ W \\delta\\Delta W itself is orthogonal. Under spectral steepest descent, the optimal adapter update δ ​ Δ ​ W ⋆ \\delta\\Delta W^{\\star} is given by δ ​ Δ ​ W ⋆ = arg ​ min δ ​ Δ ​ W ⁡ [ ⟨ G Δ ​ W , δ ​ Δ ​ W ⟩ + λ 2 ​ ‖ δ ​ Δ ​ W ‖ 2 2 ] . \\delta\\Delta W^{\\star}=\\argmin_{\\delta\\Delta W}\\ \\big[\\,\\big\\langle G_{\\Delta W},\\,\\delta\\Delta W\\big\\rangle+\\tfrac{\\lambda}{2}\\big\\|\\delta\\Delta W\\big\\|_{2}^{2}\\,\\big]. (2) If r = min ⁡ ( d 1 , d 2 ) r=\\min(d_{1},\\,d_{2}) then Δ ​ W \\Delta W is full rank and this is an identical problem to Eq. ( 1 ), which is solved by whitening the gradient ( Bernstein and Newhouse, 2024b ) , i.e., δ ​ Δ ​ W ⋆ = − η ​ msign ⁡ ( G Δ ​ W ) , \\delta\\Delta W^{\\star}=-\\eta\\msign(G_{\\Delta W}), (3) where proportionality constants have been absorbed into η \\eta . However, we do not get the same solution under a low-rank constraint r < min ⁡ ( d 1 , d 2 ) r<\\min(d_{1},d_{2}) . We have, δ ​ Δ ​ W = ( B + δ ​ B ) ​ ( A + δ ​ A ) − B ​ A = δ ​ B ​ A + B ​ δ ​ A + δ ​ B ​ δ ​ A , \\delta\\Delta W=(B+\\delta B)(A+\\delta A)-BA=\\delta B\\,A+B\\,\\delta A+\\delta B\\,\\delta A, (4)",
+      "source": "https://arxiv.org/html/2608.14492v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0015",
+      "section": "4 Method",
+      "text": "but generally it is not possible to find δ ​ B , δ ​ A \\delta B,\\,\\delta A that satisfy δ ​ Δ ​ W = − η ​ msign ⁡ ( G Δ ​ W ) \\delta\\Delta W=-\\eta\\msign(G_{\\Delta W}) . The problem here is that the change δ ​ Δ ​ W \\delta\\Delta W has rank at most 2 ​ r 2r , but msign ⁡ ( G Δ ​ W ) \\msign(G_{\\Delta W}) is usually full rank. We proceed by writing Eq. ( 2 ) in terms of the adapter matrices, ( δ ​ B ⋆ , δ ​ A ⋆ ) = arg ​ min δ ​ B , δ ​ A ⁡ [ ⟨ G Δ ​ W , δ ​ B ​ A + B ​ δ ​ A + δ ​ B ​ δ ​ A ⟩ + λ 2 ​ ‖ δ ​ B ​ A + B ​ δ ​ A + δ ​ B ​ δ ​ A ‖ 2 2 ] . (\\delta B^{\\star},\\delta A^{\\star})=\\argmin_{\\delta B,\\delta A}\\ \\bigg[\\big\\langle G_{\\Delta W},\\,\\delta B\\,A+B\\,\\delta A+\\delta B\\,\\delta A\\big\\rangle+\\tfrac{\\lambda}{2}\\big\\|\\delta B\\,A+B\\,\\delta A+\\delta B\\,\\delta A\\big\\|_{2}^{2}\\bigg]. (5) This is a non-linear optimization problem due to the second-order terms, and it has no known closed-form solution. For small updates δ ​ B , δ ​ A \\delta B,\\delta A , we approximate by dropping these second-order terms, giving ( δ ​ B ⋆ , δ ​ A ⋆ ) = arg ​ min δ ​ B , δ ​ A ⁡ [ ⟨ G Δ ​ W , δ ​ B ​ A + B ​ δ ​ A ⟩ + λ 2 ​ ‖ δ ​ B ​ A + B ​ δ ​ A ‖ 2 2 ] . (\\delta B^{\\star},\\delta A^{\\star})=\\argmin_{\\delta B,\\delta A}\\ \\bigg[\\big\\langle G_{\\Delta W},\\,\\delta B\\,A+B\\,\\delta A\\big\\rangle+\\tfrac{\\lambda}{2}\\big\\|\\delta B\\,A+B\\,\\delta A\\big\\|_{2}^{2}\\bigg]. (6) Since it is generally not possible to achieve the rank-unconstrained minimum, we instead try to get as close as possible. We solve a least-squares problem for the linearized update map (overloading the notation δ ​ B ⋆ , δ ​ A ⋆ \\delta B^{\\star},\\,\\delta A^{\\star} for convenience),",
+      "source": "https://arxiv.org/html/2608.14492v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0016",
+      "section": "4 Method",
+      "text": "( δ ​ B ⋆ , δ ​ A ⋆ ) = arg ​ min δ ​ B , δ ​ A ⁡ ‖ δ ​ Δ ​ W ⋆ − ( δ ​ B ​ A + B ​ δ ​ A ) ‖ F 2 . (\\delta B^{\\star},\\delta A^{\\star})=\\argmin_{\\delta B,\\,\\delta A}\\ \\big\\|\\,\\delta\\Delta W^{\\star}-(\\delta B\\,A+B\\,\\delta A)\\,\\big\\|_{F}^{2}. (7) Taking gradients of the objective w.r.t. δ ​ B \\delta B and δ ​ A \\delta A and setting to zero, we have, 0 \\displaystyle 0 = − 2 ​ ( δ ​ Δ ​ W ⋆ − δ ​ B ​ A − B ​ δ ​ A ) ​ A ⊤ , \\displaystyle=-2(\\delta\\Delta W^{\\star}-\\delta B\\,A-B\\,\\delta A)A^{\\top}, (8a) 0 \\displaystyle 0 = − 2 ​ B ⊤ ​ ( δ ​ Δ ​ W ⋆ − δ ​ B ​ A − B ​ δ ​ A ) . \\displaystyle=-2B^{\\top}(\\delta\\Delta W^{\\star}-\\delta B\\,A-B\\,\\delta A). (8b) Assuming B B and A A have full rank, right-multiplying Eq. ( 8a ) by ( A ​ A ⊤ ) − 1 (AA^{\\top})^{-1} and left-multiplying Eq. ( 8b ) by ( B ⊤ ​ B ) − 1 (B^{\\top}B)^{-1} gives δ ​ Δ ​ W ⋆ ​ A † \\displaystyle\\delta\\Delta W^{\\star}A^{\\dagger} = δ ​ B ​ A ​ A † + B ​ δ ​ A ​ A † \\displaystyle=\\delta B\\,AA^{\\dagger}+B\\,\\delta A\\,A^{\\dagger} = δ ​ B + B ​ δ ​ A ​ A † , \\displaystyle=\\delta B+B\\delta A\\,A^{\\dagger}, (9a) B † ​ δ ​ Δ ​ W ⋆ \\displaystyle B^{\\dagger}\\delta\\Delta W^{\\star} = B † ​ δ ​ B ​ A + B † ​ B ​ δ ​ A \\displaystyle=B^{\\dagger}\\delta B\\,A+B^{\\dagger}B\\,\\delta A = B † ​ δ ​ B ​ A + δ ​ A , \\displaystyle=B^{\\dagger}\\delta B\\,A+\\delta A, (9b) where B † = ( B ⊤ ​ B ) − 1 ​ B ⊤ B^{\\dagger}=(B^{\\top}B)^{-1}B^{\\top} and A † = A ⊤ ​ ( A ​ A ⊤ ) − 1 A^{\\dagger}=A^{\\top}(AA^{\\top})^{-1} are the Moore-Penrose inverses satisfying B † ​ B = I = A ​ A † B^{\\dagger}B=I=AA^{\\dagger} . Note that the minimizer is not unique: if ( δ ​ B , δ ​ A ) (\\delta B,\\delta A) is a minimizer of Eq. ( 7 ), then so is ( δ ​ B + B ​ S , δ ​ A − S ​ A ) (\\delta B+BS,\\delta A-SA) since,",
+      "source": "https://arxiv.org/html/2608.14492v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0017",
+      "section": "4 Method",
+      "text": "δ ​ B ​ A + B ​ δ ​ A = ( δ ​ B + B ​ S ) ​ A + B ⁡ ( δ ​ A − S ​ A ) . \\displaystyle\\delta B\\,A+B\\,\\delta A=(\\delta B+BS)A+B\\,(\\delta A-SA). (10) Rearranging Eq. ( 9b ), and setting S = − B † ​ δ ​ B S=-B^{\\dagger}\\delta B means that δ ​ A ⋆ \\displaystyle\\delta A^{\\star} = B † ​ δ ​ Δ ​ W ⋆ \\displaystyle=B^{\\dagger}\\delta\\Delta W^{\\star} (11a) is one particular minimizer, and then substituting into Eq. ( 9a ) gives the corresponding δ ​ B ⋆ \\delta B^{\\star} , δ ​ B ⋆ \\displaystyle\\delta B^{\\star} = ( I − B ​ B † ) ​ δ ​ Δ ​ W ⋆ ​ A † . \\displaystyle=(I-BB^{\\dagger})\\delta\\Delta W^{\\star}A^{\\dagger}. (11b)",
+      "source": "https://arxiv.org/html/2608.14492v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0018",
+      "section": "4.1 Low-rank gradients",
+      "text": "While the solution ( δ ​ B ⋆ , δ ​ A ⋆ ) (\\delta B^{\\star},\\,\\delta A^{\\star}) given by Eq. ( 11 ) is simple, it is not efficiently computed. The δ ​ Δ ​ W ⋆ = − η ​ msign ⁡ ( G Δ ​ W ) \\delta\\Delta W^{\\star}=-\\eta\\msign(G_{\\Delta W}) term requires orthogonalization of a large matrix (remember that G Δ ​ W ∈ ℝ d 1 × d 2 G_{\\Delta W}\\in\\mathbb{R}^{d_{1}\\times d_{2}} ), which we would like to avoid. Fortunately, we do not actually require the full gradient G Δ ​ W G_{\\Delta W} , and can instead use the low-rank gradient, H := G Δ ​ W − ( I − P B ) ​ G Δ ​ W ​ ( I − P A ) = P B ​ G Δ ​ W + ( I − P B ) ​ G Δ ​ W ​ P A , H:=G_{\\Delta W}-(I-P_{B})\\,G_{\\Delta W}\\,(I-P_{A})=P_{B}G_{\\Delta W}+(I-P_{B})G_{\\Delta W}P_{A}, (12) where P B = B ​ B † P_{B}=BB^{\\dagger} and P A = A † ​ A P_{A}=A^{\\dagger}A are projections onto the column space of B B and row space of A A respectively. The low-rank gradient H H is the projection of the gradient onto the subspace of weight updates that the current LoRA adapter can express. The two gradients H H and G Δ ​ W G_{\\Delta W} are first-order equivalent, in the sense that for any δ ​ B , δ ​ A \\delta B,\\delta A , ⟨ G Δ ​ W , δ ​ B ​ A + B ​ δ ​ A ⟩ = ⟨ H , δ ​ B ​ A + B ​ δ ​ A ⟩ . \\langle G_{\\Delta W},\\,\\delta B\\,A+B\\delta A\\rangle=\\langle H,\\delta B\\,A+B\\delta A\\rangle. (13) Thus when linearizing the Muon objective, we can replace G Δ ​ W G_{\\Delta W} with H H to obtain, ( δ ​ B , δ ​ A ) = arg ​ min δ ​ B , δ ​ A ⁡ [ ⟨ H , δ ​ B ​ A + B ​ δ ​ A ⟩ + λ 2 ​ ‖ δ ​ B ​ A + B ​ δ ​ A ‖ 2 2 ] . \\displaystyle(\\delta B,\\delta A)=\\argmin_{\\delta B,\\delta A}\\left[\\langle H,\\,\\delta B\\,A+B\\,\\delta A\\rangle+\\tfrac{\\lambda}{2}\\|\\delta B\\,A+B\\,\\delta A\\|_{2}^{2}\\right]. (14)",
+      "source": "https://arxiv.org/html/2608.14492v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0019",
+      "section": "4.1 Low-rank gradients",
+      "text": "In particular, this means we use δ ​ Δ ​ W ⋆ = − η ​ msign ⁡ ( H ) \\delta\\Delta W^{\\star}=-\\eta\\msign(H) . We show in the next section how this can be exploited to compute the update efficiently. Algorithm 1 sMuon Input: B ∈ ℝ d 1 × r B\\in\\mathbb{R}^{d_{1}\\times r} , A ∈ ℝ r × d 2 A\\in\\mathbb{R}^{r\\times d_{2}} ; momenta M B , M A M_{B},M_{A} ; lr η \\eta ; weight decay λ \\lambda // Low-rank momentum 1 H ← ( B † ) ⊤ ​ M A + ( I − B ​ B † ) ​ M B ​ ( A † ) ⊤ H\\leftarrow(B^{\\dagger})^{\\top}M_{A}+(I-BB^{\\dagger})\\,M_{B}\\,(A^{\\dagger})^{\\top} // Compute step 2 δ ​ A ← B † ​ msign ⁡ ( H ) \\delta A\\leftarrow B^{\\dagger}\\,\\msign(H) 3 δ ​ B ← ( I − B ​ B † ) ​ msign ⁡ ( H ) ​ A † \\delta B\\leftarrow(I-BB^{\\dagger})\\,\\msign(H)\\,A^{\\dagger} // Update parameters (split wd) 4 s ← 1 − λ ​ η s\\leftarrow\\sqrt{1-\\lambda\\eta} 5 B ← s ​ B − η s ​ δ ​ B B\\leftarrow s\\,B-\\frac{\\eta}{s}\\,\\delta B 6 A ← s ​ A − η s ​ δ ​ A A\\leftarrow s\\,A-\\frac{\\eta}{s}\\,\\delta A // Project momentum 7 M B ← H ​ A ⊤ M_{B}\\leftarrow H\\,A^{\\top} 8 M A ← B ⊤ ​ H M_{A}\\leftarrow B^{\\top}H Algorithm 2 Efficient/matmul-only sMuon",
+      "source": "https://arxiv.org/html/2608.14492v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0020",
+      "section": "4.1 Low-rank gradients",
+      "text": "Input: Same as Alg. 1 ; jitter ϵ > 0 \\epsilon>0 1 S B ← 𝚒𝚗𝚟𝚛𝚘𝚘𝚝 ⁡ ( B ⊤ ​ B + ϵ ​ I ) S_{B}\\leftarrow\\mathtt{invroot}(B^{\\top}B+\\epsilon I) 2 S A ← 𝚒𝚗𝚟𝚛𝚘𝚘𝚝 ⁡ ( A ​ A ⊤ + ϵ ​ I ) S_{A}\\leftarrow\\mathtt{invroot}(AA^{\\top}+\\epsilon I) // Factor H = B ​ X + Y ​ A H=BX+YA 3 X ← S B 2 ​ M A X\\leftarrow S_{B}^{2}M_{A} 4 Y ← M B ​ S A 2 − B ​ S B 2 ​ ( B ⊤ ​ M B ​ S A 2 ) Y\\leftarrow M_{B}S_{A}^{2}-BS_{B}^{2}(B^{\\top}M_{B}S_{A}^{2}) // Bases for col ⁡ ( H ) \\mathrm{col}(H) , row ⁡ ( H ) \\mathrm{row}(H) 5 U 2 ← msign ⁡ ( Y ) U_{2}\\leftarrow\\msign(Y) 6 V 1 ← msign ⁡ ( A ⊤ ) V_{1}\\leftarrow\\msign(A^{\\top}) 7 V 2 ← msign ⁡ ( X ⊤ − V 1 ​ ( V 1 ⊤ ​ X ⊤ ) ) V_{2}\\leftarrow\\msign(X^{\\top}\\!-V_{1}(V_{1}^{\\top}X^{\\top})) // 2 ​ r × 2 ​ r 2r\\times 2r core 8 Ω ← msign ⁡ ( [ S B ​ M A ​ V 1 S B ​ M A ​ V 2 ( U 2 ⊤ ​ Y ) ​ ( A ​ V 1 ) 0 ] ) \\Omega\\leftarrow\\msign\\!\\left(\\begin{bmatrix}S_{B}M_{A}V_{1}&S_{B}M_{A}V_{2}\\\\ (U_{2}^{\\top}Y)(AV_{1})&0\\end{bmatrix}\\right) // Compute step 9 δ ​ A ← S B ​ ( Ω 11 ​ V 1 ⊤ + Ω 12 ​ V 2 ⊤ ) \\delta A\\leftarrow S_{B}(\\Omega_{11}V_{1}^{\\top}+\\Omega_{12}V_{2}^{\\top}) 10 δ ​ B ← U 2 ​ Ω 21 ​ S A \\delta B\\leftarrow U_{2}\\,\\Omega_{21}S_{A} // Update parameters 11 s ← 1 − λ ​ η s\\leftarrow\\sqrt{1-\\lambda\\eta} 12 B ′ ← s ​ B − η s ​ δ ​ B B^{\\prime}\\leftarrow sB-\\tfrac{\\eta}{s}\\delta B , 13 A ′ ← s ​ A − η s ​ δ ​ A A^{\\prime}\\leftarrow sA-\\tfrac{\\eta}{s}\\delta A // Project momentum 14 M A ← ( B ′ ⊤ ​ B ) ​ X + ( B ′ ⊤ ​ Y ) ​ A M_{A}\\leftarrow({B^{\\prime}}^{\\top}B)X+({B^{\\prime}}^{\\top}Y)A 15 M B ← B ⁡ ( X ​ A ′ ⊤ ) + Y ⁡ ( A ​ A ′ ⊤ ) M_{B}\\leftarrow B(X{A^{\\prime}}^{\\top})+Y(A{A^{\\prime}}^{\\top}) 16 B ← B ′ B\\leftarrow B^{\\prime} , A ← A ′ A\\leftarrow A^{\\prime}",
+      "source": "https://arxiv.org/html/2608.14492v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0021",
+      "section": "4.2 Efficient, matmul-only computation",
+      "text": "We now show how to compute the descent steps δ ​ B ⋆ \\delta B^{\\star} and δ ​ A ⋆ \\delta A^{\\star} efficiently. One of the principal advantages of our method versus Riemannion is that it permits a matmul-only solution — Riemannion requires truncated SVDs during the retraction step, which makes parallelization/batching of computation slower (see Table 4 ). In particular, the most expensive operations required are d × r d\\times r matmuls, which are easily optimized with deep learning libraries. The gradients for B B and A A are G B = G Δ ​ W ​ A ⊤ G_{B}=G_{\\Delta W}A^{\\top} and G A = B ⊤ ​ G Δ ​ W G_{A}=B^{\\top}G_{\\Delta W} respectively; the low-rank gradient of Eq. ( 12 ) can therefore be written as, H = B ( B ⊤ ​ B ) − 1 ​ G A ⏟ = : X + ( I − P B ) ​ G B ​ ( A ​ A ⊤ ) − 1 ⏟ = : Y A , H=B\\underbrace{(B^{\\top}B)^{-1}G_{A}}_{=:\\,X}\\;+\\;\\underbrace{(I-P_{B})\\,G_{B}\\,(AA^{\\top})^{-1}}_{=:\\,Y}\\,A, (15) where X ∈ ℝ r × d 2 X\\in\\mathbb{R}^{r\\times d_{2}} and Y ∈ ℝ d 1 × r Y\\in\\mathbb{R}^{d_{1}\\times r} . Assuming B , A , X , Y B,\\,A,\\,X,\\,Y have rank r r , we have rank ⁡ ( H ) ≤ 2 ​ r \\operatorname{rank}(H)\\leq 2r .",
+      "source": "https://arxiv.org/html/2608.14492v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0022",
+      "section": "4.2 Efficient, matmul-only computation",
+      "text": "The key identity we exploit is as follows. Let U ∈ ℝ d 1 × 2 ​ r , V ∈ ℝ d 2 × 2 ​ r U\\in\\mathbb{R}^{d_{1}\\times 2r},\\,V\\in\\mathbb{R}^{d_{2}\\times 2r} be any matrices with orthonormal columns, such that the column space of U U contains the column space of H H and the column space of V V contains the row space of H H , then 1 1 1 To see why Eq. ( 16 ) is true, note that since U ​ U ⊤ UU^{\\top} and V ​ V ⊤ VV^{\\top} act as the identity on the column and row spaces of H H , we have H = U ⁡ ( U ⊤ ​ H ​ V ) ​ V ⊤ H=U(U^{\\top}HV)V^{\\top} . Let P , Σ , Q ⊤ = SVD ⁡ ( U ⊤ ​ H ​ V ) P,\\Sigma,Q^{\\top}=\\mathrm{SVD}(U^{\\top}HV) . Then H = ( U ​ P ) ​ Σ ​ ( V ​ Q ) ⊤ H=(UP)\\Sigma(VQ)^{\\top} is a valid, albeit truncated, SVD of H H ( U ​ P UP and V ​ Q VQ have orthonormal columns), so msign ⁡ ( H ) = ( U ​ P ) ​ ( V ​ Q ) ⊤ = U ⁡ ( P ​ Q ⊤ ) ​ V ⊤ = U ​ msign ⁡ ( U ⊤ ​ H ​ V ) ​ V ⊤ \\msign(H)=(UP)(VQ)^{\\top}=U(PQ^{\\top})V^{\\top}=U\\,\\msign(U^{\\top}HV)\\,V^{\\top} . , msign ⁡ ( H ) = U ​ msign ⁡ ( U ⊤ ​ H ​ V ) ​ V ⊤ . \\msign(H)=U\\,\\msign(U^{\\top}HV)\\,V^{\\top}. (16) Eq. ( 16 ) lets us convert a d 1 × d 2 d_{1}\\times d_{2} orthogonalization into a 2 ​ r × 2 ​ r 2r\\times 2r orthogonalization, and we will show shortly that instantiating H ∈ ℝ d 1 × d 2 H\\in\\mathbb{R}^{d_{1}\\times d_{2}} can be avoided. To choose U U and V V , note that since H = B ​ X + Y ​ A H=BX+YA , its column space satisfies col ⁡ ( H ) ⊆ col ⁡ ( B ) + col ⁡ ( Y ) \\operatorname{col}(H)\\subseteq\\operatorname{col}(B)+\\operatorname{col}(Y) , while its row space satisfies row ⁡ ( H ) ⊆ row ⁡ ( A ) + row ⁡ ( X ) \\operatorname{row}(H)\\subseteq\\operatorname{row}(A)+\\operatorname{row}(X) . We therefore construct orthonormal bases for these two spaces as,",
+      "source": "https://arxiv.org/html/2608.14492v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0023",
+      "section": "4.2 Efficient, matmul-only computation",
+      "text": "U = ( U 1 U 2 ) , V = ( V 1 V 2 ) , U=\\begin{pmatrix}U_{1}&U_{2}\\end{pmatrix},\\qquad V=\\begin{pmatrix}V_{1}&V_{2}\\end{pmatrix}, (17) with each block a polar factor (and therefore orthonormal columns) in the appropriate space, U 1 \\displaystyle U_{1} = B ( B ⊤ B ) − 1 / 2 , \\displaystyle=B(B^{\\top}B)^{-1/2}, U 2 \\displaystyle U_{2} = Y ( Y ⊤ Y ) − 1 / 2 , \\displaystyle=Y(Y^{\\top}Y)^{-1/2}, (18a) V 1 \\displaystyle V_{1} = A ⊤ ( A A ⊤ ) − 1 / 2 , \\displaystyle=A^{\\top}(AA^{\\top})^{-1/2}, V 2 \\displaystyle V_{2} = Z ( Z ⊤ Z ) − 1 / 2 , \\displaystyle=Z(Z^{\\top}Z)^{-1/2}, where ​ Z = ( I − P A ) ​ X ⊤ . \\displaystyle\\text{where }Z=(I-P_{A})X^{\\top}. (18b) We have U 1 ⊤ ​ U 2 = 0 U_{1}^{\\top}U_{2}=0 since B ⊤ ​ Y = B ⊤ ​ ( I − P B ) ​ G B ​ ( A ​ A ⊤ ) − 1 = 0 B^{\\top}Y=B^{\\top}(I-P_{B})G_{B}(AA^{\\top})^{-1}=0 , and V 1 ⊤ ​ V 2 = 0 V_{1}^{\\top}V_{2}=0 since A ​ Z = A ⁡ ( I − P A ) ​ X ⊤ = 0 AZ=A(I-P_{A})X^{\\top}=0 . So U U and V V have orthonormal columns, satisfying the conditions for Eq. ( 16 ). Let S B = ( B ⊤ B ) − 1 / 2 S_{B}=(B^{\\top}B)^{-1/2} and S A = ( A A ⊤ ) − 1 / 2 S_{A}=(AA^{\\top})^{-1/2} . We calculate U ⊤ ​ H ​ V U^{\\top}HV efficiently,",
+      "source": "https://arxiv.org/html/2608.14492v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0024",
+      "section": "4.2 Efficient, matmul-only computation",
+      "text": "U ⊤ ​ H ​ V \\displaystyle U^{\\top}HV = ( U 1 ⊤ ​ B U 1 ⊤ ​ Y U 2 ⊤ ​ B U 2 ⊤ ​ Y ) ​ ( X ​ V 1 X ​ V 2 A ​ V 1 A ​ V 2 ) \\displaystyle=\\begin{pmatrix}U_{1}^{\\top}B&U_{1}^{\\top}Y\\\\ U_{2}^{\\top}B&U_{2}^{\\top}Y\\end{pmatrix}\\begin{pmatrix}XV_{1}&XV_{2}\\\\ AV_{1}&AV_{2}\\end{pmatrix} = ( S B − 1 0 0 U 2 ⊤ ​ Y ) ​ ( X ​ V 1 X ​ V 2 A ​ V 1 0 ) \\displaystyle=\\begin{pmatrix}S_{B}^{-1}&0\\\\ 0&U_{2}^{\\top}Y\\end{pmatrix}\\begin{pmatrix}XV_{1}&XV_{2}\\\\ AV_{1}&0\\end{pmatrix} = ( S B ​ G A ​ V 1 S B ​ G A ​ V 2 ( U 2 ⊤ ​ Y ) ​ ( A ​ V 1 ) 0 ) , \\displaystyle=\\begin{pmatrix}S_{B}G_{A}V_{1}&S_{B}G_{A}V_{2}\\\\ (U_{2}^{\\top}Y)(AV_{1})&0\\end{pmatrix}, (19) which avoids instantiating H H directly. Writing its orthogonalization in blocks of size r × r r\\times r , Ω := msign ⁡ ( U ⊤ ​ H ​ V ) = ( Ω 11 Ω 12 Ω 21 Ω 22 ) , \\displaystyle\\Omega:=\\msign(U^{\\top}HV)=\\begin{pmatrix}\\Omega_{11}&\\Omega_{12}\\\\ \\Omega_{21}&\\Omega_{22}\\end{pmatrix}, (20) we now calculate the final factor updates δ ​ B ⋆ \\delta B^{\\star} and δ ​ A ⋆ \\delta A^{\\star} . Substituting msign ⁡ ( H ) = U ​ Ω ​ V ⊤ \\msign(H)=U\\Omega V^{\\top} into the previous expressions for δ ​ B ⋆ \\delta B^{\\star} and δ ​ A ⋆ \\delta A^{\\star} (Eq. 11 ) gives, δ ​ A ⋆ = − η ​ B † ​ U ​ Ω ​ V ⊤ = − η ​ S B ​ ( Ω 11 ​ V 1 ⊤ + Ω 12 ​ V 2 ⊤ ) , \\displaystyle\\delta A^{\\star}=-\\eta B^{\\dagger}U\\Omega V^{\\top}=-\\eta S_{B}\\left(\\Omega_{11}V_{1}^{\\top}+\\Omega_{12}V_{2}^{\\top}\\right), (21a) where we used B † ​ U 1 = S B B^{\\dagger}U_{1}=S_{B} and B † ​ U 2 = 0 B^{\\dagger}U_{2}=0 . Similarly, δ ​ B ⋆ = − η ⁡ ( I − P B ) ​ U ​ Ω ​ V ⊤ ​ A † = − η ​ U 2 ​ Ω 21 ​ S A , \\displaystyle\\delta B^{\\star}=-\\eta(I-P_{B})U\\Omega V^{\\top}A^{\\dagger}=-\\eta U_{2}\\,\\Omega_{21}\\,S_{A}, (21b)",
+      "source": "https://arxiv.org/html/2608.14492v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0025",
+      "section": "4.2 Efficient, matmul-only computation",
+      "text": "using ( I − P B ) ​ U 1 = 0 (I-P_{B})U_{1}=0 , ( I − P B ) ​ U 2 = U 2 (I-P_{B})U_{2}=U_{2} , V 1 ⊤ ​ A † = S A V_{1}^{\\top}A^{\\dagger}=S_{A} , and V 2 ⊤ ​ A † = 0 V_{2}^{\\top}A^{\\dagger}=0 . All components of δ ​ B ⋆ \\delta B^{\\star} and δ ​ A ⋆ \\delta A^{\\star} can be computed with matmuls, matrix inverse roots, and msign \\msign . In practice, both the r × r r\\times r inverse square roots and the msign \\msign ’s can be evaluated with matrix polynomial iterations ( Amsel et al., 2026 ; Zhang et al., 2026 ) , which are themselves sequences of matrix products. Table 1: Per-eval accuracy (%), grouped by base model. Each column is an optimizer (best run by validation loss); per row the best optimizer is bolded and cells are shaded green (best) to white (worst). Eval AdamW Per-factor Muon LoRA-Muon Riemannion sMuon (ours) Qwen2.5-3B Piqa 81.7 82.1 81.7 82.7 81.7 Winogrande 62.3 61.2 61.4 61.0 61.5 OBQA 78.4 79.2 76.0 77.4 77.0 Hellaswag 81.7 78.7 76.9 77.6 80.3 BoolQ 67.7 66.5 65.6 67.7 67.4 Arc-C 83.3 83.6 82.9 83.3 83.6 MMLU 64.2 64.9 65.0 64.9 64.9 Llama-3.2-3B Piqa 77.9 77.1 74.2 76.9 76.6 Winogrande 51.0 52.0 53.8 54.9 52.4 OBQA 67.2 68.4 63.4 69.4 66.8 Hellaswag 63.7 64.9 58.9 64.3 63.3 BoolQ 63.1 63.4 63.8 64.1 63.3 Arc-C 67.9 66.2 60.5 64.9 63.2 MMLU 54.4 54.8 52.7 54.9 54.4 DeepSeek-V2-Lite Piqa 79.2 76.7 78.2 75.5 79.2 Winogrande 58.2 58.8 59.7 55.8 58.2 OBQA 68.0 70.8 69.0 61.2 70.8 Hellaswag 74.4 71.3 71.2 65.4 76.4 BoolQ 64.6 64.1 64.6 64.7 65.2 Arc-C 70.6 64.9 70.6 67.2 67.6 MMLU 55.4 54.7 53.1 54.1 53.5 Moonlight-16B-A3B Piqa 84.7 84.5 85.6 84.4 86.2 Winogrande 59.4 61.2 63.3 64.0 65.8 OBQA 81.0 81.2 81.2 78.6 82.4 Hellaswag 77.9 80.5 84.7 82.3 85.9 BoolQ 68.4 67.1 69.8 68.5 69.5 Arc-C 85.6 81.9 84.3 83.3 87.0 MMLU 66.1 65.9 65.6 66.2 64.5",
+      "source": "https://arxiv.org/html/2608.14492v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0026",
+      "section": "4.3 Algorithm",
+      "text": "We combine the above updates with split weight decay ( Cesista et al., 2026 ) to match the weight decay dynamics of full-parameter training to first order, and momentum projection (inspired by momentum transport of Bogachev et al. (2026) , see App. A.3 for details) to ensure reparameterization invariance, yielding the sMuon optimizer for LoRA adapters. We provide Alg. 1 as a pedagogical version, while Alg. 2 incorporates the efficient matmul-only computations from the previous section. We also discuss a more numerically stable variant in Appendix B . One cause for concern is the practice of initializing the adapter Δ ​ W = B ​ A = 0 \\Delta W=BA=0 , and then computing inverse roots of B ⊤ ​ B B^{\\top}B and A ​ A ⊤ AA^{\\top} . We found that, despite initializing Δ ​ W = 0 \\Delta W=0 , calculating inverse roots of A ​ A ⊤ AA^{\\top} and B ⊤ ​ B B^{\\top}B was not an issue when using jitter and a semi-orthonormal B B , A = 0 A=0 initialization.",
+      "source": "https://arxiv.org/html/2608.14492v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0027",
+      "section": "5 Experiments",
+      "text": "Table 2: Code pass@1 (%), grouped by base model. Each column is an optimizer (best run by validation loss); per row the best optimizer is bolded and cells are shaded green (best) to white (worst). Eval AdamW Per-factor Muon LoRA-Muon Riemannion sMuon (ours) Qwen2.5-3B HumanEval 54.9 20.1 43.3 31.1 51.8 HumanEval+ 48.8 17.1 39.0 25.6 43.9 MBPP 65.9 69.3 68.0 65.9 62.7 MBPP+ 57.1 60.6 58.7 56.9 53.4 Llama-3.2-3B HumanEval 22.0 18.3 29.9 30.5 29.9 HumanEval+ 19.5 16.5 25.0 26.8 27.4 MBPP 43.1 35.7 42.1 46.3 45.2 MBPP+ 35.4 30.4 34.1 38.1 38.6 DeepSeek-V2-Lite HumanEval 36.6 29.3 22.0 23.2 26.8 HumanEval+ 28.7 23.8 18.3 19.5 23.2 MBPP 52.6 53.7 48.4 49.5 51.3 MBPP+ 45.5 45.0 43.4 43.7 44.7 Moonlight-16B-A3B HumanEval 49.4 57.9 53.7 40.2 54.9 HumanEval+ 42.7 48.8 47.0 35.4 48.8 MBPP 71.7 71.2 71.2 68.8 71.2 MBPP+ 60.1 60.1 61.4 58.7 60.3 Table 3: ReLoRA pretraining: final validation loss at each optimizer’s optimal learning rate, where the optimal LR minimises the validation loss at the final logged step. Lower is better; the best optimizer is bolded and cells are shaded green (best) to white (worst). AdamW Per-factor Muon LoRA-Muon Riemannion sMuon (ours) Final val loss 3.83 3.70 3.68 3.66 3.66 Optimal LR 0.001 0.006 0.001 0.0006 0.0006",
+      "source": "https://arxiv.org/html/2608.14492v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0028",
+      "section": "5 Experiments",
+      "text": "We compare sMuon to regular LoRA with AdamW, per-factor Muon (LoRA with Muon applied to each adapter weight B B and A A individually), LoRA-Muon ( Cesista et al., 2026 ) , and Riemannion ( Bogachev et al., 2026 ) . We evaluated on standard commonsense ( Clark et al., 2018 ; Clark et al., 2019 ; Zellers et al., 2019 ; Mihaylov et al., 2018 ; Bisk et al., 2020 ; Sakaguchi et al., 2021 ) and coding ( Chen et al., 2021 ; Austin et al., 2021 ) benchmarks after training with SFT. We experimented with four models, Llama-3.2-3B ( Grattafiori et al., 2024 ) , Qwen2.5-3B ( Qwen Team, 2025 ) , DeepSeek-V2-Lite ( DeepSeek-AI, 2024 ) , and Moonlight-16B-A3B ( Liu et al., 2025 ) . The first two models are dense models; the last two are sparse MoE models. The Moonlight model is of particular note because it was pretrained with Muon, whereas the others are all AdamW-pretrained. We also tested the methods in a pretraining setting using ReLoRA ( Lialin et al., 2023 ) which periodically merges and refreshes the adapter. We tuned the learning rate for each method and model, with example learning rate sweeps for the commonsense tasks shown in Appendix E . While our results are both model- and eval-dependent, sMuon performs strongly overall, especially when combined with the Moonlight-16B-A3B base model, a Muon-pretrained model (Tables 1 and 2 ). sMuon also achieved the joint-best validation loss in the ReLoRA pretraining setting (Table 3 ). We attribute performance gains, particularly over AdamW and per-factor Muon, to more accurately approximating the Muon objective.",
+      "source": "https://arxiv.org/html/2608.14492v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0029",
+      "section": "Experiment details",
+      "text": "LoRA-Muon and Riemannion were chosen as baselines in addition to the simpler AdamW and per-factor Muon baselines as these are the most similar to our method. Unfortunately, we could not find implementations for LoRA-Muon or Riemannion, so we implemented these ourselves. For Riemannion and our method, we use an A = 0 A=0 and B B orthonormal initialization, and for the remaining methods we used a standard initialization ( B = 0 B=0 , A A random Gaussian). We scale the learning rate to approximately match AdamW RMS for all Muon optimizers (for details see App. A.1 ). For all experiments, we used weight decay 0.01 0.01 , momentum 0.9 0.9 , inserted LoRA adapters into all hidden layers (except the router for models with MoE). We used GH200 for all experiments except to produce Table 4 for which we used A100. We used bf16 to store weights and optimizer states, but used fp32 to compute the step for Riemannion, sMuon, and LoRA-Muon. For the ReLoRA experiments ( Lialin et al., 2023 ) , we started with the modded-nanogpt codebase at ‘record 8’ ( Jordan et al., 2024a ) , which trains a 162M parameter transformer from scratch (using features including QK-norm, ReLU 2 activations) on the FineWeb dataset ( Penedo et al., 2024 ) , and evaluates on a 10M token validation set. We initialize LoRA adapters with rank 64, and train for a total of 3000 steps; every 500 steps we merge the adapters into the base weights and reinitialize the adapters; we use a cosine decay learning rate schedule, though after each merge+reinitialization, we also reset the learning rate to zero and warm back up to the target learning rate over 50 steps (this is also known as a jagged cosine schedule). We swept learning rates in 3e-4, 6e-4, 1e-3, 3e-3, 6e-3, 1e-2.",
+      "source": "https://arxiv.org/html/2608.14492v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0030",
+      "section": "Experiment details",
+      "text": "For the HumanEval ( Chen et al., 2021 ) and MBPP ( Austin et al., 2021 ) coding evals, we fine-tuned for 3 epochs on completing Python functions from the CodeAlpaca dataset ( Chaudhary, 2023 ) . For the MMLU ( Hendrycks et al., 2021 ) eval, we fine-tuned on a 50/50 mixture of FLAN ( Longpre et al., 2023 ) and MMLU training subset. For the remaining evals, we trained on a mixture of FLAN and CommonsenseQA ( Talmor et al., 2019 ) , and training subset for each eval. All SFT evals were 0-shot. For SFT training runs, we used α = 32 \\alpha=32 , r = 16 r=16 , gradient clipping (clipping at 1 1 ), and we used roughly 2 16 2^{16} tokens per batch.",
+      "source": "https://arxiv.org/html/2608.14492v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0031",
+      "section": "Muon-based LoRA is strongest on the Muon-pretrained model",
+      "text": "We originally hypothesized that Muon-based LoRA methods might perform better with Moonlight, since it is a Muon-pretrained model. We do find some evidence for this when aggregating over all benchmarks in Tables 1 and 2 : AdamW only achieves top performance on one of the eleven tasks, while sMuon is best for six. Some methods are markedly below others on certain tasks (e.g. per-factor Muon with Llama-3.2-3B on HumanEval, Table 2 ). This could be due to optimizer instabilities or noise in the benchmarks or selection procedure.",
+      "source": "https://arxiv.org/html/2608.14492v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0032",
+      "section": "Benefits of Muon pretraining remain with ReLoRA",
+      "text": "The ReLoRA experiment (Table 3 ) removes optimizer mismatch entirely by training from scratch. The separation between optimizer families is clear. Every Muon-based method achieves lower validation loss than LoRA+AdamW. One explanation for the strong Muon performance is amplification of the small but real signal in the long tail of the gradient’s spectrum ( Wang et al., 2025 ) . Table 4: All Muon optimizers are slightly slower than AdamW, but Riemannion adds huge overhead at larger rank. We show mean time for LoRA adapter optimizer step (ms, 2 s.f.), as well as the proportion (%) of the total step time. Figures were obtained while training a 12 layer GPT model with d model = 768 d_{\\text{model}}=768 . We ran these timings on an A100, calculating the mean time over 25 steps, with different ranks r ∈ { 2 4 , 2 5 , 2 6 , 2 7 } r\\in\\{2^{4},2^{5},2^{6},2^{7}\\} , batch size 128, 4 gradient accumulation steps. Step time, ms (% total) ↓ \\downarrow r = 16 r=16 r = 32 r=32 r = 64 r=64 r = 128 r=128 AdamW 0.66 0.66 ( 0.047 0.047 %) 0.59 0.59 ( 0.041 0.041 %) 0.65 0.65 ( 0.046 0.046 %) 0.78 0.78 ( 0.054 0.054 %) Per-factor Muon 1.4 1.4 ( 0.10 0.10 %) 1.6 1.6 ( 0.11 0.11 %) 2.0 2.0 ( 0.14 0.14 %) 3.6 3.6 ( 0.25 0.25 %) LoRA-Muon 4.5 4.5 ( 0.32 0.32 %) 4.8 4.8 ( 0.33 0.33 %) 6.3 6.3 ( 0.44 0.44 %) 10 10 ( 0.70 0.70 %) Riemannion 90 90 ( 6.0 6.0 %) 300 300 ( 17 17 %) 700 700 ( 33 33 %) 1700 1700 ( 54 54 %) sMuon (ours) 8.7 8.7 ( 0.62 0.62 %) 8.9 8.9 ( 0.62 0.62 %) 12 12 ( 0.80 0.80 %) 20 20 ( 1.4 1.4 %) Fwd+bwd, ms 1400 1400 1432 1432 1429 1429 1459 1459",
+      "source": "https://arxiv.org/html/2608.14492v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0033",
+      "section": "Efficiency gain from the matmul-only implementation",
+      "text": "Table 4 compares step times for the different optimizers. AdamW is the fastest; the only computation required by AdamW is element-wise, meaning that data communication is likely to be the largest overhead. Per-factor Muon is the next fastest, because computation is dominated by two msign ⁡ ( ⋅ ) \\msign(\\cdot) computations (that can be batched). Both LoRA-Muon and sMuon require more matmuls than per-factor Muon, but the compute time is still negligible compared to the forward+backward pass time per step of ∼ 1.4 \\sim 1.4 s. On the other hand, computing the Riemannion step is much slower, adding ∼ 50 % \\sim 50\\% overhead to the forward+backward pass when r = 64 r=64 , and even longer for r = 128 r=128 . The computation is slow because Riemannion requires thin QRs and 2 ​ r × 2 ​ r 2r\\times 2r SVDs, which add overhead for larger r r . Note that the retraction step in Riemannion specifically requires truncated SVD, which cannot be replaced by a more efficient Newton-Schulz algorithm. We found that compiling the core computation (i.e. the matmuls), and batching the computation leads to big efficiency gains with all the Muon methods except Riemannion.",
+      "source": "https://arxiv.org/html/2608.14492v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0034",
+      "section": "6 Conclusion",
+      "text": "We considered optimizing low-rank adapters using an approximate form of Muon. The resulting step is available in closed form, is invariant to the adapter parameterization ( B , A ) ↦ ( B ​ S , S − 1 ​ A ) (B,A)\\mapsto(BS,S^{-1}A) and is cheap, costing O ⁡ ( r 2 ​ ( d 1 + d 2 ) + r 3 ) O(r^{2}(d_{1}+d_{2})+r^{3}) time and O ⁡ ( r ​ max ⁡ ( d 1 , d 2 ) ) O(r\\max(d_{1},d_{2})) memory, using less optimizer state than LoRA+AdamW. Our implementation, sMuon, has empirically flatter spectra than per-factor Muon and out-performs other methods on the Moonlight Muon-pretrained model. In ReLoRA pretraining every Muon-based method beats AdamW, with sMuon and Riemannion the strongest. In general, by respecting the geometry of the full layer, rather than treating B B and A A as unrelated matrices, we often benefit, and there is little extra cost.",
+      "source": "https://arxiv.org/html/2608.14492v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0035",
+      "section": "References",
+      "text": "Amsel et al. (2026) N. Amsel, D. Persson, C. Musco, and R. M. Gower The polar express: optimal matrix sign methods and their application to the muon algorithm . In International Conference on Learning Representations , C. Vondrick, B. Hariharan, C. Raffel, L. Pinto, D. Yang, and A. Faust (Eds.) , Vol. 2026 . Cited by: §4.2 . Austin et al. (2021) J. Austin, A. Odena, M. Nye, M. Bosma, H. Michalewski, D. Dohan, E. Jiang, C. Cai, M. Terry, Q. Le, et al. Program synthesis with large language models . arXiv preprint arXiv:2108.07732 . Cited by: §5 , §5 . Bernstein and Newhouse (2024a) J. Bernstein and L. Newhouse Modular duality in deep learning . arXiv preprint arXiv:2410.21265 . Cited by: §1 . Bernstein and Newhouse (2024b) J. Bernstein and L. Newhouse Old optimizer, new norm: an anthology . arXiv preprint arXiv:2409.20325 . Cited by: §2 , §3.1 , §4 . Bernstein (2025) J. Bernstein Deriving muon . External Links: Link Cited by: §2 . Bisk et al. (2020) Y. Bisk, R. Zellers, R. Le Bras, J. Gao, and Y. Choi PIQA: reasoning about physical commonsense in natural language . In Proceedings of the AAAI Conference on Artificial Intelligence , Note: arXiv:1911.11641 Cited by: §5 . Bogachev et al. (2026) V. Bogachev, V. Aletov, A. Molozhavenko, D. Bobkov, V. Soboleva, A. Alanov, and M. Rakhuba LoRA meets riemannion: muon optimizer for parametrization-independent low-rank adapters . In International Conference on Learning Representations , Vol. 2026 , pp. 82190–82215 . Cited by: Table 5 , §1 , §1 , §2 , §4.3 , §5 . Cesista et al. (2026) F. L. Cesista, K. Crowson, C. Simal, and S. Biderman LoRA-muon: spectral steepest descent on the low-rank manifold . arXiv preprint arXiv:2606.12921 . Cited by: §A.2 , Table 5 , §1 , §1 , §2 , §4.3 , §5 .",
+      "source": "https://arxiv.org/html/2608.14492v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0036",
+      "section": "References",
+      "text": "Chaudhary (2023) S. Chaudhary Code alpaca: an instruction-following llama model for code generation . GitHub . Note: https://github.com/sahil280114/codealpaca Cited by: §5 . Chen et al. (2021) M. Chen, J. Tworek, H. Jun, et al. Evaluating large language models trained on code . arXiv preprint arXiv:2107.03374 . Cited by: §5 , §5 . Clark et al. (2019) C. Clark, K. Lee, M. Chang, T. Kwiatkowski, M. Collins, and K. Toutanova Boolq: exploring the surprising difficulty of natural yes/no questions . In Proceedings of the 2019 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies, Volume 1 (Long and Short Papers) , pp. 2924–2936 . Cited by: §5 . Clark et al. (2018) P. Clark, I. Cowhey, O. Etzioni, T. Khot, A. Sabharwal, C. Schoenick, and O. Tafjord Think you have solved question answering? try arc, the ai2 reasoning challenge . arXiv preprint arXiv:1803.05457 . Cited by: §5 . DeepSeek-AI (2024) DeepSeek-AI DeepSeek-V2: a strong, economical, and efficient mixture-of-experts language model . arXiv preprint arXiv:2405.04434 . Cited by: §5 . Ghosh et al. (2026) N. Ghosh, T. Parshakova, and R. M. Gower PoLoRA: a preconditioned orthogonalized lora optimizer . arXiv preprint arXiv:2607.17620 . Cited by: §2 . Giraud et al. (2005) L. Giraud, J. Langou, M. Rozložník, and J. v. d. Eshof Rounding error analysis of the classical gram-schmidt orthogonalization process . Numerische Mathematik . Cited by: Appendix B . Grattafiori et al. (2024) A. Grattafiori, A. Dubey, A. Jauhri, et al. The llama 3 herd of models . arXiv preprint arXiv:2407.21783 . Cited by: §5 .",
+      "source": "https://arxiv.org/html/2608.14492v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0037",
+      "section": "References",
+      "text": "He et al. (2025) C. He, Z. Deng, and Z. Lu Low-rank orthogonalization for large-scale matrix optimization with applications to foundation model training . arXiv preprint arXiv:2509.11983 . Cited by: §2 . Hendrycks et al. (2021) D. Hendrycks, C. Burns, S. Basart, A. Zou, M. Mazeika, D. Song, and J. Steinhardt Measuring massive multitask language understanding . International Conference on Learning Representations (ICLR) . Note: arXiv:2009.03300 Cited by: §5 . Hu et al. (2021) E. J. Hu, Y. Shen, P. Wallis, Z. Allen-Zhu, Y. Li, S. Wang, L. Wang, and W. Chen Lora: low-rank adaptation of large language models . arXiv preprint arXiv:2106.09685 . Cited by: §1 , §3.2 . Janson et al. (2026) P. Janson, E. Oyallon, and E. Belilovsky Stabilizing native low-rank llm pretraining . arXiv preprint arXiv:2602.12429 . Cited by: Table 5 , §1 , §2 , §2 . Jordan et al. (2024a) K. Jordan, J. Bernstein, B. Rappazzo, B. Vlado, J. You, F. Cesista, B. Koszarsky, and Grad62304977 Modded-nanogpt: speedrunning the NanoGPT baseline . Note: https://github.com/KellerJordan/modded-nanogpt Cited by: §5 . Jordan et al. (2024b) K. Jordan, Y. Jin, V. Boza, J. You, F. Cesista, L. Newhouse, and J. Bernstein Muon: an optimizer for hidden layers in neural networks, 2024 . URL https://kellerjordan. github. io/posts/muon . Cited by: §1 , §2 . Kang et al. (2026) C. Kang, J. Yun, B. Shin, Y. Cho, and C. Yun Uniform spectral growth and convergence of muon in lora-style matrix factorization . arXiv preprint arXiv:2602.06385 . Cited by: Table 5 , §1 . Kimi Team (2025) Kimi Team Kimi k2: open agentic intelligence . External Links: 2507.20534 , Link Cited by: §1 , §2 .",
+      "source": "https://arxiv.org/html/2608.14492v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0038",
+      "section": "References",
+      "text": "Lialin et al. (2023) V. Lialin, S. Muckatira, N. Shivagunde, and A. Rumshisky ReLoRA: high-rank training through low-rank updates . arXiv preprint arXiv:2307.05695 . Cited by: §5 , §5 . Liu et al. (2025) J. Liu, J. Su, X. Yao, Z. Jiang, G. Lai, Y. Du, Y. Qin, W. Xu, E. Lu, J. Yan, et al. Muon is scalable for llm training . arXiv preprint arXiv:2502.16982 . Cited by: §A.1 , §1 , §1 , §2 , §2 , §5 . Longpre et al. (2023) S. Longpre, L. Hou, T. Vu, A. Webson, H. W. Chung, Y. Tay, D. Zhou, Q. V. Le, B. Zoph, J. Wei, and A. Roberts The Flan collection: designing data and methods for effective instruction tuning . International Conference on Machine Learning (ICML) . Note: arXiv:2301.13688 Cited by: §5 . Loshchilov and Hutter (2017) I. Loshchilov and F. Hutter Decoupled weight decay regularization . arXiv preprint arXiv:1711.05101 . Cited by: §A.2 . Mihaylov et al. (2018) T. Mihaylov, P. Clark, T. Khot, and A. Sabharwal Can a suit of armor conduct electricity? a new dataset for open book question answering . In Proceedings of the 2018 Conference on Empirical Methods in Natural Language Processing , External Links: Document Cited by: §5 . Mo et al. (2025) Z. Mo, L. Huang, and S. J. Pan Parameter and memory efficient pretraining via low-rank riemannian optimization . In International Conference on Learning Representations , Vol. 2025 , pp. 7907–7936 . Cited by: §2 , §2 . Penedo et al. (2024) G. Penedo, H. Kydlíček, L. Ben Allal, A. Lozhkov, M. Mitchell, C. Raffel, L. Von Werra, and T. Wolf The FineWeb datasets: decanting the web for the finest text data at scale . Advances in Neural Information Processing Systems (Datasets and Benchmarks Track) . Note: arXiv:2406.17557 Cited by: §5 .",
+      "source": "https://arxiv.org/html/2608.14492v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0039",
+      "section": "References",
+      "text": "Qu et al. (2026) X. Qu, P. Huang, and S. Horvath Can muon fine-tune adam-pretrained models? . arXiv preprint arXiv:2605.10468 . Cited by: Table 5 , §1 , §2 , §2 . Qwen Team (2025) Qwen Team Qwen2.5 technical report . arXiv preprint arXiv:2412.15115 . Cited by: §5 . Sakaguchi et al. (2021) K. Sakaguchi, R. Le Bras, C. Bhagavatula, and Y. Choi WinoGrande: an adversarial winograd schema challenge at scale . Communications of the ACM . Note: arXiv:1907.10641 Cited by: §5 . Shah et al. (2025) I. Shah, A. M. Polloreno, K. Stratos, P. Monk, A. Chaluvaraju, A. Hojel, A. Ma, A. Thomas, A. Tanwer, D. J. Shah, et al. Practical efficiency of muon for pretraining . arXiv preprint arXiv:2505.02222 . Cited by: §1 . Talmor et al. (2019) A. Talmor, J. Herzig, N. Lourie, and J. Berant CommonsenseQA: a question answering challenge targeting commonsense knowledge . In Proceedings of NAACL-HLT , Note: arXiv:1811.00937 Cited by: §5 . Team et al. (2026) K. Team, T. Bai, Y. Bai, Y. Bao, J. Cai, X. Cai, P. Cao, Y. Cao, Z. Chai, Y. Charles, et al. Kimi k3: open frontier intelligence . arXiv preprint arXiv:2607.24653 . Cited by: §1 . Wang et al. (2025) S. Wang, F. Zhang, J. Li, C. Du, C. Du, T. Pang, Z. Yang, M. Hong, and V. Y. Tan Muon outperforms adam in tail-end associative memory learning . arXiv preprint arXiv:2509.26030 . Cited by: §5 . Wang et al. (2026) Z. Wang, J. Liang, R. He, Z. Wang, and T. Tan Taming momentum: rethinking optimizer states through low-rank approximation . arXiv preprint arXiv:2602.24283 . Cited by: §2 . Xu et al. (2026) A. Xu, B. Lin, B. Xue, B. Wang, B. Xu, B. Wu, B. Zhang, C. Lin, C. Dong, C. Ling, et al. Deepseek-v4: towards highly efficient million-token context intelligence . arXiv preprint arXiv:2606.19348 . Cited by: §1 .",
+      "source": "https://arxiv.org/html/2608.14492v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0040",
+      "section": "References",
+      "text": "Yen et al. (2025) J. Yen, S. Si, Z. Meng, F. Yu, S. S. Duvvuri, I. S. Dhillon, C. Hsieh, and S. Kumar LoRA done RITE: robust invariant transformation equilibration for LoRA optimization . In International Conference on Learning Representations , Cited by: §2 . Zellers et al. (2019) R. Zellers, A. Holtzman, Y. Bisk, A. Farhadi, and Y. Choi HellaSwag: can a machine really finish your sentence? . In Proceedings of the 57th Annual Meeting of the Association for Computational Linguistics , Cited by: §5 . Zhang and Pilanci (2024) F. Zhang and M. Pilanci Riemannian preconditioned lora for fine-tuning foundation models . arXiv preprint arXiv:2402.02347 . Cited by: §2 . Zhang et al. (2026) J. Zhang, N. Amsel, B. Chen, and T. Dao Gram newton-schulz . External Links: Link Cited by: §4.2 . Zhao et al. (2024) J. Zhao, Z. Zhang, B. Chen, Z. Wang, A. Anandkumar, and Y. Tian Galore: memory-efficient llm training by gradient low-rank projection . arXiv preprint arXiv:2403.03507 . Cited by: §2 .",
+      "source": "https://arxiv.org/html/2608.14492v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0041",
+      "section": "Appendix A Other algorithmic details",
+      "text": "We discuss some pre-existing techniques that we incorporated into sMuon.",
+      "source": "https://arxiv.org/html/2608.14492v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0042",
+      "section": "A.1 Match AdamW RMS",
+      "text": "Inspired by Liu et al. [2025] , we adopt a learning rate adjustment. The full-parameter scaling is 0.2 ​ max ⁡ ( d in , d out ) 0.2\\sqrt{\\max(d_{\\text{in}},d_{\\text{out}})} , with the overall update, including weight decay, becoming x ← x − λ ​ η ​ x − 0.2 ​ η ​ max ⁡ ( d in , d out ) ⋅ δ ​ x . \\displaystyle x\\leftarrow x-\\lambda\\eta x-0.2\\eta\\sqrt{\\max(d_{\\text{in}},d_{\\text{out}})}\\,\\cdot\\,\\delta x. (22) To match this in the LoRA setting, we used x ← x − λ ​ η ​ x − 0.2 ​ η ​ d in ​ d out / r ⋅ δ ​ x . \\displaystyle x\\leftarrow x-\\lambda\\eta x-0.2\\eta\\sqrt{d_{\\text{in}}d_{\\text{out}}/r}\\,\\cdot\\,\\delta x. (23) We loosely justify this heuristic: assume the weight update δ ​ Δ ​ W \\delta\\Delta W is orthogonalized. The rank of δ ​ Δ ​ W \\delta\\Delta W is at most 2 ​ r 2r (it can be written as the difference of two rank r r matrices), and therefore ‖ δ ​ Δ ​ W ‖ F 2 ≤ 2 ​ r \\|\\delta\\Delta W\\|_{F}^{2}\\leq 2r . So ‖ δ ​ Δ ​ W ‖ rms ≤ 2 ​ r / ( d in ​ d out ) \\|\\delta\\Delta W\\|_{\\text{rms}}\\leq\\sqrt{2r/(d_{\\text{in}}d_{\\text{out}})} . We absorb the 2 \\sqrt{2} factor, and use a scale of 0.2 ​ d in ​ d out / r 0.2\\sqrt{d_{\\text{in}}d_{\\text{out}}/r} .",
+      "source": "https://arxiv.org/html/2608.14492v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0043",
+      "section": "A.2 Split weight decay",
+      "text": "If we apply weight decay to B B and A A separately, this gives different dynamics compared to full-parameter training. Concretely, A t + 1 \\displaystyle A_{t+1} = ( 1 − η ​ λ ) ​ A t − η ​ δ ​ A , B t + 1 = ( 1 − η ​ λ ) ​ B t − η ​ δ ​ B \\displaystyle=(1-\\eta\\lambda)A_{t}-\\eta\\,\\delta A,\\quad B_{t+1}=(1-\\eta\\lambda)B_{t}-\\eta\\,\\delta B ⟹ δ ​ Δ ​ W \\displaystyle\\implies\\delta\\Delta W = [ ( 1 − η ​ λ ) ​ B t − η ​ δ ​ B ] ​ [ ( 1 − η ​ λ ) ​ A t − η ​ δ ​ A ] − B t ​ A t \\displaystyle=\\big[(1-\\eta\\lambda)B_{t}-\\eta\\,\\delta B\\big]\\big[(1-\\eta\\lambda)A_{t}-\\eta\\,\\delta A\\big]-B_{t}A_{t} = − [ 1 − ( 1 − η ​ λ ) 2 ] ​ B t ​ A t − η ⁡ ( 1 − η ​ λ ) ​ ( B t ​ δ ​ A + δ ​ B ​ A t ) + O ⁡ ( η 2 ) , \\displaystyle=-\\big[1-(1-\\eta\\lambda)^{2}\\big]B_{t}A_{t}-\\eta(1-\\eta\\lambda)\\big(B_{t}\\,\\delta A+\\delta B\\,A_{t}\\big)+O(\\eta^{2}), which is not recognizable in terms of full-parameter dynamics. We adopt the split weight decay of Cesista et al. [2026] to preserve the first-order weight decay dynamics. Setting s = 1 − λ ​ η s=\\sqrt{1-\\lambda\\eta} , LoRA factors update as, A t + 1 \\displaystyle A_{t+1} = s ​ A t − η s ​ δ ​ A , \\displaystyle=s\\,A_{t}-\\tfrac{\\eta}{s}\\,\\delta A, (24) B t + 1 \\displaystyle B_{t+1} = s ​ B t − η s ​ δ ​ B . \\displaystyle=s\\,B_{t}-\\tfrac{\\eta}{s}\\,\\delta B. (25) Expanding the resulting weight change δ ​ Δ ​ W = B t + 1 ​ A t + 1 − B t ​ A t \\delta\\Delta W=B_{t+1}A_{t+1}-B_{t}A_{t} gives,",
+      "source": "https://arxiv.org/html/2608.14492v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0044",
+      "section": "A.2 Split weight decay",
+      "text": "δ ​ Δ ​ W \\displaystyle\\delta\\Delta W = ( s ​ B t − η s ​ δ ​ B ) ​ ( s ​ A t − η s ​ δ ​ A ) − B t ​ A t \\displaystyle=\\left(sB_{t}-\\tfrac{\\eta}{s}\\,\\delta B\\right)\\left(sA_{t}-\\tfrac{\\eta}{s}\\,\\delta A\\right)-B_{t}A_{t} (26) = s 2 ​ B t ​ A t − η ⁡ ( δ ​ B ​ A t + B t ​ δ ​ A ) + η 2 s 2 ​ δ ​ B ​ δ ​ A − B t ​ A t \\displaystyle=s^{2}B_{t}A_{t}-\\eta(\\delta B\\,A_{t}+B_{t}\\,\\delta A)+\\tfrac{\\eta^{2}}{s^{2}}\\,\\delta B\\,\\delta A-B_{t}A_{t} (27) = ( s 2 − 1 ) ​ B t ​ A t − η ⁡ ( δ ​ B ​ A t + B t ​ δ ​ A ) + η 2 s 2 ​ δ ​ B ​ δ ​ A \\displaystyle=(s^{2}-1)B_{t}A_{t}-\\eta(\\delta B\\,A_{t}+B_{t}\\,\\delta A)+\\tfrac{\\eta^{2}}{s^{2}}\\,\\delta B\\,\\delta A (28) = − λ ​ η ​ Δ ​ W t ⏟ decay term − η ⁡ ( δ ​ B ​ A t + B t ​ δ ​ A ) ⏟ gradient term + O ⁡ ( η 2 ) \\displaystyle=\\underbrace{-\\lambda\\eta\\,\\Delta W_{t}}_{\\text{decay term}}-\\underbrace{\\eta(\\delta B\\,A_{t}+B_{t}\\,\\delta A)}_{\\text{gradient term}}+O(\\eta^{2}) (29) which we identify as having the dynamics of decoupled weight decay [ Loshchilov and Hutter, 2017 ] .",
+      "source": "https://arxiv.org/html/2608.14492v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0045",
+      "section": "A.3 Invariance to parameterization",
+      "text": "In practice, we orthogonalize a momentum rather than a raw gradient. The natural choice for momentum accumulation is M A ← β ​ M A + ( 1 − β ) ​ G A M_{A}\\leftarrow\\beta M_{A}+(1-\\beta)G_{A} and M B ← β ​ M B + ( 1 − β ) ​ G B M_{B}\\leftarrow\\beta M_{B}+(1-\\beta)G_{B} , and to reconstruct the effective momentum by substituting them for G A , G B G_{A},\\,G_{B} in the equation factorizing H H , H ¯ t = ( B t † ) ⊤ ​ M A , t + ( I − P B t ) ​ M B , t ​ ( A t † ) ⊤ . \\bar{H}_{t}=(B_{t}^{\\dagger})^{\\top}M_{A,t}+(I-P_{B_{t}})\\,M_{B,t}(A_{t}^{\\dagger})^{\\top}. (30) Here, G B = G Δ ​ W ​ A ⊤ G_{B}=G_{\\Delta W}A^{\\top} and G A = B ⊤ ​ G Δ ​ W G_{A}=B^{\\top}G_{\\Delta W} are the gradients of the adapter matrices B B and A A respectively. Consider two training runs, ( B t , A t ) (B_{t},\\,A_{t}) and ( B t ′ , A t ′ ) (B_{t}^{\\prime},A_{t}^{\\prime}) , that differ only in their parameterizations at each step, ( B t ′ , A t ′ ) = ( B t ​ S t , S t − 1 ​ A t ) . (B_{t}^{\\prime},A_{t}^{\\prime})=(B_{t}S_{t},\\;S_{t}^{-1}A_{t}). (31) Since Δ ​ W t ′ = B t ′ ​ A t ′ = B t ​ A t = Δ ​ W t \\Delta W_{t}^{\\prime}=B_{t}^{\\prime}A_{t}^{\\prime}=B_{t}A_{t}=\\Delta W_{t} , we want the optimizer to take equivalent steps throughout training, regardless of S t S_{t} . For this, it is necessary that H ¯ t ′ = H ¯ t \\bar{H}_{t}^{\\prime}=\\bar{H}_{t} .",
+      "source": "https://arxiv.org/html/2608.14492v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0046",
+      "section": "Without transporting momentum buffers",
+      "text": "The adapter gradients in the primed run are G A , k ′ = ( B k ′ ) ⊤ ​ G Δ ​ W , k = S k ⊤ ​ G A , k G_{A,k}^{\\prime}=(B_{k}^{\\prime})^{\\top}G_{\\Delta W,k}=S_{k}^{\\top}G_{A,k} and G B , k ′ = G Δ ​ W , k ​ ( A k ′ ) ⊤ = G B , k ​ S k − ⁣ ⊤ G_{B,k}^{\\prime}=G_{\\Delta W,k}(A_{k}^{\\prime})^{\\top}=G_{B,k}S_{k}^{-\\top} . Unrolling the EMA, we have, M A , t ′ = ∑ k ≤ t ( 1 − β ) ​ β t − k ​ S k ⊤ ​ G A , k , M B , t ′ = ∑ k ≤ t ( 1 − β ) ​ β t − k ​ G B , k ​ S k − ⁣ ⊤ . M_{A,t}^{\\prime}=\\sum_{k\\leq t}(1-\\beta)\\beta^{t-k}\\,S_{k}^{\\top}G_{A,k},\\qquad M_{B,t}^{\\prime}=\\sum_{k\\leq t}(1-\\beta)\\beta^{t-k}\\,G_{B,k}S_{k}^{-\\top}. (32) Thus, the ‘primed’ run’s effective momentum is, H ¯ t ′ = ∑ k ≤ t ( 1 − β ) ​ β t − k ​ [ ( B t † ) ⊤ ​ S t − ⁣ ⊤ ​ S k ⊤ ​ G A , k + ( I − P B t ) ​ G B , k ​ S k − ⁣ ⊤ ​ S t ⊤ ​ ( A t † ) ⊤ ] , \\bar{H}_{t}^{\\prime}=\\sum_{k\\leq t}(1-\\beta)\\beta^{t-k}\\Big[(B_{t}^{\\dagger})^{\\top}\\,S_{t}^{-\\top}S_{k}^{\\top}\\,G_{A,k}\\;+\\;(I-P_{B_{t}})\\,G_{B,k}\\,S_{k}^{-\\top}S_{t}^{\\top}\\,(A_{t}^{\\dagger})^{\\top}\\Big], (33) which differs from H ¯ t \\bar{H}_{t} by the factors S t − ⁣ ⊤ ​ S k ⊤ S_{t}^{-\\top}S_{k}^{\\top} and S k − ⁣ ⊤ ​ S t ⊤ S_{k}^{-\\top}S_{t}^{\\top} . These are the identity only when S k = S t S_{k}=S_{t} , so in general H ¯ t ′ ≠ H ¯ t \\bar{H}_{t}^{\\prime}\\neq\\bar{H}_{t} .",
+      "source": "https://arxiv.org/html/2608.14492v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0047",
+      "section": "With momentum transport",
+      "text": "We fix the issue by re-deriving the buffers from H ¯ \\bar{H} against the factors as they stand at the end of the step, M A ← B ⊤ ​ H ¯ , M B ← H ¯ ​ A ⊤ . M_{A}\\leftarrow B^{\\top}\\bar{H},\\qquad M_{B}\\leftarrow\\bar{H}A^{\\top}. (34) Geometrically, this projects H ¯ \\bar{H} onto the space in which our updates, δ ​ B ​ A + B ​ δ ​ A \\delta B\\,A+B\\,\\delta A , exist. The momenta at the next step are then, M A , t + 1 \\displaystyle M_{A,t+1} = B t + 1 ⊤ ​ ( β ​ H ¯ t + ( 1 − β ) ​ G Δ ​ W , t + 1 ) , \\displaystyle=B_{t+1}^{\\top}\\big(\\beta\\bar{H}_{t}+(1-\\beta)G_{\\Delta W,t+1}\\big), (35) M B , t + 1 \\displaystyle M_{B,t+1} = ( β ​ H ¯ t + ( 1 − β ) ​ G Δ ​ W , t + 1 ) ​ A t + 1 ⊤ . \\displaystyle=\\big(\\beta\\bar{H}_{t}+(1-\\beta)G_{\\Delta W,t+1}\\big)A_{t+1}^{\\top}. (36) Assuming H ¯ t ′ = H ¯ t \\bar{H}_{t}^{\\prime}=\\bar{H}_{t} , we have M A , t + 1 ′ = ( B t + 1 ′ ) ⊤ ​ ( β ​ H ¯ t + ( 1 − β ) ​ G Δ ​ W , t + 1 ) = S t + 1 ⊤ ​ M A , t + 1 M_{A,t+1}^{\\prime}=(B_{t+1}^{\\prime})^{\\top}\\big(\\beta\\bar{H}_{t}+(1-\\beta)G_{\\Delta W,t+1}\\big)=S_{t+1}^{\\top}M_{A,t+1} and similarly M B , t + 1 ′ = M B , t + 1 ​ S t + 1 − ⁣ ⊤ M_{B,t+1}^{\\prime}=M_{B,t+1}S_{t+1}^{-\\top} . By further substitution,",
+      "source": "https://arxiv.org/html/2608.14492v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0048",
+      "section": "With momentum transport",
+      "text": "H ¯ t + 1 ′ \\displaystyle\\bar{H}_{t+1}^{\\prime} = ( S t + 1 − 1 ​ B t + 1 † ) ⊤ ​ S t + 1 ⊤ ​ M A , t + 1 + ( I − P B t + 1 ) ​ M B , t + 1 ​ S t + 1 − ⁣ ⊤ ​ ( A t + 1 † ​ S t + 1 ) ⊤ \\displaystyle=\\big(S_{t+1}^{-1}B_{t+1}^{\\dagger}\\big)^{\\top}S_{t+1}^{\\top}M_{A,t+1}+(I-P_{B_{t+1}})\\,M_{B,t+1}S_{t+1}^{-\\top}\\big(A_{t+1}^{\\dagger}S_{t+1}\\big)^{\\top} = ( B t + 1 † ) ⊤ ​ S t + 1 − ⁣ ⊤ ​ S t + 1 ⊤ ⏟ I ​ M A , t + 1 + ( I − P B t + 1 ) ​ M B , t + 1 ​ S t + 1 − ⁣ ⊤ ​ S t + 1 ⊤ ⏟ I ​ ( A t + 1 † ) ⊤ \\displaystyle=(B_{t+1}^{\\dagger})^{\\top}\\underbrace{S_{t+1}^{-\\top}S_{t+1}^{\\top}}_{I}M_{A,t+1}+(I-P_{B_{t+1}})\\,M_{B,t+1}\\underbrace{S_{t+1}^{-\\top}S_{t+1}^{\\top}}_{I}(A_{t+1}^{\\dagger})^{\\top} = H ¯ t + 1 . \\displaystyle=\\;\\bar{H}_{t+1}. So long as we project H ¯ \\bar{H} into the momentum buffers at every step, the two runs will orthogonalize the same matrix, and therefore the realized steps will agree.",
+      "source": "https://arxiv.org/html/2608.14492v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0049",
+      "section": "Appendix B Alternative stable algorithm",
+      "text": "See Alg. 3 , a mathematically equivalent but more stable alternative to Alg. 2 from the main text. In particular, we perform two orthogonalization steps [ Giraud et al., 2005 ] to help preserve orthogonality to machine precision, and include relative jitter to help stability for larger r r . Another difference between Alg. 2 and 3 is that we use slightly different U 2 U_{2} , V 2 . V_{2}. Alg. 3 uses U 2 = msign ⁡ ( Y ~ ) U_{2}=\\msign(\\tilde{Y}) , where Y = Y ~ ​ S A 2 Y=\\tilde{Y}S_{A}^{2} , and V 2 = msign ⁡ ( Z ~ ) V_{2}=\\msign(\\tilde{Z}) , where Z = Z ~ ​ S B 2 Z=\\tilde{Z}S_{B}^{2} . This is possible because the property we need is col ⁡ ( Y ) = col ⁡ ( Y ~ ) \\operatorname{col}(Y)=\\operatorname{col}(\\tilde{Y}) , and similar for Z Z / Z ~ \\tilde{Z} , which is true when S B S_{B} and S A S_{A} are invertible (we assume this to be the case). One can also consider additional interventions, such as replacing msign ( X ) = X ( X ⊤ X ) − 1 / 2 \\msign(X)=X(X^{\\top}X)^{-1/2} for X ∈ ℝ d × r X\\in\\mathbb{R}^{d\\times r} with X ​ 𝚒𝚗𝚟𝚛𝚘𝚘𝚝 ​ ( X ⊤ ​ X ) X\\,\\mathtt{invroot}(X^{\\top}X) . The latter is slightly faster for small r r (since X ⊤ ​ X ∈ ℝ r × r X^{\\top}X\\in\\mathbb{R}^{r\\times r} ), but we found the benefits to be small in practice. Algorithm 3 Stable sMuon",
+      "source": "https://arxiv.org/html/2608.14492v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0050",
+      "section": "Appendix B Alternative stable algorithm",
+      "text": "Input: Same as Alg. 1 ; jitter ϵ > 0 \\epsilon>0 (default to 10 − 4 10^{-4} ) // Inverse roots 1 D B ← B ⊤ ​ B D_{B}\\leftarrow B^{\\top}B 2 ϵ B ← ϵ ​ max ⁡ ( tr ⁡ ( D B ) / r , 1 ) \\epsilon_{B}\\leftarrow\\epsilon\\max(\\mathrm{tr}(D_{B})/r,1) 3 S B ← 𝚒𝚗𝚟𝚛𝚘𝚘𝚝 ⁡ ( D B + ϵ B ​ I ) S_{B}\\leftarrow\\mathtt{invroot}(D_{B}+\\epsilon_{B}I) 4 D A ← A ​ A ⊤ D_{A}\\leftarrow AA^{\\top} 5 ϵ A ← ϵ ​ max ⁡ ( tr ⁡ ( D A ) / r , 1 ) \\epsilon_{A}\\leftarrow\\epsilon\\max(\\mathrm{tr}(D_{A})/r,1) 6 S A ← 𝚒𝚗𝚟𝚛𝚘𝚘𝚝 ⁡ ( D A + ϵ A ​ I ) S_{A}\\leftarrow\\mathtt{invroot}(D_{A}+\\epsilon_{A}I) // Bases 7 X ← S B 2 ​ M A X\\leftarrow S_{B}^{2}M_{A} 8 V 1 ← msign ⁡ ( A ⊤ ) V_{1}\\leftarrow\\msign(A^{\\top}) 9 Y ~ ← M B − B ⁡ ( S B 2 ​ ( B ⊤ ​ M B ) ) \\tilde{Y}\\leftarrow M_{B}-B\\big(S_{B}^{2}(B^{\\top}M_{B})\\big) 10 Y ~ ← Y ~ − B ⁡ ( S B 2 ​ ( B ⊤ ​ Y ~ ) ) \\tilde{Y}\\leftarrow\\tilde{Y}-B\\big(S_{B}^{2}(B^{\\top}\\tilde{Y})\\big)\\quad // two orthog. steps 11 U 2 ← msign ⁡ ( Y ~ ) U_{2}\\leftarrow\\msign(\\tilde{Y}) , Y ← Y ~ ​ S A 2 Y\\leftarrow\\tilde{Y}\\,S_{A}^{2} 12 Z ~ ← M A ⊤ − V 1 ​ ( V 1 ⊤ ​ M A ⊤ ) \\tilde{Z}\\leftarrow M_{A}^{\\top}-V_{1}(V_{1}^{\\top}M_{A}^{\\top}) 13 V 2 ← msign ⁡ ( Z ~ − V 1 ​ ( V 1 ⊤ ​ Z ~ ) ) V_{2}\\leftarrow\\msign(\\tilde{Z}-V_{1}(V_{1}^{\\top}\\tilde{Z}))\\quad // two orthog. steps 14 C ← [ S B ​ ( M A ​ V 1 ) S B ​ ( M A ​ V 2 ) ( U 2 ⊤ ​ Y ) ​ ( A ​ V 1 ) 0 ] C\\leftarrow\\begin{bmatrix}S_{B}(M_{A}V_{1})&S_{B}(M_{A}V_{2})\\\\ (U_{2}^{\\top}Y)(AV_{1})&0\\end{bmatrix} 15 Ω ← msign ⁡ ( C ) \\Omega\\leftarrow\\msign(C) // Step direction 16 P ← 1 2 ​ ( A ​ V 1 + ( A ​ V 1 ) ⊤ ) P\\leftarrow\\tfrac{1}{2}\\big(AV_{1}+(AV_{1})^{\\top}\\big) // symmetric matrix 17 T ← 1 2 ​ ( P ​ S A 2 + ( P ​ S A 2 ) ⊤ ) T\\leftarrow\\tfrac{1}{2}\\big(PS_{A}^{2}+(PS_{A}^{2})^{\\top}\\big)\\quad // symmetric matrix 18 δ ​ A ← S B ​ ( Ω 11 ​ V 1 ⊤",
+      "source": "https://arxiv.org/html/2608.14492v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0051",
+      "section": "Appendix B Alternative stable algorithm",
+      "text": "})^{\\top}\\big) // symmetric matrix 17 T ← 1 2 ​ ( P ​ S A 2 + ( P ​ S A 2 ) ⊤ ) T\\leftarrow\\tfrac{1}{2}\\big(PS_{A}^{2}+(PS_{A}^{2})^{\\top}\\big)\\quad // symmetric matrix 18 δ ​ A ← S B ​ ( Ω 11 ​ V 1 ⊤ + Ω 12 ​ V 2 ⊤ ) \\delta A\\leftarrow S_{B}(\\Omega_{11}V_{1}^{\\top}+\\Omega_{12}V_{2}^{\\top}) 19 δ ​ B ← U 2 ​ Ω 21 ​ T \\delta B\\leftarrow U_{2}\\,\\Omega_{21}\\,T // Update parameters 20 s ← 1 − λ ​ η s\\leftarrow\\sqrt{1-\\lambda\\eta} 21 B ′ ← s ​ B − η s ​ δ ​ B B^{\\prime}\\leftarrow sB-\\tfrac{\\eta}{s}\\delta B 22 A ′ ← s ​ A − η s ​ δ ​ A A^{\\prime}\\leftarrow sA-\\tfrac{\\eta}{s}\\delta A // Project momentum 23 M A ← ( B ′ ⊤ ​ B ) ​ X + ( B ′ ⊤ ​ Y ) ​ A M_{A}\\leftarrow({B^{\\prime}}^{\\top}B)X+({B^{\\prime}}^{\\top}Y)A 24 M B ← B ⁡ ( X ​ A ′ ⊤ ) + Y ⁡ ( A ​ A ′ ⊤ ) M_{B}\\leftarrow B(X{A^{\\prime}}^{\\top})+Y(A{A^{\\prime}}^{\\top}) 25 B ← B ′ B\\leftarrow B^{\\prime} 26 A ← A ′ A\\leftarrow A^{\\prime}",
+      "source": "https://arxiv.org/html/2608.14492v1",
+      "offset": 1598
+    },
+    {
+      "chunk_id": "chunk-0052",
+      "section": "Appendix C Comparison of Muon-based LoRA optimizers",
+      "text": "Every method that combines Muon with LoRA has the same obstruction: Muon requires a step along msign ⁡ ( G Δ ​ W ) \\msign(G_{\\Delta W}) , but a gradient step for a LoRA adapter is constrained inside the set 𝒯 = { Z : ( I − P B ) ​ Z ​ ( I − P A ) = 0 } \\mathcal{T}=\\{Z:(I-P_{B})Z(I-P_{A})=0\\} . The ideal step msign ⁡ ( G Δ ​ W ) \\msign(G_{\\Delta W}) is not in general within this set, thus different methods make different approximations. We compare the different methods in Table 5 . Table 5: Comparison of the Muon-based LoRA optimizers, all written in the convention Δ ​ W = B ​ A \\Delta W=BA of this paper. Π 𝒯 ​ ( ⋅ ) \\Pi_{\\mathcal{T}}(\\cdot) is the orthogonal projector onto the realizable step directions.",
+      "source": "https://arxiv.org/html/2608.14492v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0053",
+      "section": "Appendix C Comparison of Muon-based LoRA optimizers",
+      "text": "Method δ ​ Δ ​ W \\delta\\Delta W Momentum Weight decay on Δ ​ W \\Delta W Expensive operations Per-factor Muon [ Qu et al., 2026 , Kang et al., 2026 ] − η ⁡ ( msign ⁡ ( M B ) ​ A + B ​ msign ⁡ ( M A ) ) + O ⁡ ( η 2 ) -\\eta\\big(\\msign(M_{B})A+B\\,\\msign(M_{A})\\big)+O(\\eta^{2}) Standard per-factor EMAs, i.e. accumulate G B G_{B} in M B M_{B} ( M B ← β ​ M B + ( 1 − β ) ​ G B M_{B}\\!\\leftarrow\\!\\beta M_{B}+(1{-}\\beta)G_{B} ), likewise for M A M_{A} Decoupled, per factor: Δ ​ W ↦ ( 1 − λ ​ η ) 2 ​ Δ ​ W \\Delta W\\mapsto(1-\\lambda\\eta)^{2}\\Delta W 2 orthogonalizations Spectron [ Janson et al., 2026 ] As above with η \\eta replaced by ρ = η / ( ‖ B ‖ 2 + ‖ A ‖ 2 + 1 ) \\rho=\\eta/(\\|B\\|_{2}{+}\\|A\\|_{2}{+}1) ; only ‖ δ ​ Δ ​ W ‖ 2 ≤ η \\|\\delta\\Delta W\\|_{2}\\leq\\eta is controlled, no direction matched Standard per-factor EMAs Decoupled, per factor 2 orthogonalizations, 2 power iterations to estimate ‖ B ‖ 2 , ‖ A ‖ 2 \\|B\\|_{2},\\|A\\|_{2} LoRA-Muon [ Cesista et al., 2026 ] − η 2 ​ ( msign ⁡ ( P B ​ G Δ ​ W ) + msign ⁡ ( G Δ ​ W ​ P A ) ) + O ⁡ ( η 2 ) -\\tfrac{\\eta}{2}\\big(\\msign(P_{B}G_{\\Delta W})+\\msign(G_{\\Delta W}P_{A})\\big)+O(\\eta^{2}) Standard per-factor EMAs Split: let s = 1 − λ ​ η s=\\sqrt{1-\\lambda\\eta} , and A ← s ​ A − η / s ​ δ ​ A A\\leftarrow sA-\\eta/s\\,\\delta A (same for B B ). Overall gives − λ ​ η ​ Δ ​ W + O ⁡ ( η 2 ) -\\lambda\\eta\\,\\Delta W+O(\\eta^{2}) (Sec. A.2 ) The same 2 orthogonalizations, 2 r × r r\\times r inverse square roots of ( B ⊤ B ) − 1 / 2 (B^{\\top}B)^{-1/2} and ( A A ⊤ ) − 1 / 2 (AA^{\\top})^{-1/2} Riemannion [ Bogachev et al., 2026 ] SVD r ​ ( Δ ​ W − η ​ Π 𝒯 ​ ( msign ⁡ ( H ) ) ) − Δ ​ W \\mathrm{SVD}_{r}\\big(\\Delta W-\\eta\\,\\Pi_{\\mathcal{T}}(\\msign(H))\\big)-\\Delta W A A and B B semi-orthonormal. Accumulate ( I − B ​ B ⊤ ) ​ G B (I-BB^{\\top})G_{B} in M B",
+      "source": "https://arxiv.org/html/2608.14492v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0054",
+      "section": "Appendix C Comparison of Muon-based LoRA optimizers",
+      "text": " 𝒯 ​ ( msign ⁡ ( H ) ) ) − Δ ​ W \\mathrm{SVD}_{r}\\big(\\Delta W-\\eta\\,\\Pi_{\\mathcal{T}}(\\msign(H))\\big)-\\Delta W A A and B B semi-orthonormal. Accumulate ( I − B ​ B ⊤ ) ​ G B (I-BB^{\\top})G_{B} in M B M_{B} , and accumulate G A G_{A} in M A M_{A} . Let H = B ​ M A + ( I − B ​ B ⊤ ) ​ M B ​ A H=BM_{A}+(I-BB^{\\top})M_{B}A . After the retraction, set M B = ( I − B ​ B ⊤ ) ​ H ​ A ⊤ M_{B}=(I-BB^{\\top})HA^{\\top} , M A = B ⊤ ​ H M_{A}=B^{\\top}H Prior to retraction, A A is decayed via − η ​ γ ​ A -\\eta\\gamma\\,A ; B B is not decayed. 4 thin QRs, 2 SVDs ( 2 ​ r × 2 ​ r 2r{\\times}2r ) Ours − η ⁡ ( I − P B ) ​ msign ⁡ ( H ) ​ P A − η ​ P B ​ msign ⁡ ( H ) + O ⁡ ( η 2 ) -\\eta(I-P_{B})\\msign(H)P_{A}-\\eta P_{B}\\msign(H)+O(\\eta^{2}) Standard per-factor EMAs, but let H = ( B † ) ⊤ ​ M A + ( I − P B ) ​ M B ​ ( A † ) ⊤ H=(B^{\\dagger})^{\\top}M_{A}+(I-P_{B})M_{B}(A^{\\dagger})^{\\top} . After the gradient step, set M B = H ​ A ⊤ M_{B}=HA^{\\top} , M A = B ⊤ ​ H M_{A}=B^{\\top}H Split 2 r × r r{\\times}r inverse square roots, 4 orthogonalizations ( d × r d\\times r , worst case)",
+      "source": "https://arxiv.org/html/2608.14492v1",
+      "offset": 1597
+    },
+    {
+      "chunk_id": "chunk-0055",
+      "section": "Appendix D Optimality of the sMuon step",
+      "text": "We show in Lemma 1 that our particular choice of δ ​ A \\delta A and δ ​ B \\delta B (a) is, to first order, as close as possible to the target step − η ​ msign ⁡ ( H ) -\\eta\\msign(H) , and (b) while the minimum is not unique in terms of steps ( δ ​ B , δ ​ A ) (\\delta B,\\,\\delta A) , it is unique in terms of the first-order change to the whole linear layer.",
+      "source": "https://arxiv.org/html/2608.14492v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0056",
+      "section": "Lemma 1 .",
+      "text": "Let B ∈ ℝ d 1 × r B\\in\\mathbb{R}^{d_{1}\\times r} have full column rank and A ∈ ℝ r × d 2 A\\in\\mathbb{R}^{r\\times d_{2}} have full row rank. Let P B = B ​ B † P_{B}=BB^{\\dagger} and P A = A † ​ A P_{A}=A^{\\dagger}A , let G Δ ​ W G_{\\Delta W} be the adapter gradient, and let H = G Δ ​ W − ( I − P B ) ​ G Δ ​ W ​ ( I − P A ) H=G_{\\Delta W}-(I-P_{B})\\,G_{\\Delta W}\\,(I-P_{A}) . Write δ ​ Δ ​ W = ( B + δ ​ B ) ​ ( A + δ ​ A ) − B ​ A \\delta\\Delta W=(B+\\delta B)(A+\\delta A)-BA and δ ​ Δ ​ W ⋆ = − η ​ msign ⁡ ( H ) \\delta\\Delta W^{\\star}=-\\eta\\,\\msign(H) . Consider updates of the form δ ​ B = O ⁡ ( η ) \\delta B=O(\\eta) , δ ​ A = O ⁡ ( η ) \\delta A=O(\\eta) , then ‖ δ ​ Δ ​ W ⋆ − δ ​ Δ ​ W ‖ F = ‖ η ​ msign ⁡ ( H ) + δ ​ B ​ A + B ​ δ ​ A ‖ F + O ⁡ ( η 2 ) , \\|\\delta\\Delta W^{\\star}-\\delta\\Delta W\\|_{F}\\;=\\;\\,\\|\\eta\\msign(H)+\\delta B\\,A+B\\delta A\\|_{F}\\;+\\;O(\\eta^{2}), (37) 1. The choice δ ​ A = − η ​ B † ​ msign ⁡ ( H ) \\delta A=-\\eta\\,B^{\\dagger}\\,\\msign(H) , δ ​ B = − η ⁡ ( I − P B ) ​ msign ⁡ ( H ) ​ A † \\delta B=-\\eta\\,(I-P_{B})\\,\\msign(H)\\,A^{\\dagger} minimizes ‖ δ ​ Δ ​ W ⋆ − δ ​ Δ ​ W ‖ F \\|\\delta\\Delta W^{\\star}-\\delta\\Delta W\\|_{F} to first order. 2. The first-order minimizer is not unique. If ( δ ​ B , δ ​ A ) (\\delta B,\\,\\delta A) is a minimizing pair, then so is ( δ ​ B − B ​ S , δ ​ A + S ​ A ) (\\delta B-BS,\\ \\delta A+SA) with S ∈ ℝ r × r S\\in\\mathbb{R}^{r\\times r} , provided that S = O ⁡ ( η ) S=O(\\eta) . Every first-order minimizer realizes the same overall update, δ ​ Δ ​ W = − η ⁡ [ P B ​ msign ⁡ ( H ) + ( I − P B ) ​ msign ⁡ ( H ) ​ P A ] + O ⁡ ( η 2 ) . \\delta\\Delta W\\;=\\;-\\eta\\big[P_{B}\\msign(H)+(I-P_{B})\\msign(H)P_{A}\\big]+O(\\eta^{2}). (38)",
+      "source": "https://arxiv.org/html/2608.14492v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0057",
+      "section": "Proof.",
+      "text": "Since B † ​ B = I = A ​ A † ∈ ℝ r × r B^{\\dagger}B=I=AA^{\\dagger}\\in\\mathbb{R}^{r\\times r} , we have ( I − P B ) ​ B = 0 (I-P_{B})B=0 and A ⁡ ( I − P A ) = 0 A(I-P_{A})=0 . Write M = msign ⁡ ( H ) M=\\msign(H) , δ ​ B = η ​ b \\delta B=\\eta b , δ ​ A = η ​ a \\delta A=\\eta a with a , b a,b bounded independently of η \\eta . Then δ ​ Δ ​ W ⋆ − δ ​ Δ ​ W = − η ⁡ ( M + b ​ A + B ​ a ) + O ⁡ ( η 2 ) \\delta\\Delta W^{\\star}-\\delta\\Delta W\\;=\\;-\\eta\\,(M+bA+Ba)+O(\\eta^{2}) and the reverse triangle inequality gives Eq. ( 37 ). It therefore suffices to minimize the leading coefficient ‖ M + b ​ A + B ​ a ‖ F \\|M+bA+Ba\\|_{F} . Any X ∈ ℝ d 1 × d 2 X\\in\\mathbb{R}^{d_{1}\\times d_{2}} admits the decomposition X = P B ​ X ​ P A + P B ​ X ​ ( I − P A ) + ( I − P B ) ​ X ​ P A + ( I − P B ) ​ X ​ ( I − P A ) , X=P_{B}XP_{A}+P_{B}X(I-P_{A})+(I-P_{B})XP_{A}+(I-P_{B})X(I-P_{A}), a sum of four mutually Frobenius-orthogonal terms. We have ( I − P B ) ​ ( b ​ A + B ​ a ) ​ ( I − P A ) = 0 (I-P_{B})(bA+Ba)(I-P_{A})=0 , so ‖ M + b ​ A + B ​ a ‖ F 2 ≥ ‖ ( I − P B ) ​ M ​ ( I − P A ) ‖ F 2 . \\|M+bA+Ba\\|_{F}^{2}\\;\\geq\\;\\|(I-P_{B})\\,M\\,(I-P_{A})\\|_{F}^{2}. Crucially, the RHS is independent of the choice of b , a b,\\,a . We get equality when the other three blocks of the decomposition are zero, which they are for M + b ​ A + B ​ a M+bA+Ba ,",
+      "source": "https://arxiv.org/html/2608.14492v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0058",
+      "section": "Proof.",
+      "text": "P B \\displaystyle P_{B} ( M + b ​ A + B ​ a ) ​ P A + P B ​ ( M + b ​ A + B ​ a ) ​ ( I − P A ) + ( I − P B ) ​ ( M + b ​ A + B ​ a ) ​ P A \\displaystyle(M+bA+Ba)P_{A}+P_{B}(M+bA+Ba)(I-P_{A})+(I-P_{B})(M+bA+Ba)P_{A} = P B ​ ( M + b ​ A + B ​ a ) + ( I − P B ) ​ ( M + b ​ A + B ​ a ) ​ P A \\displaystyle=P_{B}(M+bA+Ba)\\;+\\;(I-P_{B})(M+bA+Ba)P_{A} = [ P B ​ M − P B ​ M ] + [ ( I − P B ) ​ M ​ P A − ( I − P B ) ​ M ​ P A ] = 0 , \\displaystyle=\\big[P_{B}M-P_{B}M\\big]\\;+\\;\\big[(I-P_{B})MP_{A}-(I-P_{B})MP_{A}\\big]\\;=\\;0, where we substituted the choice of Part 1 , b ​ A = − ( I − P B ) ​ M ​ [ A † ​ A ] = − ( I − P B ) ​ M ​ P A , B ​ a = − [ B ​ B † ] ​ M = − P B ​ M , bA=-(I-P_{B})M\\,\\big[A^{\\dagger}A\\big]=-(I-P_{B})MP_{A},\\qquad Ba=-\\big[BB^{\\dagger}\\big]\\,M=-P_{B}M, and used P B ​ ( I − P B ) = 0 P_{B}(I-P_{B})=0 , ( I − P B ) 2 = I − P B (I-P_{B})^{2}=I-P_{B} , P A 2 = P A P_{A}^{2}=P_{A} , etc.. Since ‖ δ ​ B ‖ F , ‖ δ ​ A ‖ F = O ⁡ ( η ) \\|\\delta B\\|_{F},\\|\\delta A\\|_{F}=O(\\eta) , this pair lies in the domain and attains equality, so it minimizes the leading coefficient, and hence ‖ δ ​ Δ ​ W ⋆ − δ ​ Δ ​ W ‖ F \\|\\delta\\Delta W^{\\star}-\\delta\\Delta W\\|_{F} to first order. For Part 2 , equality holds only when the three blocks vanish. Since the fourth block of b ​ A + B ​ a bA+Ba is identically zero by ( I − P B ) ​ B = 0 (I-P_{B})B=0 and A ⁡ ( I − P A ) = 0 A(I-P_{A})=0 , the three conditions force b ​ A + B ​ a = − P B ​ M − ( I − P B ) ​ M ​ P A for every minimizing pair. bA+Ba\\;=\\;-\\,P_{B}M-(I-P_{B})MP_{A}\\qquad\\text{for every minimizing pair.} Consequently, every first-order minimizer satisfies",
+      "source": "https://arxiv.org/html/2608.14492v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0059",
+      "section": "Proof.",
+      "text": "δ ​ Δ ​ W = η ⁡ ( b ​ A + B ​ a ) + δ ​ B ​ δ ​ A = − η ⁡ [ P B ​ M + ( I − P B ) ​ M ​ P A ] + O ⁡ ( η 2 ) , \\delta\\Delta W\\;=\\;\\eta\\,(bA+Ba)+\\delta B\\,\\delta A\\;=\\;-\\eta\\big[P_{B}M+(I-P_{B})MP_{A}\\big]+O(\\eta^{2}), which is Eq. ( 38 ). Finally, if S = O ⁡ ( η ) S=O(\\eta) , the pair ( δ ​ B − B ​ S , δ ​ A + S ​ A ) (\\delta B-BS,\\ \\delta A+SA) remains O ⁡ ( η ) O(\\eta) and satisfies ( δ ​ B − B ​ S ) ​ A + B ⁡ ( δ ​ A + S ​ A ) = δ ​ B ​ A + B ​ δ ​ A , (\\delta B-BS)\\,A+B\\,(\\delta A+SA)=\\delta B\\,A+B\\,\\delta A, so it has the same leading coefficient and is again a first-order minimizer. ∎",
+      "source": "https://arxiv.org/html/2608.14492v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0060",
+      "section": "Appendix E Learning rate curves",
+      "text": "We show learning rate curves for the commonsense runs in Figures 2 (overall commonsense accuracy) and 3 (val. loss). We swept different learning rates for different optimizers, since we found that the optimal learning rate varies between optimizers. The accuracy figures shown in the main text are chosen by taking the optimal learning rate according to loss on a held-out validation set. Figure 2: Common-sense accuracy against learning rate for each base model. Each curve is one optimizer; accuracy is the overall common-sense benchmark accuracy at the final training step. Figure 3: Validation loss against learning rate for each base model, over the same runs as Figure 2 .",
+      "source": "https://arxiv.org/html/2608.14492v1",
+      "offset": 0
+    }
+  ],
+  "links": [
+    {
+      "href": "mailto:",
+      "text": "ben.lja@proton.me",
+      "section": "Approximate Muon with low-rank adapters",
+      "context": "Ben Anson Affiliation: University of Bristol Affiliation: School of Mathematics Email: ben.lja@proton.me",
+      "url": "mailto:"
+    },
+    {
+      "href": "mailto:",
+      "text": "conor.houghton@bristol.ac.uk",
+      "section": "Approximate Muon with low-rank adapters",
+      "context": "Ben Anson Affiliation: University of Bristol Affiliation: School of Mathematics Email: ben.lja@proton.me Conor Houghton Affiliation: University of Bristol Affiliation: School of Engineering Mathematics and Technology Email: conor.houghton@bristol.ac.uk",
+      "url": "mailto:"
+    },
+    {
+      "href": "mailto:",
+      "text": "em846@bath.ac.uk",
+      "section": "Approximate Muon with low-rank adapters",
+      "context": "Ben Anson Affiliation: University of Bristol Affiliation: School of Mathematics Email: ben.lja@proton.me Conor Houghton Affiliation: University of Bristol Affiliation: School of Engineering Mathematics and Technology Email: conor.houghton@bristol.ac.uk Edward Milsom Affiliation: University of Bath Affiliation: Department of Computer Science Email: em846@bath.ac.uk",
+      "url": "mailto:"
+    },
+    {
+      "href": "#bib.bib6",
+      "text": "Jordan et al., 2024b",
+      "section": "1 Introduction",
+      "context": "Muon ( Jordan et al., 2024b",
+      "url": "https://arxiv.org/html/2608.14492v1#bib.bib6"
+    },
+    {
+      "href": "#bib.bib43",
+      "text": "Bernstein and Newhouse, 2024a",
+      "section": "1 Introduction",
+      "context": "Muon ( Jordan et al., 2024b ) is a neural network optimizer which orthogonalizes updates at each layer, equalizing all singular values. This can be interpreted as steepest descent under the spectral norm ( Bernstein and Newhouse, 2024a",
+      "url": "https://arxiv.org/html/2608.14492v1#bib.bib43"
+    },
+    {
+      "href": "#bib.bib4",
+      "text": "Liu et al., 2025",
+      "section": "1 Introduction",
+      "context": "Muon ( Jordan et al., 2024b ) is a neural network optimizer which orthogonalizes updates at each layer, equalizing all singular values. This can be interpreted as steepest descent under the spectral norm ( Bernstein and Newhouse, 2024a ) , thereby controlling the worst-case change to the layer as a linear operator, rather than viewing it as a flattened vector. Muon has demonstrated excellent results in the pretraining of LLMs, often outperforming AdamW, leading to its increasing adoption ( Liu et al., 2025",
+      "url": "https://arxiv.org/html/2608.14492v1#bib.bib4"
+    },
+    {
+      "href": "#bib.bib15",
+      "text": "Shah et al., 2025",
+      "section": "1 Introduction",
+      "context": "Muon ( Jordan et al., 2024b ) is a neural network optimizer which orthogonalizes updates at each layer, equalizing all singular values. This can be interpreted as steepest descent under the spectral norm ( Bernstein and Newhouse, 2024a ) , thereby controlling the worst-case change to the layer as a linear operator, rather than viewing it as a flattened vector. Muon has demonstrated excellent results in the pretraining of LLMs, often outperforming AdamW, leading to its increasing adoption ( Liu et al., 2025 ; Shah et al., 2025",
+      "url": "https://arxiv.org/html/2608.14492v1#bib.bib15"
+    },
+    {
+      "href": "#bib.bib8",
+      "text": "Kimi Team, 2025",
+      "section": "1 Introduction",
+      "context": "Muon ( Jordan et al., 2024b ) is a neural network optimizer which orthogonalizes updates at each layer, equalizing all singular values. This can be interpreted as steepest descent under the spectral norm ( Bernstein and Newhouse, 2024a ) , thereby controlling the worst-case change to the layer as a linear operator, rather than viewing it as a flattened vector. Muon has demonstrated excellent results in the pretraining of LLMs, often outperforming AdamW, leading to its increasing adoption ( Liu et al., 2025 ; Shah et al., 2025 ; Kimi Team, 2025",
+      "url": "https://arxiv.org/html/2608.14492v1#bib.bib8"
+    },
+    {
+      "href": "#bib.bib21",
+      "text": "Team et al., 2026",
+      "section": "1 Introduction",
+      "context": "Muon ( Jordan et al., 2024b ) is a neural network optimizer which orthogonalizes updates at each layer, equalizing all singular values. This can be interpreted as steepest descent under the spectral norm ( Bernstein and Newhouse, 2024a ) , thereby controlling the worst-case change to the layer as a linear operator, rather than viewing it as a flattened vector. Muon has demonstrated excellent results in the pretraining of LLMs, often outperforming AdamW, leading to its increasing adoption ( Liu et al., 2025 ; Shah et al., 2025 ; Kimi Team, 2025 ; Team et al., 2026",
+      "url": "https://arxiv.org/html/2608.14492v1#bib.bib21"
+    },
+    {
+      "href": "#bib.bib38",
+      "text": "Xu et al., 2026",
+      "section": "1 Introduction",
+      "context": "Muon ( Jordan et al., 2024b ) is a neural network optimizer which orthogonalizes updates at each layer, equalizing all singular values. This can be interpreted as steepest descent under the spectral norm ( Bernstein and Newhouse, 2024a ) , thereby controlling the worst-case change to the layer as a linear operator, rather than viewing it as a flattened vector. Muon has demonstrated excellent results in the pretraining of LLMs, often outperforming AdamW, leading to its increasing adoption ( Liu et al., 2025 ; Shah et al., 2025 ; Kimi Team, 2025 ; Team et al., 2026 ; Xu et al., 2026",
+      "url": "https://arxiv.org/html/2608.14492v1#bib.bib38"
+    },
+    {
+      "href": "#bib.bib4",
+      "text": "Liu et al., 2025",
+      "section": "1 Introduction",
+      "context": "However, Muon is less commonly used for fine-tuning (FT), particularly PEFT (Parameter-Efficient Fine-Tuning, which reduces compute resource requirements). There are various reasons for this, including the fact that Muon FT has been shown to perform better with Muon-pretrained base models ( Liu et al., 2025",
+      "url": "https://arxiv.org/html/2608.14492v1#bib.bib4"
+    },
+    {
+      "href": "#bib.bib3",
+      "text": "Qu et al., 2026",
+      "section": "1 Introduction",
+      "context": "However, Muon is less commonly used for fine-tuning (FT), particularly PEFT (Parameter-Efficient Fine-Tuning, which reduces compute resource requirements). There are various reasons for this, including the fact that Muon FT has been shown to perform better with Muon-pretrained base models ( Liu et al., 2025 ; Qu et al., 2026",
+      "url": "https://arxiv.org/html/2608.14492v1#bib.bib3"
+    },
+    {
+      "href": "#bib.bib10",
+      "text": "Hu et al., 2021",
+      "section": "1 Introduction",
+      "context": "However, Muon is less commonly used for fine-tuning (FT), particularly PEFT (Parameter-Efficient Fine-Tuning, which reduces compute resource requirements). There are various reasons for this, including the fact that Muon FT has been shown to perform better with Muon-pretrained base models ( Liu et al., 2025 ; Qu et al., 2026 ) , which are currently less common than AdamW-pretrained models. Perhaps the most glaring issue is that Muon does not straightforwardly combine with LoRA ( Hu et al., 2021",
+      "url": "https://arxiv.org/html/2608.14492v1#bib.bib10"
+    },
+    {
+      "href": "#bib.bib3",
+      "text": "Qu et al., 2026",
+      "section": "1 Introduction",
+      "context": "5 ; Qu et al., 2026 ) , which are currently less common than AdamW-pretrained models. Perhaps the most glaring issue is that Muon does not straightforwardly combine with LoRA ( Hu et al., 2021 ) , the dominant PEFT method. In principle, Muon requires that we orthogonalize the descent step for the whole layer, but this is not generally realizable in the LoRA parameterization. Some approximation is therefore inevitable. The simplest and most common workaround is ‘per-factor Muon’, which ignores the geometry of the whole layer and orthogonalizes changes to B B and A A separately ( Qu et al., 2026",
+      "url": "https://arxiv.org/html/2608.14492v1#bib.bib3"
+    },
+    {
+      "href": "#bib.bib5",
+      "text": "Janson et al., 2026",
+      "section": "1 Introduction",
+      "context": ", which are currently less common than AdamW-pretrained models. Perhaps the most glaring issue is that Muon does not straightforwardly combine with LoRA ( Hu et al., 2021 ) , the dominant PEFT method. In principle, Muon requires that we orthogonalize the descent step for the whole layer, but this is not generally realizable in the LoRA parameterization. Some approximation is therefore inevitable. The simplest and most common workaround is ‘per-factor Muon’, which ignores the geometry of the whole layer and orthogonalizes changes to B B and A A separately ( Qu et al., 2026 ; Janson et al., 2026",
+      "url": "https://arxiv.org/html/2608.14492v1#bib.bib5"
+    },
+    {
+      "href": "#bib.bib16",
+      "text": "Kang et al., 2026",
+      "section": "1 Introduction",
+      "context": "y less common than AdamW-pretrained models. Perhaps the most glaring issue is that Muon does not straightforwardly combine with LoRA ( Hu et al., 2021 ) , the dominant PEFT method. In principle, Muon requires that we orthogonalize the descent step for the whole layer, but this is not generally realizable in the LoRA parameterization. Some approximation is therefore inevitable. The simplest and most common workaround is ‘per-factor Muon’, which ignores the geometry of the whole layer and orthogonalizes changes to B B and A A separately ( Qu et al., 2026 ; Janson et al., 2026 ; Kang et al., 2026",
+      "url": "https://arxiv.org/html/2608.14492v1#bib.bib16"
+    },
+    {
+      "href": "#bib.bib17",
+      "text": "Cesista et al. (2026)",
+      "section": "1 Introduction",
+      "context": "ine with LoRA ( Hu et al., 2021 ) , the dominant PEFT method. In principle, Muon requires that we orthogonalize the descent step for the whole layer, but this is not generally realizable in the LoRA parameterization. Some approximation is therefore inevitable. The simplest and most common workaround is ‘per-factor Muon’, which ignores the geometry of the whole layer and orthogonalizes changes to B B and A A separately ( Qu et al., 2026 ; Janson et al., 2026 ; Kang et al., 2026 ) . Other works retain the whole layer’s geometry and introduce an approximation elsewhere, with Cesista et al. (2026)",
+      "url": "https://arxiv.org/html/2608.14492v1#bib.bib17"
+    },
+    {
+      "href": "#bib.bib1",
+      "text": "Bogachev et al. (2026)",
+      "section": "1 Introduction",
+      "context": "res that we orthogonalize the descent step for the whole layer, but this is not generally realizable in the LoRA parameterization. Some approximation is therefore inevitable. The simplest and most common workaround is ‘per-factor Muon’, which ignores the geometry of the whole layer and orthogonalizes changes to B B and A A separately ( Qu et al., 2026 ; Janson et al., 2026 ; Kang et al., 2026 ) . Other works retain the whole layer’s geometry and introduce an approximation elsewhere, with Cesista et al. (2026) relaxing the Muon objective using the triangle inequality, and Bogachev et al. (2026)",
+      "url": "https://arxiv.org/html/2608.14492v1#bib.bib1"
+    },
+    {
+      "href": "#S1.F1",
+      "text": "1",
+      "section": "1 Introduction",
+      "context": "In this paper, we linearize the low-rank Muon objective to find the optimal descent step within the available parameter space. This solution effectively orthogonalizes the full layer’s gradient and projects it onto the appropriate low-rank subspace. Empirically, we find this retains a more uniform spectrum than alternatives such as per-factor Muon (Fig. 1",
+      "url": "https://arxiv.org/html/2608.14492v1#S1.F1"
+    },
+    {
+      "href": "#bib.bib17",
+      "text": "Cesista et al., 2026",
+      "section": "1 Introduction",
+      "context": "In this paper, we linearize the low-rank Muon objective to find the optimal descent step within the available parameter space. This solution effectively orthogonalizes the full layer’s gradient and projects it onto the appropriate low-rank subspace. Empirically, we find this retains a more uniform spectrum than alternatives such as per-factor Muon (Fig. 1 ) and LoRA-Muon ( Cesista et al., 2026",
+      "url": "https://arxiv.org/html/2608.14492v1#bib.bib17"
+    },
+    {
+      "href": "#bib.bib1",
+      "text": "Bogachev et al., 2026",
+      "section": "1 Introduction",
+      "context": "In this paper, we linearize the low-rank Muon objective to find the optimal descent step within the available parameter space. This solution effectively orthogonalizes the full layer’s gradient and projects it onto the appropriate low-rank subspace. Empirically, we find this retains a more uniform spectrum than alternatives such as per-factor Muon (Fig. 1 ) and LoRA-Muon ( Cesista et al., 2026 ) . Furthermore, unlike Riemannion ( Bogachev et al., 2026",
+      "url": "https://arxiv.org/html/2608.14492v1#bib.bib1"
+    },
+    {
+      "href": "#algorithm1",
+      "text": "1",
+      "section": "1 Introduction",
+      "context": "In this paper, we linearize the low-rank Muon objective to find the optimal descent step within the available parameter space. This solution effectively orthogonalizes the full layer’s gradient and projects it onto the appropriate low-rank subspace. Empirically, we find this retains a more uniform spectrum than alternatives such as per-factor Muon (Fig. 1 ) and LoRA-Muon ( Cesista et al., 2026 ) . Furthermore, unlike Riemannion ( Bogachev et al., 2026 ) , our approach avoids expensive matrix decompositions. While our solution to the low-rank Muon problem is clean (Alg. 1",
+      "url": "https://arxiv.org/html/2608.14492v1#algorithm1"
+    },
+    {
+      "href": "#algorithm2",
+      "text": "2",
+      "section": "1 Introduction",
+      "context": "nalizes the full layer’s gradient and projects it onto the appropriate low-rank subspace. Empirically, we find this retains a more uniform spectrum than alternatives such as per-factor Muon (Fig. 1 ) and LoRA-Muon ( Cesista et al., 2026 ) . Furthermore, unlike Riemannion ( Bogachev et al., 2026 ) , our approach avoids expensive matrix decompositions. While our solution to the low-rank Muon problem is clean (Alg. 1 ), a naive implementation is computationally inefficient, as it requires orthogonalizing a large matrix. To address this, we introduce a mathematically equivalent formulation (Alg. 2",
+      "url": "https://arxiv.org/html/2608.14492v1#algorithm2"
+    },
+    {
+      "href": "#bib.bib6",
+      "text": "Jordan et al., 2024b",
+      "section": "Muon and spectral steepest descent",
+      "context": "Muon orthogonalizes the gradient descent step for each weight matrix, so that the singular values of weight updates are equal ( Jordan et al., 2024b",
+      "url": "https://arxiv.org/html/2608.14492v1#bib.bib6"
+    },
+    {
+      "href": "#bib.bib2",
+      "text": "Bernstein and Newhouse, 2024b",
+      "section": "Muon and spectral steepest descent",
+      "context": "Muon orthogonalizes the gradient descent step for each weight matrix, so that the singular values of weight updates are equal ( Jordan et al., 2024b ) . This update is exactly steepest descent under the spectral norm ( Bernstein and Newhouse, 2024b",
+      "url": "https://arxiv.org/html/2608.14492v1#bib.bib2"
+    },
+    {
+      "href": "#bib.bib7",
+      "text": "Bernstein, 2025",
+      "section": "Muon and spectral steepest descent",
+      "context": "Muon orthogonalizes the gradient descent step for each weight matrix, so that the singular values of weight updates are equal ( Jordan et al., 2024b ) . This update is exactly steepest descent under the spectral norm ( Bernstein and Newhouse, 2024b ; Bernstein, 2025",
+      "url": "https://arxiv.org/html/2608.14492v1#bib.bib7"
+    },
+    {
+      "href": "#bib.bib4",
+      "text": "Liu et al., 2025",
+      "section": "Muon and spectral steepest descent",
+      "context": "Muon orthogonalizes the gradient descent step for each weight matrix, so that the singular values of weight updates are equal ( Jordan et al., 2024b ) . This update is exactly steepest descent under the spectral norm ( Bernstein and Newhouse, 2024b ; Bernstein, 2025 ) . Muon has been shown to scale to billion- and trillion-parameter models for LLM pretraining, with considerable efficiency gains over AdamW ( Liu et al., 2025",
+      "url": "https://arxiv.org/html/2608.14492v1#bib.bib4"
+    },
+    {
+      "href": "#bib.bib8",
+      "text": "Kimi Team, 2025",
+      "section": "Muon and spectral steepest descent",
+      "context": "Muon orthogonalizes the gradient descent step for each weight matrix, so that the singular values of weight updates are equal ( Jordan et al., 2024b ) . This update is exactly steepest descent under the spectral norm ( Bernstein and Newhouse, 2024b ; Bernstein, 2025 ) . Muon has been shown to scale to billion- and trillion-parameter models for LLM pretraining, with considerable efficiency gains over AdamW ( Liu et al., 2025 ; Kimi Team, 2025",
+      "url": "https://arxiv.org/html/2608.14492v1#bib.bib8"
+    },
+    {
+      "href": "#bib.bib4",
+      "text": "Liu et al. (2025)",
+      "section": "Muon for fine-tuning and optimizer mismatch",
+      "context": "Although Muon excels at pretraining, it is used far less for fine-tuning. Liu et al. (2025)",
+      "url": "https://arxiv.org/html/2608.14492v1#bib.bib4"
+    },
+    {
+      "href": "#bib.bib3",
+      "text": "Qu et al. (2026)",
+      "section": "Muon for fine-tuning and optimizer mismatch",
+      "context": "Although Muon excels at pretraining, it is used far less for fine-tuning. Liu et al. (2025) note that fine-tuning an AdamW-pretrained model with Muon (or vice-versa) degrades performance. Qu et al. (2026)",
+      "url": "https://arxiv.org/html/2608.14492v1#bib.bib3"
+    },
+    {
+      "href": "#bib.bib17",
+      "text": "Cesista et al. (2026)",
+      "section": "Geometry-aware and Muon-based LoRA optimizers",
+      "context": "The most closely related works are Cesista et al. (2026)",
+      "url": "https://arxiv.org/html/2608.14492v1#bib.bib17"
+    },
+    {
+      "href": "#bib.bib1",
+      "text": "Bogachev et al. (2026)",
+      "section": "Geometry-aware and Muon-based LoRA optimizers",
+      "context": "The most closely related works are Cesista et al. (2026) and Bogachev et al. (2026)",
+      "url": "https://arxiv.org/html/2608.14492v1#bib.bib1"
+    },
+    {
+      "href": "#bib.bib17",
+      "text": "Cesista et al., 2026",
+      "section": "Geometry-aware and Muon-based LoRA optimizers",
+      "context": "The most closely related works are Cesista et al. (2026) and Bogachev et al. (2026) ; these both attempt to approximate a low-rank solution to the spectral-regularized gradient descent problem. LoRA-Muon ( Cesista et al., 2026",
+      "url": "https://arxiv.org/html/2608.14492v1#bib.bib17"
+    },
+    {
+      "href": "#bib.bib1",
+      "text": "Bogachev et al. (2026)",
+      "section": "Geometry-aware and Muon-based LoRA optimizers",
+      "context": "t al. (2026) and Bogachev et al. (2026) ; these both attempt to approximate a low-rank solution to the spectral-regularized gradient descent problem. LoRA-Muon ( Cesista et al., 2026 ) is derived by approximating the spectral steepest-descent optimization problem using the triangle inequality applied to the spectral norm regularizer, and then minimizing to first order. We similarly linearize (we expect second-order terms to be suitably small), but we avoid the triangle inequality, as this is not necessarily tight under the spectral norm. For their ‘Riemannion’ optimizer, Bogachev et al. (2026)",
+      "url": "https://arxiv.org/html/2608.14492v1#bib.bib1"
+    },
+    {
+      "href": "#bib.bib44",
+      "text": "Ghosh et al., 2026",
+      "section": "Geometry-aware and Muon-based LoRA optimizers",
+      "context": "ideas of this method are similar to our method (projecting onto the low-rank space), Riemannian optimization also involves a ‘retract’ step. One issue with their retraction is requiring a truncated SVD, which cannot be efficiently replaced with an efficient matmul-only approximation. In practice this leads to Riemannion being slower than alternatives, especially for larger LoRA rank. By contrast, we obtain the step using least squares on the orthogonalized gradient direction, avoiding expensive manifold constraints that don’t appear to benefit model performance. The PoLoRA ( Ghosh et al., 2026",
+      "url": "https://arxiv.org/html/2608.14492v1#bib.bib44"
+    },
+    {
+      "href": "#bib.bib11",
+      "text": "Yen et al., 2025",
+      "section": "Geometry-aware and Muon-based LoRA optimizers",
+      "context": "e with their retraction is requiring a truncated SVD, which cannot be efficiently replaced with an efficient matmul-only approximation. In practice this leads to Riemannion being slower than alternatives, especially for larger LoRA rank. By contrast, we obtain the step using least squares on the orthogonalized gradient direction, avoiding expensive manifold constraints that don’t appear to benefit model performance. The PoLoRA ( Ghosh et al., 2026 ) method is again similar to our work, but can be understood as a version of LoRA-Muon with additional preconditioning. LoRA-RITE ( Yen et al., 2025",
+      "url": "https://arxiv.org/html/2608.14492v1#bib.bib11"
+    },
+    {
+      "href": "#bib.bib12",
+      "text": "Zhang and Pilanci, 2024",
+      "section": "Geometry-aware and Muon-based LoRA optimizers",
+      "context": "not be efficiently replaced with an efficient matmul-only approximation. In practice this leads to Riemannion being slower than alternatives, especially for larger LoRA rank. By contrast, we obtain the step using least squares on the orthogonalized gradient direction, avoiding expensive manifold constraints that don’t appear to benefit model performance. The PoLoRA ( Ghosh et al., 2026 ) method is again similar to our work, but can be understood as a version of LoRA-Muon with additional preconditioning. LoRA-RITE ( Yen et al., 2025 ) and Riemannian-preconditioned LoRA ( Zhang and Pilanci, 2024",
+      "url": "https://arxiv.org/html/2608.14492v1#bib.bib12"
+    },
+    {
+      "href": "#bib.bib3",
+      "text": "Qu et al., 2026",
+      "section": "Geometry-aware and Muon-based LoRA optimizers",
+      "context": "arger LoRA rank. By contrast, we obtain the step using least squares on the orthogonalized gradient direction, avoiding expensive manifold constraints that don’t appear to benefit model performance. The PoLoRA ( Ghosh et al., 2026 ) method is again similar to our work, but can be understood as a version of LoRA-Muon with additional preconditioning. LoRA-RITE ( Yen et al., 2025 ) and Riemannian-preconditioned LoRA ( Zhang and Pilanci, 2024 ) attempt to keep the adapters invariant to parameterization. Another popular approach is to simply apply Muon to B B and A A independently ( Qu et al., 2026",
+      "url": "https://arxiv.org/html/2608.14492v1#bib.bib3"
+    },
+    {
+      "href": "#bib.bib5",
+      "text": "Janson et al., 2026",
+      "section": "Geometry-aware and Muon-based LoRA optimizers",
+      "context": "ntrast, we obtain the step using least squares on the orthogonalized gradient direction, avoiding expensive manifold constraints that don’t appear to benefit model performance. The PoLoRA ( Ghosh et al., 2026 ) method is again similar to our work, but can be understood as a version of LoRA-Muon with additional preconditioning. LoRA-RITE ( Yen et al., 2025 ) and Riemannian-preconditioned LoRA ( Zhang and Pilanci, 2024 ) attempt to keep the adapters invariant to parameterization. Another popular approach is to simply apply Muon to B B and A A independently ( Qu et al., 2026 ; Janson et al., 2026",
+      "url": "https://arxiv.org/html/2608.14492v1#bib.bib5"
+    },
+    {
+      "href": "#bib.bib45",
+      "text": "Mo et al., 2025",
+      "section": "Geometry-aware and Muon-based LoRA optimizers",
+      "context": "the step using least squares on the orthogonalized gradient direction, avoiding expensive manifold constraints that don’t appear to benefit model performance. The PoLoRA ( Ghosh et al., 2026 ) method is again similar to our work, but can be understood as a version of LoRA-Muon with additional preconditioning. LoRA-RITE ( Yen et al., 2025 ) and Riemannian-preconditioned LoRA ( Zhang and Pilanci, 2024 ) attempt to keep the adapters invariant to parameterization. Another popular approach is to simply apply Muon to B B and A A independently ( Qu et al., 2026 ; Janson et al., 2026 ; Mo et al., 2025",
+      "url": "https://arxiv.org/html/2608.14492v1#bib.bib45"
+    },
+    {
+      "href": "#A1.SS3",
+      "text": "A.3",
+      "section": "Geometry-aware and Muon-based LoRA optimizers",
+      "context": " ) method is again similar to our work, but can be understood as a version of LoRA-Muon with additional preconditioning. LoRA-RITE ( Yen et al., 2025 ) and Riemannian-preconditioned LoRA ( Zhang and Pilanci, 2024 ) attempt to keep the adapters invariant to parameterization. Another popular approach is to simply apply Muon to B B and A A independently ( Qu et al., 2026 ; Janson et al., 2026 ; Mo et al., 2025 ) . This ignores the geometry of the linear layer and causes the update to depend on the adapter parameterization, whereas our update is first-order parameterization-invariant (see App. A.3",
+      "url": "https://arxiv.org/html/2608.14492v1#A1.SS3"
+    },
+    {
+      "href": "#A3",
+      "text": "C",
+      "section": "Geometry-aware and Muon-based LoRA optimizers",
+      "context": "gain similar to our work, but can be understood as a version of LoRA-Muon with additional preconditioning. LoRA-RITE ( Yen et al., 2025 ) and Riemannian-preconditioned LoRA ( Zhang and Pilanci, 2024 ) attempt to keep the adapters invariant to parameterization. Another popular approach is to simply apply Muon to B B and A A independently ( Qu et al., 2026 ; Janson et al., 2026 ; Mo et al., 2025 ) . This ignores the geometry of the linear layer and causes the update to depend on the adapter parameterization, whereas our update is first-order parameterization-invariant (see App. A.3 ). Appendix C",
+      "url": "https://arxiv.org/html/2608.14492v1#A3"
+    },
+    {
+      "href": "#bib.bib5",
+      "text": "Janson et al., 2026",
+      "section": "Low-rank optimization beyond LoRA fine-tuning",
+      "context": "Some works, such as Spectron ( Janson et al., 2026",
+      "url": "https://arxiv.org/html/2608.14492v1#bib.bib5"
+    },
+    {
+      "href": "#bib.bib45",
+      "text": "Mo et al., 2025",
+      "section": "Low-rank optimization beyond LoRA fine-tuning",
+      "context": "Some works, such as Spectron ( Janson et al., 2026 ) , LORO ( Mo et al., 2025",
+      "url": "https://arxiv.org/html/2608.14492v1#bib.bib45"
+    },
+    {
+      "href": "#bib.bib13",
+      "text": "Zhao et al., 2024",
+      "section": "Low-rank optimization beyond LoRA fine-tuning",
+      "context": "Some works, such as Spectron ( Janson et al., 2026 ) , LORO ( Mo et al., 2025 ) , GaLore ( Zhao et al., 2024",
+      "url": "https://arxiv.org/html/2608.14492v1#bib.bib13"
+    },
+    {
+      "href": "#bib.bib14",
+      "text": "Wang et al., 2026",
+      "section": "Low-rank optimization beyond LoRA fine-tuning",
+      "context": "Some works, such as Spectron ( Janson et al., 2026 ) , LORO ( Mo et al., 2025 ) , GaLore ( Zhao et al., 2024 ) , and LoRA-Pre ( Wang et al., 2026",
+      "url": "https://arxiv.org/html/2608.14492v1#bib.bib14"
+    },
+    {
+      "href": "#bib.bib9",
+      "text": "He et al. (2025)",
+      "section": "Low-rank optimization beyond LoRA fine-tuning",
+      "context": "Some works, such as Spectron ( Janson et al., 2026 ) , LORO ( Mo et al., 2025 ) , GaLore ( Zhao et al., 2024 ) , and LoRA-Pre ( Wang et al., 2026 ) target efficient low-rank pretraining, either through stabilization, or optimizer state compression. He et al. (2025)",
+      "url": "https://arxiv.org/html/2608.14492v1#bib.bib9"
+    },
+    {
+      "href": "#bib.bib2",
+      "text": "Bernstein and Newhouse, 2024b",
+      "section": "3.1 Muon",
+      "context": "Given a gradient matrix G W ∈ ℝ d 1 × d 2 G_{W}\\in\\mathbb{R}^{d_{1}\\times d_{2}} for weight matrix W ∈ ℝ d 1 × d 2 W\\in\\mathbb{R}^{d_{1}\\times d_{2}} , Muon selects the step direction δ ​ W ⋆ ∈ ℝ d 1 × d 2 \\delta W^{\\star}\\in\\mathbb{R}^{d_{1}\\times d_{2}} through a regularized minimization under the spectral norm ∥ ⋅ ∥ 2 \\|\\cdot\\|_{2} (largest singular value) ( Bernstein and Newhouse, 2024b",
+      "url": "https://arxiv.org/html/2608.14492v1#bib.bib2"
+    },
+    {
+      "href": "#bib.bib10",
+      "text": "Hu et al., 2021",
+      "section": "3.2 LoRA",
+      "context": "LoRA ( Hu et al., 2021",
+      "url": "https://arxiv.org/html/2608.14492v1#bib.bib10"
+    },
+    {
+      "href": "#S3.E1",
+      "text": "1",
+      "section": "4 Method",
+      "context": "If r = min ⁡ ( d 1 , d 2 ) r=\\min(d_{1},\\,d_{2}) then Δ ​ W \\Delta W is full rank and this is an identical problem to Eq. ( 1",
+      "url": "https://arxiv.org/html/2608.14492v1#S3.E1"
+    },
+    {
+      "href": "#bib.bib2",
+      "text": "Bernstein and Newhouse, 2024b",
+      "section": "4 Method",
+      "context": "If r = min ⁡ ( d 1 , d 2 ) r=\\min(d_{1},\\,d_{2}) then Δ ​ W \\Delta W is full rank and this is an identical problem to Eq. ( 1 ), which is solved by whitening the gradient ( Bernstein and Newhouse, 2024b",
+      "url": "https://arxiv.org/html/2608.14492v1#bib.bib2"
+    },
+    {
+      "href": "#S4.E2",
+      "text": "2",
+      "section": "4 Method",
+      "context": "We proceed by writing Eq. ( 2",
+      "url": "https://arxiv.org/html/2608.14492v1#S4.E2"
+    },
+    {
+      "href": "#S4.E8.1",
+      "text": "8a",
+      "section": "4 Method",
+      "context": "Assuming B B and A A have full rank, right-multiplying Eq. ( 8a",
+      "url": "https://arxiv.org/html/2608.14492v1#S4.E8.1"
+    },
+    {
+      "href": "#S4.E8.2",
+      "text": "8b",
+      "section": "4 Method",
+      "context": "Assuming B B and A A have full rank, right-multiplying Eq. ( 8a ) by ( A ​ A ⊤ ) − 1 (AA^{\\top})^{-1} and left-multiplying Eq. ( 8b",
+      "url": "https://arxiv.org/html/2608.14492v1#S4.E8.2"
+    },
+    {
+      "href": "#S4.E7",
+      "text": "7",
+      "section": "4 Method",
+      "context": "where B † = ( B ⊤ ​ B ) − 1 ​ B ⊤ B^{\\dagger}=(B^{\\top}B)^{-1}B^{\\top} and A † = A ⊤ ​ ( A ​ A ⊤ ) − 1 A^{\\dagger}=A^{\\top}(AA^{\\top})^{-1} are the Moore-Penrose inverses satisfying B † ​ B = I = A ​ A † B^{\\dagger}B=I=AA^{\\dagger} . Note that the minimizer is not unique: if ( δ ​ B , δ ​ A ) (\\delta B,\\delta A) is a minimizer of Eq. ( 7",
+      "url": "https://arxiv.org/html/2608.14492v1#S4.E7"
+    },
+    {
+      "href": "#S4.E9.2",
+      "text": "9b",
+      "section": "4 Method",
+      "context": "Rearranging Eq. ( 9b",
+      "url": "https://arxiv.org/html/2608.14492v1#S4.E9.2"
+    },
+    {
+      "href": "#S4.E9.1",
+      "text": "9a",
+      "section": "4 Method",
+      "context": "δ ​ A ⋆ \\displaystyle\\delta A^{\\star} = B † ​ δ ​ Δ ​ W ⋆ \\displaystyle=B^{\\dagger}\\delta\\Delta W^{\\star} (11a) is one particular minimizer, and then substituting into Eq. ( 9a",
+      "url": "https://arxiv.org/html/2608.14492v1#S4.E9.1"
+    },
+    {
+      "href": "#S4.E11",
+      "text": "11",
+      "section": "4.1 Low-rank gradients",
+      "context": "While the solution ( δ ​ B ⋆ , δ ​ A ⋆ ) (\\delta B^{\\star},\\,\\delta A^{\\star}) given by Eq. ( 11",
+      "url": "https://arxiv.org/html/2608.14492v1#S4.E11"
+    },
+    {
+      "href": "#algorithm1",
+      "text": "1",
+      "section": "4.1 Low-rank gradients",
+      "context": "Input: Same as Alg. 1",
+      "url": "https://arxiv.org/html/2608.14492v1#algorithm1"
+    },
+    {
+      "href": "#S5.T4",
+      "text": "4",
+      "section": "4.2 Efficient, matmul-only computation",
+      "context": "We now show how to compute the descent steps δ ​ B ⋆ \\delta B^{\\star} and δ ​ A ⋆ \\delta A^{\\star} efficiently. One of the principal advantages of our method versus Riemannion is that it permits a matmul-only solution — Riemannion requires truncated SVDs during the retraction step, which makes parallelization/batching of computation slower (see Table 4",
+      "url": "https://arxiv.org/html/2608.14492v1#S5.T4"
+    },
+    {
+      "href": "#S4.E12",
+      "text": "12",
+      "section": "4.2 Efficient, matmul-only computation",
+      "context": "The gradients for B B and A A are G B = G Δ ​ W ​ A ⊤ G_{B}=G_{\\Delta W}A^{\\top} and G A = B ⊤ ​ G Δ ​ W G_{A}=B^{\\top}G_{\\Delta W} respectively; the low-rank gradient of Eq. ( 12",
+      "url": "https://arxiv.org/html/2608.14492v1#S4.E12"
+    },
+    {
+      "href": "#S4.E16",
+      "text": "16",
+      "section": "4.2 Efficient, matmul-only computation",
+      "context": "The key identity we exploit is as follows. Let U ∈ ℝ d 1 × 2 ​ r , V ∈ ℝ d 2 × 2 ​ r U\\in\\mathbb{R}^{d_{1}\\times 2r},\\,V\\in\\mathbb{R}^{d_{2}\\times 2r} be any matrices with orthonormal columns, such that the column space of U U contains the column space of H H and the column space of V V contains the row space of H H , then 1 1 1 To see why Eq. ( 16",
+      "url": "https://arxiv.org/html/2608.14492v1#S4.E16"
+    },
+    {
+      "href": "#S4.E16",
+      "text": "16",
+      "section": "4.2 Efficient, matmul-only computation",
+      "context": "Eq. ( 16",
+      "url": "https://arxiv.org/html/2608.14492v1#S4.E16"
+    },
+    {
+      "href": "#S4.E16",
+      "text": "16",
+      "section": "4.2 Efficient, matmul-only computation",
+      "context": "We have U 1 ⊤ ​ U 2 = 0 U_{1}^{\\top}U_{2}=0 since B ⊤ ​ Y = B ⊤ ​ ( I − P B ) ​ G B ​ ( A ​ A ⊤ ) − 1 = 0 B^{\\top}Y=B^{\\top}(I-P_{B})G_{B}(AA^{\\top})^{-1}=0 , and V 1 ⊤ ​ V 2 = 0 V_{1}^{\\top}V_{2}=0 since A ​ Z = A ⁡ ( I − P A ) ​ X ⊤ = 0 AZ=A(I-P_{A})X^{\\top}=0 . So U U and V V have orthonormal columns, satisfying the conditions for Eq. ( 16",
+      "url": "https://arxiv.org/html/2608.14492v1#S4.E16"
+    },
+    {
+      "href": "#S4.E11",
+      "text": "11",
+      "section": "4.2 Efficient, matmul-only computation",
+      "context": "we now calculate the final factor updates δ ​ B ⋆ \\delta B^{\\star} and δ ​ A ⋆ \\delta A^{\\star} . Substituting msign ⁡ ( H ) = U ​ Ω ​ V ⊤ \\msign(H)=U\\Omega V^{\\top} into the previous expressions for δ ​ B ⋆ \\delta B^{\\star} and δ ​ A ⋆ \\delta A^{\\star} (Eq. 11",
+      "url": "https://arxiv.org/html/2608.14492v1#S4.E11"
+    },
+    {
+      "href": "#bib.bib39",
+      "text": "Amsel et al., 2026",
+      "section": "4.2 Efficient, matmul-only computation",
+      "context": "All components of δ ​ B ⋆ \\delta B^{\\star} and δ ​ A ⋆ \\delta A^{\\star} can be computed with matmuls, matrix inverse roots, and msign \\msign . In practice, both the r × r r\\times r inverse square roots and the msign \\msign ’s can be evaluated with matrix polynomial iterations ( Amsel et al., 2026",
+      "url": "https://arxiv.org/html/2608.14492v1#bib.bib39"
+    },
+    {
+      "href": "#bib.bib40",
+      "text": "Zhang et al., 2026",
+      "section": "4.2 Efficient, matmul-only computation",
+      "context": "All components of δ ​ B ⋆ \\delta B^{\\star} and δ ​ A ⋆ \\delta A^{\\star} can be computed with matmuls, matrix inverse roots, and msign \\msign . In practice, both the r × r r\\times r inverse square roots and the msign \\msign ’s can be evaluated with matrix polynomial iterations ( Amsel et al., 2026 ; Zhang et al., 2026",
+      "url": "https://arxiv.org/html/2608.14492v1#bib.bib40"
+    },
+    {
+      "href": "#bib.bib17",
+      "text": "Cesista et al., 2026",
+      "section": "4.3 Algorithm",
+      "context": "We combine the above updates with split weight decay ( Cesista et al., 2026",
+      "url": "https://arxiv.org/html/2608.14492v1#bib.bib17"
+    },
+    {
+      "href": "#bib.bib1",
+      "text": "Bogachev et al. (2026)",
+      "section": "4.3 Algorithm",
+      "context": "We combine the above updates with split weight decay ( Cesista et al., 2026 ) to match the weight decay dynamics of full-parameter training to first order, and momentum projection (inspired by momentum transport of Bogachev et al. (2026)",
+      "url": "https://arxiv.org/html/2608.14492v1#bib.bib1"
+    },
+    {
+      "href": "#A1.SS3",
+      "text": "A.3",
+      "section": "4.3 Algorithm",
+      "context": "We combine the above updates with split weight decay ( Cesista et al., 2026 ) to match the weight decay dynamics of full-parameter training to first order, and momentum projection (inspired by momentum transport of Bogachev et al. (2026) , see App. A.3",
+      "url": "https://arxiv.org/html/2608.14492v1#A1.SS3"
+    },
+    {
+      "href": "#algorithm1",
+      "text": "1",
+      "section": "4.3 Algorithm",
+      "context": "We combine the above updates with split weight decay ( Cesista et al., 2026 ) to match the weight decay dynamics of full-parameter training to first order, and momentum projection (inspired by momentum transport of Bogachev et al. (2026) , see App. A.3 for details) to ensure reparameterization invariance, yielding the sMuon optimizer for LoRA adapters. We provide Alg. 1",
+      "url": "https://arxiv.org/html/2608.14492v1#algorithm1"
+    },
+    {
+      "href": "#algorithm2",
+      "text": "2",
+      "section": "4.3 Algorithm",
+      "context": "We combine the above updates with split weight decay ( Cesista et al., 2026 ) to match the weight decay dynamics of full-parameter training to first order, and momentum projection (inspired by momentum transport of Bogachev et al. (2026) , see App. A.3 for details) to ensure reparameterization invariance, yielding the sMuon optimizer for LoRA adapters. We provide Alg. 1 as a pedagogical version, while Alg. 2",
+      "url": "https://arxiv.org/html/2608.14492v1#algorithm2"
+    },
+    {
+      "href": "#A2",
+      "text": "B",
+      "section": "4.3 Algorithm",
+      "context": "We also discuss a more numerically stable variant in Appendix B",
+      "url": "https://arxiv.org/html/2608.14492v1#A2"
+    },
+    {
+      "href": "#bib.bib17",
+      "text": "Cesista et al., 2026",
+      "section": "5 Experiments",
+      "context": "We compare sMuon to regular LoRA with AdamW, per-factor Muon (LoRA with Muon applied to each adapter weight B B and A A individually), LoRA-Muon ( Cesista et al., 2026",
+      "url": "https://arxiv.org/html/2608.14492v1#bib.bib17"
+    },
+    {
+      "href": "#bib.bib1",
+      "text": "Bogachev et al., 2026",
+      "section": "5 Experiments",
+      "context": "We compare sMuon to regular LoRA with AdamW, per-factor Muon (LoRA with Muon applied to each adapter weight B B and A A individually), LoRA-Muon ( Cesista et al., 2026 ) , and Riemannion ( Bogachev et al., 2026",
+      "url": "https://arxiv.org/html/2608.14492v1#bib.bib1"
+    },
+    {
+      "href": "#bib.bib31",
+      "text": "Clark et al., 2018",
+      "section": "5 Experiments",
+      "context": "We compare sMuon to regular LoRA with AdamW, per-factor Muon (LoRA with Muon applied to each adapter weight B B and A A individually), LoRA-Muon ( Cesista et al., 2026 ) , and Riemannion ( Bogachev et al., 2026 ) . We evaluated on standard commonsense ( Clark et al., 2018",
+      "url": "https://arxiv.org/html/2608.14492v1#bib.bib31"
+    },
+    {
+      "href": "#bib.bib32",
+      "text": "Clark et al., 2019",
+      "section": "5 Experiments",
+      "context": "We compare sMuon to regular LoRA with AdamW, per-factor Muon (LoRA with Muon applied to each adapter weight B B and A A individually), LoRA-Muon ( Cesista et al., 2026 ) , and Riemannion ( Bogachev et al., 2026 ) . We evaluated on standard commonsense ( Clark et al., 2018 ; Clark et al., 2019",
+      "url": "https://arxiv.org/html/2608.14492v1#bib.bib32"
+    },
+    {
+      "href": "#bib.bib33",
+      "text": "Zellers et al., 2019",
+      "section": "5 Experiments",
+      "context": "We compare sMuon to regular LoRA with AdamW, per-factor Muon (LoRA with Muon applied to each adapter weight B B and A A individually), LoRA-Muon ( Cesista et al., 2026 ) , and Riemannion ( Bogachev et al., 2026 ) . We evaluated on standard commonsense ( Clark et al., 2018 ; Clark et al., 2019 ; Zellers et al., 2019",
+      "url": "https://arxiv.org/html/2608.14492v1#bib.bib33"
+    },
+    {
+      "href": "#bib.bib34",
+      "text": "Mihaylov et al., 2018",
+      "section": "5 Experiments",
+      "context": "We compare sMuon to regular LoRA with AdamW, per-factor Muon (LoRA with Muon applied to each adapter weight B B and A A individually), LoRA-Muon ( Cesista et al., 2026 ) , and Riemannion ( Bogachev et al., 2026 ) . We evaluated on standard commonsense ( Clark et al., 2018 ; Clark et al., 2019 ; Zellers et al., 2019 ; Mihaylov et al., 2018",
+      "url": "https://arxiv.org/html/2608.14492v1#bib.bib34"
+    },
+    {
+      "href": "#bib.bib35",
+      "text": "Bisk et al., 2020",
+      "section": "5 Experiments",
+      "context": "We compare sMuon to regular LoRA with AdamW, per-factor Muon (LoRA with Muon applied to each adapter weight B B and A A individually), LoRA-Muon ( Cesista et al., 2026 ) , and Riemannion ( Bogachev et al., 2026 ) . We evaluated on standard commonsense ( Clark et al., 2018 ; Clark et al., 2019 ; Zellers et al., 2019 ; Mihaylov et al., 2018 ; Bisk et al., 2020",
+      "url": "https://arxiv.org/html/2608.14492v1#bib.bib35"
+    },
+    {
+      "href": "#bib.bib36",
+      "text": "Sakaguchi et al., 2021",
+      "section": "5 Experiments",
+      "context": "We compare sMuon to regular LoRA with AdamW, per-factor Muon (LoRA with Muon applied to each adapter weight B B and A A individually), LoRA-Muon ( Cesista et al., 2026 ) , and Riemannion ( Bogachev et al., 2026 ) . We evaluated on standard commonsense ( Clark et al., 2018 ; Clark et al., 2019 ; Zellers et al., 2019 ; Mihaylov et al., 2018 ; Bisk et al., 2020 ; Sakaguchi et al., 2021",
+      "url": "https://arxiv.org/html/2608.14492v1#bib.bib36"
+    },
+    {
+      "href": "#bib.bib27",
+      "text": "Chen et al., 2021",
+      "section": "5 Experiments",
+      "context": "We compare sMuon to regular LoRA with AdamW, per-factor Muon (LoRA with Muon applied to each adapter weight B B and A A individually), LoRA-Muon ( Cesista et al., 2026 ) , and Riemannion ( Bogachev et al., 2026 ) . We evaluated on standard commonsense ( Clark et al., 2018 ; Clark et al., 2019 ; Zellers et al., 2019 ; Mihaylov et al., 2018 ; Bisk et al., 2020 ; Sakaguchi et al., 2021 ) and coding ( Chen et al., 2021",
+      "url": "https://arxiv.org/html/2608.14492v1#bib.bib27"
+    },
+    {
+      "href": "#bib.bib28",
+      "text": "Austin et al., 2021",
+      "section": "5 Experiments",
+      "context": "We compare sMuon to regular LoRA with AdamW, per-factor Muon (LoRA with Muon applied to each adapter weight B B and A A individually), LoRA-Muon ( Cesista et al., 2026 ) , and Riemannion ( Bogachev et al., 2026 ) . We evaluated on standard commonsense ( Clark et al., 2018 ; Clark et al., 2019 ; Zellers et al., 2019 ; Mihaylov et al., 2018 ; Bisk et al., 2020 ; Sakaguchi et al., 2021 ) and coding ( Chen et al., 2021 ; Austin et al., 2021",
+      "url": "https://arxiv.org/html/2608.14492v1#bib.bib28"
+    },
+    {
+      "href": "#bib.bib18",
+      "text": "Grattafiori et al., 2024",
+      "section": "5 Experiments",
+      "context": "We compare sMuon to regular LoRA with AdamW, per-factor Muon (LoRA with Muon applied to each adapter weight B B and A A individually), LoRA-Muon ( Cesista et al., 2026 ) , and Riemannion ( Bogachev et al., 2026 ) . We evaluated on standard commonsense ( Clark et al., 2018 ; Clark et al., 2019 ; Zellers et al., 2019 ; Mihaylov et al., 2018 ; Bisk et al., 2020 ; Sakaguchi et al., 2021 ) and coding ( Chen et al., 2021 ; Austin et al., 2021 ) benchmarks after training with SFT. We experimented with four models, Llama-3.2-3B ( Grattafiori et al., 2024",
+      "url": "https://arxiv.org/html/2608.14492v1#bib.bib18"
+    },
+    {
+      "href": "#bib.bib19",
+      "text": "Qwen Team, 2025",
+      "section": "5 Experiments",
+      "context": "We compare sMuon to regular LoRA with AdamW, per-factor Muon (LoRA with Muon applied to each adapter weight B B and A A individually), LoRA-Muon ( Cesista et al., 2026 ) , and Riemannion ( Bogachev et al., 2026 ) . We evaluated on standard commonsense ( Clark et al., 2018 ; Clark et al., 2019 ; Zellers et al., 2019 ; Mihaylov et al., 2018 ; Bisk et al., 2020 ; Sakaguchi et al., 2021 ) and coding ( Chen et al., 2021 ; Austin et al., 2021 ) benchmarks after training with SFT. We experimented with four models, Llama-3.2-3B ( Grattafiori et al., 2024 ) , Qwen2.5-3B ( Qwen Team, 2025",
+      "url": "https://arxiv.org/html/2608.14492v1#bib.bib19"
+    },
+    {
+      "href": "#bib.bib20",
+      "text": "DeepSeek-AI, 2024",
+      "section": "5 Experiments",
+      "context": "r LoRA with AdamW, per-factor Muon (LoRA with Muon applied to each adapter weight B B and A A individually), LoRA-Muon ( Cesista et al., 2026 ) , and Riemannion ( Bogachev et al., 2026 ) . We evaluated on standard commonsense ( Clark et al., 2018 ; Clark et al., 2019 ; Zellers et al., 2019 ; Mihaylov et al., 2018 ; Bisk et al., 2020 ; Sakaguchi et al., 2021 ) and coding ( Chen et al., 2021 ; Austin et al., 2021 ) benchmarks after training with SFT. We experimented with four models, Llama-3.2-3B ( Grattafiori et al., 2024 ) , Qwen2.5-3B ( Qwen Team, 2025 ) , DeepSeek-V2-Lite ( DeepSeek-AI, 2024",
+      "url": "https://arxiv.org/html/2608.14492v1#bib.bib20"
+    },
+    {
+      "href": "#bib.bib4",
+      "text": "Liu et al., 2025",
+      "section": "5 Experiments",
+      "context": " Muon applied to each adapter weight B B and A A individually), LoRA-Muon ( Cesista et al., 2026 ) , and Riemannion ( Bogachev et al., 2026 ) . We evaluated on standard commonsense ( Clark et al., 2018 ; Clark et al., 2019 ; Zellers et al., 2019 ; Mihaylov et al., 2018 ; Bisk et al., 2020 ; Sakaguchi et al., 2021 ) and coding ( Chen et al., 2021 ; Austin et al., 2021 ) benchmarks after training with SFT. We experimented with four models, Llama-3.2-3B ( Grattafiori et al., 2024 ) , Qwen2.5-3B ( Qwen Team, 2025 ) , DeepSeek-V2-Lite ( DeepSeek-AI, 2024 ) , and Moonlight-16B-A3B ( Liu et al., 2025",
+      "url": "https://arxiv.org/html/2608.14492v1#bib.bib4"
+    },
+    {
+      "href": "#bib.bib24",
+      "text": "Lialin et al., 2023",
+      "section": "5 Experiments",
+      "context": "; Sakaguchi et al., 2021 ) and coding ( Chen et al., 2021 ; Austin et al., 2021 ) benchmarks after training with SFT. We experimented with four models, Llama-3.2-3B ( Grattafiori et al., 2024 ) , Qwen2.5-3B ( Qwen Team, 2025 ) , DeepSeek-V2-Lite ( DeepSeek-AI, 2024 ) , and Moonlight-16B-A3B ( Liu et al., 2025 ) . The first two models are dense models; the last two are sparse MoE models. The Moonlight model is of particular note because it was pretrained with Muon, whereas the others are all AdamW-pretrained. We also tested the methods in a pretraining setting using ReLoRA ( Lialin et al., 2023",
+      "url": "https://arxiv.org/html/2608.14492v1#bib.bib24"
+    },
+    {
+      "href": "#A5",
+      "text": "E",
+      "section": "5 Experiments",
+      "context": "24 ) , Qwen2.5-3B ( Qwen Team, 2025 ) , DeepSeek-V2-Lite ( DeepSeek-AI, 2024 ) , and Moonlight-16B-A3B ( Liu et al., 2025 ) . The first two models are dense models; the last two are sparse MoE models. The Moonlight model is of particular note because it was pretrained with Muon, whereas the others are all AdamW-pretrained. We also tested the methods in a pretraining setting using ReLoRA ( Lialin et al., 2023 ) which periodically merges and refreshes the adapter. We tuned the learning rate for each method and model, with example learning rate sweeps for the commonsense tasks shown in Appendix E",
+      "url": "https://arxiv.org/html/2608.14492v1#A5"
+    },
+    {
+      "href": "#S4.T1",
+      "text": "1",
+      "section": "5 Experiments",
+      "context": "While our results are both model- and eval-dependent, sMuon performs strongly overall, especially when combined with the Moonlight-16B-A3B base model, a Muon-pretrained model (Tables 1",
+      "url": "https://arxiv.org/html/2608.14492v1#S4.T1"
+    },
+    {
+      "href": "#S5.T2",
+      "text": "2",
+      "section": "5 Experiments",
+      "context": "While our results are both model- and eval-dependent, sMuon performs strongly overall, especially when combined with the Moonlight-16B-A3B base model, a Muon-pretrained model (Tables 1 and 2",
+      "url": "https://arxiv.org/html/2608.14492v1#S5.T2"
+    },
+    {
+      "href": "#S5.T3",
+      "text": "3",
+      "section": "5 Experiments",
+      "context": "While our results are both model- and eval-dependent, sMuon performs strongly overall, especially when combined with the Moonlight-16B-A3B base model, a Muon-pretrained model (Tables 1 and 2 ). sMuon also achieved the joint-best validation loss in the ReLoRA pretraining setting (Table 3",
+      "url": "https://arxiv.org/html/2608.14492v1#S5.T3"
+    },
+    {
+      "href": "#A1.SS1",
+      "text": "A.1",
+      "section": "Experiment details",
+      "context": "LoRA-Muon and Riemannion were chosen as baselines in addition to the simpler AdamW and per-factor Muon baselines as these are the most similar to our method. Unfortunately, we could not find implementations for LoRA-Muon or Riemannion, so we implemented these ourselves. For Riemannion and our method, we use an A = 0 A=0 and B B orthonormal initialization, and for the remaining methods we used a standard initialization ( B = 0 B=0 , A A random Gaussian). We scale the learning rate to approximately match AdamW RMS for all Muon optimizers (for details see App. A.1",
+      "url": "https://arxiv.org/html/2608.14492v1#A1.SS1"
+    },
+    {
+      "href": "#S5.T4",
+      "text": "4",
+      "section": "Experiment details",
+      "context": " implementations for LoRA-Muon or Riemannion, so we implemented these ourselves. For Riemannion and our method, we use an A = 0 A=0 and B B orthonormal initialization, and for the remaining methods we used a standard initialization ( B = 0 B=0 , A A random Gaussian). We scale the learning rate to approximately match AdamW RMS for all Muon optimizers (for details see App. A.1 ). For all experiments, we used weight decay 0.01 0.01 , momentum 0.9 0.9 , inserted LoRA adapters into all hidden layers (except the router for models with MoE). We used GH200 for all experiments except to produce Table 4",
+      "url": "https://arxiv.org/html/2608.14492v1#S5.T4"
+    },
+    {
+      "href": "#bib.bib24",
+      "text": "Lialin et al., 2023",
+      "section": "Experiment details",
+      "context": "For the ReLoRA experiments ( Lialin et al., 2023",
+      "url": "https://arxiv.org/html/2608.14492v1#bib.bib24"
+    },
+    {
+      "href": "#bib.bib22",
+      "text": "Jordan et al., 2024a",
+      "section": "Experiment details",
+      "context": "For the ReLoRA experiments ( Lialin et al., 2023 ) , we started with the modded-nanogpt codebase at ‘record 8’ ( Jordan et al., 2024a",
+      "url": "https://arxiv.org/html/2608.14492v1#bib.bib22"
+    },
+    {
+      "href": "#bib.bib23",
+      "text": "Penedo et al., 2024",
+      "section": "Experiment details",
+      "context": "For the ReLoRA experiments ( Lialin et al., 2023 ) , we started with the modded-nanogpt codebase at ‘record 8’ ( Jordan et al., 2024a ) , which trains a 162M parameter transformer from scratch (using features including QK-norm, ReLU 2 activations) on the FineWeb dataset ( Penedo et al., 2024",
+      "url": "https://arxiv.org/html/2608.14492v1#bib.bib23"
+    },
+    {
+      "href": "#bib.bib27",
+      "text": "Chen et al., 2021",
+      "section": "Experiment details",
+      "context": "For the HumanEval ( Chen et al., 2021",
+      "url": "https://arxiv.org/html/2608.14492v1#bib.bib27"
+    },
+    {
+      "href": "#bib.bib28",
+      "text": "Austin et al., 2021",
+      "section": "Experiment details",
+      "context": "For the HumanEval ( Chen et al., 2021 ) and MBPP ( Austin et al., 2021",
+      "url": "https://arxiv.org/html/2608.14492v1#bib.bib28"
+    },
+    {
+      "href": "#bib.bib25",
+      "text": "Chaudhary, 2023",
+      "section": "Experiment details",
+      "context": "For the HumanEval ( Chen et al., 2021 ) and MBPP ( Austin et al., 2021 ) coding evals, we fine-tuned for 3 epochs on completing Python functions from the CodeAlpaca dataset ( Chaudhary, 2023",
+      "url": "https://arxiv.org/html/2608.14492v1#bib.bib25"
+    },
+    {
+      "href": "#bib.bib29",
+      "text": "Hendrycks et al., 2021",
+      "section": "Experiment details",
+      "context": "For the HumanEval ( Chen et al., 2021 ) and MBPP ( Austin et al., 2021 ) coding evals, we fine-tuned for 3 epochs on completing Python functions from the CodeAlpaca dataset ( Chaudhary, 2023 ) . For the MMLU ( Hendrycks et al., 2021",
+      "url": "https://arxiv.org/html/2608.14492v1#bib.bib29"
+    },
+    {
+      "href": "#bib.bib26",
+      "text": "Longpre et al., 2023",
+      "section": "Experiment details",
+      "context": "For the HumanEval ( Chen et al., 2021 ) and MBPP ( Austin et al., 2021 ) coding evals, we fine-tuned for 3 epochs on completing Python functions from the CodeAlpaca dataset ( Chaudhary, 2023 ) . For the MMLU ( Hendrycks et al., 2021 ) eval, we fine-tuned on a 50/50 mixture of FLAN ( Longpre et al., 2023",
+      "url": "https://arxiv.org/html/2608.14492v1#bib.bib26"
+    },
+    {
+      "href": "#bib.bib30",
+      "text": "Talmor et al., 2019",
+      "section": "Experiment details",
+      "context": "For the HumanEval ( Chen et al., 2021 ) and MBPP ( Austin et al., 2021 ) coding evals, we fine-tuned for 3 epochs on completing Python functions from the CodeAlpaca dataset ( Chaudhary, 2023 ) . For the MMLU ( Hendrycks et al., 2021 ) eval, we fine-tuned on a 50/50 mixture of FLAN ( Longpre et al., 2023 ) and MMLU training subset. For the remaining evals, we trained on a mixture of FLAN and CommonsenseQA ( Talmor et al., 2019",
+      "url": "https://arxiv.org/html/2608.14492v1#bib.bib30"
+    },
+    {
+      "href": "#S4.T1",
+      "text": "1",
+      "section": "Muon-based LoRA is strongest on the Muon-pretrained model",
+      "context": "We originally hypothesized that Muon-based LoRA methods might perform better with Moonlight, since it is a Muon-pretrained model. We do find some evidence for this when aggregating over all benchmarks in Tables 1",
+      "url": "https://arxiv.org/html/2608.14492v1#S4.T1"
+    },
+    {
+      "href": "#S5.T2",
+      "text": "2",
+      "section": "Muon-based LoRA is strongest on the Muon-pretrained model",
+      "context": "We originally hypothesized that Muon-based LoRA methods might perform better with Moonlight, since it is a Muon-pretrained model. We do find some evidence for this when aggregating over all benchmarks in Tables 1 and 2",
+      "url": "https://arxiv.org/html/2608.14492v1#S5.T2"
+    },
+    {
+      "href": "#S5.T2",
+      "text": "2",
+      "section": "Muon-based LoRA is strongest on the Muon-pretrained model",
+      "context": "We originally hypothesized that Muon-based LoRA methods might perform better with Moonlight, since it is a Muon-pretrained model. We do find some evidence for this when aggregating over all benchmarks in Tables 1 and 2 : AdamW only achieves top performance on one of the eleven tasks, while sMuon is best for six. Some methods are markedly below others on certain tasks (e.g. per-factor Muon with Llama-3.2-3B on HumanEval, Table 2",
+      "url": "https://arxiv.org/html/2608.14492v1#S5.T2"
+    },
+    {
+      "href": "#S5.T3",
+      "text": "3",
+      "section": "Benefits of Muon pretraining remain with ReLoRA",
+      "context": "The ReLoRA experiment (Table 3",
+      "url": "https://arxiv.org/html/2608.14492v1#S5.T3"
+    },
+    {
+      "href": "#bib.bib37",
+      "text": "Wang et al., 2025",
+      "section": "Benefits of Muon pretraining remain with ReLoRA",
+      "context": "The ReLoRA experiment (Table 3 ) removes optimizer mismatch entirely by training from scratch. The separation between optimizer families is clear. Every Muon-based method achieves lower validation loss than LoRA+AdamW. One explanation for the strong Muon performance is amplification of the small but real signal in the long tail of the gradient’s spectrum ( Wang et al., 2025",
+      "url": "https://arxiv.org/html/2608.14492v1#bib.bib37"
+    },
+    {
+      "href": "#S5.T4",
+      "text": "4",
+      "section": "Efficiency gain from the matmul-only implementation",
+      "context": "Table 4",
+      "url": "https://arxiv.org/html/2608.14492v1#S5.T4"
+    },
+    {
+      "href": "#S4.SS2.p5.1",
+      "text": "§4.2",
+      "section": "References",
+      "context": "Amsel et al. (2026) N. Amsel, D. Persson, C. Musco, and R. M. Gower The polar express: optimal matrix sign methods and their application to the muon algorithm . In International Conference on Learning Representations , C. Vondrick, B. Hariharan, C. Raffel, L. Pinto, D. Yang, and A. Faust (Eds.) , Vol. 2026 . Cited by: §4.2",
+      "url": "https://arxiv.org/html/2608.14492v1#S4.SS2.p5.1"
+    },
+    {
+      "href": "#S5.SS0.SSS0.Px1.p3.1",
+      "text": "§5",
+      "section": "References",
+      "context": "Austin et al. (2021) J. Austin, A. Odena, M. Nye, M. Bosma, H. Michalewski, D. Dohan, E. Jiang, C. Cai, M. Terry, Q. Le, et al. Program synthesis with large language models . arXiv preprint arXiv:2108.07732 . Cited by: §5",
+      "url": "https://arxiv.org/html/2608.14492v1#S5.SS0.SSS0.Px1.p3.1"
+    },
+    {
+      "href": "#S5.p1.1",
+      "text": "§5",
+      "section": "References",
+      "context": "Austin et al. (2021) J. Austin, A. Odena, M. Nye, M. Bosma, H. Michalewski, D. Dohan, E. Jiang, C. Cai, M. Terry, Q. Le, et al. Program synthesis with large language models . arXiv preprint arXiv:2108.07732 . Cited by: §5 , §5",
+      "url": "https://arxiv.org/html/2608.14492v1#S5.p1.1"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Bernstein and Newhouse (2024a) J. Bernstein and L. Newhouse Modular duality in deep learning . arXiv preprint arXiv:2410.21265 . Cited by: §1",
+      "url": "https://arxiv.org/html/2608.14492v1#S1.p1.1"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px1.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Bernstein and Newhouse (2024b) J. Bernstein and L. Newhouse Old optimizer, new norm: an anthology . arXiv preprint arXiv:2409.20325 . Cited by: §2",
+      "url": "https://arxiv.org/html/2608.14492v1#S2.SS0.SSS0.Px1.p1.1"
+    },
+    {
+      "href": "#S3.SS1.p1.1",
+      "text": "§3.1",
+      "section": "References",
+      "context": "Bernstein and Newhouse (2024b) J. Bernstein and L. Newhouse Old optimizer, new norm: an anthology . arXiv preprint arXiv:2409.20325 . Cited by: §2 , §3.1",
+      "url": "https://arxiv.org/html/2608.14492v1#S3.SS1.p1.1"
+    },
+    {
+      "href": "#S4.p1.2",
+      "text": "§4",
+      "section": "References",
+      "context": "Bernstein and Newhouse (2024b) J. Bernstein and L. Newhouse Old optimizer, new norm: an anthology . arXiv preprint arXiv:2409.20325 . Cited by: §2 , §3.1 , §4",
+      "url": "https://arxiv.org/html/2608.14492v1#S4.p1.2"
+    },
+    {
+      "href": "https://jeremybernste.in/writing/deriving-muon",
+      "text": "Link",
+      "section": "References",
+      "context": "Bernstein (2025) J. Bernstein Deriving muon . External Links: Link",
+      "url": "https://jeremybernste.in/writing/deriving-muon"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px1.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Bernstein (2025) J. Bernstein Deriving muon . External Links: Link Cited by: §2",
+      "url": "https://arxiv.org/html/2608.14492v1#S2.SS0.SSS0.Px1.p1.1"
+    },
+    {
+      "href": "#S5.p1.1",
+      "text": "§5",
+      "section": "References",
+      "context": "Bisk et al. (2020) Y. Bisk, R. Zellers, R. Le Bras, J. Gao, and Y. Choi PIQA: reasoning about physical commonsense in natural language . In Proceedings of the AAAI Conference on Artificial Intelligence , Note: arXiv:1911.11641 Cited by: §5",
+      "url": "https://arxiv.org/html/2608.14492v1#S5.p1.1"
+    },
+    {
+      "href": "#A3.T5.2.1.1.5.1.1.1",
+      "text": "Table 5",
+      "section": "References",
+      "context": "Bogachev et al. (2026) V. Bogachev, V. Aletov, A. Molozhavenko, D. Bobkov, V. Soboleva, A. Alanov, and M. Rakhuba LoRA meets riemannion: muon optimizer for parametrization-independent low-rank adapters . In International Conference on Learning Representations , Vol. 2026 , pp. 82190–82215 . Cited by: Table 5",
+      "url": "https://arxiv.org/html/2608.14492v1#A3.T5.2.1.1.5.1.1.1"
+    },
+    {
+      "href": "#S1.p2.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Bogachev et al. (2026) V. Bogachev, V. Aletov, A. Molozhavenko, D. Bobkov, V. Soboleva, A. Alanov, and M. Rakhuba LoRA meets riemannion: muon optimizer for parametrization-independent low-rank adapters . In International Conference on Learning Representations , Vol. 2026 , pp. 82190–82215 . Cited by: Table 5 , §1",
+      "url": "https://arxiv.org/html/2608.14492v1#S1.p2.1"
+    },
+    {
+      "href": "#S1.p4.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Bogachev et al. (2026) V. Bogachev, V. Aletov, A. Molozhavenko, D. Bobkov, V. Soboleva, A. Alanov, and M. Rakhuba LoRA meets riemannion: muon optimizer for parametrization-independent low-rank adapters . In International Conference on Learning Representations , Vol. 2026 , pp. 82190–82215 . Cited by: Table 5 , §1 , §1",
+      "url": "https://arxiv.org/html/2608.14492v1#S1.p4.1"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px3.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Bogachev et al. (2026) V. Bogachev, V. Aletov, A. Molozhavenko, D. Bobkov, V. Soboleva, A. Alanov, and M. Rakhuba LoRA meets riemannion: muon optimizer for parametrization-independent low-rank adapters . In International Conference on Learning Representations , Vol. 2026 , pp. 82190–82215 . Cited by: Table 5 , §1 , §1 , §2",
+      "url": "https://arxiv.org/html/2608.14492v1#S2.SS0.SSS0.Px3.p1.1"
+    },
+    {
+      "href": "#S4.SS3.p1.1",
+      "text": "§4.3",
+      "section": "References",
+      "context": "Bogachev et al. (2026) V. Bogachev, V. Aletov, A. Molozhavenko, D. Bobkov, V. Soboleva, A. Alanov, and M. Rakhuba LoRA meets riemannion: muon optimizer for parametrization-independent low-rank adapters . In International Conference on Learning Representations , Vol. 2026 , pp. 82190–82215 . Cited by: Table 5 , §1 , §1 , §2 , §4.3",
+      "url": "https://arxiv.org/html/2608.14492v1#S4.SS3.p1.1"
+    },
+    {
+      "href": "#S5.p1.1",
+      "text": "§5",
+      "section": "References",
+      "context": "Bogachev et al. (2026) V. Bogachev, V. Aletov, A. Molozhavenko, D. Bobkov, V. Soboleva, A. Alanov, and M. Rakhuba LoRA meets riemannion: muon optimizer for parametrization-independent low-rank adapters . In International Conference on Learning Representations , Vol. 2026 , pp. 82190–82215 . Cited by: Table 5 , §1 , §1 , §2 , §4.3 , §5",
+      "url": "https://arxiv.org/html/2608.14492v1#S5.p1.1"
+    },
+    {
+      "href": "#A1.SS2.p1.2",
+      "text": "§A.2",
+      "section": "References",
+      "context": "Cesista et al. (2026) F. L. Cesista, K. Crowson, C. Simal, and S. Biderman LoRA-muon: spectral steepest descent on the low-rank manifold . arXiv preprint arXiv:2606.12921 . Cited by: §A.2",
+      "url": "https://arxiv.org/html/2608.14492v1#A1.SS2.p1.2"
+    },
+    {
+      "href": "#A3.T5.2.1.1.4.1.1.1",
+      "text": "Table 5",
+      "section": "References",
+      "context": "Cesista et al. (2026) F. L. Cesista, K. Crowson, C. Simal, and S. Biderman LoRA-muon: spectral steepest descent on the low-rank manifold . arXiv preprint arXiv:2606.12921 . Cited by: §A.2 , Table 5",
+      "url": "https://arxiv.org/html/2608.14492v1#A3.T5.2.1.1.4.1.1.1"
+    },
+    {
+      "href": "#S1.p2.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Cesista et al. (2026) F. L. Cesista, K. Crowson, C. Simal, and S. Biderman LoRA-muon: spectral steepest descent on the low-rank manifold . arXiv preprint arXiv:2606.12921 . Cited by: §A.2 , Table 5 , §1",
+      "url": "https://arxiv.org/html/2608.14492v1#S1.p2.1"
+    },
+    {
+      "href": "#S1.p4.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Cesista et al. (2026) F. L. Cesista, K. Crowson, C. Simal, and S. Biderman LoRA-muon: spectral steepest descent on the low-rank manifold . arXiv preprint arXiv:2606.12921 . Cited by: §A.2 , Table 5 , §1 , §1",
+      "url": "https://arxiv.org/html/2608.14492v1#S1.p4.1"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px3.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Cesista et al. (2026) F. L. Cesista, K. Crowson, C. Simal, and S. Biderman LoRA-muon: spectral steepest descent on the low-rank manifold . arXiv preprint arXiv:2606.12921 . Cited by: §A.2 , Table 5 , §1 , §1 , §2",
+      "url": "https://arxiv.org/html/2608.14492v1#S2.SS0.SSS0.Px3.p1.1"
+    },
+    {
+      "href": "#S4.SS3.p1.1",
+      "text": "§4.3",
+      "section": "References",
+      "context": "Cesista et al. (2026) F. L. Cesista, K. Crowson, C. Simal, and S. Biderman LoRA-muon: spectral steepest descent on the low-rank manifold . arXiv preprint arXiv:2606.12921 . Cited by: §A.2 , Table 5 , §1 , §1 , §2 , §4.3",
+      "url": "https://arxiv.org/html/2608.14492v1#S4.SS3.p1.1"
+    },
+    {
+      "href": "#S5.p1.1",
+      "text": "§5",
+      "section": "References",
+      "context": "Cesista et al. (2026) F. L. Cesista, K. Crowson, C. Simal, and S. Biderman LoRA-muon: spectral steepest descent on the low-rank manifold . arXiv preprint arXiv:2606.12921 . Cited by: §A.2 , Table 5 , §1 , §1 , §2 , §4.3 , §5",
+      "url": "https://arxiv.org/html/2608.14492v1#S5.p1.1"
+    },
+    {
+      "href": "https://github.com/sahil280114/codealpaca",
+      "text": "https://github.com/sahil280114/codealpaca",
+      "section": "References",
+      "context": "Chaudhary (2023) S. Chaudhary Code alpaca: an instruction-following llama model for code generation . GitHub . Note: https://github.com/sahil280114/codealpaca",
+      "url": "https://github.com/sahil280114/codealpaca"
+    },
+    {
+      "href": "#S5.SS0.SSS0.Px1.p3.1",
+      "text": "§5",
+      "section": "References",
+      "context": "Chaudhary (2023) S. Chaudhary Code alpaca: an instruction-following llama model for code generation . GitHub . Note: https://github.com/sahil280114/codealpaca Cited by: §5",
+      "url": "https://arxiv.org/html/2608.14492v1#S5.SS0.SSS0.Px1.p3.1"
+    },
+    {
+      "href": "#S5.SS0.SSS0.Px1.p3.1",
+      "text": "§5",
+      "section": "References",
+      "context": "Chen et al. (2021) M. Chen, J. Tworek, H. Jun, et al. Evaluating large language models trained on code . arXiv preprint arXiv:2107.03374 . Cited by: §5",
+      "url": "https://arxiv.org/html/2608.14492v1#S5.SS0.SSS0.Px1.p3.1"
+    },
+    {
+      "href": "#S5.p1.1",
+      "text": "§5",
+      "section": "References",
+      "context": "Chen et al. (2021) M. Chen, J. Tworek, H. Jun, et al. Evaluating large language models trained on code . arXiv preprint arXiv:2107.03374 . Cited by: §5 , §5",
+      "url": "https://arxiv.org/html/2608.14492v1#S5.p1.1"
+    },
+    {
+      "href": "#S5.p1.1",
+      "text": "§5",
+      "section": "References",
+      "context": "Clark et al. (2019) C. Clark, K. Lee, M. Chang, T. Kwiatkowski, M. Collins, and K. Toutanova Boolq: exploring the surprising difficulty of natural yes/no questions . In Proceedings of the 2019 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies, Volume 1 (Long and Short Papers) , pp. 2924–2936 . Cited by: §5",
+      "url": "https://arxiv.org/html/2608.14492v1#S5.p1.1"
+    },
+    {
+      "href": "#S5.p1.1",
+      "text": "§5",
+      "section": "References",
+      "context": "Clark et al. (2018) P. Clark, I. Cowhey, O. Etzioni, T. Khot, A. Sabharwal, C. Schoenick, and O. Tafjord Think you have solved question answering? try arc, the ai2 reasoning challenge . arXiv preprint arXiv:1803.05457 . Cited by: §5",
+      "url": "https://arxiv.org/html/2608.14492v1#S5.p1.1"
+    },
+    {
+      "href": "#S5.p1.1",
+      "text": "§5",
+      "section": "References",
+      "context": "DeepSeek-AI (2024) DeepSeek-AI DeepSeek-V2: a strong, economical, and efficient mixture-of-experts language model . arXiv preprint arXiv:2405.04434 . Cited by: §5",
+      "url": "https://arxiv.org/html/2608.14492v1#S5.p1.1"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px3.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Ghosh et al. (2026) N. Ghosh, T. Parshakova, and R. M. Gower PoLoRA: a preconditioned orthogonalized lora optimizer . arXiv preprint arXiv:2607.17620 . Cited by: §2",
+      "url": "https://arxiv.org/html/2608.14492v1#S2.SS0.SSS0.Px3.p1.1"
+    },
+    {
+      "href": "#A2.p1.1",
+      "text": "Appendix B",
+      "section": "References",
+      "context": "Giraud et al. (2005) L. Giraud, J. Langou, M. Rozložník, and J. v. d. Eshof Rounding error analysis of the classical gram-schmidt orthogonalization process . Numerische Mathematik . Cited by: Appendix B",
+      "url": "https://arxiv.org/html/2608.14492v1#A2.p1.1"
+    },
+    {
+      "href": "#S5.p1.1",
+      "text": "§5",
+      "section": "References",
+      "context": "Grattafiori et al. (2024) A. Grattafiori, A. Dubey, A. Jauhri, et al. The llama 3 herd of models . arXiv preprint arXiv:2407.21783 . Cited by: §5",
+      "url": "https://arxiv.org/html/2608.14492v1#S5.p1.1"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px4.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "He et al. (2025) C. He, Z. Deng, and Z. Lu Low-rank orthogonalization for large-scale matrix optimization with applications to foundation model training . arXiv preprint arXiv:2509.11983 . Cited by: §2",
+      "url": "https://arxiv.org/html/2608.14492v1#S2.SS0.SSS0.Px4.p1.1"
+    },
+    {
+      "href": "#S5.SS0.SSS0.Px1.p3.1",
+      "text": "§5",
+      "section": "References",
+      "context": "Hendrycks et al. (2021) D. Hendrycks, C. Burns, S. Basart, A. Zou, M. Mazeika, D. Song, and J. Steinhardt Measuring massive multitask language understanding . International Conference on Learning Representations (ICLR) . Note: arXiv:2009.03300 Cited by: §5",
+      "url": "https://arxiv.org/html/2608.14492v1#S5.SS0.SSS0.Px1.p3.1"
+    },
+    {
+      "href": "#S1.p2.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Hu et al. (2021) E. J. Hu, Y. Shen, P. Wallis, Z. Allen-Zhu, Y. Li, S. Wang, L. Wang, and W. Chen Lora: low-rank adaptation of large language models . arXiv preprint arXiv:2106.09685 . Cited by: §1",
+      "url": "https://arxiv.org/html/2608.14492v1#S1.p2.1"
+    },
+    {
+      "href": "#S3.SS2.p1.1",
+      "text": "§3.2",
+      "section": "References",
+      "context": "Hu et al. (2021) E. J. Hu, Y. Shen, P. Wallis, Z. Allen-Zhu, Y. Li, S. Wang, L. Wang, and W. Chen Lora: low-rank adaptation of large language models . arXiv preprint arXiv:2106.09685 . Cited by: §1 , §3.2",
+      "url": "https://arxiv.org/html/2608.14492v1#S3.SS2.p1.1"
+    },
+    {
+      "href": "#A3.T5.2.1.1.3.1.1.1",
+      "text": "Table 5",
+      "section": "References",
+      "context": "Janson et al. (2026) P. Janson, E. Oyallon, and E. Belilovsky Stabilizing native low-rank llm pretraining . arXiv preprint arXiv:2602.12429 . Cited by: Table 5",
+      "url": "https://arxiv.org/html/2608.14492v1#A3.T5.2.1.1.3.1.1.1"
+    },
+    {
+      "href": "#S1.p2.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Janson et al. (2026) P. Janson, E. Oyallon, and E. Belilovsky Stabilizing native low-rank llm pretraining . arXiv preprint arXiv:2602.12429 . Cited by: Table 5 , §1",
+      "url": "https://arxiv.org/html/2608.14492v1#S1.p2.1"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px3.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Janson et al. (2026) P. Janson, E. Oyallon, and E. Belilovsky Stabilizing native low-rank llm pretraining . arXiv preprint arXiv:2602.12429 . Cited by: Table 5 , §1 , §2",
+      "url": "https://arxiv.org/html/2608.14492v1#S2.SS0.SSS0.Px3.p1.1"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px4.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Janson et al. (2026) P. Janson, E. Oyallon, and E. Belilovsky Stabilizing native low-rank llm pretraining . arXiv preprint arXiv:2602.12429 . Cited by: Table 5 , §1 , §2 , §2",
+      "url": "https://arxiv.org/html/2608.14492v1#S2.SS0.SSS0.Px4.p1.1"
+    },
+    {
+      "href": "https://github.com/KellerJordan/modded-nanogpt",
+      "text": "https://github.com/KellerJordan/modded-nanogpt",
+      "section": "References",
+      "context": "Jordan et al. (2024a) K. Jordan, J. Bernstein, B. Rappazzo, B. Vlado, J. You, F. Cesista, B. Koszarsky, and Grad62304977 Modded-nanogpt: speedrunning the NanoGPT baseline . Note: https://github.com/KellerJordan/modded-nanogpt",
+      "url": "https://github.com/KellerJordan/modded-nanogpt"
+    },
+    {
+      "href": "#S5.SS0.SSS0.Px1.p2.1",
+      "text": "§5",
+      "section": "References",
+      "context": "Jordan et al. (2024a) K. Jordan, J. Bernstein, B. Rappazzo, B. Vlado, J. You, F. Cesista, B. Koszarsky, and Grad62304977 Modded-nanogpt: speedrunning the NanoGPT baseline . Note: https://github.com/KellerJordan/modded-nanogpt Cited by: §5",
+      "url": "https://arxiv.org/html/2608.14492v1#S5.SS0.SSS0.Px1.p2.1"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Jordan et al. (2024b) K. Jordan, Y. Jin, V. Boza, J. You, F. Cesista, L. Newhouse, and J. Bernstein Muon: an optimizer for hidden layers in neural networks, 2024 . URL https://kellerjordan. github. io/posts/muon . Cited by: §1",
+      "url": "https://arxiv.org/html/2608.14492v1#S1.p1.1"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px1.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Jordan et al. (2024b) K. Jordan, Y. Jin, V. Boza, J. You, F. Cesista, L. Newhouse, and J. Bernstein Muon: an optimizer for hidden layers in neural networks, 2024 . URL https://kellerjordan. github. io/posts/muon . Cited by: §1 , §2",
+      "url": "https://arxiv.org/html/2608.14492v1#S2.SS0.SSS0.Px1.p1.1"
+    },
+    {
+      "href": "#A3.T5.2.1.1.2.1.1.1",
+      "text": "Table 5",
+      "section": "References",
+      "context": "Kang et al. (2026) C. Kang, J. Yun, B. Shin, Y. Cho, and C. Yun Uniform spectral growth and convergence of muon in lora-style matrix factorization . arXiv preprint arXiv:2602.06385 . Cited by: Table 5",
+      "url": "https://arxiv.org/html/2608.14492v1#A3.T5.2.1.1.2.1.1.1"
+    },
+    {
+      "href": "#S1.p2.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Kang et al. (2026) C. Kang, J. Yun, B. Shin, Y. Cho, and C. Yun Uniform spectral growth and convergence of muon in lora-style matrix factorization . arXiv preprint arXiv:2602.06385 . Cited by: Table 5 , §1",
+      "url": "https://arxiv.org/html/2608.14492v1#S1.p2.1"
+    },
+    {
+      "href": "https://arxiv.org/abs/2507.20534",
+      "text": "Link",
+      "section": "References",
+      "context": "Kimi Team (2025) Kimi Team Kimi k2: open agentic intelligence . External Links: 2507.20534 , Link",
+      "url": "https://arxiv.org/abs/2507.20534"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Kimi Team (2025) Kimi Team Kimi k2: open agentic intelligence . External Links: 2507.20534 , Link Cited by: §1",
+      "url": "https://arxiv.org/html/2608.14492v1#S1.p1.1"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px1.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Kimi Team (2025) Kimi Team Kimi k2: open agentic intelligence . External Links: 2507.20534 , Link Cited by: §1 , §2",
+      "url": "https://arxiv.org/html/2608.14492v1#S2.SS0.SSS0.Px1.p1.1"
+    },
+    {
+      "href": "#S5.SS0.SSS0.Px1.p2.1",
+      "text": "§5",
+      "section": "References",
+      "context": "Lialin et al. (2023) V. Lialin, S. Muckatira, N. Shivagunde, and A. Rumshisky ReLoRA: high-rank training through low-rank updates . arXiv preprint arXiv:2307.05695 . Cited by: §5",
+      "url": "https://arxiv.org/html/2608.14492v1#S5.SS0.SSS0.Px1.p2.1"
+    },
+    {
+      "href": "#S5.p1.1",
+      "text": "§5",
+      "section": "References",
+      "context": "Lialin et al. (2023) V. Lialin, S. Muckatira, N. Shivagunde, and A. Rumshisky ReLoRA: high-rank training through low-rank updates . arXiv preprint arXiv:2307.05695 . Cited by: §5 , §5",
+      "url": "https://arxiv.org/html/2608.14492v1#S5.p1.1"
+    },
+    {
+      "href": "#A1.SS1.p1.1",
+      "text": "§A.1",
+      "section": "References",
+      "context": "Liu et al. (2025) J. Liu, J. Su, X. Yao, Z. Jiang, G. Lai, Y. Du, Y. Qin, W. Xu, E. Lu, J. Yan, et al. Muon is scalable for llm training . arXiv preprint arXiv:2502.16982 . Cited by: §A.1",
+      "url": "https://arxiv.org/html/2608.14492v1#A1.SS1.p1.1"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Liu et al. (2025) J. Liu, J. Su, X. Yao, Z. Jiang, G. Lai, Y. Du, Y. Qin, W. Xu, E. Lu, J. Yan, et al. Muon is scalable for llm training . arXiv preprint arXiv:2502.16982 . Cited by: §A.1 , §1",
+      "url": "https://arxiv.org/html/2608.14492v1#S1.p1.1"
+    },
+    {
+      "href": "#S1.p2.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Liu et al. (2025) J. Liu, J. Su, X. Yao, Z. Jiang, G. Lai, Y. Du, Y. Qin, W. Xu, E. Lu, J. Yan, et al. Muon is scalable for llm training . arXiv preprint arXiv:2502.16982 . Cited by: §A.1 , §1 , §1",
+      "url": "https://arxiv.org/html/2608.14492v1#S1.p2.1"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px1.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Liu et al. (2025) J. Liu, J. Su, X. Yao, Z. Jiang, G. Lai, Y. Du, Y. Qin, W. Xu, E. Lu, J. Yan, et al. Muon is scalable for llm training . arXiv preprint arXiv:2502.16982 . Cited by: §A.1 , §1 , §1 , §2",
+      "url": "https://arxiv.org/html/2608.14492v1#S2.SS0.SSS0.Px1.p1.1"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px2.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Liu et al. (2025) J. Liu, J. Su, X. Yao, Z. Jiang, G. Lai, Y. Du, Y. Qin, W. Xu, E. Lu, J. Yan, et al. Muon is scalable for llm training . arXiv preprint arXiv:2502.16982 . Cited by: §A.1 , §1 , §1 , §2 , §2",
+      "url": "https://arxiv.org/html/2608.14492v1#S2.SS0.SSS0.Px2.p1.1"
+    },
+    {
+      "href": "#S5.p1.1",
+      "text": "§5",
+      "section": "References",
+      "context": "Liu et al. (2025) J. Liu, J. Su, X. Yao, Z. Jiang, G. Lai, Y. Du, Y. Qin, W. Xu, E. Lu, J. Yan, et al. Muon is scalable for llm training . arXiv preprint arXiv:2502.16982 . Cited by: §A.1 , §1 , §1 , §2 , §2 , §5",
+      "url": "https://arxiv.org/html/2608.14492v1#S5.p1.1"
+    },
+    {
+      "href": "#S5.SS0.SSS0.Px1.p3.1",
+      "text": "§5",
+      "section": "References",
+      "context": "Longpre et al. (2023) S. Longpre, L. Hou, T. Vu, A. Webson, H. W. Chung, Y. Tay, D. Zhou, Q. V. Le, B. Zoph, J. Wei, and A. Roberts The Flan collection: designing data and methods for effective instruction tuning . International Conference on Machine Learning (ICML) . Note: arXiv:2301.13688 Cited by: §5",
+      "url": "https://arxiv.org/html/2608.14492v1#S5.SS0.SSS0.Px1.p3.1"
+    },
+    {
+      "href": "#A1.SS2.p1.4",
+      "text": "§A.2",
+      "section": "References",
+      "context": "Loshchilov and Hutter (2017) I. Loshchilov and F. Hutter Decoupled weight decay regularization . arXiv preprint arXiv:1711.05101 . Cited by: §A.2",
+      "url": "https://arxiv.org/html/2608.14492v1#A1.SS2.p1.4"
+    },
+    {
+      "href": "https://dx.doi.org/10.18653/v1/D18-1260",
+      "text": "Document",
+      "section": "References",
+      "context": "Mihaylov et al. (2018) T. Mihaylov, P. Clark, T. Khot, and A. Sabharwal Can a suit of armor conduct electricity? a new dataset for open book question answering . In Proceedings of the 2018 Conference on Empirical Methods in Natural Language Processing , External Links: Document",
+      "url": "https://dx.doi.org/10.18653/v1/D18-1260"
+    },
+    {
+      "href": "#S5.p1.1",
+      "text": "§5",
+      "section": "References",
+      "context": "Mihaylov et al. (2018) T. Mihaylov, P. Clark, T. Khot, and A. Sabharwal Can a suit of armor conduct electricity? a new dataset for open book question answering . In Proceedings of the 2018 Conference on Empirical Methods in Natural Language Processing , External Links: Document Cited by: §5",
+      "url": "https://arxiv.org/html/2608.14492v1#S5.p1.1"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px3.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Mo et al. (2025) Z. Mo, L. Huang, and S. J. Pan Parameter and memory efficient pretraining via low-rank riemannian optimization . In International Conference on Learning Representations , Vol. 2025 , pp. 7907–7936 . Cited by: §2",
+      "url": "https://arxiv.org/html/2608.14492v1#S2.SS0.SSS0.Px3.p1.1"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px4.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Mo et al. (2025) Z. Mo, L. Huang, and S. J. Pan Parameter and memory efficient pretraining via low-rank riemannian optimization . In International Conference on Learning Representations , Vol. 2025 , pp. 7907–7936 . Cited by: §2 , §2",
+      "url": "https://arxiv.org/html/2608.14492v1#S2.SS0.SSS0.Px4.p1.1"
+    },
+    {
+      "href": "#S5.SS0.SSS0.Px1.p2.1",
+      "text": "§5",
+      "section": "References",
+      "context": "Penedo et al. (2024) G. Penedo, H. Kydlíček, L. Ben Allal, A. Lozhkov, M. Mitchell, C. Raffel, L. Von Werra, and T. Wolf The FineWeb datasets: decanting the web for the finest text data at scale . Advances in Neural Information Processing Systems (Datasets and Benchmarks Track) . Note: arXiv:2406.17557 Cited by: §5",
+      "url": "https://arxiv.org/html/2608.14492v1#S5.SS0.SSS0.Px1.p2.1"
+    },
+    {
+      "href": "#A3.T5.2.1.1.2.1.1.1",
+      "text": "Table 5",
+      "section": "References",
+      "context": "Qu et al. (2026) X. Qu, P. Huang, and S. Horvath Can muon fine-tune adam-pretrained models? . arXiv preprint arXiv:2605.10468 . Cited by: Table 5",
+      "url": "https://arxiv.org/html/2608.14492v1#A3.T5.2.1.1.2.1.1.1"
+    },
+    {
+      "href": "#S1.p2.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Qu et al. (2026) X. Qu, P. Huang, and S. Horvath Can muon fine-tune adam-pretrained models? . arXiv preprint arXiv:2605.10468 . Cited by: Table 5 , §1",
+      "url": "https://arxiv.org/html/2608.14492v1#S1.p2.1"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px2.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Qu et al. (2026) X. Qu, P. Huang, and S. Horvath Can muon fine-tune adam-pretrained models? . arXiv preprint arXiv:2605.10468 . Cited by: Table 5 , §1 , §2",
+      "url": "https://arxiv.org/html/2608.14492v1#S2.SS0.SSS0.Px2.p1.1"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px3.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Qu et al. (2026) X. Qu, P. Huang, and S. Horvath Can muon fine-tune adam-pretrained models? . arXiv preprint arXiv:2605.10468 . Cited by: Table 5 , §1 , §2 , §2",
+      "url": "https://arxiv.org/html/2608.14492v1#S2.SS0.SSS0.Px3.p1.1"
+    },
+    {
+      "href": "#S5.p1.1",
+      "text": "§5",
+      "section": "References",
+      "context": "Qwen Team (2025) Qwen Team Qwen2.5 technical report . arXiv preprint arXiv:2412.15115 . Cited by: §5",
+      "url": "https://arxiv.org/html/2608.14492v1#S5.p1.1"
+    },
+    {
+      "href": "#S5.p1.1",
+      "text": "§5",
+      "section": "References",
+      "context": "Sakaguchi et al. (2021) K. Sakaguchi, R. Le Bras, C. Bhagavatula, and Y. Choi WinoGrande: an adversarial winograd schema challenge at scale . Communications of the ACM . Note: arXiv:1907.10641 Cited by: §5",
+      "url": "https://arxiv.org/html/2608.14492v1#S5.p1.1"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Shah et al. (2025) I. Shah, A. M. Polloreno, K. Stratos, P. Monk, A. Chaluvaraju, A. Hojel, A. Ma, A. Thomas, A. Tanwer, D. J. Shah, et al. Practical efficiency of muon for pretraining . arXiv preprint arXiv:2505.02222 . Cited by: §1",
+      "url": "https://arxiv.org/html/2608.14492v1#S1.p1.1"
+    },
+    {
+      "href": "#S5.SS0.SSS0.Px1.p3.1",
+      "text": "§5",
+      "section": "References",
+      "context": "Talmor et al. (2019) A. Talmor, J. Herzig, N. Lourie, and J. Berant CommonsenseQA: a question answering challenge targeting commonsense knowledge . In Proceedings of NAACL-HLT , Note: arXiv:1811.00937 Cited by: §5",
+      "url": "https://arxiv.org/html/2608.14492v1#S5.SS0.SSS0.Px1.p3.1"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Team et al. (2026) K. Team, T. Bai, Y. Bai, Y. Bao, J. Cai, X. Cai, P. Cao, Y. Cao, Z. Chai, Y. Charles, et al. Kimi k3: open frontier intelligence . arXiv preprint arXiv:2607.24653 . Cited by: §1",
+      "url": "https://arxiv.org/html/2608.14492v1#S1.p1.1"
+    },
+    {
+      "href": "#S5.SS0.SSS0.Px3.p1.1",
+      "text": "§5",
+      "section": "References",
+      "context": "Wang et al. (2025) S. Wang, F. Zhang, J. Li, C. Du, C. Du, T. Pang, Z. Yang, M. Hong, and V. Y. Tan Muon outperforms adam in tail-end associative memory learning . arXiv preprint arXiv:2509.26030 . Cited by: §5",
+      "url": "https://arxiv.org/html/2608.14492v1#S5.SS0.SSS0.Px3.p1.1"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px4.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Wang et al. (2026) Z. Wang, J. Liang, R. He, Z. Wang, and T. Tan Taming momentum: rethinking optimizer states through low-rank approximation . arXiv preprint arXiv:2602.24283 . Cited by: §2",
+      "url": "https://arxiv.org/html/2608.14492v1#S2.SS0.SSS0.Px4.p1.1"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Xu et al. (2026) A. Xu, B. Lin, B. Xue, B. Wang, B. Xu, B. Wu, B. Zhang, C. Lin, C. Dong, C. Ling, et al. Deepseek-v4: towards highly efficient million-token context intelligence . arXiv preprint arXiv:2606.19348 . Cited by: §1",
+      "url": "https://arxiv.org/html/2608.14492v1#S1.p1.1"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px3.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Yen et al. (2025) J. Yen, S. Si, Z. Meng, F. Yu, S. S. Duvvuri, I. S. Dhillon, C. Hsieh, and S. Kumar LoRA done RITE: robust invariant transformation equilibration for LoRA optimization . In International Conference on Learning Representations , Cited by: §2",
+      "url": "https://arxiv.org/html/2608.14492v1#S2.SS0.SSS0.Px3.p1.1"
+    },
+    {
+      "href": "#S5.p1.1",
+      "text": "§5",
+      "section": "References",
+      "context": "Zellers et al. (2019) R. Zellers, A. Holtzman, Y. Bisk, A. Farhadi, and Y. Choi HellaSwag: can a machine really finish your sentence? . In Proceedings of the 57th Annual Meeting of the Association for Computational Linguistics , Cited by: §5",
+      "url": "https://arxiv.org/html/2608.14492v1#S5.p1.1"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px3.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Zhang and Pilanci (2024) F. Zhang and M. Pilanci Riemannian preconditioned lora for fine-tuning foundation models . arXiv preprint arXiv:2402.02347 . Cited by: §2",
+      "url": "https://arxiv.org/html/2608.14492v1#S2.SS0.SSS0.Px3.p1.1"
+    },
+    {
+      "href": "https://dao-ailab.github.io/blog/2026/gram-newton-schulz/",
+      "text": "Link",
+      "section": "References",
+      "context": "Zhang et al. (2026) J. Zhang, N. Amsel, B. Chen, and T. Dao Gram newton-schulz . External Links: Link",
+      "url": "https://dao-ailab.github.io/blog/2026/gram-newton-schulz/"
+    },
+    {
+      "href": "#S4.SS2.p5.1",
+      "text": "§4.2",
+      "section": "References",
+      "context": "Zhang et al. (2026) J. Zhang, N. Amsel, B. Chen, and T. Dao Gram newton-schulz . External Links: Link Cited by: §4.2",
+      "url": "https://arxiv.org/html/2608.14492v1#S4.SS2.p5.1"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px4.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Zhao et al. (2024) J. Zhao, Z. Zhang, B. Chen, Z. Wang, A. Anandkumar, and Y. Tian Galore: memory-efficient llm training by gradient low-rank projection . arXiv preprint arXiv:2403.03507 . Cited by: §2",
+      "url": "https://arxiv.org/html/2608.14492v1#S2.SS0.SSS0.Px4.p1.1"
+    },
+    {
+      "href": "#bib.bib4",
+      "text": "Liu et al. [2025]",
+      "section": "A.1 Match AdamW RMS",
+      "context": "Inspired by Liu et al. [2025]",
+      "url": "https://arxiv.org/html/2608.14492v1#bib.bib4"
+    },
+    {
+      "href": "#bib.bib17",
+      "text": "Cesista et al. [2026]",
+      "section": "A.2 Split weight decay",
+      "context": "which is not recognizable in terms of full-parameter dynamics. We adopt the split weight decay of Cesista et al. [2026]",
+      "url": "https://arxiv.org/html/2608.14492v1#bib.bib17"
+    },
+    {
+      "href": "#bib.bib41",
+      "text": "Loshchilov and Hutter, 2017",
+      "section": "A.2 Split weight decay",
+      "context": "which we identify as having the dynamics of decoupled weight decay [ Loshchilov and Hutter, 2017",
+      "url": "https://arxiv.org/html/2608.14492v1#bib.bib41"
+    },
+    {
+      "href": "#algorithm3",
+      "text": "3",
+      "section": "Appendix B Alternative stable algorithm",
+      "context": "See Alg. 3",
+      "url": "https://arxiv.org/html/2608.14492v1#algorithm3"
+    },
+    {
+      "href": "#algorithm2",
+      "text": "2",
+      "section": "Appendix B Alternative stable algorithm",
+      "context": "See Alg. 3 , a mathematically equivalent but more stable alternative to Alg. 2",
+      "url": "https://arxiv.org/html/2608.14492v1#algorithm2"
+    },
+    {
+      "href": "#bib.bib42",
+      "text": "Giraud et al., 2005",
+      "section": "Appendix B Alternative stable algorithm",
+      "context": "See Alg. 3 , a mathematically equivalent but more stable alternative to Alg. 2 from the main text. In particular, we perform two orthogonalization steps [ Giraud et al., 2005",
+      "url": "https://arxiv.org/html/2608.14492v1#bib.bib42"
+    },
+    {
+      "href": "#algorithm2",
+      "text": "2",
+      "section": "Appendix B Alternative stable algorithm",
+      "context": "See Alg. 3 , a mathematically equivalent but more stable alternative to Alg. 2 from the main text. In particular, we perform two orthogonalization steps [ Giraud et al., 2005 ] to help preserve orthogonality to machine precision, and include relative jitter to help stability for larger r r . Another difference between Alg. 2",
+      "url": "https://arxiv.org/html/2608.14492v1#algorithm2"
+    },
+    {
+      "href": "#algorithm3",
+      "text": "3",
+      "section": "Appendix B Alternative stable algorithm",
+      "context": "See Alg. 3 , a mathematically equivalent but more stable alternative to Alg. 2 from the main text. In particular, we perform two orthogonalization steps [ Giraud et al., 2005 ] to help preserve orthogonality to machine precision, and include relative jitter to help stability for larger r r . Another difference between Alg. 2 and 3",
+      "url": "https://arxiv.org/html/2608.14492v1#algorithm3"
+    },
+    {
+      "href": "#algorithm3",
+      "text": "3",
+      "section": "Appendix B Alternative stable algorithm",
+      "context": "See Alg. 3 , a mathematically equivalent but more stable alternative to Alg. 2 from the main text. In particular, we perform two orthogonalization steps [ Giraud et al., 2005 ] to help preserve orthogonality to machine precision, and include relative jitter to help stability for larger r r . Another difference between Alg. 2 and 3 is that we use slightly different U 2 U_{2} , V 2 . V_{2}. Alg. 3",
+      "url": "https://arxiv.org/html/2608.14492v1#algorithm3"
+    },
+    {
+      "href": "#algorithm1",
+      "text": "1",
+      "section": "Appendix B Alternative stable algorithm",
+      "context": "Input: Same as Alg. 1",
+      "url": "https://arxiv.org/html/2608.14492v1#algorithm1"
+    },
+    {
+      "href": "#A3.T5",
+      "text": "5",
+      "section": "Appendix C Comparison of Muon-based LoRA optimizers",
+      "context": "Every method that combines Muon with LoRA has the same obstruction: Muon requires a step along msign ⁡ ( G Δ ​ W ) \\msign(G_{\\Delta W}) , but a gradient step for a LoRA adapter is constrained inside the set 𝒯 = { Z : ( I − P B ) ​ Z ​ ( I − P A ) = 0 } \\mathcal{T}=\\{Z:(I-P_{B})Z(I-P_{A})=0\\} . The ideal step msign ⁡ ( G Δ ​ W ) \\msign(G_{\\Delta W}) is not in general within this set, thus different methods make different approximations. We compare the different methods in Table 5",
+      "url": "https://arxiv.org/html/2608.14492v1#A3.T5"
+    },
+    {
+      "href": "#bib.bib3",
+      "text": "Qu et al., 2026",
+      "section": "Appendix C Comparison of Muon-based LoRA optimizers",
+      "context": "Method δ ​ Δ ​ W \\delta\\Delta W Momentum Weight decay on Δ ​ W \\Delta W Expensive operations Per-factor Muon [ Qu et al., 2026",
+      "url": "https://arxiv.org/html/2608.14492v1#bib.bib3"
+    },
+    {
+      "href": "#bib.bib16",
+      "text": "Kang et al., 2026",
+      "section": "Appendix C Comparison of Muon-based LoRA optimizers",
+      "context": "Method δ ​ Δ ​ W \\delta\\Delta W Momentum Weight decay on Δ ​ W \\Delta W Expensive operations Per-factor Muon [ Qu et al., 2026 , Kang et al., 2026",
+      "url": "https://arxiv.org/html/2608.14492v1#bib.bib16"
+    },
+    {
+      "href": "#bib.bib5",
+      "text": "Janson et al., 2026",
+      "section": "Appendix C Comparison of Muon-based LoRA optimizers",
+      "context": "Method δ ​ Δ ​ W \\delta\\Delta W Momentum Weight decay on Δ ​ W \\Delta W Expensive operations Per-factor Muon [ Qu et al., 2026 , Kang et al., 2026 ] − η ⁡ ( msign ⁡ ( M B ) ​ A + B ​ msign ⁡ ( M A ) ) + O ⁡ ( η 2 ) -\\eta\\big(\\msign(M_{B})A+B\\,\\msign(M_{A})\\big)+O(\\eta^{2}) Standard per-factor EMAs, i.e. accumulate G B G_{B} in M B M_{B} ( M B ← β ​ M B + ( 1 − β ) ​ G B M_{B}\\!\\leftarrow\\!\\beta M_{B}+(1{-}\\beta)G_{B} ), likewise for M A M_{A} Decoupled, per factor: Δ ​ W ↦ ( 1 − λ ​ η ) 2 ​ Δ ​ W \\Delta W\\mapsto(1-\\lambda\\eta)^{2}\\Delta W 2 orthogonalizations Spectron [ Janson et al., 2026",
+      "url": "https://arxiv.org/html/2608.14492v1#bib.bib5"
+    },
+    {
+      "href": "#bib.bib17",
+      "text": "Cesista et al., 2026",
+      "section": "Appendix C Comparison of Muon-based LoRA optimizers",
+      "context": " G B M_{B}\\!\\leftarrow\\!\\beta M_{B}+(1{-}\\beta)G_{B} ), likewise for M A M_{A} Decoupled, per factor: Δ ​ W ↦ ( 1 − λ ​ η ) 2 ​ Δ ​ W \\Delta W\\mapsto(1-\\lambda\\eta)^{2}\\Delta W 2 orthogonalizations Spectron [ Janson et al., 2026 ] As above with η \\eta replaced by ρ = η / ( ‖ B ‖ 2 + ‖ A ‖ 2 + 1 ) \\rho=\\eta/(\\|B\\|_{2}{+}\\|A\\|_{2}{+}1) ; only ‖ δ ​ Δ ​ W ‖ 2 ≤ η \\|\\delta\\Delta W\\|_{2}\\leq\\eta is controlled, no direction matched Standard per-factor EMAs Decoupled, per factor 2 orthogonalizations, 2 power iterations to estimate ‖ B ‖ 2 , ‖ A ‖ 2 \\|B\\|_{2},\\|A\\|_{2} LoRA-Muon [ Cesista et al., 2026",
+      "url": "https://arxiv.org/html/2608.14492v1#bib.bib17"
+    },
+    {
+      "href": "#A1.SS2",
+      "text": "A.2",
+      "section": "Appendix C Comparison of Muon-based LoRA optimizers",
+      "context": "ection matched Standard per-factor EMAs Decoupled, per factor 2 orthogonalizations, 2 power iterations to estimate ‖ B ‖ 2 , ‖ A ‖ 2 \\|B\\|_{2},\\|A\\|_{2} LoRA-Muon [ Cesista et al., 2026 ] − η 2 ​ ( msign ⁡ ( P B ​ G Δ ​ W ) + msign ⁡ ( G Δ ​ W ​ P A ) ) + O ⁡ ( η 2 ) -\\tfrac{\\eta}{2}\\big(\\msign(P_{B}G_{\\Delta W})+\\msign(G_{\\Delta W}P_{A})\\big)+O(\\eta^{2}) Standard per-factor EMAs Split: let s = 1 − λ ​ η s=\\sqrt{1-\\lambda\\eta} , and A ← s ​ A − η / s ​ δ ​ A A\\leftarrow sA-\\eta/s\\,\\delta A (same for B B ). Overall gives − λ ​ η ​ Δ ​ W + O ⁡ ( η 2 ) -\\lambda\\eta\\,\\Delta W+O(\\eta^{2}) (Sec. A.2",
+      "url": "https://arxiv.org/html/2608.14492v1#A1.SS2"
+    },
+    {
+      "href": "#bib.bib1",
+      "text": "Bogachev et al., 2026",
+      "section": "Appendix C Comparison of Muon-based LoRA optimizers",
+      "context": "− η 2 ​ ( msign ⁡ ( P B ​ G Δ ​ W ) + msign ⁡ ( G Δ ​ W ​ P A ) ) + O ⁡ ( η 2 ) -\\tfrac{\\eta}{2}\\big(\\msign(P_{B}G_{\\Delta W})+\\msign(G_{\\Delta W}P_{A})\\big)+O(\\eta^{2}) Standard per-factor EMAs Split: let s = 1 − λ ​ η s=\\sqrt{1-\\lambda\\eta} , and A ← s ​ A − η / s ​ δ ​ A A\\leftarrow sA-\\eta/s\\,\\delta A (same for B B ). Overall gives − λ ​ η ​ Δ ​ W + O ⁡ ( η 2 ) -\\lambda\\eta\\,\\Delta W+O(\\eta^{2}) (Sec. A.2 ) The same 2 orthogonalizations, 2 r × r r\\times r inverse square roots of ( B ⊤ B ) − 1 / 2 (B^{\\top}B)^{-1/2} and ( A A ⊤ ) − 1 / 2 (AA^{\\top})^{-1/2} Riemannion [ Bogachev et al., 2026",
+      "url": "https://arxiv.org/html/2608.14492v1#bib.bib1"
+    },
+    {
+      "href": "#Thmlemma1",
+      "text": "1",
+      "section": "Appendix D Optimality of the sMuon step",
+      "context": "We show in Lemma 1",
+      "url": "https://arxiv.org/html/2608.14492v1#Thmlemma1"
+    },
+    {
+      "href": "#A4.E37",
+      "text": "37",
+      "section": "Proof.",
+      "context": "and the reverse triangle inequality gives Eq. ( 37",
+      "url": "https://arxiv.org/html/2608.14492v1#A4.E37"
+    },
+    {
+      "href": "#A4.I1.i1",
+      "text": "1",
+      "section": "Proof.",
+      "context": "where we substituted the choice of Part 1",
+      "url": "https://arxiv.org/html/2608.14492v1#A4.I1.i1"
+    },
+    {
+      "href": "#A4.I1.i2",
+      "text": "2",
+      "section": "Proof.",
+      "context": "For Part 2",
+      "url": "https://arxiv.org/html/2608.14492v1#A4.I1.i2"
+    },
+    {
+      "href": "#A4.E38",
+      "text": "38",
+      "section": "Proof.",
+      "context": "which is Eq. ( 38",
+      "url": "https://arxiv.org/html/2608.14492v1#A4.E38"
+    },
+    {
+      "href": "#A5.F2",
+      "text": "2",
+      "section": "Appendix E Learning rate curves",
+      "context": "We show learning rate curves for the commonsense runs in Figures 2",
+      "url": "https://arxiv.org/html/2608.14492v1#A5.F2"
+    },
+    {
+      "href": "#A5.F3",
+      "text": "3",
+      "section": "Appendix E Learning rate curves",
+      "context": "We show learning rate curves for the commonsense runs in Figures 2 (overall commonsense accuracy) and 3",
+      "url": "https://arxiv.org/html/2608.14492v1#A5.F3"
+    },
+    {
+      "href": "#A5.F2",
+      "text": "2",
+      "section": "Appendix E Learning rate curves",
+      "context": "Figure 3: Validation loss against learning rate for each base model, over the same runs as Figure 2",
+      "url": "https://arxiv.org/html/2608.14492v1#A5.F2"
+    }
+  ],
+  "note": "Extracted HTML text; equations and table formatting may be imperfect. No PDF extraction was attempted."
+}

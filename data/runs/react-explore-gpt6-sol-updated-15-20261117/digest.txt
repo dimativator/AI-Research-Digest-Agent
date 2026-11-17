@@ -1,0 +1,130 @@
+Research digest for dmitrii
+2026-11-03 to 2026-11-16 (inclusive, UTC)
+Categories: cs.LG, cs.CL, stat.ML, cs.AI, cs.IR
+
+15 recommended papers
+
+1. The Behavioral Rate of Fine-Tuning: Compression as a Measure of Useful Information
+https://arxiv.org/abs/2611.06598v1
+
+Defines a behavior-based compression rate for LoRA adapters and finds that weight reconstruction error can misrepresent retained fine-tuning gains.
+
+Why it matters to you: Directly addresses low-rank compressibility, singular directions, and corrupted training data.
+
+2. Spectral and Subspace Dynamics of LoRA in Supervised Fine-Tuning and Reinforcement Learning
+https://arxiv.org/abs/2611.08414v1
+
+Finds contrasting LoRA spectral and subspace dynamics in supervised fine-tuning and reinforcement learning, with controlled comparisons implicating group-mean baseline subtraction.
+
+Why it matters to you: Connects LoRA optimization to effective rank and singular-subspace motion.
+
+3. ResQAdam: Residual-Preserving Adaptive Optimization for Memory-Efficient Quantization Aware Training
+https://arxiv.org/abs/2611.08924v1
+
+ResQAdam preserves a QAT momentum residual while compressing optimizer state. Its reported peak-memory savings come with a small throughput decrease versus AdamW.
+
+Why it matters to you: Directly informs memory, quality, and speed tradeoffs for low-rank optimizer-state compression.
+
+4. Maximizing Capacity Utilization of LoRA Adapters for Mitigating the Learning-Forgetting Trade-off
+https://arxiv.org/abs/2611.17191v1
+
+Adds an SVD-free Rényi-2 effective-rank penalty to LoRA training and reports lower mean Wiki perplexity at tested ranks of at least 16.
+
+Why it matters to you: Tests whether spectral regularization can change adapter rank utilization without substantially worsening the training objective.
+
+5. From What Is Used to What Is Missing: Rethinking Dynamic Rank in LoRA
+https://arxiv.org/abs/2611.07349v1
+
+GEAR uses the normal spectrum to guide LoRA rank expansion and reports an improved LLaMA3-8B commonsense score with fewer trainable parameters.
+
+Why it matters to you: Addresses the geometry and practical behavior of dynamically ranked LoRA updates.
+
+6. Spectral Rank and Step-Direction Dynamics in Language-Model Post-Training
+https://arxiv.org/abs/2611.11752v1
+
+Shows that low stable rank need not mean that an LLM weight update is well represented by a small number of singular components.
+
+Why it matters to you: Clarifies which spectral rank measures are useful when judging low-rank compressibility.
+
+7. Delayed Effects of Temporary Weight Decay in Muon Pretraining
+https://arxiv.org/abs/2611.17876v1
+
+Finds delayed validation-loss benefits from temporary weight decay in Muon pretraining across four tested model scales.
+
+Why it matters to you: Informs optimization-schedule evaluation and scale-dependent quality tradeoffs.
+
+8. Finite Spectral Depth Controls Gaussian Entrance Rank and Avoidance of the First Gradient-Flow Saddle
+https://arxiv.org/abs/2611.05022v1
+
+In a quadratic two-layer model, finite Newton–Schulz depth changes early rank selection and can bypass a gradient-flow stationary point.
+
+Why it matters to you: Provides a theoretical connection between Muon’s approximation depth and rank dynamics, not yet an LLM-training result.
+
+9. DisMUSE: An Efficient Distributed Singular-Spectrum-Based Optimization Approach with Theoretical Convergence Guarantee
+https://arxiv.org/abs/2611.10212v1
+
+Studies distributed Muon-style spectral updates, finite Newton–Schulz orthogonalization, and low-rank momentum communication. Its measured compression tradeoff is on a small vision benchmark.
+
+Why it matters to you: Addresses convergence and communication costs of matrix-valued optimization.
+
+10. Direction or Magnitude? Learning Scalars over Task-Calibrated Directions
+https://arxiv.org/abs/2611.17784v1
+
+SCALAR trains scalar coefficients over fixed bases and reports lower peak memory and higher throughput than LoRA for Qwen2.5-7B fine-tuning.
+
+Why it matters to you: Offers a measured parameter-efficient fine-tuning alternative for memory and throughput comparisons.
+
+11. Active Learning of Approximate LLM Ranking for Energy-Efficient Retrieval of Long Queries
+https://arxiv.org/abs/2611.16488v1
+
+Uses active learning to approximate LLM document reranking at a controlled evaluation budget; its strongest reported result is for verbose queries.
+
+Why it matters to you: Potentially useful for reducing LLM calls in a paper-retrieval pipeline.
+
+12. Optimal Re-Ranking Depth
+https://arxiv.org/abs/2611.05908v1
+
+Studies query-specific reranking depth and reports that an LLM-assessed first-stage quality measure can reduce average depth while preserving effectiveness.
+
+Why it matters to you: Could inform how deeply a digest agent reranks candidate papers.
+
+13. MemCredit: From Relevance to Utility for Decision-Time Memory in Long-Horizon Web Agents
+https://arxiv.org/abs/2611.15600v1
+
+Proposes selecting agent memories by estimated decision utility rather than semantic relevance alone.
+
+Why it matters to you: A possible design idea for context selection in the research-digest agent, though evaluated in other agent settings.
+
+14. From Search to Decision: How Post-Training Shapes Information-Seeking Capabilities in Large Language Models
+https://arxiv.org/abs/2611.14149v1
+
+Surveys information-seeking decisions in LLM systems, including retrieval routing, query refinement, tool exploration, and evidence use.
+
+Why it matters to you: Maps directly onto decisions required by a tool-using research-digest agent.
+
+15. Theoretical Analysis of Muon on Transformers for Next-Token Prediction
+https://arxiv.org/abs/2611.04465v1
+
+Analyzes Muon training dynamics for next-token prediction in Transformers and reports convergence and spectral-margin results.
+
+Why it matters to you: Connects matrix optimization theory to language-model training.
+
+Limitations:
+- These are paper-reported findings from the supplied abstracts and retrieved passages, not independent replications.
+- GEAR’s measured resource comparison in the supplied passages is for ViT-B/16, not LLaMA3-8B; the effective-rank penalty’s measured runtime and memory overhead were not established here.
+- The retrieval and memory papers were not evaluated on research-paper digests in the supplied evidence. LAAM’s full-DeepSeek energy comparison uses an estimate rather than identical hardware measurement.
+- Code availability and reproducibility were not verified. X analysis was disabled.
+- inspect:2611.08924: only question-relevant HTML passages were inspected, not the whole paper.
+- inspect:2611.08414: only question-relevant HTML passages were inspected, not the whole paper.
+- inspect:2611.06598: only question-relevant HTML passages were inspected, not the whole paper.
+- inspect:2611.11752: only question-relevant HTML passages were inspected, not the whole paper.
+- inspect:2611.17191: only question-relevant HTML passages were inspected, not the whole paper.
+- inspect:2611.07349: only question-relevant HTML passages were inspected, not the whole paper.
+- inspect:2611.17876: only question-relevant HTML passages were inspected, not the whole paper.
+- inspect:2611.10212: only question-relevant HTML passages were inspected, not the whole paper.
+- inspect:2611.16488: only question-relevant HTML passages were inspected, not the whole paper.
+- inspect:2611.17784: only question-relevant HTML passages were inspected, not the whole paper.
+- inspect:2611.05908: only question-relevant HTML passages were inspected, not the whole paper.
+- inspect:2611.05022: only question-relevant HTML passages were inspected, not the whole paper.
+
+Fetched 4655 papers; screened 51.

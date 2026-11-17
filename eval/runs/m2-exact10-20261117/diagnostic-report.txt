@@ -1,0 +1,71 @@
+M2 ReAct exact-10 validation, 17-11-2026
+
+Protocol: three repetitions on the same 100 manually labeled papers, GPT-5.6-Luna,
+BM25 shortlist 30, exact digest size 10, X disabled, unlimited decision budgets.
+Both exact quote checks remain disabled. Profile is the historical M2 profile.
+Tool fixtures reused from m2-top10-20261117; no new fixtures fetched.
+Gold labels were held out from model inputs. Full code snapshots and traces retained.
+
+Results:
+Run 1: 8 interesting, 1 potential, 1 not interesting; nDCG@10=0.901664; 5 calls; 2 decisions; 1 tools; 91.3s.
+Run 2: 8 interesting, 0 potential, 2 not interesting; nDCG@10=0.864315; 6 calls; 3 decisions; 2 tools; 114.0s.
+Run 3: 8 interesting, 1 potential, 1 not interesting; nDCG@10=0.897442; 6 calls; 3 decisions; 2 tools; 111.4s.
+
+{
+  "completed": 3,
+  "exact_count_successes": 3,
+  "mean_ndcg_at_10": 0.8878066072591738,
+  "bm25_top10": {
+    "ndcg_at_10": 0.7971389170873965,
+    "selected_labels": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      0.5,
+      0.0,
+      0.5,
+      0.0
+    ],
+    "interesting": 6,
+    "potentially_interesting": 2,
+    "not_interesting": 2
+  },
+  "input_tokens": 287548,
+  "output_tokens": 13359,
+  "estimated_api_cost_usd": 0.0735404,
+  "mean_latency_seconds": 105.55599155600066,
+  "llm_calls": 17,
+  "tool_calls": 5
+}
+
+All runs completed with exactly ten unique selections on the first finish attempt.
+No validation errors. Five tool calls, all inspect_paper. No search or expansion.
+Cost is an API-equivalent estimate with the assumptions in summary.json, not
+actual Codex subscription billing.
+
+Remaining problems:
+Run 1 false positive: 2610.29189 — Reasoning-Search-Augmented LLMs: An Operational Taxonomy, Benchmark Analysis and Controlled Evidence Synthesis
+Run 2 false positive: 2610.30344 — AQL-Lite: Enabling Efficient Knowledge Acquisition for Arabic LLMs via Data-Centric Continual Pretraining
+Run 2 false positive: 2610.29326 — Signals and Queries: Token-Efficient Agentic Context Discovery
+Run 3 false positive: 2610.30344 — AQL-Lite: Enabling Efficient Knowledge Acquisition for Arabic LLMs via Data-Centric Continual Pretraining
+
+Every run selected eight gold-1 papers, leaving seven of fifteen unselected.
+Only ten gold-1 papers were in the initial shortlist; none were added through tools.
+Screening labeled all ten available gold-1 papers relevant in every run, so two
+were omitted at final selection despite being available and screened relevant.
+Three or four gold-0 papers were screened relevant per repetition.
+Test a selection critic for those omissions and false positives, and selective
+inspection against an abstract-only LLM baseline under the exact same protocol.
+
+Comparison and limits:
+Mean nDCG@10 exceeds BM25 (0.797139) in this batch; each repetition also exceeds it.
+Previous up-to-10 batch mean was 0.780515. This change fixes the output-count
+contract, but three stochastic repetitions on one corpus cannot isolate a causal
+quality gain from that change. No matching abstract-only LLM baseline was run.
+Do not compare top-5 and top-10 scores as if they were the same evaluation.
+Success means completion and count compliance, not verified scientific claims
+or verbatim evidence. analysis.json uses the legacy field rejected_quotes for
+diagnostic quote nonmatches; these were not rejected during execution.

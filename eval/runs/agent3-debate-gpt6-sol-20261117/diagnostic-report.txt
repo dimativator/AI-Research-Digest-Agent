@@ -1,0 +1,28 @@
+Agent 3 validation: 100 manually labeled papers
+Model: gpt-6-sol. Digest size: 10. Three repetitions. X disabled. Unlimited budgets.
+Each repetition uses a fresh DB, the same saved profile and E5 ordering. Labels never enter model input.
+Tool fixtures seeded from Agent 2; missing fixtures are captured on first use.
+
+Run | Interesting / Potential / Not interesting | nDCG@10 | Tool calls | LLM calls | Seconds
+1 | 9/0/1 | 0.9337 | 0 | 6 | 170.2
+2 | 9/0/1 | 0.9337 | 4 | 12 | 224.2
+3 | 9/0/1 | 0.9306 | 4 | 11 | 217.7
+
+Mean nDCG@10: 0.9327
+Previous Agent 2 mean: 0.8515
+E5-only top 10 nDCG@10: 0.9682
+
+Observations:
+All runs completed and selected exactly 10 papers. Each used two initial reviewer calls; none requested reconsideration.
+Run 1 finished without tools. Runs 2 and 3 used four tools each, without improving nDCG over Run 1.
+Every run selected the same label-0 paper: AQL-Lite: Enabling Efficient Knowledge Acquisition for Arabic LLMs via Data-Centric Continual Pretraining.
+Agent 3 scored above the previous Agent 2 runs but below E5-only ranking on this sample.
+Three repeated runs on one 100-paper pool do not establish a general advantage or isolate the contribution of debate.
+The new runs include multiple architecture changes compared with Agent 1, and its historical model differed.
+Missing tool fixtures captured during these runs: 0.8167452500201762 seconds.
+
+Artifacts: manifest.json, source/, sample.json, profile.json, summary.json, debate-analysis.json.
+Each run-N contains trace.jsonl, calls.jsonl, run.sqlite3, state.json and result.json.
+Human-readable logs: run-N/traces/<run_id>/activity.log.
+
+Stopping explanation issue: Run 1 (trace.jsonl line 24) and Run 3 (line 44) claim further retrieval is prohibited/unavailable by instruction. The experiment imposed no such retrieval restriction. This repeats the earlier live-run symptom and may reflect confusion with the Codex native-tool prohibition. This is a hypothesis, not a confirmed cause.

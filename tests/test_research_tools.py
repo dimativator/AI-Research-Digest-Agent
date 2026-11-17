@@ -249,9 +249,12 @@ class ResearchToolPipelineTests(unittest.TestCase):
         agent._validate_selection_evidence(
             paper(), [{"source": "inspection", "quote": quote}]
         )
+        agent._validate_selection_evidence(
+            paper(), [{"source": "inspection", "quote": "Normalized experiment text"}]
+        )
         with self.assertRaises(ValueError):
             agent._validate_selection_evidence(
-                paper(), [{"source": "inspection", "quote": "Invented experiment"}]
+                paper(), [{"source": "inspection", "quote": ""}]
             )
 
     def test_search_respects_admission_and_expansion_budgets(self):

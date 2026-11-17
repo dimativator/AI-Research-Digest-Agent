@@ -1,0 +1,233 @@
+[
+  {
+    "paper_id": "2610.11730",
+    "version": 1,
+    "title": "Spectral Weight Decay: Inducing Low-Rank Structure in Neural Network Weights",
+    "abstract": "Standard weight decay treats each weight matrix as a vector and ignores its spectral structure. We introduce spectral weight decay, a post-step decoupled nuclear-norm update that applies additive rather than multiplicative spectral shrinkage. We connect the update to approximate proximal descent and show that its sensitivity to update order can exceed that of conventional $\\ell_2$ weight decay near rank deficiency. Across LLaMA models with $124$M to $500$M parameters, spectral weight decay lowers effective rank and improves SVD-LLM compression at matched validation loss. At $500$M and a $4\\%$ distortion budget, it reaches $1.89\\times$ compression and $1.18\\times$ GPU inference speedup, compared with $1.14\\times$ and $1.01\\times$ after standard weight decay. Under fixed-horizon training with $60\\%$ label noise, it also improves final mean clean-test accuracy over matched $\\ell_2$ regularization by up to $17.8$ points on MNIST and $4.6$ points across four BERT-base tasks. Code is available at https://github.com/brain-lab-research/SpectralWD.",
+    "authors": [
+      "Dmitrii Andriianov",
+      "Andrey Veprikov",
+      "Aleksandr Beznosikov"
+    ],
+    "categories": [
+      "cs.LG",
+      "math.OC"
+    ],
+    "published": "2026-10-08T11:26:26Z",
+    "updated": "2026-10-08T11:26:26Z"
+  },
+  {
+    "paper_id": "1802.10026",
+    "version": 4,
+    "title": "Loss Surfaces, Mode Connectivity, and Fast Ensembling of DNNs",
+    "abstract": "The loss functions of deep neural networks are complex and their geometric properties are not well understood. We show that the optima of these complex loss functions are in fact connected by simple curves over which training and test accuracy are nearly constant. We introduce a training procedure to discover these high-accuracy pathways between modes. Inspired by this new geometric insight, we also propose a new ensembling method entitled Fast Geometric Ensembling (FGE). Using FGE we can train high-performing ensembles in the time required to train a single model. We achieve improved performance compared to the recent state-of-the-art Snapshot Ensembles, on CIFAR-10, CIFAR-100, and ImageNet.",
+    "authors": [
+      "Timur Garipov",
+      "Pavel Izmailov",
+      "Dmitrii Podoprikhin",
+      "Dmitry Vetrov",
+      "Andrew Gordon Wilson"
+    ],
+    "categories": [
+      "stat.ML",
+      "cs.AI",
+      "cs.LG"
+    ],
+    "published": "2018-02-27T17:13:28Z",
+    "updated": "2018-10-30T11:39:49Z"
+  },
+  {
+    "paper_id": "2510.05491",
+    "version": 1,
+    "title": "NorMuon: Making Muon more efficient and scalable",
+    "abstract": "The choice of optimizer significantly impacts the training efficiency and computational costs of large language models (LLMs). Recently, the Muon optimizer has demonstrated promising results by orthogonalizing parameter updates, improving optimization geometry through better conditioning. Despite Muon's emergence as a candidate successor to Adam, the potential for jointly leveraging their strengths has not been systematically explored. In this work, we bridge this gap by proposing NorMuon (Neuron-wise Normalized Muon), an optimizer that synergistically combines orthogonalization with neuron-level adaptive learning rates. Our analysis reveals that while Muon effectively reduces condition numbers, the resulting updates exhibit highly non-uniform neuron norms, causing certain neurons to dominate the optimization process. NorMuon addresses this imbalance by maintaining second-order momentum statistics for each neuron and applying row-wise normalization after orthogonalization, ensuring balanced parameter utilization while preserving Muon's conditioning benefits. To enable practical deployment at scale, we develop an efficient distributed implementation under the FSDP2 framework that strategically distributes orthogonalization computations across devices. Experiments across multiple model scales demonstrate that NorMuon consistently outperforms both Adam and Muon, achieving 21.74% better training efficiency than Adam and 11.31% improvement over Muon on 1.1 B pretraining setting, while maintaining a comparable memory footprint to Muon. Our findings suggest that orthogonalization and adaptive learning rates are complementary rather than competing approaches, opening new avenues for optimizer design in large-scale deep learning.",
+    "authors": [
+      "Zichong Li",
+      "Liming Liu",
+      "Chen Liang",
+      "Weizhu Chen",
+      "Tuo Zhao"
+    ],
+    "categories": [
+      "cs.LG",
+      "cs.CL"
+    ],
+    "published": "2025-10-07T01:13:41Z",
+    "updated": "2025-10-07T01:13:41Z"
+  },
+  {
+    "paper_id": "2010.01412",
+    "version": 3,
+    "title": "Sharpness-Aware Minimization for Efficiently Improving Generalization",
+    "abstract": "In today's heavily overparameterized models, the value of the training loss provides few guarantees on model generalization ability. Indeed, optimizing only the training loss value, as is commonly done, can easily lead to suboptimal model quality. Motivated by prior work connecting the geometry of the loss landscape and generalization, we introduce a novel, effective procedure for instead simultaneously minimizing loss value and loss sharpness. In particular, our procedure, Sharpness-Aware Minimization (SAM), seeks parameters that lie in neighborhoods having uniformly low loss; this formulation results in a min-max optimization problem on which gradient descent can be performed efficiently. We present empirical results showing that SAM improves model generalization across a variety of benchmark datasets (e.g., CIFAR-10, CIFAR-100, ImageNet, finetuning tasks) and models, yielding novel state-of-the-art performance for several. Additionally, we find that SAM natively provides robustness to label noise on par with that provided by state-of-the-art procedures that specifically target learning with noisy labels. We open source our code at \\url{https://github.com/google-research/sam}.",
+    "authors": [
+      "Pierre Foret",
+      "Ariel Kleiner",
+      "Hossein Mobahi",
+      "Behnam Neyshabur"
+    ],
+    "categories": [
+      "cs.LG",
+      "stat.ML"
+    ],
+    "published": "2020-10-03T19:02:10Z",
+    "updated": "2021-04-29T16:44:25Z"
+  },
+  {
+    "paper_id": "2610.08975",
+    "version": 2,
+    "title": "The Best Optimizer Depends on Batch Size",
+    "abstract": "A plethora of new adaptive optimizers are designed to efficiently estimate and use minibatch gradient statistics to shape parameter updates, but they are typically benchmarked at a single batch size. Hyperparameter scaling rules promise to preserve performance as batch size and gradient noise change, suggesting that the best optimizer at one batch size should remain the best at another. We challenge this approach to developing and evaluating optimizers by showing: (1) no principled scaling rule for Muon works consistently across training settings, and (2) the best optimizer for language model pretraining changes with batch size even after extensive hyperparameter tuning. To understand these failures, we analyze a noisy quadratic model and show that the batch-size scaling rule that preserves performance is direction-dependent, shifting from square-root to linear as a direction's curvature-to-noise ratio rises. We further prove that gradient noise drives a bias-variance tradeoff in preconditioning that can reverse optimizer rankings across batch sizes, even under optimal learning rate and momentum tuning. Consistent with this, when we increase the batch size $16\\times$ partway through language model pretraining, keeping small-batch updates in only the sharpest $0.001\\%$ of directions removes up to $59.5\\%$ of the resulting loss gap over the next $8\\%$ of training, while a random subspace of the same size barely helps. Taken together, our results show that principled optimizer design must account for batch size and empirical benchmarking should be performed across batch sizes.",
+    "authors": [
+      "Xingyu Dang",
+      "Kaiyue Wen",
+      "Sadhika Malladi"
+    ],
+    "categories": [
+      "cs.LG",
+      "stat.ML"
+    ],
+    "published": "2026-10-06T18:37:45Z",
+    "updated": "2026-10-12T21:48:27Z"
+  },
+  {
+    "paper_id": "2610.25858",
+    "version": 1,
+    "title": "Are Self-Evolving Agents Continual Learners?",
+    "abstract": "Large language model agents are often deployed in environments where new knowledge, tools, and workflows keep arriving. Such an agent is therefore expected to adapt continually, learning new tasks as they arrive without forgetting earlier ones. This resembles the continual learning problem, but at a pace that conventional gradient updates cannot sustain. Nonparametric self-evolving agents are a natural alternative: they adapt by rewriting their own harness, such as prompts, memory, and skills, from task feedback while the model weights stay frozen. We study whether such agents are effective continual learners across four drifting task streams that shift in topic, workflow, or domain (built from BIRD, BFCL, and ScienceWorld). Evaluating three representative methods spanning experience retrieval and self-modification (ReasoningBank, GEPA, and Meta-Harness), we find that although self-evolution improves aggregate performance on most streams, higher plasticity consistently comes at the cost of stability. Specifically, self-modifying methods apply global edits to a shared prompt or workspace, interfering with unseen tasks and overwriting earlier knowledge as the stream shifts. Conversely, similarity-based memory retrieval localizes updates across distant domains, but still retrieves foreign memories on unseen tasks and suffers from retrieval collision when similar queries require conflicting workflows. These findings show that current self-evolving agents remain incomplete continual learners.",
+    "authors": [
+      "Xiaoyin Chen",
+      "Yizheng Huang",
+      "Yinglun Xu",
+      "Ziyun Zhao",
+      "Emmett McQuinn",
+      "Julie Liu",
+      "Hope Yao"
+    ],
+    "categories": [
+      "cs.AI",
+      "cs.LG"
+    ],
+    "published": "2026-10-19T06:12:45Z",
+    "updated": "2026-10-19T06:12:45Z"
+  },
+  {
+    "paper_id": "2608.14492",
+    "version": 1,
+    "title": "Approximate Muon with low-rank adapters",
+    "abstract": "The Muon optimizer shows clear benefits versus alternatives when pretraining neural networks. However, it is used less frequently for parameter-efficient fine-tuning (PEFT). One potential reason is that the most common PEFT method, LoRA, does not naturally combine with Muon since it is not mathematically possible to orthogonalize the weight update given by a low-rank parameterization. In this paper, we address this issue by approximating the solution to a relaxed Muon objective in the low-rank setting via linearization and then least-squares. We provide an efficient implementation that uses matmul operations only, as opposed to more complex linear algebra decomposition routines. Our method, sMuon (small Muon), performs favourably across SFT and a ReLoRA pretraining experiment. While results are model- and eval-dependent, we find overall that using Muon for low-rank fine-tuning provides moderate performance improvements.",
+    "authors": [
+      "Ben Anson",
+      "Conor Houghton",
+      "Edward Milsom"
+    ],
+    "categories": [
+      "cs.LG"
+    ],
+    "published": "2026-08-14T17:07:37Z",
+    "updated": "2026-08-14T17:07:37Z"
+  },
+  {
+    "paper_id": "2610.27674",
+    "version": 2,
+    "title": "Hybrid Momentum Methods for Optimizing Deep Learning Models",
+    "abstract": "Momentum is central to stochastic optimization in deep learning, including the training of large language models. Classical momentum methods typically rely on a fast exponential moving average (EMA) scheme, which discounts past gradients on a fixed timescale and may underweight older gradients that remain informative. This creates a trade-off between retaining long-term history and adapting to recent changes. We introduce Hybrid Momentum (HyM), which combines a linearly weighted average of past gradients with a geometrically discounted fast momentum. The former assigns weights proportional to the gradients' iteration indices and retains a growing span of history, while the latter emphasizes recent gradients. This hybrid construction is modular and can be combined with adaptive preconditioning and other update transformations. In particular, we propose HyMUON, which applies Newton--Schulz orthogonalization to the hybrid direction. Illustrative examples and controlled experiments demonstrate the benefits of combining gradient information across these two timescales. Across image classification, machine translation, and language modeling, HyM and HyMUON match or improve upon strong baselines. HyMUON improves over Muon on IWSLT14, and in both the 100k- and 600k-step GPT-2 124M OpenWebText regimes. For LLaMA-1.3B pretraining on C4, HyMUON achieves a final validation loss of 2.777, compared with 2.903 for Muon.",
+    "authors": [
+      "Haifeng Xu",
+      "Yijin Ren",
+      "Chenyu Zhou",
+      "Qi Deng",
+      "Dongdong Ge",
+      "Yinyu Ye"
+    ],
+    "categories": [
+      "cs.LG"
+    ],
+    "published": "2026-10-20T05:39:58Z",
+    "updated": "2026-10-21T09:25:17Z"
+  },
+  {
+    "paper_id": "2609.40127",
+    "version": 1,
+    "title": "Learning Functional Subspaces for Neural Network Compression",
+    "abstract": "Modern transformers pair impressive capabilities with substantial memory and compute demands. Low-rank weight factorization reduces both while keeping the matrices dense, and thus efficient on standard hardware. Existing methods, however, choose the subspace to remove from each weight matrix with local closed-form criteria: activation energy, layer-wise reconstruction error, or a quadratic approximation of the loss. These criteria ignore how errors propagate through the network, so at high compression the errors compound with depth and performance collapses. We introduce Learnable Subspace Projections (LSP), which instead learns the subspaces to discard end-to-end. Each linear layer, or tied group of layers that read the same activations, is assigned an orthogonal projector. All projectors are optimized jointly against a global objective--the KL divergence to the dense model's output distribution or the model's original training loss--while the pretrained weights remain frozen. Projectors are initialized from a whitened SVD truncation, and ranks are allocated by the output KL each projector induces per parameter saved. After training, the projectors merge into standard low-rank factors, with each tied group sharing one factor. In attention, this also lets the model cache one narrow latent in place of full keys and values. Across LLMs (OPT-125M/1.3B, Qwen3-4B, Llama-2-7B) and ViT-B/16, LSP outperforms baselines, and its advantage widens as compression increases. At -70% compression, LSP brings Llama-2-7B to 10.9 WikiText-2 perplexity and 42.2% mean zero-shot accuracy, versus 13.3 and 36.0% for the strongest baseline. The factorized model decodes up to 1.6x faster than the dense model at small batch sizes, and aching the shared latent shrinks the combined memory of weights and KV cache by 13.5x at a 128k-token context, versus at most 6.5x for untied baseline factorizations.",
+    "authors": [
+      "Massimo Bini",
+      "Anders Christensen",
+      "Stephan Alaniz",
+      "Judah Goldfeder",
+      "Ole Winther",
+      "Yann LeCun",
+      "Ravid Shwartz-Ziv",
+      "Zeynep Akata"
+    ],
+    "categories": [
+      "cs.LG",
+      "cs.CL"
+    ],
+    "published": "2026-09-30T16:47:35Z",
+    "updated": "2026-09-30T16:47:35Z"
+  },
+  {
+    "paper_id": "2610.31642",
+    "version": 3,
+    "title": "A Fix for Softmax and Cross-Entropy",
+    "abstract": "Standard implementations of softmax, log-softmax, and cross-entropy have two numerical bugs. The first bug, Softmax Collapse, rounds the target logit's gradient to zero if that one logit is much larger than the others, resulting in gradients that no longer sum to zero. The second bug, Softmax Cancellation, occurs when student logits are close to teacher logits, and produces non-zero gradients even when the student and teacher logits are equal. We present simple implementations of log-softmax, softmax, and cross-entropy that fix both bugs. Our fix eliminates the previously observed \"slingshot\" phenomenon, speeds up grokking with weight decay, prevents accuracy collapse without weight decay, stops student networks from drifting away from the teacher during distillation, and shows that after memorization, logit growth is bounded by an equilibrium between weight decay and Adam's $\u03b5$ hyperparameter.",
+    "authors": [
+      "Jonathan T. Barron",
+      "Dan Gnanapragasam",
+      "Michael Tschannen"
+    ],
+    "categories": [
+      "cs.LG"
+    ],
+    "published": "2026-10-22T17:54:56Z",
+    "updated": "2026-10-29T01:45:43Z"
+  },
+  {
+    "paper_id": "2608.31036",
+    "version": 1,
+    "title": "Normalized Low-Rank Adaptation",
+    "abstract": "While low-rank adaptation (LoRA) is widely used for parameter-efficient model adaptation, how to regularize its training dynamics for stable and effective optimization remains underexplored. Because LoRA initializes the up-projection to zero, its early optimization dynamics are largely governed by the down-projection. Building on this observation, we introduce Normalized Low-Rank Adaptation (NoRA), a simple yet effective method that normalizes the down-projection matrices during training. We further show that the same normalization can be applied only at initialization, improving standard LoRA without requiring repeated normalization throughout training. Across pretraining, supervised finetuning, and reinforcement learning, NoRA consistently accelerates convergence, improves performance and training stability, and mitigates catastrophic forgetting. These benefits require neither additional trainable parameters nor inference-time computation, making NoRA a simple and broadly applicable enhancement to LoRA.",
+    "authors": [
+      "Jiale Kang",
+      "Ziyin Yue",
+      "Zheng Zhan",
+      "Yangyi Huang",
+      "Weiyang Liu"
+    ],
+    "categories": [
+      "cs.LG"
+    ],
+    "published": "2026-08-31T16:15:36Z",
+    "updated": "2026-08-31T16:15:36Z"
+  },
+  {
+    "paper_id": "2609.37725",
+    "version": 1,
+    "title": "Context Language Models",
+    "abstract": "We introduce Context Language Models (CLMs), language models that natively manage their own context. We implement this by treating the context as a file and allowing the model to make unrestricted updates to this file. This allows the model to learn what is most important to maintain in context, and naturally extends to multi-agent systems where multiple agent contexts coexist as files. Building CLMs zero-shot with existing models outperforms SOTA context management strategies across a variety of tasks: 11.4% higher accuracy with 21.5% fewer FLOPs on BrowseComp-Plus, 5% higher scores with 59% fewer FLOPs on 12-hour EdgeBench, and 65% greater improvement with the same compute on a 24-hour multi-repository agent-swarm task. Moreover, by shifting context management from external harness control to intrinsic model behavior, CLMs naturally enable both in-context and parametric learning of context-management strategies. We show that CLMs can be steered with natural-language instructions evolved through a standard skill-optimization loop, improving held-out accuracy by up to 35.9 points on a context-management task while reducing compute. We also introduce an online reinforcement learning method for CLMs, improving Qwen3.5-9B performance on BrowseComp-Plus by 47.6% while using 12% fewer FLOPs. Finally, we co-design Suffix Cache Reuse for CLM serving, further reducing server-side compute by 35% relative to standard SGLang at matched performance.",
+    "authors": [
+      "Rulin Shao",
+      "Shannon Zejiang Shen",
+      "Junjie Oscar Yin",
+      "Yuetai Li",
+      "Minheng Wang",
+      "Hamish Ivison",
+      "Radha Poovendran",
+      "Nathan Lambert",
+      "Teng Xiao",
+      "Mike Lewis",
+      "Wen-tau Yih",
+      "Luke Zettlemoyer",
+      "Pang Wei Koh"
+    ],
+    "categories": [
+      "cs.AI",
+      "cs.CL",
+      "cs.LG"
+    ],
+    "published": "2026-09-29T14:50:08Z",
+    "updated": "2026-09-29T14:50:08Z"
+  }
+]

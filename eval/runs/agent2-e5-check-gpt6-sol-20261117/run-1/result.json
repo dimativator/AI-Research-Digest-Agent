@@ -1,0 +1,332 @@
+{
+  "run_id": "12601677bf2a4e15b4d513bd2b81cd6a",
+  "status": "completed",
+  "user_id": "dmitrii",
+  "profile_fingerprint": "a2480e0075ad9cdf236d40e30f74f9bfd87a08dd948530b42e6b57e4a123bfc0",
+  "pipeline_version": "react-v2",
+  "categories": [
+    "cs.AI",
+    "cs.CG",
+    "cs.CL",
+    "cs.CR",
+    "cs.CV",
+    "cs.DB",
+    "cs.DC",
+    "cs.DS",
+    "cs.GR",
+    "cs.HC",
+    "cs.IR",
+    "cs.LG",
+    "cs.LO",
+    "cs.MA",
+    "cs.NE",
+    "cs.NI",
+    "cs.RO",
+    "cs.SD",
+    "cs.SE",
+    "eess.AS",
+    "eess.IV",
+    "eess.SP",
+    "eess.SY",
+    "math.AP",
+    "math.OC",
+    "math.PR",
+    "nlin.CD",
+    "q-bio.NC",
+    "stat.ML"
+  ],
+  "date_from": "2018-02-27",
+  "date_to": "2026-10-22",
+  "papers": [
+    {
+      "paper_id": "2610.11730",
+      "summary": "Introduces decoupled nuclear-norm spectral weight decay. In 124M–500M LLaMA models, it reports lower effective rank and better low-rank compression at matched validation loss, alongside noisy-label accuracy gains.",
+      "relevance": "Directly addresses spectral regularization, training for compressibility, and memorization under label noise.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "Across LLaMA models with 124 124 M to 500 500 M parameters, spectral weight decay improves low-rank compression and inference speed over standard weight decay at matched validation loss."
+        },
+        {
+          "source": "inspection",
+          "quote": "At 60 % 60\\% label noise, mean clean-test accuracy gains over matched ℓ 2 \\ell_{2} regularization reach 17.78 17.78 points on MNIST and 4.59 4.59 points on four BERT-base tasks."
+        }
+      ],
+      "title": "Spectral Weight Decay: Inducing Low-Rank Structure in Neural Network Weights",
+      "url": "https://arxiv.org/abs/2610.11730v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2609.40127",
+      "summary": "Learns compression subspaces end-to-end while freezing pretrained weights. At 70% linear-layer compression, the authors report better Llama-2-7B perplexity and zero-shot accuracy than their strongest baseline.",
+      "relevance": "A direct comparison point for low-rank weight compression and quality-preserving factorization, though not a pretraining method.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "All projectors are optimized jointly against a global objective—the KL divergence to the dense model’s output distribution or the model’s original training loss—while the pretrained weights remain frozen."
+        },
+        {
+          "source": "inspection",
+          "quote": "At − 70 % -70\\% compression, LSP brings Llama-2-7B to 10.9 10.9 WikiText-2 perplexity and 42.2 % 42.2\\% mean zero-shot accuracy, versus 13.3 13.3 and 36.0 % 36.0\\% for the strongest baseline."
+        }
+      ],
+      "title": "Learning Functional Subspaces for Neural Network Compression",
+      "url": "https://arxiv.org/abs/2609.40127v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2608.14492",
+      "summary": "Derives a low-rank approximation to Muon and implements it using matrix multiplications. Its ReLoRA run ties the best reported final validation loss, while SFT results vary by model and evaluation.",
+      "relevance": "Directly tests optimization geometry and practical behavior of low-rank adapters.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "We derive a method for training LoRA adapters with Muon by taking a first-order approximation of the spectral-norm-regularized steepest descent objective."
+        },
+        {
+          "source": "inspection",
+          "quote": "While our results are both model- and eval-dependent, sMuon performs strongly overall, especially when combined with the Moonlight-16B-A3B base model, a Muon-pretrained model (Tables 1 and 2 ). sMuon also achieved the joint-best validation loss in the ReLoRA pretraining setting (Table 3 )."
+        }
+      ],
+      "title": "Approximate Muon with low-rank adapters",
+      "url": "https://arxiv.org/abs/2608.14492v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2608.31036",
+      "summary": "Normalizes LoRA down-projection matrices during training or only at initialization. The abstract reports faster convergence and improved stability across pretraining and fine-tuning settings.",
+      "relevance": "Targets LoRA training dynamics without adding trainable parameters or inference-time computation.",
+      "evidence": [
+        {
+          "source": "abstract",
+          "quote": "We further show that the same normalization can be applied only at initialization, improving standard LoRA without requiring repeated normalization throughout training."
+        },
+        {
+          "source": "abstract",
+          "quote": "Across pretraining, supervised finetuning, and reinforcement learning, NoRA consistently accelerates convergence, improves performance and training stability, and mitigates catastrophic forgetting."
+        }
+      ],
+      "title": "Normalized Low-Rank Adaptation",
+      "url": "https://arxiv.org/abs/2608.31036v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2510.05491",
+      "summary": "Proposes neuron-wise normalization after Muon orthogonalization to balance update norms, with a distributed FSDP2 implementation described in the available excerpt.",
+      "relevance": "Matches interest in Muon and scalable LLM optimization, but its truncated abstract does not establish measured efficiency gains.",
+      "evidence": [
+        {
+          "source": "abstract",
+          "quote": "NorMuon addresses this imbalance by maintaining second-order momentum statistics for each neuron and applying row-wise normalization after orthogonalization, ensuring balanced parameter utilization while preserving Muon's conditioning benefits."
+        },
+        {
+          "source": "abstract",
+          "quote": "To enable practical deployment at scale, we develop an efficient distributed implementation under the FSDP2 framework"
+        }
+      ],
+      "title": "NorMuon: Making Muon more efficient and scalable",
+      "url": "https://arxiv.org/abs/2510.05491v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.08975",
+      "summary": "Studies how batch size and gradient noise affect optimizer comparisons in language-model pretraining. The abstract reports that optimizer rankings change with batch size despite hyperparameter tuning.",
+      "relevance": "Useful when evaluating training-efficiency claims across batch regimes and model scales.",
+      "evidence": [
+        {
+          "source": "abstract",
+          "quote": "the best optimizer for language model pretraining changes with batch size even after extensive hyperparameter tuning."
+        },
+        {
+          "source": "abstract",
+          "quote": "gradient noise drives a bias-variance tradeoff in preconditioning that can reverse optimizer rankings across batch sizes"
+        }
+      ],
+      "title": "The Best Optimizer Depends on Batch Size",
+      "url": "https://arxiv.org/abs/2610.08975v2",
+      "version": 2,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.29326",
+      "summary": "Uses offline examples and hard negatives to train an embedding-based relevance filter before expensive LLM evaluation. Its reported evaluation concerns agent policies, not papers.",
+      "relevance": "Suggests a two-stage relevance-filter design for the research-digest harness.",
+      "evidence": [
+        {
+          "source": "abstract",
+          "quote": "a lightweight first-stage relevance filter developed for Parlant 4.0 that removes at least 30% of candidate policies before downstream evaluation while preserving high recall."
+        },
+        {
+          "source": "abstract",
+          "quote": "An independent logistic classifier trained on their embeddings then predicts relevance using embeddings and vector dot products, with no per-turn LLM calls."
+        }
+      ],
+      "title": "Signals and Queries: Token-Efficient Agentic Context Discovery",
+      "url": "https://arxiv.org/abs/2610.29326v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2609.37725",
+      "summary": "Treats an agent’s context as a file the model can update. The abstract reports accuracy and compute improvements on several context-management tasks.",
+      "relevance": "Informs context-management choices for a digest agent, while differing from an application-controlled harness.",
+      "evidence": [
+        {
+          "source": "abstract",
+          "quote": "We implement this by treating the context as a file and allowing the model to make unrestricted updates to this file."
+        },
+        {
+          "source": "abstract",
+          "quote": "11.4% higher accuracy with 21.5% fewer FLOPs on BrowseComp-Plus, 5% higher scores with 59% fewer FLOPs on 12-hour EdgeBench"
+        }
+      ],
+      "title": "Context Language Models",
+      "url": "https://arxiv.org/abs/2609.37725v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.25858",
+      "summary": "Evaluates agents that adapt by rewriting their prompts, memory, skills, or harness from feedback. The abstract reports a stability cost from self-modification across drifting task streams.",
+      "relevance": "Directly bears on whether a handwritten digest harness should permit self-modification and how to evaluate it.",
+      "evidence": [
+        {
+          "source": "abstract",
+          "quote": "they adapt by rewriting their own harness, such as prompts, memory, and skills, from task feedback while the model weights stay frozen."
+        },
+        {
+          "source": "abstract",
+          "quote": "higher plasticity consistently comes at the cost of stability."
+        }
+      ],
+      "title": "Are Self-Evolving Agents Continual Learners?",
+      "url": "https://arxiv.org/abs/2610.25858v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.29189",
+      "summary": "Reviews reasoning-search loops through retrieval coupling, controller design, knowledge source, and grounding strictness.",
+      "relevance": "Closely matches a digest agent’s iterative paper retrieval, evidence integration, and stopping decisions.",
+      "evidence": [
+        {
+          "source": "abstract",
+          "quote": "treating retrieval as an action within an iterative agentic loop rather than a one-shot preprocessing step."
+        },
+        {
+          "source": "abstract",
+          "quote": "interleaving planning, querying, retrieval, integration, verification, and stopping."
+        }
+      ],
+      "title": "Reasoning-Search-Augmented LLMs: An Operational Taxonomy, Benchmark Analysis and Controlled Evidence Synthesis",
+      "url": "https://arxiv.org/abs/2610.29189v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    }
+  ],
+  "x_feature": null,
+  "limitations": [
+    "No selected paper directly evaluates optimizer-state compression or low-rank-gradient memory-efficient LLM pretraining.",
+    "Several abstracts are truncated; the papers not inspected here lack verified detailed baselines, resource measurements, and experimental controls.",
+    "Code availability and reproducibility were not checked. X analysis was disabled.",
+    "inspect:2610.11730: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2608.14492: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2609.40127: only question-relevant HTML passages were inspected, not the whole paper."
+  ],
+  "stats": {
+    "fetched_count": 100,
+    "candidate_count": 100,
+    "llm_calls": 14,
+    "steps": 9,
+    "inspections": 3,
+    "expansions": 3,
+    "screened": 41,
+    "usage": {
+      "recorded_calls": 14,
+      "llm_latency_seconds": 230.66701687598834,
+      "input_tokens": 391155,
+      "output_tokens": 9025,
+      "estimated_api_cost_usd": null,
+      "calls_without_usage": 0,
+      "cost_note": "API-equivalent estimate using standard GPT-5.6-Luna rates checked 2026-11-17: $0.20/M input, $1.20/M output; above 272K input, $0.40/M and $1.80/M. Assumes all input is uncached; excludes cache writes and external tools. Not actual Codex subscription billing. Unknown usage/model yields null cost.",
+      "price_source": "https://developers.openai.com/api/docs/models/gpt-5.6-luna"
+    },
+    "tool_calls": 6,
+    "tool_latency_seconds": 25.961447543057147
+  }
+}

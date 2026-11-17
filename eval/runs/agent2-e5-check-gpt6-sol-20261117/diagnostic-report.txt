@@ -1,0 +1,61 @@
+Agent 2: E5 retrieval plus one-time selection check
+17-11-2026
+
+Protocol: GPT-6-Sol, Codex CLI 0.169.0, three repetitions on the frozen
+100-paper sample. BM25 top min(200, corpus size), E5 rerank, initial shortlist30,
+exactly10 selections, X disabled, unlimited budgets. Labels hidden from model.
+Historical eval/sample.json profile. E5 revision pinned in e5_reranking.json.
+All100 papers fit the rerank pool, unlike a larger live corpus.
+The agent and model differ from the previous Agent1/Luna evaluation; that is not
+a controlled ablation. Comparing draft and final is an observed within-run
+change, not a randomized estimate of the check’s causal effect.
+
+Results:
+Run 1: before nDCG=0.8604, final=0.8630; final labels 8 interesting / 0 potential / 2 not interesting; 14 calls, 231.1s.
+Run 2: before nDCG=0.8572, final=0.8286; final labels 7 interesting / 1 potential / 2 not interesting; 21 calls, 340.1s.
+Run 3: before nDCG=0.8572, final=0.8630; final labels 8 interesting / 0 potential / 2 not interesting; 17 calls, 267.7s.
+
+Mean before=0.8583, after=0.8515.
+3/3 completed, no validation retries, one check per run, all verdicts revise.
+No check requested retrieval. Main-loop tools: inspections 3/7/6; searches 3/4/3.
+Neither get_candidate_overview nor search_similar was chosen by the main loop.
+The harness did compute the overview for each selection check.
+Total input tokens=1693540; output tokens=30742.
+Check input lengths:39067/40848/39173 characters; reported input tokens:16060/16396/16095.
+These review calls omit inspection passages. Full main-agent context remains unchanged.
+No API-equivalent cost estimate is configured for GPT-6-Sol.
+E5-only top10 reference: {"ndcg_at_10": 0.968189605900524, "selected_labels": [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.5], "interesting": 9, "potentially_interesting": 1, "not_interesting": 0}
+
+Failure evidence (line numbers refer to trace.jsonl):
+Run 1:
+  run-1/trace.jsonl:49: action
+  run-1/trace.jsonl:53: selection_check_result
+  run-1/trace.jsonl:57: action
+  Removed: [{"id": "2610.30344", "label": 0.0}, {"id": "2010.01412", "label": 1.0}]; added: [{"id": "2610.25858", "label": 1.0}, {"id": "2610.29189", "label": 0.0}]
+Run 2:
+  run-2/trace.jsonl:77: action
+  run-2/trace.jsonl:81: selection_check_result
+  run-2/trace.jsonl:85: action
+  Removed: [{"id": "2610.30344", "label": 0.0}, {"id": "2010.01412", "label": 1.0}, {"id": "2610.30191", "label": 1.0}]; added: [{"id": "2610.25858", "label": 1.0}, {"id": "2610.29189", "label": 0.0}, {"id": "2610.29357", "label": 0.5}]
+Run 3:
+  run-3/trace.jsonl:61: action
+  run-3/trace.jsonl:65: selection_check_result
+  run-3/trace.jsonl:69: action
+  Removed: [{"id": "2610.30344", "label": 0.0}]; added: [{"id": "2610.29189", "label": 0.0}]
+
+Interpretation and potential fixes:
+The check correctly questioned AQL-Lite (gold0), but recommended the reasoning-search
+survey (gold0) in every run. Runs1 and2 removed SAM (gold1). Run2 also removed
+another gold1 and added a gold0.5. These are real selection failures, not mocked cases.
+Likely contributors: the profile emphasizes building a research-digest harness;
+the check sees600-character abstract excerpts and no inspected evidence. Its
+argument that SAM lacks a direct noisy-label connection may reflect truncated
+input, not the full abstract. Treat these as hypotheses to test.
+Candidate fixes: reconcile profile priorities with the user, show full abstracts
+for proposed replacements, and ask for stronger evidence before displacing a
+strong candidate. Do not tune prompts using held-out gold labels as model input.
+
+Reproducibility: source snapshot, full calls, traces, SQLite, state, results and
+tool fixtures retained. Run2 captured an uncached fixture (1.56s); other capture
+times zero. Therefore not every tool response was frozen before the batch.
+No changes were made to the agent during the experiment.

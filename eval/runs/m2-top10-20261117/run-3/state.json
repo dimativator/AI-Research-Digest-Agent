@@ -1,0 +1,1274 @@
+{
+  "pipeline_version": "react-v2",
+  "profile": {
+    "user_id": "dmitrii",
+    "summary": "LLM research focused on optimization, low-rank and memory-efficient training, spectral regularization, parameter-efficient fine-tuning, and an AI research-digest agent.",
+    "topics": [
+      {
+        "name": "Low-rank pretraining and compressibility",
+        "keywords": [
+          "low-rank pretraining",
+          "low-rank factorization",
+          "model compressibility",
+          "effective rank",
+          "singular-value spectrum"
+        ],
+        "source_id": "description",
+        "evidence_quote": "A central question is whether training can make a model easier to compress with low-rank factorization while preserving its quality."
+      },
+      {
+        "name": "Spectral regularization and matrix optimization",
+        "keywords": [
+          "spectral regularization",
+          "spectral weight decay",
+          "nuclear-norm regularization",
+          "proximal methods",
+          "Newton-Schulz approximation"
+        ],
+        "source_id": "description",
+        "evidence_quote": "I am interested in spectral weight decay, nuclear-norm regularization, proximal methods, and Newton-Schulz approximations."
+      },
+      {
+        "name": "Generalization and memorization under label noise",
+        "keywords": [
+          "generalization",
+          "memorization",
+          "label noise",
+          "noisy labels",
+          "neural network training"
+        ],
+        "source_id": "description",
+        "evidence_quote": "Related questions concern generalization and memorization under label noise."
+      },
+      {
+        "name": "Optimization for LoRA and low-rank parameterizations",
+        "keywords": [
+          "LoRA",
+          "low-rank adaptation",
+          "Muon optimizer",
+          "factorized weights",
+          "rebalancing",
+          "convergence analysis"
+        ],
+        "source_id": "description",
+        "evidence_quote": "Another research direction is optimization for LoRA and other low-rank parameterizations."
+      },
+      {
+        "name": "Memory-efficient LLM pretraining",
+        "keywords": [
+          "memory-efficient LLM pretraining",
+          "low-rank gradients",
+          "optimizer-state compression",
+          "GaLore",
+          "Frugal",
+          "FP8 optimizer states"
+        ],
+        "source_id": "description",
+        "evidence_quote": "I also work on memory-efficient LLM pretraining."
+      },
+      {
+        "name": "Training-efficiency tradeoffs at scale",
+        "keywords": [
+          "training memory",
+          "throughput",
+          "communication cost",
+          "model quality",
+          "scaling behavior",
+          "LLM scale"
+        ],
+        "source_id": "description",
+        "evidence_quote": "I am interested in their tradeoffs between model quality, training memory, throughput, and communication cost, including how those tradeoffs change with model scale."
+      },
+      {
+        "name": "AI research digest agents and paper retrieval",
+        "keywords": [
+          "research digest agent",
+          "context management",
+          "structured LLM decisions",
+          "tool orchestration",
+          "paper retrieval",
+          "relevance ranking"
+        ],
+        "source_id": "description",
+        "evidence_quote": "Relevant work includes explicit context management, structured LLM decisions, application-controlled tools, and paper retrieval and relevance ranking using lexical or embedding-based methods."
+      }
+    ],
+    "goals": [
+      "Understand how optimization and regularization affect singular-value spectra and the effective rank of weight matrices.",
+      "Determine whether training can improve low-rank compressibility while preserving model quality.",
+      "Understand the geometry and practical language-model fine-tuning behavior of LoRA and other low-rank updates.",
+      "Evaluate tradeoffs among model quality, memory, throughput, and communication cost across model scales.",
+      "Build an AI research digest agent with a handwritten harness."
+    ],
+    "exclusions": [],
+    "arxiv_categories": [
+      "cs.LG",
+      "cs.CL",
+      "stat.ML",
+      "cs.AI",
+      "cs.IR"
+    ],
+    "open_questions": [],
+    "sources": {
+      "description": "I am an LLM researcher working on optimization and efficient training of neural networks. My current research includes low-rank pretraining, spectral regularization, parameter-efficient fine-tuning, and reducing the memory cost of language-model training.\n\nI study how optimization and regularization affect the singular-value spectra and effective rank of weight matrices. I am interested in spectral weight decay, nuclear-norm regularization, proximal methods, and Newton-Schulz approximations. A central question is whether training can make a model easier to compress with low-rank factorization while preserving its quality. Related questions concern generalization and memorization under label noise.\n\nAnother research direction is optimization for LoRA and other low-rank parameterizations. Relevant topics include Muon-style matrix updates, optimization of factorized weights, rebalancing, spectral constraints, and convergence analysis. I want to understand both the geometry of these updates and their practical behavior when fine-tuning language models.\n\nI also work on memory-efficient LLM pretraining. Relevant methods include low-rank gradient and optimizer-state representations, GaLore, Frugal-style methods, and low-precision optimizer states such as FP8. I am interested in their tradeoffs between model quality, training memory, throughput, and communication cost, including how those tradeoffs change with model scale.\n\nAs a secondary current interest, I am building an AI research digest agent with a handwritten harness. Relevant work includes explicit context management, structured LLM decisions, application-controlled tools, and paper retrieval and relevance ranking using lexical or embedding-based methods.\n\nI have not specified hard topic exclusions for this digest."
+    },
+    "model": null,
+    "schema_version": 1
+  },
+  "config": {
+    "categories": [
+      "cs.AI",
+      "cs.CG",
+      "cs.CL",
+      "cs.CR",
+      "cs.CV",
+      "cs.DB",
+      "cs.DC",
+      "cs.DS",
+      "cs.GR",
+      "cs.HC",
+      "cs.IR",
+      "cs.LG",
+      "cs.LO",
+      "cs.MA",
+      "cs.NE",
+      "cs.NI",
+      "cs.RO",
+      "cs.SD",
+      "cs.SE",
+      "eess.AS",
+      "eess.IV",
+      "eess.SP",
+      "eess.SY",
+      "math.AP",
+      "math.OC",
+      "math.PR",
+      "nlin.CD",
+      "q-bio.NC",
+      "stat.ML"
+    ],
+    "date_from": "2018-02-27",
+    "date_to": "2026-10-22",
+    "model": "gpt-5.6-luna",
+    "shortlist_size": 30,
+    "batch_size": 10,
+    "expansion_size": 10,
+    "max_candidates": 100,
+    "digest_size": 10,
+    "max_steps": null,
+    "max_llm_calls": null,
+    "max_inspections": null,
+    "max_expansions": null,
+    "page_size": 100,
+    "refresh_metadata": false,
+    "max_context_chars": null,
+    "new_only": false,
+    "x_enabled": false,
+    "variant": "react"
+  },
+  "phase": "react",
+  "screened": {
+    "2610.11730": {
+      "paper_id": "2610.11730",
+      "label": "relevant",
+      "reason": "Directly studies spectral weight decay, nuclear-norm/proximal updates, effective rank, compression, and label-noise robustness.",
+      "evidence_quote": "spectral weight decay lowers effective rank and improves SVD-LLM compression"
+    },
+    "2609.40127": {
+      "paper_id": "2609.40127",
+      "label": "relevant",
+      "reason": "Studies learned low-rank subspaces for neural network compression and evaluates quality, rank allocation, decoding speed, and memory savings at LLM scale.",
+      "evidence_quote": "We introduce Learnable Subspace Projections (LSP), which instead learns the subspaces to discard end-to-end."
+    },
+    "2608.14492": {
+      "paper_id": "2608.14492",
+      "label": "relevant",
+      "reason": "Directly addresses Muon optimization for LoRA and low-rank parameterizations, including an efficient approximation and ReLoRA pretraining.",
+      "evidence_quote": "Our method, sMuon (small Muon), performs favourably across SFT and a ReLoRA pretraining experiment."
+    },
+    "2608.31036": {
+      "paper_id": "2608.31036",
+      "label": "relevant",
+      "reason": "Studies optimization and normalization of LoRA training dynamics, with effects on convergence, stability, performance, and forgetting.",
+      "evidence_quote": "we introduce Normalized Low-Rank Adaptation (NoRA), a simple yet effective method that normalizes the down-projection matrices during training."
+    },
+    "2010.01412": {
+      "paper_id": "2010.01412",
+      "label": "relevant",
+      "reason": "Directly studies optimization, generalization, and robustness to label noise in neural networks.",
+      "evidence_quote": "SAM natively provides robustness to label noise"
+    },
+    "2510.05491": {
+      "paper_id": "2510.05491",
+      "label": "relevant",
+      "reason": "Introduces an efficient, distributed Muon variant and evaluates optimizer efficiency, memory footprint, conditioning, and scaling in LLM pretraining.",
+      "evidence_quote": "we develop an efficient distributed implementation under the FSDP2 framework"
+    },
+    "2610.29357": {
+      "paper_id": "2610.29357",
+      "label": "uncertain",
+      "reason": "Relevant to AI-agent memory, continual learning, context limits, and evaluation, but it does not specifically address research-digest agents, paper retrieval, or relevance ranking.",
+      "evidence_quote": "their fixed weights and context limits hinder sustained learning from experience over long-term deployment"
+    },
+    "2610.30646": {
+      "paper_id": "2610.30646",
+      "label": "irrelevant",
+      "reason": "Focuses on one-shot federated unsupervised domain adaptation and knowledge distillation, without a meaningful connection to the stated research topics.",
+      "evidence_quote": "One-shot federated unsupervised domain adaptation"
+    },
+    "2610.28500": {
+      "paper_id": "2610.28500",
+      "label": "uncertain",
+      "reason": "Studies LLM inference efficiency and throughput-memory tradeoffs through low-bit weights and multi-token prediction, but not training optimization or low-rank methods.",
+      "evidence_quote": "methods of ultra-low-bit backbones reduce weight storage, memory traffic, and linear-layer execution cost"
+    },
+    "2610.31098": {
+      "paper_id": "2610.31098",
+      "label": "uncertain",
+      "reason": "Addresses LLM memory efficiency and compressibility through KV-cache compression and drafter training, but concerns inference-time cache compression rather than low-rank training or optimizer memory.",
+      "evidence_quote": "We further demonstrate how a compressibility-driven drafter training phase"
+    },
+    "2610.30344": {
+      "paper_id": "2610.30344",
+      "label": "relevant",
+      "reason": "Studies RS-LoRA adapters and partial-parameter continual pretraining for efficient language-model adaptation, directly addressing parameter-efficient training and quality-efficiency tradeoffs.",
+      "evidence_quote": "partial-parameter CPT recipe that trains RS-LoRA adapters across the network"
+    },
+    "2610.27674": {
+      "paper_id": "2610.27674",
+      "label": "relevant",
+      "reason": "Directly studies Muon, Newton--Schulz orthogonalization, and optimization for language-model pretraining.",
+      "evidence_quote": "we propose HyMUON, which applies Newton--Schulz orthogonalization to the hybrid direction"
+    },
+    "2610.08975": {
+      "paper_id": "2610.08975",
+      "label": "relevant",
+      "reason": "Analyzes optimizer behavior, batch-size scaling, curvature, gradient noise, and language-model pretraining, matching the user's optimization and scaling interests.",
+      "evidence_quote": "the best optimizer for language model pretraining changes with batch size"
+    },
+    "2610.29326": {
+      "paper_id": "2610.29326",
+      "label": "relevant",
+      "reason": "Develops an embedding-based relevance filter for LLM agents, directly relevant to paper retrieval, relevance ranking, and efficient agent tool orchestration.",
+      "evidence_quote": "a lightweight first-stage relevance filter"
+    },
+    "2610.29298": {
+      "paper_id": "2610.29298",
+      "label": "irrelevant",
+      "reason": "Focuses on generative recommendation retrieval and long-tail item memorization rather than LLM training, low-rank methods, or research-digest agents.",
+      "evidence_quote": "Generative recommenders Forget the Long Tail"
+    },
+    "2610.30478": {
+      "paper_id": "2610.30478",
+      "label": "uncertain",
+      "reason": "Studies LoRA student policies and external versus parameterized memory, offering some relevance to low-rank fine-tuning and memory design, but the domain is embodied control rather than language-model research.",
+      "evidence_quote": "we distil LoRA student policies"
+    },
+    "2610.30933": {
+      "paper_id": "2610.30933",
+      "label": "uncertain",
+      "reason": "Addresses optimization of long-horizon LLM agents and tool use, but does not specifically study the user's low-rank, spectral, memory-efficient training, or research-digest interests.",
+      "evidence_quote": "Reflection-Guided Policy Optimization"
+    },
+    "2610.28851": {
+      "paper_id": "2610.28851",
+      "label": "irrelevant",
+      "reason": "Studies differentiable low-fidelity operations-research models and power, gas, and pooling problems, not neural-network low-rank training or LLM optimization.",
+      "evidence_quote": "Low-fidelity (LF) optimization models are widely used in large-scale operations"
+    },
+    "2610.25858": {
+      "paper_id": "2610.25858",
+      "label": "relevant",
+      "reason": "Directly studies self-evolving agents, prompts, memory, skills, retrieval, and harness modification, matching the AI research-digest agent and context-management interests.",
+      "evidence_quote": "they adapt by rewriting their own harness, such as prompts, memory, and skills"
+    },
+    "2610.27952": {
+      "paper_id": "2610.27952",
+      "label": "irrelevant",
+      "reason": "Focuses on federated split-computing personalization for mobile inference rather than LLM training, low-rank optimization, or research-digest agents.",
+      "evidence_quote": "Unsupervised Head Network Personalization for Split Computing via Federated Learning"
+    },
+    "2610.29720": {
+      "paper_id": "2610.29720",
+      "label": "irrelevant",
+      "reason": "Focuses on spiking speech recognition architecture and inference efficiency, without addressing the user's optimization, low-rank training, or research-agent interests.",
+      "evidence_quote": "Spiking Neural Networks (SNNs) promise energy-efficient inference"
+    },
+    "2610.29192": {
+      "paper_id": "2610.29192",
+      "label": "relevant",
+      "reason": "Studies optimization dynamics and proposes a curvature-scaled sharpness-aware method with convergence guarantees, relevant to optimization and regularization research.",
+      "evidence_quote": "we propose Curvature-Scaled SAM (CS-SAM)"
+    },
+    "2610.31305": {
+      "paper_id": "2610.31305",
+      "label": "uncertain",
+      "reason": "Investigates compact latent representations and large-scale language-model training, which may relate to compression and efficiency, but does not clearly study low-rank structure or training memory.",
+      "evidence_quote": "learn compact, predictive latent representations"
+    },
+    "2610.29577": {
+      "paper_id": "2610.29577",
+      "label": "irrelevant",
+      "reason": "Uses a spectral-radius threshold to analyze multi-agent performative prediction, but does not concern spectral regularization, low-rank training, or LLM optimization.",
+      "evidence_quote": "The threshold occurs when the spectral radius of this matrix crosses one."
+    },
+    "2610.30825": {
+      "paper_id": "2610.30825",
+      "label": "irrelevant",
+      "reason": "Addresses cross-domain sequential recommendation and personalized transfer, with no clear connection to the user's research topics.",
+      "evidence_quote": "Cross-domain sequential recommendation aims to alleviate data sparsity and cold-start problems"
+    },
+    "2609.37725": {
+      "paper_id": "2609.37725",
+      "label": "relevant",
+      "reason": "Directly studies intrinsic context management for language-model agents, matching the user's interest in AI research-digest agents and context management.",
+      "evidence_quote": "language models that natively manage their own context"
+    },
+    "2610.28945": {
+      "paper_id": "2610.28945",
+      "label": "irrelevant",
+      "reason": "Studies predictive-control-style self-improving agents in interactive environments, rather than paper retrieval, digest agents, or optimization of low-rank models.",
+      "evidence_quote": "combines multi-branch predictive analysis with experience-based adaptation"
+    },
+    "2610.27628": {
+      "paper_id": "2610.27628",
+      "label": "irrelevant",
+      "reason": "Focuses on recurrent state tracking and length generalization, without addressing low-rank parameterizations, spectral regularization, or memory-efficient LLM training.",
+      "evidence_quote": "Progress-Aligned Recurrence for Length Generalization in State Tracking"
+    },
+    "2610.29189": {
+      "paper_id": "2610.29189",
+      "label": "relevant",
+      "reason": "Reviews interactive reasoning-search systems and retrieval-agent architectures, directly relevant to paper retrieval, tool orchestration, and structured research-digest agents.",
+      "evidence_quote": "tightly coupling step-by-step reasoning with interactive search"
+    },
+    "2610.31642": {
+      "paper_id": "2610.31642",
+      "label": "relevant",
+      "reason": "Connects numerical behavior of softmax and cross-entropy to memorization, weight decay, optimization, and distillation, matching the user's interests in generalization and memorization under training dynamics.",
+      "evidence_quote": "after memorization, logit growth is bounded by an equilibrium between weight decay and Adam's $ε$ hyperparameter"
+    }
+  },
+  "admitted_ids": [
+    "2610.11730",
+    "2609.40127",
+    "2608.14492",
+    "2608.31036",
+    "2010.01412",
+    "2510.05491",
+    "2610.29357",
+    "2610.30646",
+    "2610.28500",
+    "2610.31098",
+    "2610.30344",
+    "2610.27674",
+    "2610.08975",
+    "2610.29326",
+    "2610.29298",
+    "2610.30478",
+    "2610.30933",
+    "2610.28851",
+    "2610.25858",
+    "2610.27952",
+    "2610.29720",
+    "2610.29192",
+    "2610.31305",
+    "2610.29577",
+    "2610.30825",
+    "2609.37725",
+    "2610.28945",
+    "2610.27628",
+    "2610.29189",
+    "2610.31642"
+  ],
+  "observations": {
+    "inspect:2610.11730": {
+      "status": "ok",
+      "question": "What experimental baselines and controls are used for spectral weight decay, and what are the measured effects on effective rank, validation loss, compression, inference speed, training memory, and compute across model sizes?",
+      "source": "https://arxiv.org/html/2610.11730v1",
+      "passages": [
+        {
+          "chunk_id": "chunk-0003",
+          "section": "1 Introduction",
+          "text": "To make the regularizer matrix-aware, we begin with the proximal interpretation of decoupled weight decay. To first order, its update is a proximal gradient step for the squared Frobenius penalty [ Parikh and Boyd, 2014 ; Zhuang et al., 2022 ] . We replace this penalty with the nuclear norm, a convex surrogate for rank whose proximal operator soft-thresholds singular values [ Recht et al., 2010 ; Cai et al., 2010 ] . This construction is the matrix analogue of replacing ridge shrinkage with coefficient selection by the lasso [ Hoerl and Kennard, 1970 ; Tibshirani, 1996 ] . Given the loss-only optimizer direction Δ \\Delta , let Z = W ( k ) − η ​ Δ = U Z ​ Σ Z ​ V Z ⊤ Z=W^{(k)}-\\eta\\Delta=U_{Z}\\Sigma_{Z}V_{Z}^{\\top} . Spectral weight decay applies the post-step correction W ( k + 1 ) = Z − η ​ λ ​ U Z ​ V Z ⊤ , W^{(k+1)}=Z-\\eta\\lambda U_{Z}V_{Z}^{\\top}, (1) where η \\eta is the learning rate and λ \\lambda the regularization coefficient. This correction acts additively in the singular basis of Z Z , whereas conventional weight decay scales the spectrum uniformly. SLORR-Nuc also approximates the nuclear-norm polar factor [ González-Martínez and Liu, 2026 ] . Its decoupled extension would use the pre-step correction Z − η ​ λ ​ U W ​ V W ⊤ Z-\\eta\\lambda U_{W}V_{W}^{\\top} for W ( k ) = U W ​ Σ W ​ V W ⊤ W^{(k)}=U_{W}\\Sigma_{W}V_{W}^{\\top} , rather than ( 1 ).",
+          "source": "https://arxiv.org/html/2610.11730v1",
+          "offset": 0,
+          "score": 2.6601823127151047
+        },
+        {
+          "chunk_id": "chunk-0004",
+          "section": "1 Introduction",
+          "text": "The additive shrinkage acts more strongly on smaller singular values and concentrates the spectrum. The resulting low-effective-rank weights admit efficient truncated SVD compression. Replacing a dense m × n m\\times n matrix with rank- r r factors reduces its parameter count and multiplication cost from m ​ n mn to r ⁡ ( m + n ) r(m+n) . This factorization lowers storage and inference memory and can reduce latency when the retained rank is sufficiently small. Beyond compression, we test whether the same low-rank bias limits memorization under label noise. We evaluate spectral weight decay in LLaMA [ Touvron et al., 2023 ] pretraining, post-training compression, and fixed-horizon noisy-label classification. Across models with 124 124 M to 500 500 M parameters, it lowers effective rank [ Roy and Vetterli, 2007 ] and improves compression and inference speed at matched validation loss. At 500 500 M and a 4 % 4\\% distortion budget, it reaches 1.89 × 1.89\\times compression and a 1.18 × 1.18\\times GPU inference speedup. At 60 % 60\\% label noise, mean clean-test accuracy gains over matched ℓ 2 \\ell_{2} regularization reach 17.78 17.78 points on MNIST and 4.59 4.59 points on four BERT-base tasks.",
+          "source": "https://arxiv.org/html/2610.11730v1",
+          "offset": 0,
+          "score": 19.11166007639698
+        },
+        {
+          "chunk_id": "chunk-0005",
+          "section": "Contributions",
+          "text": "• We formulate spectral weight decay as decoupled nuclear-norm regularization, derive its additive singular-value shrinkage, and connect the update to approximate proximal descent. • Across LLaMA models with 124 124 M to 500 500 M parameters, spectral weight decay improves low-rank compression and inference speed over standard weight decay at matched validation loss. It also outperforms Cuttlefish and Prehab in matched compression comparisons. • On image and text classification tasks, spectral weight decay improves fixed-horizon robustness to label noise over matched ℓ 2 \\ell_{2} regularization.",
+          "source": "https://arxiv.org/html/2610.11730v1",
+          "offset": 0,
+          "score": 15.97982161507622
+        },
+        {
+          "chunk_id": "chunk-0012",
+          "section": "3.1 Effective rank and why it matters",
+          "text": "We use effective rank instead of stable rank, ‖ W ‖ F 2 / ‖ W ‖ 2 2 \\|W\\|_{F}^{2}/\\|W\\|_{2}^{2} , because it predicts a practical compression threshold. Truncating to ⌈ erank ⁡ ( W ) ⌉ \\lceil\\operatorname{erank}(W)\\rceil preserves model quality, while lower ranks degrade it sharply (Figure 2 , right). Stable rank can remain near one when a single singular value dominates many active directions, so it does not capture this threshold. Figure 2 : Effective-rank profiles and compression of the λ = 1 \\lambda=1 model. Left: effective rank as a percentage of full rank, grouped by layer type. Middle: the same ratio across transformer blocks. Right: validation loss after truncated SVD and SVD-LLM at different retained ranks. The vertical line marks the mean effective rank. Figure 3 : Compression and inference frontiers under validation-loss distortion budgets. Top: maximum compression rate relative to the best dense checkpoint at each scale. Bottom: maximum inference speedup.",
+          "source": "https://arxiv.org/html/2610.11730v1",
+          "offset": 0,
+          "score": 13.971443502388645
+        },
+        {
+          "chunk_id": "chunk-0013",
+          "section": "3.2 Compression and inference",
+          "text": "Spectral weight decay lowers the effective rank of weight matrices, making them amenable to low-rank compression. We use SVD-LLM [ Wang et al., 2024 ] , which gives the lowest validation loss in our matched comparison. We compress each weight matrix to its own effective rank, which varies substantially across layers (Figure 2 , middle). We leave the token embeddings and output head uncompressed because their ranks respond little to spectral weight decay, and compressing them even to their effective ranks sharply degrades model quality. The comparison and compression procedure are described in Appendix B.4 . Figure 3 (top) reports the maximum compression rate supported by each validation-loss distortion budget. Spectral weight decay substantially shifts this frontier upward at all three model scales. For the 500 500 M model and a 4 % 4\\% distortion budget, it supports 1.89 × 1.89\\times compression, compared with 1.14 × 1.14\\times after standard weight decay. The same factorization reduces the FLOPs of a linear layer when r ⁡ ( m + n ) < m ​ n r(m+n)<mn . This reduction does not translate directly into lower latency because the factorized forward pass evaluates ( U r ​ Σ r ) ​ ( V r ⊤ ​ X ) (U_{r}\\Sigma_{r})(V_{r}^{\\top}X) with two GEMMs instead of the single GEMM W ​ X WX . The additional kernel launch and intermediate activation can offset the reduction in FLOPs. To improve tensor-core utilization, we round the effective rank down to the nearest multiple of 16 16 , r l = max ⁡ ( 16 , 16 ​ ⌊ erank ⁡ ( W l ) 16 ⌋ ) , r_{l}=\\max\\!\\left(16,\\,16\\left\\lfloor\\frac{\\operatorname{erank}(W_{l})}{16}\\right\\rfloor\\right), (3)",
+          "source": "https://arxiv.org/html/2610.11730v1",
+          "offset": 0,
+          "score": 13.264792858725645
+        },
+        {
+          "chunk_id": "chunk-0014",
+          "section": "3.2 Compression and inference",
+          "text": "Adjusting an aligned rank by one step, ± 16 \\pm 16 , has negligible effect on validation loss. We therefore use this rank-aligned compression scheme throughout. The factorized models outperform their dense counterparts only at large batch sizes, so we measure forward-pass latency with a batch size of 256 256 on a single GPU. For the 500 500 M model, spectral weight decay yields a 1.09 × 1.09\\times speedup near a 2 % 2\\% distortion budget and reaches 1.18 × 1.18\\times at 4 % 4\\% , compared with 1.01 × 1.01\\times under standard weight decay (Figure 3 , bottom).",
+          "source": "https://arxiv.org/html/2610.11730v1",
+          "offset": 0,
+          "score": 15.041388053734513
+        }
+      ],
+      "text": "To make the regularizer matrix-aware, we begin with the proximal interpretation of decoupled weight decay. To first order, its update is a proximal gradient step for the squared Frobenius penalty [ Parikh and Boyd, 2014 ; Zhuang et al., 2022 ] . We replace this penalty with the nuclear norm, a convex surrogate for rank whose proximal operator soft-thresholds singular values [ Recht et al., 2010 ; Cai et al., 2010 ] . This construction is the matrix analogue of replacing ridge shrinkage with coefficient selection by the lasso [ Hoerl and Kennard, 1970 ; Tibshirani, 1996 ] . Given the loss-only optimizer direction Δ \\Delta , let Z = W ( k ) − η ​ Δ = U Z ​ Σ Z ​ V Z ⊤ Z=W^{(k)}-\\eta\\Delta=U_{Z}\\Sigma_{Z}V_{Z}^{\\top} . Spectral weight decay applies the post-step correction W ( k + 1 ) = Z − η ​ λ ​ U Z ​ V Z ⊤ , W^{(k+1)}=Z-\\eta\\lambda U_{Z}V_{Z}^{\\top}, (1) where η \\eta is the learning rate and λ \\lambda the regularization coefficient. This correction acts additively in the singular basis of Z Z , whereas conventional weight decay scales the spectrum uniformly. SLORR-Nuc also approximates the nuclear-norm polar factor [ González-Martínez and Liu, 2026 ] . Its decoupled extension would use the pre-step correction Z − η ​ λ ​ U W ​ V W ⊤ Z-\\eta\\lambda U_{W}V_{W}^{\\top} for W ( k ) = U W ​ Σ W ​ V W ⊤ W^{(k)}=U_{W}\\Sigma_{W}V_{W}^{\\top} , rather than ( 1 ).\n\nThe additive shrinkage acts more strongly on smaller singular values and concentrates the spectrum. The resulting low-effective-rank weights admit efficient truncated SVD compression. Replacing a dense m × n m\\times n matrix with rank- r r factors reduces its parameter count and multiplication cost from m ​ n mn to r ⁡ ( m + n ) r(m+n) . This factorization lowers storage and inference memory and can reduce latency when the retained rank is sufficiently small. Beyond compression, we test whether the same low-rank bias limits memorization under label noise. We evaluate spectral weight decay in LLaMA [ Touvron et al., 2023 ] pretraining, post-training compression, and fixed-horizon noisy-label classification. Across models with 124 124 M to 500 500 M parameters, it lowers effective rank [ Roy and Vetterli, 2007 ] and improves compression and inference speed at matched validation loss. At 500 500 M and a 4 % 4\\% distortion budget, it reaches 1.89 × 1.89\\times compression and a 1.18 × 1.18\\times GPU inference speedup. At 60 % 60\\% label noise, mean clean-test accuracy gains over matched ℓ 2 \\ell_{2} regularization reach 17.78 17.78 points on MNIST and 4.59 4.59 points on four BERT-base tasks.\n\n• We formulate spectral weight decay as decoupled nuclear-norm regularization, derive its additive singular-value shrinkage, and connect the update to approximate proximal descent. • Across LLaMA models with 124 124 M to 500 500 M parameters, spectral weight decay improves low-rank compression and inference speed over standard weight decay at matched validation loss. It also outperforms Cuttlefish and Prehab in matched compression comparisons. • On image and text classification tasks, spectral weight decay improves fixed-horizon robustness to label noise over matched ℓ 2 \\ell_{2} regularization.\n\nWe use effective rank instead of stable rank, ‖ W ‖ F 2 / ‖ W ‖ 2 2 \\|W\\|_{F}^{2}/\\|W\\|_{2}^{2} , because it predicts a practical compression threshold. Truncating to ⌈ erank ⁡ ( W ) ⌉ \\lceil\\operatorname{erank}(W)\\rceil preserves model quality, while lower ranks degrade it sharply (Figure 2 , right). Stable rank can remain near one when a single singular value dominates many active directions, so it does not capture this threshold. Figure 2 : Effective-rank profiles and compression of the λ = 1 \\lambda=1 model. Left: effective rank as a percentage of full rank, grouped by layer type. Middle: the same ratio across transformer blocks. Right: validation loss after truncated SVD and SVD-LLM at different retained ranks. The vertical line marks the mean effective rank. Figure 3 : Compression and inference frontiers under validation-loss distortion budgets. Top: maximum compression rate relative to the best dense checkpoint at each scale. Bottom: maximum inference speedup.\n\nSpectral weight decay lowers the effective rank of weight matrices, making them amenable to low-rank compression. We use SVD-LLM [ Wang et al., 2024 ] , which gives the lowest validation loss in our matched comparison. We compress each weight matrix to its own effective rank, which varies substantially across layers (Figure 2 , middle). We leave the token embeddings and output head uncompressed because their ranks respond little to spectral weight decay, and compressing them even to their effective ranks sharply degrades model quality. The comparison and compression procedure are described in Appendix B.4 . Figure 3 (top) reports the maximum compression rate supported by each validation-loss distortion budget. Spectral weight decay substantially shifts this frontier upward at all three model scales. For the 500 500 M model and a 4 % 4\\% distortion budget, it supports 1.89 × 1.89\\times compression, compared with 1.14 × 1.14\\times after standard weight decay. The same factorization reduces the FLOPs of a linear layer when r ⁡ ( m + n ) < m ​ n r(m+n)<mn . This reduction does not translate directly into lower latency because the factorized forward pass evaluates ( U r ​ Σ r ) ​ ( V r ⊤ ​ X ) (U_{r}\\Sigma_{r})(V_{r}^{\\top}X) with two GEMMs instead of the single GEMM W ​ X WX . The additional kernel launch and intermediate activation can offset the reduction in FLOPs. To improve tensor-core utilization, we round the effective rank down to the nearest multiple of 16 16 , r l = max ⁡ ( 16 , 16 ​ ⌊ erank ⁡ ( W l ) 16 ⌋ ) , r_{l}=\\max\\!\\left(16,\\,16\\left\\lfloor\\frac{\\operatorname{erank}(W_{l})}{16}\\right\\rfloor\\right), (3)\n\nAdjusting an aligned rank by one step, ± 16 \\pm 16 , has negligible effect on validation loss. We therefore use this rank-aligned compression scheme throughout. The factorized models outperform their dense counterparts only at large batch sizes, so we measure forward-pass latency with a batch size of 256 256 on a single GPU. For the 500 500 M model, spectral weight decay yields a 1.09 × 1.09\\times speedup near a 2 % 2\\% distortion budget and reaches 1.18 × 1.18\\times at 4 % 4\\% , compared with 1.01 × 1.01\\times under standard weight decay (Figure 3 , bottom).",
+      "truncated": true,
+      "available_chars": 68851,
+      "note": "Retrieved passages, not an answer. Missing matches do not establish that the paper lacks the requested experiment. Extracted HTML text; equations and table formatting may be imperfect. No PDF extraction was attempted.",
+      "questions": [
+        "What experimental baselines and controls are used for spectral weight decay, and what are the measured effects on effective rank, validation loss, compression, inference speed, training memory, and compute across model sizes?"
+      ]
+    },
+    "inspect:2608.14492": {
+      "status": "ok",
+      "question": "What baselines, model sizes, tasks, and controlled comparisons are used for sMuon, and what quantitative performance, convergence, memory, or compute differences are reported versus Adam, Muon, LoRA, and ReLoRA?",
+      "source": "https://arxiv.org/html/2608.14492v1",
+      "passages": [
+        {
+          "chunk_id": "chunk-0002",
+          "section": "Abstract",
+          "text": "The Muon optimizer shows clear benefits versus alternatives when pretraining neural networks. However, it is used less frequently for parameter-efficient fine-tuning (PEFT). One potential reason is that the most common PEFT method, LoRA, does not naturally combine with Muon since it is not mathematically possible to orthogonalize the weight update given by a low-rank parameterization. In this paper, we address this issue by approximating the solution to a relaxed Muon objective in the low-rank setting via linearization and then least-squares. We provide an efficient implementation that uses matmul operations only, as opposed to more complex linear algebra decomposition routines. Our method, sMuon (small Muon), performs favourably across SFT and a ReLoRA pretraining experiment. While results are model- and eval-dependent, we find overall that using Muon for low-rank fine-tuning provides moderate performance improvements.",
+          "source": "https://arxiv.org/html/2608.14492v1",
+          "offset": 0,
+          "score": 16.56034249877086
+        },
+        {
+          "chunk_id": "chunk-0027",
+          "section": "5 Experiments",
+          "text": "Table 2: Code pass@1 (%), grouped by base model. Each column is an optimizer (best run by validation loss); per row the best optimizer is bolded and cells are shaded green (best) to white (worst). Eval AdamW Per-factor Muon LoRA-Muon Riemannion sMuon (ours) Qwen2.5-3B HumanEval 54.9 20.1 43.3 31.1 51.8 HumanEval+ 48.8 17.1 39.0 25.6 43.9 MBPP 65.9 69.3 68.0 65.9 62.7 MBPP+ 57.1 60.6 58.7 56.9 53.4 Llama-3.2-3B HumanEval 22.0 18.3 29.9 30.5 29.9 HumanEval+ 19.5 16.5 25.0 26.8 27.4 MBPP 43.1 35.7 42.1 46.3 45.2 MBPP+ 35.4 30.4 34.1 38.1 38.6 DeepSeek-V2-Lite HumanEval 36.6 29.3 22.0 23.2 26.8 HumanEval+ 28.7 23.8 18.3 19.5 23.2 MBPP 52.6 53.7 48.4 49.5 51.3 MBPP+ 45.5 45.0 43.4 43.7 44.7 Moonlight-16B-A3B HumanEval 49.4 57.9 53.7 40.2 54.9 HumanEval+ 42.7 48.8 47.0 35.4 48.8 MBPP 71.7 71.2 71.2 68.8 71.2 MBPP+ 60.1 60.1 61.4 58.7 60.3 Table 3: ReLoRA pretraining: final validation loss at each optimizer’s optimal learning rate, where the optimal LR minimises the validation loss at the final logged step. Lower is better; the best optimizer is bolded and cells are shaded green (best) to white (worst). AdamW Per-factor Muon LoRA-Muon Riemannion sMuon (ours) Final val loss 3.83 3.70 3.68 3.66 3.66 Optimal LR 0.001 0.006 0.001 0.0006 0.0006",
+          "source": "https://arxiv.org/html/2608.14492v1",
+          "offset": 0,
+          "score": 6.69724988678411
+        },
+        {
+          "chunk_id": "chunk-0028",
+          "section": "5 Experiments",
+          "text": "We compare sMuon to regular LoRA with AdamW, per-factor Muon (LoRA with Muon applied to each adapter weight B B and A A individually), LoRA-Muon ( Cesista et al., 2026 ) , and Riemannion ( Bogachev et al., 2026 ) . We evaluated on standard commonsense ( Clark et al., 2018 ; Clark et al., 2019 ; Zellers et al., 2019 ; Mihaylov et al., 2018 ; Bisk et al., 2020 ; Sakaguchi et al., 2021 ) and coding ( Chen et al., 2021 ; Austin et al., 2021 ) benchmarks after training with SFT. We experimented with four models, Llama-3.2-3B ( Grattafiori et al., 2024 ) , Qwen2.5-3B ( Qwen Team, 2025 ) , DeepSeek-V2-Lite ( DeepSeek-AI, 2024 ) , and Moonlight-16B-A3B ( Liu et al., 2025 ) . The first two models are dense models; the last two are sparse MoE models. The Moonlight model is of particular note because it was pretrained with Muon, whereas the others are all AdamW-pretrained. We also tested the methods in a pretraining setting using ReLoRA ( Lialin et al., 2023 ) which periodically merges and refreshes the adapter. We tuned the learning rate for each method and model, with example learning rate sweeps for the commonsense tasks shown in Appendix E . While our results are both model- and eval-dependent, sMuon performs strongly overall, especially when combined with the Moonlight-16B-A3B base model, a Muon-pretrained model (Tables 1 and 2 ). sMuon also achieved the joint-best validation loss in the ReLoRA pretraining setting (Table 3 ). We attribute performance gains, particularly over AdamW and per-factor Muon, to more accurately approximating the Muon objective.",
+          "source": "https://arxiv.org/html/2608.14492v1",
+          "offset": 0,
+          "score": 14.634489756370547
+        },
+        {
+          "chunk_id": "chunk-0029",
+          "section": "Experiment details",
+          "text": "LoRA-Muon and Riemannion were chosen as baselines in addition to the simpler AdamW and per-factor Muon baselines as these are the most similar to our method. Unfortunately, we could not find implementations for LoRA-Muon or Riemannion, so we implemented these ourselves. For Riemannion and our method, we use an A = 0 A=0 and B B orthonormal initialization, and for the remaining methods we used a standard initialization ( B = 0 B=0 , A A random Gaussian). We scale the learning rate to approximately match AdamW RMS for all Muon optimizers (for details see App. A.1 ). For all experiments, we used weight decay 0.01 0.01 , momentum 0.9 0.9 , inserted LoRA adapters into all hidden layers (except the router for models with MoE). We used GH200 for all experiments except to produce Table 4 for which we used A100. We used bf16 to store weights and optimizer states, but used fp32 to compute the step for Riemannion, sMuon, and LoRA-Muon. For the ReLoRA experiments ( Lialin et al., 2023 ) , we started with the modded-nanogpt codebase at ‘record 8’ ( Jordan et al., 2024a ) , which trains a 162M parameter transformer from scratch (using features including QK-norm, ReLU 2 activations) on the FineWeb dataset ( Penedo et al., 2024 ) , and evaluates on a 10M token validation set. We initialize LoRA adapters with rank 64, and train for a total of 3000 steps; every 500 steps we merge the adapters into the base weights and reinitialize the adapters; we use a cosine decay learning rate schedule, though after each merge+reinitialization, we also reset the learning rate to zero and warm back up to the target learning rate over 50 steps (this is also known as a jagged cosine schedule). We swept learning rates in 3e-4, 6e-4, 1e-3, 3e-3, 6e-3, 1e-2.",
+          "source": "https://arxiv.org/html/2608.14492v1",
+          "offset": 0,
+          "score": 15.688618103181316
+        },
+        {
+          "chunk_id": "chunk-0030",
+          "section": "Experiment details",
+          "text": "For the HumanEval ( Chen et al., 2021 ) and MBPP ( Austin et al., 2021 ) coding evals, we fine-tuned for 3 epochs on completing Python functions from the CodeAlpaca dataset ( Chaudhary, 2023 ) . For the MMLU ( Hendrycks et al., 2021 ) eval, we fine-tuned on a 50/50 mixture of FLAN ( Longpre et al., 2023 ) and MMLU training subset. For the remaining evals, we trained on a mixture of FLAN and CommonsenseQA ( Talmor et al., 2019 ) , and training subset for each eval. All SFT evals were 0-shot. For SFT training runs, we used α = 32 \\alpha=32 , r = 16 r=16 , gradient clipping (clipping at 1 1 ), and we used roughly 2 16 2^{16} tokens per batch.",
+          "source": "https://arxiv.org/html/2608.14492v1",
+          "offset": 0,
+          "score": 3.3235510837563966
+        },
+        {
+          "chunk_id": "chunk-0031",
+          "section": "Muon-based LoRA is strongest on the Muon-pretrained model",
+          "text": "We originally hypothesized that Muon-based LoRA methods might perform better with Moonlight, since it is a Muon-pretrained model. We do find some evidence for this when aggregating over all benchmarks in Tables 1 and 2 : AdamW only achieves top performance on one of the eleven tasks, while sMuon is best for six. Some methods are markedly below others on certain tasks (e.g. per-factor Muon with Llama-3.2-3B on HumanEval, Table 2 ). This could be due to optimizer instabilities or noise in the benchmarks or selection procedure.",
+          "source": "https://arxiv.org/html/2608.14492v1",
+          "offset": 0,
+          "score": 14.86041193261244
+        }
+      ],
+      "text": "The Muon optimizer shows clear benefits versus alternatives when pretraining neural networks. However, it is used less frequently for parameter-efficient fine-tuning (PEFT). One potential reason is that the most common PEFT method, LoRA, does not naturally combine with Muon since it is not mathematically possible to orthogonalize the weight update given by a low-rank parameterization. In this paper, we address this issue by approximating the solution to a relaxed Muon objective in the low-rank setting via linearization and then least-squares. We provide an efficient implementation that uses matmul operations only, as opposed to more complex linear algebra decomposition routines. Our method, sMuon (small Muon), performs favourably across SFT and a ReLoRA pretraining experiment. While results are model- and eval-dependent, we find overall that using Muon for low-rank fine-tuning provides moderate performance improvements.\n\nTable 2: Code pass@1 (%), grouped by base model. Each column is an optimizer (best run by validation loss); per row the best optimizer is bolded and cells are shaded green (best) to white (worst). Eval AdamW Per-factor Muon LoRA-Muon Riemannion sMuon (ours) Qwen2.5-3B HumanEval 54.9 20.1 43.3 31.1 51.8 HumanEval+ 48.8 17.1 39.0 25.6 43.9 MBPP 65.9 69.3 68.0 65.9 62.7 MBPP+ 57.1 60.6 58.7 56.9 53.4 Llama-3.2-3B HumanEval 22.0 18.3 29.9 30.5 29.9 HumanEval+ 19.5 16.5 25.0 26.8 27.4 MBPP 43.1 35.7 42.1 46.3 45.2 MBPP+ 35.4 30.4 34.1 38.1 38.6 DeepSeek-V2-Lite HumanEval 36.6 29.3 22.0 23.2 26.8 HumanEval+ 28.7 23.8 18.3 19.5 23.2 MBPP 52.6 53.7 48.4 49.5 51.3 MBPP+ 45.5 45.0 43.4 43.7 44.7 Moonlight-16B-A3B HumanEval 49.4 57.9 53.7 40.2 54.9 HumanEval+ 42.7 48.8 47.0 35.4 48.8 MBPP 71.7 71.2 71.2 68.8 71.2 MBPP+ 60.1 60.1 61.4 58.7 60.3 Table 3: ReLoRA pretraining: final validation loss at each optimizer’s optimal learning rate, where the optimal LR minimises the validation loss at the final logged step. Lower is better; the best optimizer is bolded and cells are shaded green (best) to white (worst). AdamW Per-factor Muon LoRA-Muon Riemannion sMuon (ours) Final val loss 3.83 3.70 3.68 3.66 3.66 Optimal LR 0.001 0.006 0.001 0.0006 0.0006\n\nWe compare sMuon to regular LoRA with AdamW, per-factor Muon (LoRA with Muon applied to each adapter weight B B and A A individually), LoRA-Muon ( Cesista et al., 2026 ) , and Riemannion ( Bogachev et al., 2026 ) . We evaluated on standard commonsense ( Clark et al., 2018 ; Clark et al., 2019 ; Zellers et al., 2019 ; Mihaylov et al., 2018 ; Bisk et al., 2020 ; Sakaguchi et al., 2021 ) and coding ( Chen et al., 2021 ; Austin et al., 2021 ) benchmarks after training with SFT. We experimented with four models, Llama-3.2-3B ( Grattafiori et al., 2024 ) , Qwen2.5-3B ( Qwen Team, 2025 ) , DeepSeek-V2-Lite ( DeepSeek-AI, 2024 ) , and Moonlight-16B-A3B ( Liu et al., 2025 ) . The first two models are dense models; the last two are sparse MoE models. The Moonlight model is of particular note because it was pretrained with Muon, whereas the others are all AdamW-pretrained. We also tested the methods in a pretraining setting using ReLoRA ( Lialin et al., 2023 ) which periodically merges and refreshes the adapter. We tuned the learning rate for each method and model, with example learning rate sweeps for the commonsense tasks shown in Appendix E . While our results are both model- and eval-dependent, sMuon performs strongly overall, especially when combined with the Moonlight-16B-A3B base model, a Muon-pretrained model (Tables 1 and 2 ). sMuon also achieved the joint-best validation loss in the ReLoRA pretraining setting (Table 3 ). We attribute performance gains, particularly over AdamW and per-factor Muon, to more accurately approximating the Muon objective.\n\nLoRA-Muon and Riemannion were chosen as baselines in addition to the simpler AdamW and per-factor Muon baselines as these are the most similar to our method. Unfortunately, we could not find implementations for LoRA-Muon or Riemannion, so we implemented these ourselves. For Riemannion and our method, we use an A = 0 A=0 and B B orthonormal initialization, and for the remaining methods we used a standard initialization ( B = 0 B=0 , A A random Gaussian). We scale the learning rate to approximately match AdamW RMS for all Muon optimizers (for details see App. A.1 ). For all experiments, we used weight decay 0.01 0.01 , momentum 0.9 0.9 , inserted LoRA adapters into all hidden layers (except the router for models with MoE). We used GH200 for all experiments except to produce Table 4 for which we used A100. We used bf16 to store weights and optimizer states, but used fp32 to compute the step for Riemannion, sMuon, and LoRA-Muon. For the ReLoRA experiments ( Lialin et al., 2023 ) , we started with the modded-nanogpt codebase at ‘record 8’ ( Jordan et al., 2024a ) , which trains a 162M parameter transformer from scratch (using features including QK-norm, ReLU 2 activations) on the FineWeb dataset ( Penedo et al., 2024 ) , and evaluates on a 10M token validation set. We initialize LoRA adapters with rank 64, and train for a total of 3000 steps; every 500 steps we merge the adapters into the base weights and reinitialize the adapters; we use a cosine decay learning rate schedule, though after each merge+reinitialization, we also reset the learning rate to zero and warm back up to the target learning rate over 50 steps (this is also known as a jagged cosine schedule). We swept learning rates in 3e-4, 6e-4, 1e-3, 3e-3, 6e-3, 1e-2.\n\nFor the HumanEval ( Chen et al., 2021 ) and MBPP ( Austin et al., 2021 ) coding evals, we fine-tuned for 3 epochs on completing Python functions from the CodeAlpaca dataset ( Chaudhary, 2023 ) . For the MMLU ( Hendrycks et al., 2021 ) eval, we fine-tuned on a 50/50 mixture of FLAN ( Longpre et al., 2023 ) and MMLU training subset. For the remaining evals, we trained on a mixture of FLAN and CommonsenseQA ( Talmor et al., 2019 ) , and training subset for each eval. All SFT evals were 0-shot. For SFT training runs, we used α = 32 \\alpha=32 , r = 16 r=16 , gradient clipping (clipping at 1 1 ), and we used roughly 2 16 2^{16} tokens per batch.\n\nWe originally hypothesized that Muon-based LoRA methods might perform better with Moonlight, since it is a Muon-pretrained model. We do find some evidence for this when aggregating over all benchmarks in Tables 1 and 2 : AdamW only achieves top performance on one of the eleven tasks, while sMuon is best for six. Some methods are markedly below others on certain tasks (e.g. per-factor Muon with Llama-3.2-3B on HumanEval, Table 2 ). This could be due to optimizer instabilities or noise in the benchmarks or selection procedure.",
+      "truncated": true,
+      "available_chars": 70899,
+      "note": "Retrieved passages, not an answer. Missing matches do not establish that the paper lacks the requested experiment. Extracted HTML text; equations and table formatting may be imperfect. No PDF extraction was attempted.",
+      "questions": [
+        "What baselines, model sizes, tasks, and controlled comparisons are used for sMuon, and what quantitative performance, convergence, memory, or compute differences are reported versus Adam, Muon, LoRA, and ReLoRA?"
+      ]
+    },
+    "inspect:2609.40127": {
+      "status": "ok",
+      "question": "What baselines, model sizes, compression ratios or retained ranks, quality metrics, memory savings, inference/training compute, and ablations are reported for Learnable Subspace Projections compared with SVD or other low-rank compression methods?",
+      "source": "https://arxiv.org/html/2609.40127v1",
+      "passages": [
+        {
+          "chunk_id": "chunk-0002",
+          "section": "Abstract",
+          "text": "Modern transformers pair impressive capabilities with substantial memory and compute demands. Low-rank weight factorization reduces both while keeping the matrices dense, and thus efficient on standard hardware. Existing methods, however, choose the subspace to remove from each weight matrix with local closed-form criteria: activation energy, layer-wise reconstruction error, or a quadratic approximation of the loss. These criteria ignore how errors propagate through the network, so at high compression the errors compound with depth and performance collapses. We introduce Learnable Subspace Projections (LSP), which instead learns the subspaces to discard end-to-end. Each linear layer, or tied group of layers that read the same activations, is assigned an orthogonal projector. All projectors are optimized jointly against a global objective—the KL divergence to the dense model’s output distribution or the model’s original training loss—while the pretrained weights remain frozen. Projectors are initialized from a whitened SVD truncation, and ranks are allocated by the output KL each projector induces per parameter saved. After training, the projectors merge into standard low-rank factors, with each tied group sharing one factor. In attention, this also lets the model cache one narrow latent in place of full keys and values. Across LLMs (OPT-125M/1.3B, Qwen3-4B, Llama-2-7B) and ViT-B/16, LSP outperforms baselines, and its advantage widens as compression increases. At − 70 % -70\\% compression, LSP brings Llama-2-7B to 10.9 10.9 WikiText-2 perplexity and 42.2 % 42.2\\% mean zero-shot accuracy, versus 13.3 13.3 and 36.0 % 36.0\\% for the strongest baseline. The factorized model decodes up to 1.6 × 1.6\\times faster than the dense model at small batch sizes, and aching the shared",
+          "source": "https://arxiv.org/html/2609.40127v1",
+          "offset": 0,
+          "score": 28.112243234274047
+        },
+        {
+          "chunk_id": "chunk-0003",
+          "section": "Abstract",
+          "text": "shot accuracy, versus 13.3 13.3 and 36.0 % 36.0\\% for the strongest baseline. The factorized model decodes up to 1.6 × 1.6\\times faster than the dense model at small batch sizes, and aching the shared latent shrinks the combined memory of weights and KV cache by 13.5 × 13.5\\times at a 128k-token context, versus at most 6.5 × 6.5\\times for untied baseline factorizations.",
+          "source": "https://arxiv.org/html/2609.40127v1",
+          "offset": 1598,
+          "score": 9.482703215541427
+        },
+        {
+          "chunk_id": "chunk-0039",
+          "section": "5 Conclusion",
+          "text": "We introduced Learnable Subspace Projections (LSP), which compresses a pretrained network by learning, for each linear layer, the subspace the network can do without. Its premise is that statistical redundancy, whether measured by activation energy or by layer-wise reconstruction error, is not functional redundancy. LSP therefore selects the removed subspaces against the network output: it allocates ranks by measured output KL and optimizes all projectors jointly, with the pretrained weights frozen. Across four decoder LLMs, one of its two objectives attains the lowest perplexity in all twelve model–ratio settings, and both achieve the best zero-shot accuracy among low-rank methods. The margin grows with the compression ratio: at − 70 % -70\\% on Llama-2-7B, LSP reaches 10.9 10.9 perplexity, against 13.3 13.3 for the strongest baseline and 222.8 222.8 without learning. On a vision transformer, it is the most robust to calibration shift and transfers best when calibrated on diverse unlabeled data. The merged model is also the fastest factorization we measure, decoding up to 1.56 × 1.56\\times faster than the dense model. Its shared latent reduces the memory of weights and KV cache by 13.5 × 13.5\\times at a 128k-token context, twice the savings of untied factorizations.",
+          "source": "https://arxiv.org/html/2609.40127v1",
+          "offset": 0,
+          "score": 20.913332693015988
+        },
+        {
+          "chunk_id": "chunk-0073",
+          "section": "A.7 Limitations",
+          "text": "(i) The measured-KL allocation is a local surrogate: isolated unit costs omit interactions, and the current strategy has no global-optimality guarantee. This makes the allocation uncertain on quality in specific settings: in a few cases uniform ranks can still be preferred; however empirical evidence shows that measured KL is still better, since it is able to adapt to different architectures: performance improvement over Qwen3-4B, OPT-1.3B, and two out of three compression ranges of Llama-2-7B. (ii) Compression is also not free: LSP requires both the KL measurements and projection training, although the measurements are reusable across ratios and objectives. On the other hand, compression is a one-off cost that is repaid by the inference savings of Section 3.3 and LSP justifies this with the strong performance. (iii) Tied groups only lead to savings with latent cache if KV are tied on the input side. This means our best configuration for Qwen3-4B does not gain in efficiency as much as the input-tied version does. This represents a performance-efficiency trade-off, as shown in Table 12 : tying KV on the output side leads to the best performance, but one can choose to tie KV on the input side for improved inference efficiency instead.",
+          "source": "https://arxiv.org/html/2609.40127v1",
+          "offset": 0,
+          "score": 20.04247393433071
+        },
+        {
+          "chunk_id": "chunk-0077",
+          "section": "Appendix B Implementation Details",
+          "text": "Baselines. All baselines are using the same calibration budget of 1024 1024 sequences of 2048 2048 tokens, run with bf16 weights and compression arithmetic in fp32 or fp64 (following LSP), and, for the SVD methods, are evaluated in factorized form. Where a baseline exposes a tuning knob we sweep it around the published value and keep the best per model and ratio: SVD-LLM’s recovery learning rate against its single published one, Dobi-SVD’s γ \\gamma learning rate around the released default, Swift-SVD’s allocation α \\alpha over its own eleven-point grid, and ASVD’s α \\alpha . Dobi-SVD is run without its quantization step so that parameter counts match; Swift-SVD’s OPT rows are bias-corrected; SVD-LLM’s recovery stage is LoRA of rank 8 8 on the calibration corpus of the table it appears in. Notice that LSP keeps original weights frozen, and learns to compress their subspace, which means it does not move from the original subspace but only projects. SVD-LLM-v2 ( Wang et al., 2025c ) and MoDeGPT ( Lin et al., 2025 ) , though relevant, could not be reported as no official implementation has been released. The ViT ports of SVD-LLM (W) and SliceGPT are adapted from the official released implementation, while FLAR-SVD and PELA come from their official implementation. PELA, specifically, re-trains all the network’s weights with the objective to copy the dense model’s intermediate features, which acts as a recovery fine-tuning stage. Evaluation. Perplexity follows the SparseGPT and SliceGPT convention: the test split is joined, tokenized once and cut into non-overlapping 2048 2048 -token windows. Zero-shot accuracy is measured with the EleutherAI harness ( Gao et al., 2024a ) at zero shots on the merged model, and we report plain accuracy.",
+          "source": "https://arxiv.org/html/2609.40127v1",
+          "offset": 0,
+          "score": 14.532128429327601
+        },
+        {
+          "chunk_id": "chunk-0078",
+          "section": "Appendix B Implementation Details",
+          "text": "Benchmarks. The choice of benchmarks follows other compression methods in the literature. In Table 1 we report perplexity for a diverse mix of pruning and low-rank compression methods, as reported by Ashkboos et al. (2024) ; van der Ouderaa et al. (2024) ; Wang et al. (2025d) ; Wang et al. (2025b) ; Qi et al. (2026) . For zero-shot performance ( Table 2 ) we restrict the analysis to low-rank compression methods ( Wang et al., 2025d ; Wang et al., 2025b ; Qi et al., 2026 ) , since they are the closest to LSP. Specifically, we report the same six benchmark evaluations as baselines do, and calibrate on the same datasets. While Alpaca-calibrated compression follows our compression ratios reported for other tables, for C4-calibrated compression we follow same procedure as Swift-SVD, with compression ratios of − 20 % / 40 % / 60 % -20\\%/40\\%/60\\% , to introduce further richness in compression ratios. We re-evaluate all methods and benchmarks for evaluation fairness, using the same setup for calibration and evaluation for all methods.",
+          "source": "https://arxiv.org/html/2609.40127v1",
+          "offset": 0,
+          "score": 25.788741270916542
+        }
+      ],
+      "text": "Modern transformers pair impressive capabilities with substantial memory and compute demands. Low-rank weight factorization reduces both while keeping the matrices dense, and thus efficient on standard hardware. Existing methods, however, choose the subspace to remove from each weight matrix with local closed-form criteria: activation energy, layer-wise reconstruction error, or a quadratic approximation of the loss. These criteria ignore how errors propagate through the network, so at high compression the errors compound with depth and performance collapses. We introduce Learnable Subspace Projections (LSP), which instead learns the subspaces to discard end-to-end. Each linear layer, or tied group of layers that read the same activations, is assigned an orthogonal projector. All projectors are optimized jointly against a global objective—the KL divergence to the dense model’s output distribution or the model’s original training loss—while the pretrained weights remain frozen. Projectors are initialized from a whitened SVD truncation, and ranks are allocated by the output KL each projector induces per parameter saved. After training, the projectors merge into standard low-rank factors, with each tied group sharing one factor. In attention, this also lets the model cache one narrow latent in place of full keys and values. Across LLMs (OPT-125M/1.3B, Qwen3-4B, Llama-2-7B) and ViT-B/16, LSP outperforms baselines, and its advantage widens as compression increases. At − 70 % -70\\% compression, LSP brings Llama-2-7B to 10.9 10.9 WikiText-2 perplexity and 42.2 % 42.2\\% mean zero-shot accuracy, versus 13.3 13.3 and 36.0 % 36.0\\% for the strongest baseline. The factorized model decodes up to 1.6 × 1.6\\times faster than the dense model at small batch sizes, and aching the shared\n\nshot accuracy, versus 13.3 13.3 and 36.0 % 36.0\\% for the strongest baseline. The factorized model decodes up to 1.6 × 1.6\\times faster than the dense model at small batch sizes, and aching the shared latent shrinks the combined memory of weights and KV cache by 13.5 × 13.5\\times at a 128k-token context, versus at most 6.5 × 6.5\\times for untied baseline factorizations.\n\nWe introduced Learnable Subspace Projections (LSP), which compresses a pretrained network by learning, for each linear layer, the subspace the network can do without. Its premise is that statistical redundancy, whether measured by activation energy or by layer-wise reconstruction error, is not functional redundancy. LSP therefore selects the removed subspaces against the network output: it allocates ranks by measured output KL and optimizes all projectors jointly, with the pretrained weights frozen. Across four decoder LLMs, one of its two objectives attains the lowest perplexity in all twelve model–ratio settings, and both achieve the best zero-shot accuracy among low-rank methods. The margin grows with the compression ratio: at − 70 % -70\\% on Llama-2-7B, LSP reaches 10.9 10.9 perplexity, against 13.3 13.3 for the strongest baseline and 222.8 222.8 without learning. On a vision transformer, it is the most robust to calibration shift and transfers best when calibrated on diverse unlabeled data. The merged model is also the fastest factorization we measure, decoding up to 1.56 × 1.56\\times faster than the dense model. Its shared latent reduces the memory of weights and KV cache by 13.5 × 13.5\\times at a 128k-token context, twice the savings of untied factorizations.\n\n(i) The measured-KL allocation is a local surrogate: isolated unit costs omit interactions, and the current strategy has no global-optimality guarantee. This makes the allocation uncertain on quality in specific settings: in a few cases uniform ranks can still be preferred; however empirical evidence shows that measured KL is still better, since it is able to adapt to different architectures: performance improvement over Qwen3-4B, OPT-1.3B, and two out of three compression ranges of Llama-2-7B. (ii) Compression is also not free: LSP requires both the KL measurements and projection training, although the measurements are reusable across ratios and objectives. On the other hand, compression is a one-off cost that is repaid by the inference savings of Section 3.3 and LSP justifies this with the strong performance. (iii) Tied groups only lead to savings with latent cache if KV are tied on the input side. This means our best configuration for Qwen3-4B does not gain in efficiency as much as the input-tied version does. This represents a performance-efficiency trade-off, as shown in Table 12 : tying KV on the output side leads to the best performance, but one can choose to tie KV on the input side for improved inference efficiency instead.\n\nBaselines. All baselines are using the same calibration budget of 1024 1024 sequences of 2048 2048 tokens, run with bf16 weights and compression arithmetic in fp32 or fp64 (following LSP), and, for the SVD methods, are evaluated in factorized form. Where a baseline exposes a tuning knob we sweep it around the published value and keep the best per model and ratio: SVD-LLM’s recovery learning rate against its single published one, Dobi-SVD’s γ \\gamma learning rate around the released default, Swift-SVD’s allocation α \\alpha over its own eleven-point grid, and ASVD’s α \\alpha . Dobi-SVD is run without its quantization step so that parameter counts match; Swift-SVD’s OPT rows are bias-corrected; SVD-LLM’s recovery stage is LoRA of rank 8 8 on the calibration corpus of the table it appears in. Notice that LSP keeps original weights frozen, and learns to compress their subspace, which means it does not move from the original subspace but only projects. SVD-LLM-v2 ( Wang et al., 2025c ) and MoDeGPT ( Lin et al., 2025 ) , though relevant, could not be reported as no official implementation has been released. The ViT ports of SVD-LLM (W) and SliceGPT are adapted from the official released implementation, while FLAR-SVD and PELA come from their official implementation. PELA, specifically, re-trains all the network’s weights with the objective to copy the dense model’s intermediate features, which acts as a recovery fine-tuning stage. Evaluation. Perplexity follows the SparseGPT and SliceGPT convention: the test split is joined, tokenized once and cut into non-overlapping 2048 2048 -token windows. Zero-shot accuracy is measured with the EleutherAI harness ( Gao et al., 2024a ) at zero shots on the merged model, and we report plain accuracy.\n\nBenchmarks. The choice of benchmarks follows other compression methods in the literature. In Table 1 we report perplexity for a diverse mix of pruning and low-rank compression methods, as reported by Ashkboos et al. (2024) ; van der Ouderaa et al. (2024) ; Wang et al. (2025d) ; Wang et al. (2025b) ; Qi et al. (2026) . For zero-shot performance ( Table 2 ) we restrict the analysis to low-rank compression methods ( Wang et al., 2025d ; Wang et al., 2025b ; Qi et al., 2026 ) , since they are the closest to LSP. Specifically, we report the same six benchmark evaluations as baselines do, and calibrate on the same datasets. While Alpaca-calibrated compression follows our compression ratios reported for other tables, for C4-calibrated compression we follow same procedure as Swift-SVD, with compression ratios of − 20 % / 40 % / 60 % -20\\%/40\\%/60\\% , to introduce further richness in compression ratios. We re-evaluate all methods and benchmarks for evaluation fairness, using the same setup for calibration and evaluation for all methods.",
+      "truncated": true,
+      "available_chars": 125587,
+      "note": "Retrieved passages, not an answer. Missing matches do not establish that the paper lacks the requested experiment. Extracted HTML text; equations and table formatting may be imperfect. No PDF extraction was attempted.",
+      "questions": [
+        "What baselines, model sizes, compression ratios or retained ranks, quality metrics, memory savings, inference/training compute, and ablations are reported for Learnable Subspace Projections compared with SVD or other low-rank compression methods?"
+      ]
+    },
+    "search:5e8af93abf13967d3139c536f98c02c01445ff3d9e836978ad4029f1a1040246": {
+      "status": "ok",
+      "query": "memory-efficient LLM pretraining low-rank gradients optimizer-state compression GaLore FP8 optimizer states",
+      "new_ids": [],
+      "matches": [
+        {
+          "paper_id": "2608.14492",
+          "score": 19.80323850620265,
+          "title": "Approximate Muon with low-rank adapters",
+          "abstract_excerpt": "The Muon optimizer shows clear benefits versus alternatives when pretraining neural networks. However, it is used less frequently for parameter-efficient fine-tuning (PEFT). One potential reason is that the most common PEFT method, LoRA, does not naturally combine with Muon since it is not mathematically possible to orthogonalize the weight update given by a low-rank parameterization. In this paper, we address this issue by approximating the solution to a relaxed Muon objective in the low-rank setting via linearization and then least-squares. We provide an efficient implementation that uses matmul operations only, as opposed to more complex linear algebra decomposition routines. Our method, sMuon (small Muon), performs favourably across SFT and a ReLoRA pretraining experiment. While result",
+          "screened": true,
+          "assessment": {
+            "paper_id": "2608.14492",
+            "label": "relevant",
+            "reason": "Directly addresses Muon optimization for LoRA and low-rank parameterizations, including an efficient approximation and ReLoRA pretraining.",
+            "evidence_quote": "Our method, sMuon (small Muon), performs favourably across SFT and a ReLoRA pretraining experiment."
+          }
+        },
+        {
+          "paper_id": "2609.40127",
+          "score": 14.655204724748433,
+          "title": "Learning Functional Subspaces for Neural Network Compression",
+          "abstract_excerpt": "Modern transformers pair impressive capabilities with substantial memory and compute demands. Low-rank weight factorization reduces both while keeping the matrices dense, and thus efficient on standard hardware. Existing methods, however, choose the subspace to remove from each weight matrix with local closed-form criteria: activation energy, layer-wise reconstruction error, or a quadratic approximation of the loss. These criteria ignore how errors propagate through the network, so at high compression the errors compound with depth and performance collapses. We introduce Learnable Subspace Projections (LSP), which instead learns the subspaces to discard end-to-end. Each linear layer, or tied group of layers that read the same activations, is assigned an orthogonal projector. All projectors",
+          "screened": true,
+          "assessment": {
+            "paper_id": "2609.40127",
+            "label": "relevant",
+            "reason": "Studies learned low-rank subspaces for neural network compression and evaluates quality, rank allocation, decoding speed, and memory savings at LLM scale.",
+            "evidence_quote": "We introduce Learnable Subspace Projections (LSP), which instead learns the subspaces to discard end-to-end."
+          }
+        },
+        {
+          "paper_id": "2608.31036",
+          "score": 13.731234041982972,
+          "title": "Normalized Low-Rank Adaptation",
+          "abstract_excerpt": "While low-rank adaptation (LoRA) is widely used for parameter-efficient model adaptation, how to regularize its training dynamics for stable and effective optimization remains underexplored. Because LoRA initializes the up-projection to zero, its early optimization dynamics are largely governed by the down-projection. Building on this observation, we introduce Normalized Low-Rank Adaptation (NoRA), a simple yet effective method that normalizes the down-projection matrices during training. We further show that the same normalization can be applied only at initialization, improving standard LoRA without requiring repeated normalization throughout training. Across pretraining, supervised finetuning, and reinforcement learning, NoRA consistently accelerates convergence, improves performance an",
+          "screened": true,
+          "assessment": {
+            "paper_id": "2608.31036",
+            "label": "relevant",
+            "reason": "Studies optimization and normalization of LoRA training dynamics, with effects on convergence, stability, performance, and forgetting.",
+            "evidence_quote": "we introduce Normalized Low-Rank Adaptation (NoRA), a simple yet effective method that normalizes the down-projection matrices during training."
+          }
+        },
+        {
+          "paper_id": "2610.11730",
+          "score": 12.668333426023523,
+          "title": "Spectral Weight Decay: Inducing Low-Rank Structure in Neural Network Weights",
+          "abstract_excerpt": "Standard weight decay treats each weight matrix as a vector and ignores its spectral structure. We introduce spectral weight decay, a post-step decoupled nuclear-norm update that applies additive rather than multiplicative spectral shrinkage. We connect the update to approximate proximal descent and show that its sensitivity to update order can exceed that of conventional $\\ell_2$ weight decay near rank deficiency. Across LLaMA models with $124$M to $500$M parameters, spectral weight decay lowers effective rank and improves SVD-LLM compression at matched validation loss. At $500$M and a $4\\%$ distortion budget, it reaches $1.89\\times$ compression and $1.18\\times$ GPU inference speedup, compared with $1.14\\times$ and $1.01\\times$ after standard weight decay. Under fixed-horizon training wit",
+          "screened": true,
+          "assessment": {
+            "paper_id": "2610.11730",
+            "label": "relevant",
+            "reason": "Directly studies spectral weight decay, nuclear-norm/proximal updates, effective rank, compression, and label-noise robustness.",
+            "evidence_quote": "spectral weight decay lowers effective rank and improves SVD-LLM compression"
+          }
+        },
+        {
+          "paper_id": "2510.05491",
+          "score": 12.626497201503668,
+          "title": "NorMuon: Making Muon more efficient and scalable",
+          "abstract_excerpt": "The choice of optimizer significantly impacts the training efficiency and computational costs of large language models (LLMs). Recently, the Muon optimizer has demonstrated promising results by orthogonalizing parameter updates, improving optimization geometry through better conditioning. Despite Muon's emergence as a candidate successor to Adam, the potential for jointly leveraging their strengths has not been systematically explored. In this work, we bridge this gap by proposing NorMuon (Neuron-wise Normalized Muon), an optimizer that synergistically combines orthogonalization with neuron-level adaptive learning rates. Our analysis reveals that while Muon effectively reduces condition numbers, the resulting updates exhibit highly non-uniform neuron norms, causing certain neurons to domin",
+          "screened": true,
+          "assessment": {
+            "paper_id": "2510.05491",
+            "label": "relevant",
+            "reason": "Introduces an efficient, distributed Muon variant and evaluates optimizer efficiency, memory footprint, conditioning, and scaling in LLM pretraining.",
+            "evidence_quote": "we develop an efficient distributed implementation under the FSDP2 framework"
+          }
+        },
+        {
+          "paper_id": "2610.28500",
+          "score": 11.628914372858908,
+          "title": "BitMTP: When Multi-Token Prediction Meets Low-Bit Large Language Models",
+          "abstract_excerpt": "For efficient deployment of large language models (LLMs), methods of ultra-low-bit backbones reduce weight storage, memory traffic, and linear-layer execution cost, while multi-token prediction (MTP) methods reduce sequential decoding steps by predicting multiple future tokens in parallel. Although complementary, the direct combination of these methods cannot accelerate decoding at comparable quality: masked drafting lacks intermediate token input supplied in next-token training, while wider computation and causal key-value (KV) updates can offset the savings from fewer steps. To address these challenges, we propose BitMTP, an algorithm-system co-design framework for efficient MTP on ultra-low-bit LLM backbones. A joint next-token prediction and MTP objective equips a single model with bot",
+          "screened": true,
+          "assessment": {
+            "paper_id": "2610.28500",
+            "label": "uncertain",
+            "reason": "Studies LLM inference efficiency and throughput-memory tradeoffs through low-bit weights and multi-token prediction, but not training optimization or low-rank methods.",
+            "evidence_quote": "methods of ultra-low-bit backbones reduce weight storage, memory traffic, and linear-layer execution cost"
+          }
+        },
+        {
+          "paper_id": "2610.31305",
+          "score": 9.052694969020472,
+          "title": "Cola2: Co-Adaptive Hierarchical Language Modeling with Continuous Semantic Compression and Balanced Discrete Generation",
+          "abstract_excerpt": "Hierarchical language generation separates continuous semantic modeling from discrete text realization, but its effectiveness depends on what the latent space compresses and how the discrete generator uses it. We propose Cola2, a framework that jointly studies continuous semantic compression, the balance between reconstruction and generation, and continuous-discrete co-adaptation. Cola2 dynamically segments text into semantic spans, controls the compression rate through auxiliary-loss-free negative feedback, and combines reconstruction and generation supervision to learn compact, predictive latent representations. A block-causal masked diffusion decoder is trained with clean, noisy, and dropped latent conditions, while classifier-free guidance adjusts the balance between semantic reconstru",
+          "screened": true,
+          "assessment": {
+            "paper_id": "2610.31305",
+            "label": "uncertain",
+            "reason": "Investigates compact latent representations and large-scale language-model training, which may relate to compression and efficiency, but does not clearly study low-rank structure or training memory.",
+            "evidence_quote": "learn compact, predictive latent representations"
+          }
+        },
+        {
+          "paper_id": "2610.08975",
+          "score": 8.992855009142074,
+          "title": "The Best Optimizer Depends on Batch Size",
+          "abstract_excerpt": "A plethora of new adaptive optimizers are designed to efficiently estimate and use minibatch gradient statistics to shape parameter updates, but they are typically benchmarked at a single batch size. Hyperparameter scaling rules promise to preserve performance as batch size and gradient noise change, suggesting that the best optimizer at one batch size should remain the best at another. We challenge this approach to developing and evaluating optimizers by showing: (1) no principled scaling rule for Muon works consistently across training settings, and (2) the best optimizer for language model pretraining changes with batch size even after extensive hyperparameter tuning. To understand these failures, we analyze a noisy quadratic model and show that the batch-size scaling rule that preserve",
+          "screened": true,
+          "assessment": {
+            "paper_id": "2610.08975",
+            "label": "relevant",
+            "reason": "Analyzes optimizer behavior, batch-size scaling, curvature, gradient noise, and language-model pretraining, matching the user's optimization and scaling interests.",
+            "evidence_quote": "the best optimizer for language model pretraining changes with batch size"
+          }
+        },
+        {
+          "paper_id": "2610.30825",
+          "score": 8.82349309995267,
+          "title": "Bezier-Guided Adaptive Flow for Cross-domain Sequential Recommendation",
+          "abstract_excerpt": "Cross-domain sequential recommendation aims to alleviate data sparsity and cold-start problems by transferring useful preference knowledge across domains. However, users exhibit varying degrees of preference consistency across domains, while existing methods often rely on global alignment objectives or coarse-grained transfer strategies. Such approaches may introduce irrelevant information and provide limited flexibility in adapting semantic representations to individual user preferences. To address these challenges, we propose BGAFlow, a personalized framework that combines state-adaptive semantic evolution with user-specific transfer control. BGAFlow first establishes a shared semantic space through unified dual-domain pretraining with user profiles inferred by a large language model (LL",
+          "screened": true,
+          "assessment": {
+            "paper_id": "2610.30825",
+            "label": "irrelevant",
+            "reason": "Addresses cross-domain sequential recommendation and personalized transfer, with no clear connection to the user's research topics.",
+            "evidence_quote": "Cross-domain sequential recommendation aims to alleviate data sparsity and cold-start problems"
+          }
+        },
+        {
+          "paper_id": "2610.30344",
+          "score": 8.038781462630338,
+          "title": "AQL-Lite: Enabling Efficient Knowledge Acquisition for Arabic LLMs via Data-Centric Continual Pretraining",
+          "abstract_excerpt": "Training Arabic large language models faces challenges from noisy web data, dialectal variation, and the high cost of continual pretraining (CPT). We introduce AQL-Lite (AQL: Arabic Quality Language), a time- and resource-efficient framework for adapting a multilingual LLM to Modern Standard Arabic (MSA). AQL-Lite couples a quality-first curation pipeline (structural cleaning, heuristic and model-based filtering, MSA selection, and deduplication) with a partial-parameter CPT recipe that trains RS-LoRA adapters across the network together with the last eight transformer blocks and the embedding matrix, under layer-wise learning rates. At a matched 1B-token budget, CPT on AQL-curated data raises a four-benchmark Arabic mean by 3.51 points over CPT on raw web text, which yields no gain over t",
+          "screened": true,
+          "assessment": {
+            "paper_id": "2610.30344",
+            "label": "relevant",
+            "reason": "Studies RS-LoRA adapters and partial-parameter continual pretraining for efficient language-model adaptation, directly addressing parameter-efficient training and quality-efficiency tradeoffs.",
+            "evidence_quote": "partial-parameter CPT recipe that trains RS-LoRA adapters across the network"
+          }
+        }
+      ],
+      "remaining_admission_slots": 70,
+      "note": "Query-specific scores over the fixed run corpus. Only screened IDs are selectable."
+    }
+  },
+  "x_collector": "arc-v2",
+  "pending": {
+    "action": "finish",
+    "paper_id": "",
+    "reason": "Selected the strongest supported matches across spectral regularization, low-rank compression and optimization, PEFT, scaling, and research-agent retrieval. Remaining uncertainty concerns unverified code/reproducibility and incomplete experimental details for several papers.",
+    "question": "",
+    "query": "",
+    "limit": 10,
+    "selections": [
+      {
+        "paper_id": "2610.11730",
+        "summary": "Introduces decoupled nuclear-norm spectral weight decay that additively shrinks singular values, lowering effective rank. Across 124M–500M LLaMA models, it improves compression and inference speed at matched validation loss and improves robustness to label noise.",
+        "relevance": "Exceptional match for spectral regularization, effective rank, compressibility, and memorization under label noise.",
+        "evidence": [
+          {
+            "source": "inspection",
+            "quote": "The additive shrinkage acts more strongly on smaller singular values and concentrates the spectrum."
+          },
+          {
+            "source": "inspection",
+            "quote": "For the 500M model and a 4% distortion budget, it supports 1.89× compression, compared with 1.14× after standard weight decay."
+          }
+        ]
+      },
+      {
+        "paper_id": "2609.40127",
+        "summary": "Learns low-rank subspaces end-to-end against the dense model's output rather than using local reconstruction criteria. It reports improved quality at high compression, faster decoding, and large combined weight/KV-cache memory savings.",
+        "relevance": "Strong match for low-rank compression, functional redundancy, model quality, and memory-efficiency tradeoffs.",
+        "evidence": [
+          {
+            "source": "inspection",
+            "quote": "At −70% compression on Llama-2-7B, LSP reaches 10.9 perplexity and 42.2% mean zero-shot accuracy, versus 13.3 and 36.0% for the strongest baseline."
+          },
+          {
+            "source": "inspection",
+            "quote": "Its shared latent reduces the memory of weights and KV cache by 13.5× at a 128k-token context."
+          }
+        ]
+      },
+      {
+        "paper_id": "2608.14492",
+        "summary": "Introduces sMuon, an efficient matmul-only approximation of Muon for low-rank adapters. It compares against AdamW, per-factor Muon, LoRA-Muon, and Riemannion across four models and reports strong but model- and evaluation-dependent results.",
+        "relevance": "Directly addresses optimization for LoRA, Muon, low-rank parameterizations, and ReLoRA pretraining.",
+        "evidence": [
+          {
+            "source": "inspection",
+            "quote": "Our method, sMuon (small Muon), performs favourably across SFT and a ReLoRA pretraining experiment."
+          },
+          {
+            "source": "inspection",
+            "quote": "ReLoRA pretraining: final validation loss ... AdamW 3.83 ... sMuon (ours) 3.66."
+          }
+        ]
+      },
+      {
+        "paper_id": "2608.31036",
+        "summary": "Proposes Normalized Low-Rank Adaptation, which normalizes LoRA down-projection matrices during training or only at initialization. The abstract reports improved convergence, stability, performance, and reduced catastrophic forgetting across pretraining, supervised fine-tuning, and reinforcement learning.",
+        "relevance": "Strong match for LoRA optimization dynamics and practical parameter-efficient training.",
+        "evidence": [
+          {
+            "source": "abstract",
+            "quote": "we introduce Normalized Low-Rank Adaptation (NoRA), a simple yet effective method that normalizes the down-projection matrices during training."
+          },
+          {
+            "source": "abstract",
+            "quote": "Across pretraining, supervised finetuning, and reinforcement learning, NoRA consistently accelerates convergence, improves performance and training stability, and mitigates catastrophic forgetting."
+          }
+        ]
+      },
+      {
+        "paper_id": "2510.05491",
+        "summary": "Introduces NorMuon, combining Muon orthogonalization with neuron-wise normalization and an efficient distributed FSDP2 implementation. It targets optimizer conditioning, non-uniform neuron norms, and scalable LLM pretraining.",
+        "relevance": "Relevant to Muon optimization, training efficiency, distributed implementation, and optimizer scaling.",
+        "evidence": [
+          {
+            "source": "abstract",
+            "quote": "NorMuon (Neuron-wise Normalized Muon), an optimizer that synergistically combines orthogonalization with neuron-level adaptive learning rates."
+          },
+          {
+            "source": "abstract",
+            "quote": "we develop an efficient distributed implementation under the FSDP2 framework"
+          }
+        ]
+      },
+      {
+        "paper_id": "2610.08975",
+        "summary": "Studies how optimizer rankings change with batch size and gradient noise. It argues that no single Muon scaling rule works consistently and that the best optimizer can change after batch-size increases even with extensive tuning.",
+        "relevance": "Directly relevant to optimizer behavior, scaling laws, curvature, gradient noise, and LLM pretraining tradeoffs.",
+        "evidence": [
+          {
+            "source": "abstract",
+            "quote": "no principled scaling rule for Muon works consistently across training settings"
+          },
+          {
+            "source": "abstract",
+            "quote": "the best optimizer for language model pretraining changes with batch size"
+          }
+        ]
+      },
+      {
+        "paper_id": "2610.30344",
+        "summary": "Presents an efficient continual-pretraining recipe using RS-LoRA adapters plus selected unfrozen transformer blocks and embeddings. It reports quality gains over raw-data CPT and substantially lower wall-clock time than full-parameter CPT in controlled comparisons.",
+        "relevance": "Relevant to parameter-efficient LLM adaptation and quality, data, and training-time tradeoffs.",
+        "evidence": [
+          {
+            "source": "abstract",
+            "quote": "partial-parameter CPT recipe that trains RS-LoRA adapters across the network"
+          },
+          {
+            "source": "abstract",
+            "quote": "recovers 94% of the gain of full-parameter CPT ... in 52% of the wall-clock time"
+          }
+        ]
+      },
+      {
+        "paper_id": "2610.29326",
+        "summary": "Introduces a lightweight first-stage relevance filter for LLM agents. It uses offline-generated activating examples and hard negatives with an embedding-based classifier to reduce downstream LLM relevance-evaluation cost while preserving recall.",
+        "relevance": "Strong match for paper retrieval, relevance ranking, context management, and efficient agent tool orchestration.",
+        "evidence": [
+          {
+            "source": "abstract",
+            "quote": "a lightweight first-stage relevance filter"
+          },
+          {
+            "source": "abstract",
+            "quote": "achieves higher precision than top-K and cosine-threshold retrieval at every evaluated recall level"
+          }
+        ]
+      },
+      {
+        "paper_id": "2610.29189",
+        "summary": "Reviews reasoning-search systems that interleave planning, querying, retrieval, integration, verification, and stopping. It provides a taxonomy over retrieval coupling, controller design, knowledge source, grounding strictness, and learning signal.",
+        "relevance": "Directly relevant to building a research-digest agent with structured decisions, retrieval, verification, and tool orchestration.",
+        "evidence": [
+          {
+            "source": "abstract",
+            "quote": "tightly coupling step-by-step reasoning with interactive search"
+          },
+          {
+            "source": "abstract",
+            "quote": "We analyze these systems through four architectural axes: retrieval coupling, controller design, knowledge source, and grounding strictness."
+          }
+        ]
+      },
+      {
+        "paper_id": "2609.37725",
+        "summary": "Introduces Context Language Models that treat context as a file the model can update. The abstract reports improved task accuracy with fewer FLOPs and shows that context-management behavior can be steered through natural-language instructions and skill optimization.",
+        "relevance": "Strong match for explicit context management and AI research-digest agent design.",
+        "evidence": [
+          {
+            "source": "abstract",
+            "quote": "We introduce Context Language Models (CLMs), language models that natively manage their own context."
+          },
+          {
+            "source": "abstract",
+            "quote": "11.4% higher accuracy with 21.5% fewer FLOPs on BrowseComp-Plus"
+          }
+        ]
+      }
+    ],
+    "limitations": [
+      "X attention is disabled, so no popularity or social-attention signal is available.",
+      "Repository availability was not checked for the selected papers.",
+      "Several abstracts are truncated, and detailed memory, compute, ablation, and reproducibility evidence is unavailable for some selections."
+    ]
+  },
+  "screen_target": 30,
+  "llm_calls": 8,
+  "steps": 5,
+  "inspections": 3,
+  "expansions": 1,
+  "fetched_count": 100,
+  "candidate_count": 100,
+  "llm_usage": [
+    {
+      "model": "gpt-5.6-luna",
+      "status": "completed",
+      "input_tokens": 9351,
+      "output_tokens": 780,
+      "latency_seconds": 18.775759041993297,
+      "estimated_api_cost_usd": 0.0028062
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "status": "completed",
+      "input_tokens": 9433,
+      "output_tokens": 835,
+      "latency_seconds": 19.09863687500183,
+      "estimated_api_cost_usd": 0.0028886000000000003
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "status": "completed",
+      "input_tokens": 9494,
+      "output_tokens": 795,
+      "latency_seconds": 17.93623099999968,
+      "estimated_api_cost_usd": 0.0028528000000000004
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "status": "completed",
+      "input_tokens": 18810,
+      "output_tokens": 209,
+      "latency_seconds": 7.978683833003743,
+      "estimated_api_cost_usd": 0.0040128
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "status": "completed",
+      "input_tokens": 26622,
+      "output_tokens": 292,
+      "latency_seconds": 9.025769874991965,
+      "estimated_api_cost_usd": 0.0056748
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "status": "completed",
+      "input_tokens": 31912,
+      "output_tokens": 282,
+      "latency_seconds": 9.312708750003367,
+      "estimated_api_cost_usd": 0.0067208
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "status": "completed",
+      "input_tokens": 35611,
+      "output_tokens": 250,
+      "latency_seconds": 9.101659249994555,
+      "estimated_api_cost_usd": 0.0074222
+    },
+    {
+      "model": "gpt-5.6-luna",
+      "status": "completed",
+      "input_tokens": 37260,
+      "output_tokens": 1707,
+      "latency_seconds": 34.94798774999799,
+      "estimated_api_cost_usd": 0.009500399999999999
+    }
+  ],
+  "tool_calls": 4,
+  "inspection_queries": {
+    "2610.11730:8c91d610a6d53beb39bfa38c4d9a5a1cb666d3cacc76fb91b4e2e12b8fae22b8": {
+      "status": "ok",
+      "question": "What experimental baselines and controls are used for spectral weight decay, and what are the measured effects on effective rank, validation loss, compression, inference speed, training memory, and compute across model sizes?",
+      "source": "https://arxiv.org/html/2610.11730v1",
+      "passages": [
+        {
+          "chunk_id": "chunk-0003",
+          "section": "1 Introduction",
+          "text": "To make the regularizer matrix-aware, we begin with the proximal interpretation of decoupled weight decay. To first order, its update is a proximal gradient step for the squared Frobenius penalty [ Parikh and Boyd, 2014 ; Zhuang et al., 2022 ] . We replace this penalty with the nuclear norm, a convex surrogate for rank whose proximal operator soft-thresholds singular values [ Recht et al., 2010 ; Cai et al., 2010 ] . This construction is the matrix analogue of replacing ridge shrinkage with coefficient selection by the lasso [ Hoerl and Kennard, 1970 ; Tibshirani, 1996 ] . Given the loss-only optimizer direction Δ \\Delta , let Z = W ( k ) − η ​ Δ = U Z ​ Σ Z ​ V Z ⊤ Z=W^{(k)}-\\eta\\Delta=U_{Z}\\Sigma_{Z}V_{Z}^{\\top} . Spectral weight decay applies the post-step correction W ( k + 1 ) = Z − η ​ λ ​ U Z ​ V Z ⊤ , W^{(k+1)}=Z-\\eta\\lambda U_{Z}V_{Z}^{\\top}, (1) where η \\eta is the learning rate and λ \\lambda the regularization coefficient. This correction acts additively in the singular basis of Z Z , whereas conventional weight decay scales the spectrum uniformly. SLORR-Nuc also approximates the nuclear-norm polar factor [ González-Martínez and Liu, 2026 ] . Its decoupled extension would use the pre-step correction Z − η ​ λ ​ U W ​ V W ⊤ Z-\\eta\\lambda U_{W}V_{W}^{\\top} for W ( k ) = U W ​ Σ W ​ V W ⊤ W^{(k)}=U_{W}\\Sigma_{W}V_{W}^{\\top} , rather than ( 1 ).",
+          "source": "https://arxiv.org/html/2610.11730v1",
+          "offset": 0,
+          "score": 2.6601823127151047
+        },
+        {
+          "chunk_id": "chunk-0004",
+          "section": "1 Introduction",
+          "text": "The additive shrinkage acts more strongly on smaller singular values and concentrates the spectrum. The resulting low-effective-rank weights admit efficient truncated SVD compression. Replacing a dense m × n m\\times n matrix with rank- r r factors reduces its parameter count and multiplication cost from m ​ n mn to r ⁡ ( m + n ) r(m+n) . This factorization lowers storage and inference memory and can reduce latency when the retained rank is sufficiently small. Beyond compression, we test whether the same low-rank bias limits memorization under label noise. We evaluate spectral weight decay in LLaMA [ Touvron et al., 2023 ] pretraining, post-training compression, and fixed-horizon noisy-label classification. Across models with 124 124 M to 500 500 M parameters, it lowers effective rank [ Roy and Vetterli, 2007 ] and improves compression and inference speed at matched validation loss. At 500 500 M and a 4 % 4\\% distortion budget, it reaches 1.89 × 1.89\\times compression and a 1.18 × 1.18\\times GPU inference speedup. At 60 % 60\\% label noise, mean clean-test accuracy gains over matched ℓ 2 \\ell_{2} regularization reach 17.78 17.78 points on MNIST and 4.59 4.59 points on four BERT-base tasks.",
+          "source": "https://arxiv.org/html/2610.11730v1",
+          "offset": 0,
+          "score": 19.11166007639698
+        },
+        {
+          "chunk_id": "chunk-0005",
+          "section": "Contributions",
+          "text": "• We formulate spectral weight decay as decoupled nuclear-norm regularization, derive its additive singular-value shrinkage, and connect the update to approximate proximal descent. • Across LLaMA models with 124 124 M to 500 500 M parameters, spectral weight decay improves low-rank compression and inference speed over standard weight decay at matched validation loss. It also outperforms Cuttlefish and Prehab in matched compression comparisons. • On image and text classification tasks, spectral weight decay improves fixed-horizon robustness to label noise over matched ℓ 2 \\ell_{2} regularization.",
+          "source": "https://arxiv.org/html/2610.11730v1",
+          "offset": 0,
+          "score": 15.97982161507622
+        },
+        {
+          "chunk_id": "chunk-0012",
+          "section": "3.1 Effective rank and why it matters",
+          "text": "We use effective rank instead of stable rank, ‖ W ‖ F 2 / ‖ W ‖ 2 2 \\|W\\|_{F}^{2}/\\|W\\|_{2}^{2} , because it predicts a practical compression threshold. Truncating to ⌈ erank ⁡ ( W ) ⌉ \\lceil\\operatorname{erank}(W)\\rceil preserves model quality, while lower ranks degrade it sharply (Figure 2 , right). Stable rank can remain near one when a single singular value dominates many active directions, so it does not capture this threshold. Figure 2 : Effective-rank profiles and compression of the λ = 1 \\lambda=1 model. Left: effective rank as a percentage of full rank, grouped by layer type. Middle: the same ratio across transformer blocks. Right: validation loss after truncated SVD and SVD-LLM at different retained ranks. The vertical line marks the mean effective rank. Figure 3 : Compression and inference frontiers under validation-loss distortion budgets. Top: maximum compression rate relative to the best dense checkpoint at each scale. Bottom: maximum inference speedup.",
+          "source": "https://arxiv.org/html/2610.11730v1",
+          "offset": 0,
+          "score": 13.971443502388645
+        },
+        {
+          "chunk_id": "chunk-0013",
+          "section": "3.2 Compression and inference",
+          "text": "Spectral weight decay lowers the effective rank of weight matrices, making them amenable to low-rank compression. We use SVD-LLM [ Wang et al., 2024 ] , which gives the lowest validation loss in our matched comparison. We compress each weight matrix to its own effective rank, which varies substantially across layers (Figure 2 , middle). We leave the token embeddings and output head uncompressed because their ranks respond little to spectral weight decay, and compressing them even to their effective ranks sharply degrades model quality. The comparison and compression procedure are described in Appendix B.4 . Figure 3 (top) reports the maximum compression rate supported by each validation-loss distortion budget. Spectral weight decay substantially shifts this frontier upward at all three model scales. For the 500 500 M model and a 4 % 4\\% distortion budget, it supports 1.89 × 1.89\\times compression, compared with 1.14 × 1.14\\times after standard weight decay. The same factorization reduces the FLOPs of a linear layer when r ⁡ ( m + n ) < m ​ n r(m+n)<mn . This reduction does not translate directly into lower latency because the factorized forward pass evaluates ( U r ​ Σ r ) ​ ( V r ⊤ ​ X ) (U_{r}\\Sigma_{r})(V_{r}^{\\top}X) with two GEMMs instead of the single GEMM W ​ X WX . The additional kernel launch and intermediate activation can offset the reduction in FLOPs. To improve tensor-core utilization, we round the effective rank down to the nearest multiple of 16 16 , r l = max ⁡ ( 16 , 16 ​ ⌊ erank ⁡ ( W l ) 16 ⌋ ) , r_{l}=\\max\\!\\left(16,\\,16\\left\\lfloor\\frac{\\operatorname{erank}(W_{l})}{16}\\right\\rfloor\\right), (3)",
+          "source": "https://arxiv.org/html/2610.11730v1",
+          "offset": 0,
+          "score": 13.264792858725645
+        },
+        {
+          "chunk_id": "chunk-0014",
+          "section": "3.2 Compression and inference",
+          "text": "Adjusting an aligned rank by one step, ± 16 \\pm 16 , has negligible effect on validation loss. We therefore use this rank-aligned compression scheme throughout. The factorized models outperform their dense counterparts only at large batch sizes, so we measure forward-pass latency with a batch size of 256 256 on a single GPU. For the 500 500 M model, spectral weight decay yields a 1.09 × 1.09\\times speedup near a 2 % 2\\% distortion budget and reaches 1.18 × 1.18\\times at 4 % 4\\% , compared with 1.01 × 1.01\\times under standard weight decay (Figure 3 , bottom).",
+          "source": "https://arxiv.org/html/2610.11730v1",
+          "offset": 0,
+          "score": 15.041388053734513
+        }
+      ],
+      "text": "To make the regularizer matrix-aware, we begin with the proximal interpretation of decoupled weight decay. To first order, its update is a proximal gradient step for the squared Frobenius penalty [ Parikh and Boyd, 2014 ; Zhuang et al., 2022 ] . We replace this penalty with the nuclear norm, a convex surrogate for rank whose proximal operator soft-thresholds singular values [ Recht et al., 2010 ; Cai et al., 2010 ] . This construction is the matrix analogue of replacing ridge shrinkage with coefficient selection by the lasso [ Hoerl and Kennard, 1970 ; Tibshirani, 1996 ] . Given the loss-only optimizer direction Δ \\Delta , let Z = W ( k ) − η ​ Δ = U Z ​ Σ Z ​ V Z ⊤ Z=W^{(k)}-\\eta\\Delta=U_{Z}\\Sigma_{Z}V_{Z}^{\\top} . Spectral weight decay applies the post-step correction W ( k + 1 ) = Z − η ​ λ ​ U Z ​ V Z ⊤ , W^{(k+1)}=Z-\\eta\\lambda U_{Z}V_{Z}^{\\top}, (1) where η \\eta is the learning rate and λ \\lambda the regularization coefficient. This correction acts additively in the singular basis of Z Z , whereas conventional weight decay scales the spectrum uniformly. SLORR-Nuc also approximates the nuclear-norm polar factor [ González-Martínez and Liu, 2026 ] . Its decoupled extension would use the pre-step correction Z − η ​ λ ​ U W ​ V W ⊤ Z-\\eta\\lambda U_{W}V_{W}^{\\top} for W ( k ) = U W ​ Σ W ​ V W ⊤ W^{(k)}=U_{W}\\Sigma_{W}V_{W}^{\\top} , rather than ( 1 ).\n\nThe additive shrinkage acts more strongly on smaller singular values and concentrates the spectrum. The resulting low-effective-rank weights admit efficient truncated SVD compression. Replacing a dense m × n m\\times n matrix with rank- r r factors reduces its parameter count and multiplication cost from m ​ n mn to r ⁡ ( m + n ) r(m+n) . This factorization lowers storage and inference memory and can reduce latency when the retained rank is sufficiently small. Beyond compression, we test whether the same low-rank bias limits memorization under label noise. We evaluate spectral weight decay in LLaMA [ Touvron et al., 2023 ] pretraining, post-training compression, and fixed-horizon noisy-label classification. Across models with 124 124 M to 500 500 M parameters, it lowers effective rank [ Roy and Vetterli, 2007 ] and improves compression and inference speed at matched validation loss. At 500 500 M and a 4 % 4\\% distortion budget, it reaches 1.89 × 1.89\\times compression and a 1.18 × 1.18\\times GPU inference speedup. At 60 % 60\\% label noise, mean clean-test accuracy gains over matched ℓ 2 \\ell_{2} regularization reach 17.78 17.78 points on MNIST and 4.59 4.59 points on four BERT-base tasks.\n\n• We formulate spectral weight decay as decoupled nuclear-norm regularization, derive its additive singular-value shrinkage, and connect the update to approximate proximal descent. • Across LLaMA models with 124 124 M to 500 500 M parameters, spectral weight decay improves low-rank compression and inference speed over standard weight decay at matched validation loss. It also outperforms Cuttlefish and Prehab in matched compression comparisons. • On image and text classification tasks, spectral weight decay improves fixed-horizon robustness to label noise over matched ℓ 2 \\ell_{2} regularization.\n\nWe use effective rank instead of stable rank, ‖ W ‖ F 2 / ‖ W ‖ 2 2 \\|W\\|_{F}^{2}/\\|W\\|_{2}^{2} , because it predicts a practical compression threshold. Truncating to ⌈ erank ⁡ ( W ) ⌉ \\lceil\\operatorname{erank}(W)\\rceil preserves model quality, while lower ranks degrade it sharply (Figure 2 , right). Stable rank can remain near one when a single singular value dominates many active directions, so it does not capture this threshold. Figure 2 : Effective-rank profiles and compression of the λ = 1 \\lambda=1 model. Left: effective rank as a percentage of full rank, grouped by layer type. Middle: the same ratio across transformer blocks. Right: validation loss after truncated SVD and SVD-LLM at different retained ranks. The vertical line marks the mean effective rank. Figure 3 : Compression and inference frontiers under validation-loss distortion budgets. Top: maximum compression rate relative to the best dense checkpoint at each scale. Bottom: maximum inference speedup.\n\nSpectral weight decay lowers the effective rank of weight matrices, making them amenable to low-rank compression. We use SVD-LLM [ Wang et al., 2024 ] , which gives the lowest validation loss in our matched comparison. We compress each weight matrix to its own effective rank, which varies substantially across layers (Figure 2 , middle). We leave the token embeddings and output head uncompressed because their ranks respond little to spectral weight decay, and compressing them even to their effective ranks sharply degrades model quality. The comparison and compression procedure are described in Appendix B.4 . Figure 3 (top) reports the maximum compression rate supported by each validation-loss distortion budget. Spectral weight decay substantially shifts this frontier upward at all three model scales. For the 500 500 M model and a 4 % 4\\% distortion budget, it supports 1.89 × 1.89\\times compression, compared with 1.14 × 1.14\\times after standard weight decay. The same factorization reduces the FLOPs of a linear layer when r ⁡ ( m + n ) < m ​ n r(m+n)<mn . This reduction does not translate directly into lower latency because the factorized forward pass evaluates ( U r ​ Σ r ) ​ ( V r ⊤ ​ X ) (U_{r}\\Sigma_{r})(V_{r}^{\\top}X) with two GEMMs instead of the single GEMM W ​ X WX . The additional kernel launch and intermediate activation can offset the reduction in FLOPs. To improve tensor-core utilization, we round the effective rank down to the nearest multiple of 16 16 , r l = max ⁡ ( 16 , 16 ​ ⌊ erank ⁡ ( W l ) 16 ⌋ ) , r_{l}=\\max\\!\\left(16,\\,16\\left\\lfloor\\frac{\\operatorname{erank}(W_{l})}{16}\\right\\rfloor\\right), (3)\n\nAdjusting an aligned rank by one step, ± 16 \\pm 16 , has negligible effect on validation loss. We therefore use this rank-aligned compression scheme throughout. The factorized models outperform their dense counterparts only at large batch sizes, so we measure forward-pass latency with a batch size of 256 256 on a single GPU. For the 500 500 M model, spectral weight decay yields a 1.09 × 1.09\\times speedup near a 2 % 2\\% distortion budget and reaches 1.18 × 1.18\\times at 4 % 4\\% , compared with 1.01 × 1.01\\times under standard weight decay (Figure 3 , bottom).",
+      "truncated": true,
+      "available_chars": 68851,
+      "note": "Retrieved passages, not an answer. Missing matches do not establish that the paper lacks the requested experiment. Extracted HTML text; equations and table formatting may be imperfect. No PDF extraction was attempted."
+    },
+    "2608.14492:798314f742049a5dcee4dd30f6e1160c1292dc232676c75569eb10ba38a024d7": {
+      "status": "ok",
+      "question": "What baselines, model sizes, tasks, and controlled comparisons are used for sMuon, and what quantitative performance, convergence, memory, or compute differences are reported versus Adam, Muon, LoRA, and ReLoRA?",
+      "source": "https://arxiv.org/html/2608.14492v1",
+      "passages": [
+        {
+          "chunk_id": "chunk-0002",
+          "section": "Abstract",
+          "text": "The Muon optimizer shows clear benefits versus alternatives when pretraining neural networks. However, it is used less frequently for parameter-efficient fine-tuning (PEFT). One potential reason is that the most common PEFT method, LoRA, does not naturally combine with Muon since it is not mathematically possible to orthogonalize the weight update given by a low-rank parameterization. In this paper, we address this issue by approximating the solution to a relaxed Muon objective in the low-rank setting via linearization and then least-squares. We provide an efficient implementation that uses matmul operations only, as opposed to more complex linear algebra decomposition routines. Our method, sMuon (small Muon), performs favourably across SFT and a ReLoRA pretraining experiment. While results are model- and eval-dependent, we find overall that using Muon for low-rank fine-tuning provides moderate performance improvements.",
+          "source": "https://arxiv.org/html/2608.14492v1",
+          "offset": 0,
+          "score": 16.56034249877086
+        },
+        {
+          "chunk_id": "chunk-0027",
+          "section": "5 Experiments",
+          "text": "Table 2: Code pass@1 (%), grouped by base model. Each column is an optimizer (best run by validation loss); per row the best optimizer is bolded and cells are shaded green (best) to white (worst). Eval AdamW Per-factor Muon LoRA-Muon Riemannion sMuon (ours) Qwen2.5-3B HumanEval 54.9 20.1 43.3 31.1 51.8 HumanEval+ 48.8 17.1 39.0 25.6 43.9 MBPP 65.9 69.3 68.0 65.9 62.7 MBPP+ 57.1 60.6 58.7 56.9 53.4 Llama-3.2-3B HumanEval 22.0 18.3 29.9 30.5 29.9 HumanEval+ 19.5 16.5 25.0 26.8 27.4 MBPP 43.1 35.7 42.1 46.3 45.2 MBPP+ 35.4 30.4 34.1 38.1 38.6 DeepSeek-V2-Lite HumanEval 36.6 29.3 22.0 23.2 26.8 HumanEval+ 28.7 23.8 18.3 19.5 23.2 MBPP 52.6 53.7 48.4 49.5 51.3 MBPP+ 45.5 45.0 43.4 43.7 44.7 Moonlight-16B-A3B HumanEval 49.4 57.9 53.7 40.2 54.9 HumanEval+ 42.7 48.8 47.0 35.4 48.8 MBPP 71.7 71.2 71.2 68.8 71.2 MBPP+ 60.1 60.1 61.4 58.7 60.3 Table 3: ReLoRA pretraining: final validation loss at each optimizer’s optimal learning rate, where the optimal LR minimises the validation loss at the final logged step. Lower is better; the best optimizer is bolded and cells are shaded green (best) to white (worst). AdamW Per-factor Muon LoRA-Muon Riemannion sMuon (ours) Final val loss 3.83 3.70 3.68 3.66 3.66 Optimal LR 0.001 0.006 0.001 0.0006 0.0006",
+          "source": "https://arxiv.org/html/2608.14492v1",
+          "offset": 0,
+          "score": 6.69724988678411
+        },
+        {
+          "chunk_id": "chunk-0028",
+          "section": "5 Experiments",
+          "text": "We compare sMuon to regular LoRA with AdamW, per-factor Muon (LoRA with Muon applied to each adapter weight B B and A A individually), LoRA-Muon ( Cesista et al., 2026 ) , and Riemannion ( Bogachev et al., 2026 ) . We evaluated on standard commonsense ( Clark et al., 2018 ; Clark et al., 2019 ; Zellers et al., 2019 ; Mihaylov et al., 2018 ; Bisk et al., 2020 ; Sakaguchi et al., 2021 ) and coding ( Chen et al., 2021 ; Austin et al., 2021 ) benchmarks after training with SFT. We experimented with four models, Llama-3.2-3B ( Grattafiori et al., 2024 ) , Qwen2.5-3B ( Qwen Team, 2025 ) , DeepSeek-V2-Lite ( DeepSeek-AI, 2024 ) , and Moonlight-16B-A3B ( Liu et al., 2025 ) . The first two models are dense models; the last two are sparse MoE models. The Moonlight model is of particular note because it was pretrained with Muon, whereas the others are all AdamW-pretrained. We also tested the methods in a pretraining setting using ReLoRA ( Lialin et al., 2023 ) which periodically merges and refreshes the adapter. We tuned the learning rate for each method and model, with example learning rate sweeps for the commonsense tasks shown in Appendix E . While our results are both model- and eval-dependent, sMuon performs strongly overall, especially when combined with the Moonlight-16B-A3B base model, a Muon-pretrained model (Tables 1 and 2 ). sMuon also achieved the joint-best validation loss in the ReLoRA pretraining setting (Table 3 ). We attribute performance gains, particularly over AdamW and per-factor Muon, to more accurately approximating the Muon objective.",
+          "source": "https://arxiv.org/html/2608.14492v1",
+          "offset": 0,
+          "score": 14.634489756370547
+        },
+        {
+          "chunk_id": "chunk-0029",
+          "section": "Experiment details",
+          "text": "LoRA-Muon and Riemannion were chosen as baselines in addition to the simpler AdamW and per-factor Muon baselines as these are the most similar to our method. Unfortunately, we could not find implementations for LoRA-Muon or Riemannion, so we implemented these ourselves. For Riemannion and our method, we use an A = 0 A=0 and B B orthonormal initialization, and for the remaining methods we used a standard initialization ( B = 0 B=0 , A A random Gaussian). We scale the learning rate to approximately match AdamW RMS for all Muon optimizers (for details see App. A.1 ). For all experiments, we used weight decay 0.01 0.01 , momentum 0.9 0.9 , inserted LoRA adapters into all hidden layers (except the router for models with MoE). We used GH200 for all experiments except to produce Table 4 for which we used A100. We used bf16 to store weights and optimizer states, but used fp32 to compute the step for Riemannion, sMuon, and LoRA-Muon. For the ReLoRA experiments ( Lialin et al., 2023 ) , we started with the modded-nanogpt codebase at ‘record 8’ ( Jordan et al., 2024a ) , which trains a 162M parameter transformer from scratch (using features including QK-norm, ReLU 2 activations) on the FineWeb dataset ( Penedo et al., 2024 ) , and evaluates on a 10M token validation set. We initialize LoRA adapters with rank 64, and train for a total of 3000 steps; every 500 steps we merge the adapters into the base weights and reinitialize the adapters; we use a cosine decay learning rate schedule, though after each merge+reinitialization, we also reset the learning rate to zero and warm back up to the target learning rate over 50 steps (this is also known as a jagged cosine schedule). We swept learning rates in 3e-4, 6e-4, 1e-3, 3e-3, 6e-3, 1e-2.",
+          "source": "https://arxiv.org/html/2608.14492v1",
+          "offset": 0,
+          "score": 15.688618103181316
+        },
+        {
+          "chunk_id": "chunk-0030",
+          "section": "Experiment details",
+          "text": "For the HumanEval ( Chen et al., 2021 ) and MBPP ( Austin et al., 2021 ) coding evals, we fine-tuned for 3 epochs on completing Python functions from the CodeAlpaca dataset ( Chaudhary, 2023 ) . For the MMLU ( Hendrycks et al., 2021 ) eval, we fine-tuned on a 50/50 mixture of FLAN ( Longpre et al., 2023 ) and MMLU training subset. For the remaining evals, we trained on a mixture of FLAN and CommonsenseQA ( Talmor et al., 2019 ) , and training subset for each eval. All SFT evals were 0-shot. For SFT training runs, we used α = 32 \\alpha=32 , r = 16 r=16 , gradient clipping (clipping at 1 1 ), and we used roughly 2 16 2^{16} tokens per batch.",
+          "source": "https://arxiv.org/html/2608.14492v1",
+          "offset": 0,
+          "score": 3.3235510837563966
+        },
+        {
+          "chunk_id": "chunk-0031",
+          "section": "Muon-based LoRA is strongest on the Muon-pretrained model",
+          "text": "We originally hypothesized that Muon-based LoRA methods might perform better with Moonlight, since it is a Muon-pretrained model. We do find some evidence for this when aggregating over all benchmarks in Tables 1 and 2 : AdamW only achieves top performance on one of the eleven tasks, while sMuon is best for six. Some methods are markedly below others on certain tasks (e.g. per-factor Muon with Llama-3.2-3B on HumanEval, Table 2 ). This could be due to optimizer instabilities or noise in the benchmarks or selection procedure.",
+          "source": "https://arxiv.org/html/2608.14492v1",
+          "offset": 0,
+          "score": 14.86041193261244
+        }
+      ],
+      "text": "The Muon optimizer shows clear benefits versus alternatives when pretraining neural networks. However, it is used less frequently for parameter-efficient fine-tuning (PEFT). One potential reason is that the most common PEFT method, LoRA, does not naturally combine with Muon since it is not mathematically possible to orthogonalize the weight update given by a low-rank parameterization. In this paper, we address this issue by approximating the solution to a relaxed Muon objective in the low-rank setting via linearization and then least-squares. We provide an efficient implementation that uses matmul operations only, as opposed to more complex linear algebra decomposition routines. Our method, sMuon (small Muon), performs favourably across SFT and a ReLoRA pretraining experiment. While results are model- and eval-dependent, we find overall that using Muon for low-rank fine-tuning provides moderate performance improvements.\n\nTable 2: Code pass@1 (%), grouped by base model. Each column is an optimizer (best run by validation loss); per row the best optimizer is bolded and cells are shaded green (best) to white (worst). Eval AdamW Per-factor Muon LoRA-Muon Riemannion sMuon (ours) Qwen2.5-3B HumanEval 54.9 20.1 43.3 31.1 51.8 HumanEval+ 48.8 17.1 39.0 25.6 43.9 MBPP 65.9 69.3 68.0 65.9 62.7 MBPP+ 57.1 60.6 58.7 56.9 53.4 Llama-3.2-3B HumanEval 22.0 18.3 29.9 30.5 29.9 HumanEval+ 19.5 16.5 25.0 26.8 27.4 MBPP 43.1 35.7 42.1 46.3 45.2 MBPP+ 35.4 30.4 34.1 38.1 38.6 DeepSeek-V2-Lite HumanEval 36.6 29.3 22.0 23.2 26.8 HumanEval+ 28.7 23.8 18.3 19.5 23.2 MBPP 52.6 53.7 48.4 49.5 51.3 MBPP+ 45.5 45.0 43.4 43.7 44.7 Moonlight-16B-A3B HumanEval 49.4 57.9 53.7 40.2 54.9 HumanEval+ 42.7 48.8 47.0 35.4 48.8 MBPP 71.7 71.2 71.2 68.8 71.2 MBPP+ 60.1 60.1 61.4 58.7 60.3 Table 3: ReLoRA pretraining: final validation loss at each optimizer’s optimal learning rate, where the optimal LR minimises the validation loss at the final logged step. Lower is better; the best optimizer is bolded and cells are shaded green (best) to white (worst). AdamW Per-factor Muon LoRA-Muon Riemannion sMuon (ours) Final val loss 3.83 3.70 3.68 3.66 3.66 Optimal LR 0.001 0.006 0.001 0.0006 0.0006\n\nWe compare sMuon to regular LoRA with AdamW, per-factor Muon (LoRA with Muon applied to each adapter weight B B and A A individually), LoRA-Muon ( Cesista et al., 2026 ) , and Riemannion ( Bogachev et al., 2026 ) . We evaluated on standard commonsense ( Clark et al., 2018 ; Clark et al., 2019 ; Zellers et al., 2019 ; Mihaylov et al., 2018 ; Bisk et al., 2020 ; Sakaguchi et al., 2021 ) and coding ( Chen et al., 2021 ; Austin et al., 2021 ) benchmarks after training with SFT. We experimented with four models, Llama-3.2-3B ( Grattafiori et al., 2024 ) , Qwen2.5-3B ( Qwen Team, 2025 ) , DeepSeek-V2-Lite ( DeepSeek-AI, 2024 ) , and Moonlight-16B-A3B ( Liu et al., 2025 ) . The first two models are dense models; the last two are sparse MoE models. The Moonlight model is of particular note because it was pretrained with Muon, whereas the others are all AdamW-pretrained. We also tested the methods in a pretraining setting using ReLoRA ( Lialin et al., 2023 ) which periodically merges and refreshes the adapter. We tuned the learning rate for each method and model, with example learning rate sweeps for the commonsense tasks shown in Appendix E . While our results are both model- and eval-dependent, sMuon performs strongly overall, especially when combined with the Moonlight-16B-A3B base model, a Muon-pretrained model (Tables 1 and 2 ). sMuon also achieved the joint-best validation loss in the ReLoRA pretraining setting (Table 3 ). We attribute performance gains, particularly over AdamW and per-factor Muon, to more accurately approximating the Muon objective.\n\nLoRA-Muon and Riemannion were chosen as baselines in addition to the simpler AdamW and per-factor Muon baselines as these are the most similar to our method. Unfortunately, we could not find implementations for LoRA-Muon or Riemannion, so we implemented these ourselves. For Riemannion and our method, we use an A = 0 A=0 and B B orthonormal initialization, and for the remaining methods we used a standard initialization ( B = 0 B=0 , A A random Gaussian). We scale the learning rate to approximately match AdamW RMS for all Muon optimizers (for details see App. A.1 ). For all experiments, we used weight decay 0.01 0.01 , momentum 0.9 0.9 , inserted LoRA adapters into all hidden layers (except the router for models with MoE). We used GH200 for all experiments except to produce Table 4 for which we used A100. We used bf16 to store weights and optimizer states, but used fp32 to compute the step for Riemannion, sMuon, and LoRA-Muon. For the ReLoRA experiments ( Lialin et al., 2023 ) , we started with the modded-nanogpt codebase at ‘record 8’ ( Jordan et al., 2024a ) , which trains a 162M parameter transformer from scratch (using features including QK-norm, ReLU 2 activations) on the FineWeb dataset ( Penedo et al., 2024 ) , and evaluates on a 10M token validation set. We initialize LoRA adapters with rank 64, and train for a total of 3000 steps; every 500 steps we merge the adapters into the base weights and reinitialize the adapters; we use a cosine decay learning rate schedule, though after each merge+reinitialization, we also reset the learning rate to zero and warm back up to the target learning rate over 50 steps (this is also known as a jagged cosine schedule). We swept learning rates in 3e-4, 6e-4, 1e-3, 3e-3, 6e-3, 1e-2.\n\nFor the HumanEval ( Chen et al., 2021 ) and MBPP ( Austin et al., 2021 ) coding evals, we fine-tuned for 3 epochs on completing Python functions from the CodeAlpaca dataset ( Chaudhary, 2023 ) . For the MMLU ( Hendrycks et al., 2021 ) eval, we fine-tuned on a 50/50 mixture of FLAN ( Longpre et al., 2023 ) and MMLU training subset. For the remaining evals, we trained on a mixture of FLAN and CommonsenseQA ( Talmor et al., 2019 ) , and training subset for each eval. All SFT evals were 0-shot. For SFT training runs, we used α = 32 \\alpha=32 , r = 16 r=16 , gradient clipping (clipping at 1 1 ), and we used roughly 2 16 2^{16} tokens per batch.\n\nWe originally hypothesized that Muon-based LoRA methods might perform better with Moonlight, since it is a Muon-pretrained model. We do find some evidence for this when aggregating over all benchmarks in Tables 1 and 2 : AdamW only achieves top performance on one of the eleven tasks, while sMuon is best for six. Some methods are markedly below others on certain tasks (e.g. per-factor Muon with Llama-3.2-3B on HumanEval, Table 2 ). This could be due to optimizer instabilities or noise in the benchmarks or selection procedure.",
+      "truncated": true,
+      "available_chars": 70899,
+      "note": "Retrieved passages, not an answer. Missing matches do not establish that the paper lacks the requested experiment. Extracted HTML text; equations and table formatting may be imperfect. No PDF extraction was attempted."
+    },
+    "2609.40127:a8b893b1cd072689a76885e3451038cc481d176b4769ce2c60331682a54f2407": {
+      "status": "ok",
+      "question": "What baselines, model sizes, compression ratios or retained ranks, quality metrics, memory savings, inference/training compute, and ablations are reported for Learnable Subspace Projections compared with SVD or other low-rank compression methods?",
+      "source": "https://arxiv.org/html/2609.40127v1",
+      "passages": [
+        {
+          "chunk_id": "chunk-0002",
+          "section": "Abstract",
+          "text": "Modern transformers pair impressive capabilities with substantial memory and compute demands. Low-rank weight factorization reduces both while keeping the matrices dense, and thus efficient on standard hardware. Existing methods, however, choose the subspace to remove from each weight matrix with local closed-form criteria: activation energy, layer-wise reconstruction error, or a quadratic approximation of the loss. These criteria ignore how errors propagate through the network, so at high compression the errors compound with depth and performance collapses. We introduce Learnable Subspace Projections (LSP), which instead learns the subspaces to discard end-to-end. Each linear layer, or tied group of layers that read the same activations, is assigned an orthogonal projector. All projectors are optimized jointly against a global objective—the KL divergence to the dense model’s output distribution or the model’s original training loss—while the pretrained weights remain frozen. Projectors are initialized from a whitened SVD truncation, and ranks are allocated by the output KL each projector induces per parameter saved. After training, the projectors merge into standard low-rank factors, with each tied group sharing one factor. In attention, this also lets the model cache one narrow latent in place of full keys and values. Across LLMs (OPT-125M/1.3B, Qwen3-4B, Llama-2-7B) and ViT-B/16, LSP outperforms baselines, and its advantage widens as compression increases. At − 70 % -70\\% compression, LSP brings Llama-2-7B to 10.9 10.9 WikiText-2 perplexity and 42.2 % 42.2\\% mean zero-shot accuracy, versus 13.3 13.3 and 36.0 % 36.0\\% for the strongest baseline. The factorized model decodes up to 1.6 × 1.6\\times faster than the dense model at small batch sizes, and aching the shared",
+          "source": "https://arxiv.org/html/2609.40127v1",
+          "offset": 0,
+          "score": 28.112243234274047
+        },
+        {
+          "chunk_id": "chunk-0003",
+          "section": "Abstract",
+          "text": "shot accuracy, versus 13.3 13.3 and 36.0 % 36.0\\% for the strongest baseline. The factorized model decodes up to 1.6 × 1.6\\times faster than the dense model at small batch sizes, and aching the shared latent shrinks the combined memory of weights and KV cache by 13.5 × 13.5\\times at a 128k-token context, versus at most 6.5 × 6.5\\times for untied baseline factorizations.",
+          "source": "https://arxiv.org/html/2609.40127v1",
+          "offset": 1598,
+          "score": 9.482703215541427
+        },
+        {
+          "chunk_id": "chunk-0039",
+          "section": "5 Conclusion",
+          "text": "We introduced Learnable Subspace Projections (LSP), which compresses a pretrained network by learning, for each linear layer, the subspace the network can do without. Its premise is that statistical redundancy, whether measured by activation energy or by layer-wise reconstruction error, is not functional redundancy. LSP therefore selects the removed subspaces against the network output: it allocates ranks by measured output KL and optimizes all projectors jointly, with the pretrained weights frozen. Across four decoder LLMs, one of its two objectives attains the lowest perplexity in all twelve model–ratio settings, and both achieve the best zero-shot accuracy among low-rank methods. The margin grows with the compression ratio: at − 70 % -70\\% on Llama-2-7B, LSP reaches 10.9 10.9 perplexity, against 13.3 13.3 for the strongest baseline and 222.8 222.8 without learning. On a vision transformer, it is the most robust to calibration shift and transfers best when calibrated on diverse unlabeled data. The merged model is also the fastest factorization we measure, decoding up to 1.56 × 1.56\\times faster than the dense model. Its shared latent reduces the memory of weights and KV cache by 13.5 × 13.5\\times at a 128k-token context, twice the savings of untied factorizations.",
+          "source": "https://arxiv.org/html/2609.40127v1",
+          "offset": 0,
+          "score": 20.913332693015988
+        },
+        {
+          "chunk_id": "chunk-0073",
+          "section": "A.7 Limitations",
+          "text": "(i) The measured-KL allocation is a local surrogate: isolated unit costs omit interactions, and the current strategy has no global-optimality guarantee. This makes the allocation uncertain on quality in specific settings: in a few cases uniform ranks can still be preferred; however empirical evidence shows that measured KL is still better, since it is able to adapt to different architectures: performance improvement over Qwen3-4B, OPT-1.3B, and two out of three compression ranges of Llama-2-7B. (ii) Compression is also not free: LSP requires both the KL measurements and projection training, although the measurements are reusable across ratios and objectives. On the other hand, compression is a one-off cost that is repaid by the inference savings of Section 3.3 and LSP justifies this with the strong performance. (iii) Tied groups only lead to savings with latent cache if KV are tied on the input side. This means our best configuration for Qwen3-4B does not gain in efficiency as much as the input-tied version does. This represents a performance-efficiency trade-off, as shown in Table 12 : tying KV on the output side leads to the best performance, but one can choose to tie KV on the input side for improved inference efficiency instead.",
+          "source": "https://arxiv.org/html/2609.40127v1",
+          "offset": 0,
+          "score": 20.04247393433071
+        },
+        {
+          "chunk_id": "chunk-0077",
+          "section": "Appendix B Implementation Details",
+          "text": "Baselines. All baselines are using the same calibration budget of 1024 1024 sequences of 2048 2048 tokens, run with bf16 weights and compression arithmetic in fp32 or fp64 (following LSP), and, for the SVD methods, are evaluated in factorized form. Where a baseline exposes a tuning knob we sweep it around the published value and keep the best per model and ratio: SVD-LLM’s recovery learning rate against its single published one, Dobi-SVD’s γ \\gamma learning rate around the released default, Swift-SVD’s allocation α \\alpha over its own eleven-point grid, and ASVD’s α \\alpha . Dobi-SVD is run without its quantization step so that parameter counts match; Swift-SVD’s OPT rows are bias-corrected; SVD-LLM’s recovery stage is LoRA of rank 8 8 on the calibration corpus of the table it appears in. Notice that LSP keeps original weights frozen, and learns to compress their subspace, which means it does not move from the original subspace but only projects. SVD-LLM-v2 ( Wang et al., 2025c ) and MoDeGPT ( Lin et al., 2025 ) , though relevant, could not be reported as no official implementation has been released. The ViT ports of SVD-LLM (W) and SliceGPT are adapted from the official released implementation, while FLAR-SVD and PELA come from their official implementation. PELA, specifically, re-trains all the network’s weights with the objective to copy the dense model’s intermediate features, which acts as a recovery fine-tuning stage. Evaluation. Perplexity follows the SparseGPT and SliceGPT convention: the test split is joined, tokenized once and cut into non-overlapping 2048 2048 -token windows. Zero-shot accuracy is measured with the EleutherAI harness ( Gao et al., 2024a ) at zero shots on the merged model, and we report plain accuracy.",
+          "source": "https://arxiv.org/html/2609.40127v1",
+          "offset": 0,
+          "score": 14.532128429327601
+        },
+        {
+          "chunk_id": "chunk-0078",
+          "section": "Appendix B Implementation Details",
+          "text": "Benchmarks. The choice of benchmarks follows other compression methods in the literature. In Table 1 we report perplexity for a diverse mix of pruning and low-rank compression methods, as reported by Ashkboos et al. (2024) ; van der Ouderaa et al. (2024) ; Wang et al. (2025d) ; Wang et al. (2025b) ; Qi et al. (2026) . For zero-shot performance ( Table 2 ) we restrict the analysis to low-rank compression methods ( Wang et al., 2025d ; Wang et al., 2025b ; Qi et al., 2026 ) , since they are the closest to LSP. Specifically, we report the same six benchmark evaluations as baselines do, and calibrate on the same datasets. While Alpaca-calibrated compression follows our compression ratios reported for other tables, for C4-calibrated compression we follow same procedure as Swift-SVD, with compression ratios of − 20 % / 40 % / 60 % -20\\%/40\\%/60\\% , to introduce further richness in compression ratios. We re-evaluate all methods and benchmarks for evaluation fairness, using the same setup for calibration and evaluation for all methods.",
+          "source": "https://arxiv.org/html/2609.40127v1",
+          "offset": 0,
+          "score": 25.788741270916542
+        }
+      ],
+      "text": "Modern transformers pair impressive capabilities with substantial memory and compute demands. Low-rank weight factorization reduces both while keeping the matrices dense, and thus efficient on standard hardware. Existing methods, however, choose the subspace to remove from each weight matrix with local closed-form criteria: activation energy, layer-wise reconstruction error, or a quadratic approximation of the loss. These criteria ignore how errors propagate through the network, so at high compression the errors compound with depth and performance collapses. We introduce Learnable Subspace Projections (LSP), which instead learns the subspaces to discard end-to-end. Each linear layer, or tied group of layers that read the same activations, is assigned an orthogonal projector. All projectors are optimized jointly against a global objective—the KL divergence to the dense model’s output distribution or the model’s original training loss—while the pretrained weights remain frozen. Projectors are initialized from a whitened SVD truncation, and ranks are allocated by the output KL each projector induces per parameter saved. After training, the projectors merge into standard low-rank factors, with each tied group sharing one factor. In attention, this also lets the model cache one narrow latent in place of full keys and values. Across LLMs (OPT-125M/1.3B, Qwen3-4B, Llama-2-7B) and ViT-B/16, LSP outperforms baselines, and its advantage widens as compression increases. At − 70 % -70\\% compression, LSP brings Llama-2-7B to 10.9 10.9 WikiText-2 perplexity and 42.2 % 42.2\\% mean zero-shot accuracy, versus 13.3 13.3 and 36.0 % 36.0\\% for the strongest baseline. The factorized model decodes up to 1.6 × 1.6\\times faster than the dense model at small batch sizes, and aching the shared\n\nshot accuracy, versus 13.3 13.3 and 36.0 % 36.0\\% for the strongest baseline. The factorized model decodes up to 1.6 × 1.6\\times faster than the dense model at small batch sizes, and aching the shared latent shrinks the combined memory of weights and KV cache by 13.5 × 13.5\\times at a 128k-token context, versus at most 6.5 × 6.5\\times for untied baseline factorizations.\n\nWe introduced Learnable Subspace Projections (LSP), which compresses a pretrained network by learning, for each linear layer, the subspace the network can do without. Its premise is that statistical redundancy, whether measured by activation energy or by layer-wise reconstruction error, is not functional redundancy. LSP therefore selects the removed subspaces against the network output: it allocates ranks by measured output KL and optimizes all projectors jointly, with the pretrained weights frozen. Across four decoder LLMs, one of its two objectives attains the lowest perplexity in all twelve model–ratio settings, and both achieve the best zero-shot accuracy among low-rank methods. The margin grows with the compression ratio: at − 70 % -70\\% on Llama-2-7B, LSP reaches 10.9 10.9 perplexity, against 13.3 13.3 for the strongest baseline and 222.8 222.8 without learning. On a vision transformer, it is the most robust to calibration shift and transfers best when calibrated on diverse unlabeled data. The merged model is also the fastest factorization we measure, decoding up to 1.56 × 1.56\\times faster than the dense model. Its shared latent reduces the memory of weights and KV cache by 13.5 × 13.5\\times at a 128k-token context, twice the savings of untied factorizations.\n\n(i) The measured-KL allocation is a local surrogate: isolated unit costs omit interactions, and the current strategy has no global-optimality guarantee. This makes the allocation uncertain on quality in specific settings: in a few cases uniform ranks can still be preferred; however empirical evidence shows that measured KL is still better, since it is able to adapt to different architectures: performance improvement over Qwen3-4B, OPT-1.3B, and two out of three compression ranges of Llama-2-7B. (ii) Compression is also not free: LSP requires both the KL measurements and projection training, although the measurements are reusable across ratios and objectives. On the other hand, compression is a one-off cost that is repaid by the inference savings of Section 3.3 and LSP justifies this with the strong performance. (iii) Tied groups only lead to savings with latent cache if KV are tied on the input side. This means our best configuration for Qwen3-4B does not gain in efficiency as much as the input-tied version does. This represents a performance-efficiency trade-off, as shown in Table 12 : tying KV on the output side leads to the best performance, but one can choose to tie KV on the input side for improved inference efficiency instead.\n\nBaselines. All baselines are using the same calibration budget of 1024 1024 sequences of 2048 2048 tokens, run with bf16 weights and compression arithmetic in fp32 or fp64 (following LSP), and, for the SVD methods, are evaluated in factorized form. Where a baseline exposes a tuning knob we sweep it around the published value and keep the best per model and ratio: SVD-LLM’s recovery learning rate against its single published one, Dobi-SVD’s γ \\gamma learning rate around the released default, Swift-SVD’s allocation α \\alpha over its own eleven-point grid, and ASVD’s α \\alpha . Dobi-SVD is run without its quantization step so that parameter counts match; Swift-SVD’s OPT rows are bias-corrected; SVD-LLM’s recovery stage is LoRA of rank 8 8 on the calibration corpus of the table it appears in. Notice that LSP keeps original weights frozen, and learns to compress their subspace, which means it does not move from the original subspace but only projects. SVD-LLM-v2 ( Wang et al., 2025c ) and MoDeGPT ( Lin et al., 2025 ) , though relevant, could not be reported as no official implementation has been released. The ViT ports of SVD-LLM (W) and SliceGPT are adapted from the official released implementation, while FLAR-SVD and PELA come from their official implementation. PELA, specifically, re-trains all the network’s weights with the objective to copy the dense model’s intermediate features, which acts as a recovery fine-tuning stage. Evaluation. Perplexity follows the SparseGPT and SliceGPT convention: the test split is joined, tokenized once and cut into non-overlapping 2048 2048 -token windows. Zero-shot accuracy is measured with the EleutherAI harness ( Gao et al., 2024a ) at zero shots on the merged model, and we report plain accuracy.\n\nBenchmarks. The choice of benchmarks follows other compression methods in the literature. In Table 1 we report perplexity for a diverse mix of pruning and low-rank compression methods, as reported by Ashkboos et al. (2024) ; van der Ouderaa et al. (2024) ; Wang et al. (2025d) ; Wang et al. (2025b) ; Qi et al. (2026) . For zero-shot performance ( Table 2 ) we restrict the analysis to low-rank compression methods ( Wang et al., 2025d ; Wang et al., 2025b ; Qi et al., 2026 ) , since they are the closest to LSP. Specifically, we report the same six benchmark evaluations as baselines do, and calibrate on the same datasets. While Alpaca-calibrated compression follows our compression ratios reported for other tables, for C4-calibrated compression we follow same procedure as Swift-SVD, with compression ratios of − 20 % / 40 % / 60 % -20\\%/40\\%/60\\% , to introduce further richness in compression ratios. We re-evaluate all methods and benchmarks for evaluation fairness, using the same setup for calibration and evaluation for all methods.",
+      "truncated": true,
+      "available_chars": 125587,
+      "note": "Retrieved passages, not an answer. Missing matches do not establish that the paper lacks the requested experiment. Extracted HTML text; equations and table formatting may be imperfect. No PDF extraction was attempted."
+    }
+  },
+  "tool_latency_seconds": 0.048864707991015166,
+  "last_observation": {
+    "action": "search_candidates",
+    "result": {
+      "status": "ok",
+      "query": "memory-efficient LLM pretraining low-rank gradients optimizer-state compression GaLore FP8 optimizer states",
+      "new_ids": [],
+      "matches": [
+        {
+          "paper_id": "2608.14492",
+          "score": 19.80323850620265,
+          "title": "Approximate Muon with low-rank adapters",
+          "abstract_excerpt": "The Muon optimizer shows clear benefits versus alternatives when pretraining neural networks. However, it is used less frequently for parameter-efficient fine-tuning (PEFT). One potential reason is that the most common PEFT method, LoRA, does not naturally combine with Muon since it is not mathematically possible to orthogonalize the weight update given by a low-rank parameterization. In this paper, we address this issue by approximating the solution to a relaxed Muon objective in the low-rank setting via linearization and then least-squares. We provide an efficient implementation that uses matmul operations only, as opposed to more complex linear algebra decomposition routines. Our method, sMuon (small Muon), performs favourably across SFT and a ReLoRA pretraining experiment. While result",
+          "screened": true,
+          "assessment": {
+            "paper_id": "2608.14492",
+            "label": "relevant",
+            "reason": "Directly addresses Muon optimization for LoRA and low-rank parameterizations, including an efficient approximation and ReLoRA pretraining.",
+            "evidence_quote": "Our method, sMuon (small Muon), performs favourably across SFT and a ReLoRA pretraining experiment."
+          }
+        },
+        {
+          "paper_id": "2609.40127",
+          "score": 14.655204724748433,
+          "title": "Learning Functional Subspaces for Neural Network Compression",
+          "abstract_excerpt": "Modern transformers pair impressive capabilities with substantial memory and compute demands. Low-rank weight factorization reduces both while keeping the matrices dense, and thus efficient on standard hardware. Existing methods, however, choose the subspace to remove from each weight matrix with local closed-form criteria: activation energy, layer-wise reconstruction error, or a quadratic approximation of the loss. These criteria ignore how errors propagate through the network, so at high compression the errors compound with depth and performance collapses. We introduce Learnable Subspace Projections (LSP), which instead learns the subspaces to discard end-to-end. Each linear layer, or tied group of layers that read the same activations, is assigned an orthogonal projector. All projectors",
+          "screened": true,
+          "assessment": {
+            "paper_id": "2609.40127",
+            "label": "relevant",
+            "reason": "Studies learned low-rank subspaces for neural network compression and evaluates quality, rank allocation, decoding speed, and memory savings at LLM scale.",
+            "evidence_quote": "We introduce Learnable Subspace Projections (LSP), which instead learns the subspaces to discard end-to-end."
+          }
+        },
+        {
+          "paper_id": "2608.31036",
+          "score": 13.731234041982972,
+          "title": "Normalized Low-Rank Adaptation",
+          "abstract_excerpt": "While low-rank adaptation (LoRA) is widely used for parameter-efficient model adaptation, how to regularize its training dynamics for stable and effective optimization remains underexplored. Because LoRA initializes the up-projection to zero, its early optimization dynamics are largely governed by the down-projection. Building on this observation, we introduce Normalized Low-Rank Adaptation (NoRA), a simple yet effective method that normalizes the down-projection matrices during training. We further show that the same normalization can be applied only at initialization, improving standard LoRA without requiring repeated normalization throughout training. Across pretraining, supervised finetuning, and reinforcement learning, NoRA consistently accelerates convergence, improves performance an",
+          "screened": true,
+          "assessment": {
+            "paper_id": "2608.31036",
+            "label": "relevant",
+            "reason": "Studies optimization and normalization of LoRA training dynamics, with effects on convergence, stability, performance, and forgetting.",
+            "evidence_quote": "we introduce Normalized Low-Rank Adaptation (NoRA), a simple yet effective method that normalizes the down-projection matrices during training."
+          }
+        },
+        {
+          "paper_id": "2610.11730",
+          "score": 12.668333426023523,
+          "title": "Spectral Weight Decay: Inducing Low-Rank Structure in Neural Network Weights",
+          "abstract_excerpt": "Standard weight decay treats each weight matrix as a vector and ignores its spectral structure. We introduce spectral weight decay, a post-step decoupled nuclear-norm update that applies additive rather than multiplicative spectral shrinkage. We connect the update to approximate proximal descent and show that its sensitivity to update order can exceed that of conventional $\\ell_2$ weight decay near rank deficiency. Across LLaMA models with $124$M to $500$M parameters, spectral weight decay lowers effective rank and improves SVD-LLM compression at matched validation loss. At $500$M and a $4\\%$ distortion budget, it reaches $1.89\\times$ compression and $1.18\\times$ GPU inference speedup, compared with $1.14\\times$ and $1.01\\times$ after standard weight decay. Under fixed-horizon training wit",
+          "screened": true,
+          "assessment": {
+            "paper_id": "2610.11730",
+            "label": "relevant",
+            "reason": "Directly studies spectral weight decay, nuclear-norm/proximal updates, effective rank, compression, and label-noise robustness.",
+            "evidence_quote": "spectral weight decay lowers effective rank and improves SVD-LLM compression"
+          }
+        },
+        {
+          "paper_id": "2510.05491",
+          "score": 12.626497201503668,
+          "title": "NorMuon: Making Muon more efficient and scalable",
+          "abstract_excerpt": "The choice of optimizer significantly impacts the training efficiency and computational costs of large language models (LLMs). Recently, the Muon optimizer has demonstrated promising results by orthogonalizing parameter updates, improving optimization geometry through better conditioning. Despite Muon's emergence as a candidate successor to Adam, the potential for jointly leveraging their strengths has not been systematically explored. In this work, we bridge this gap by proposing NorMuon (Neuron-wise Normalized Muon), an optimizer that synergistically combines orthogonalization with neuron-level adaptive learning rates. Our analysis reveals that while Muon effectively reduces condition numbers, the resulting updates exhibit highly non-uniform neuron norms, causing certain neurons to domin",
+          "screened": true,
+          "assessment": {
+            "paper_id": "2510.05491",
+            "label": "relevant",
+            "reason": "Introduces an efficient, distributed Muon variant and evaluates optimizer efficiency, memory footprint, conditioning, and scaling in LLM pretraining.",
+            "evidence_quote": "we develop an efficient distributed implementation under the FSDP2 framework"
+          }
+        },
+        {
+          "paper_id": "2610.28500",
+          "score": 11.628914372858908,
+          "title": "BitMTP: When Multi-Token Prediction Meets Low-Bit Large Language Models",
+          "abstract_excerpt": "For efficient deployment of large language models (LLMs), methods of ultra-low-bit backbones reduce weight storage, memory traffic, and linear-layer execution cost, while multi-token prediction (MTP) methods reduce sequential decoding steps by predicting multiple future tokens in parallel. Although complementary, the direct combination of these methods cannot accelerate decoding at comparable quality: masked drafting lacks intermediate token input supplied in next-token training, while wider computation and causal key-value (KV) updates can offset the savings from fewer steps. To address these challenges, we propose BitMTP, an algorithm-system co-design framework for efficient MTP on ultra-low-bit LLM backbones. A joint next-token prediction and MTP objective equips a single model with bot",
+          "screened": true,
+          "assessment": {
+            "paper_id": "2610.28500",
+            "label": "uncertain",
+            "reason": "Studies LLM inference efficiency and throughput-memory tradeoffs through low-bit weights and multi-token prediction, but not training optimization or low-rank methods.",
+            "evidence_quote": "methods of ultra-low-bit backbones reduce weight storage, memory traffic, and linear-layer execution cost"
+          }
+        },
+        {
+          "paper_id": "2610.31305",
+          "score": 9.052694969020472,
+          "title": "Cola2: Co-Adaptive Hierarchical Language Modeling with Continuous Semantic Compression and Balanced Discrete Generation",
+          "abstract_excerpt": "Hierarchical language generation separates continuous semantic modeling from discrete text realization, but its effectiveness depends on what the latent space compresses and how the discrete generator uses it. We propose Cola2, a framework that jointly studies continuous semantic compression, the balance between reconstruction and generation, and continuous-discrete co-adaptation. Cola2 dynamically segments text into semantic spans, controls the compression rate through auxiliary-loss-free negative feedback, and combines reconstruction and generation supervision to learn compact, predictive latent representations. A block-causal masked diffusion decoder is trained with clean, noisy, and dropped latent conditions, while classifier-free guidance adjusts the balance between semantic reconstru",
+          "screened": true,
+          "assessment": {
+            "paper_id": "2610.31305",
+            "label": "uncertain",
+            "reason": "Investigates compact latent representations and large-scale language-model training, which may relate to compression and efficiency, but does not clearly study low-rank structure or training memory.",
+            "evidence_quote": "learn compact, predictive latent representations"
+          }
+        },
+        {
+          "paper_id": "2610.08975",
+          "score": 8.992855009142074,
+          "title": "The Best Optimizer Depends on Batch Size",
+          "abstract_excerpt": "A plethora of new adaptive optimizers are designed to efficiently estimate and use minibatch gradient statistics to shape parameter updates, but they are typically benchmarked at a single batch size. Hyperparameter scaling rules promise to preserve performance as batch size and gradient noise change, suggesting that the best optimizer at one batch size should remain the best at another. We challenge this approach to developing and evaluating optimizers by showing: (1) no principled scaling rule for Muon works consistently across training settings, and (2) the best optimizer for language model pretraining changes with batch size even after extensive hyperparameter tuning. To understand these failures, we analyze a noisy quadratic model and show that the batch-size scaling rule that preserve",
+          "screened": true,
+          "assessment": {
+            "paper_id": "2610.08975",
+            "label": "relevant",
+            "reason": "Analyzes optimizer behavior, batch-size scaling, curvature, gradient noise, and language-model pretraining, matching the user's optimization and scaling interests.",
+            "evidence_quote": "the best optimizer for language model pretraining changes with batch size"
+          }
+        },
+        {
+          "paper_id": "2610.30825",
+          "score": 8.82349309995267,
+          "title": "Bezier-Guided Adaptive Flow for Cross-domain Sequential Recommendation",
+          "abstract_excerpt": "Cross-domain sequential recommendation aims to alleviate data sparsity and cold-start problems by transferring useful preference knowledge across domains. However, users exhibit varying degrees of preference consistency across domains, while existing methods often rely on global alignment objectives or coarse-grained transfer strategies. Such approaches may introduce irrelevant information and provide limited flexibility in adapting semantic representations to individual user preferences. To address these challenges, we propose BGAFlow, a personalized framework that combines state-adaptive semantic evolution with user-specific transfer control. BGAFlow first establishes a shared semantic space through unified dual-domain pretraining with user profiles inferred by a large language model (LL",
+          "screened": true,
+          "assessment": {
+            "paper_id": "2610.30825",
+            "label": "irrelevant",
+            "reason": "Addresses cross-domain sequential recommendation and personalized transfer, with no clear connection to the user's research topics.",
+            "evidence_quote": "Cross-domain sequential recommendation aims to alleviate data sparsity and cold-start problems"
+          }
+        },
+        {
+          "paper_id": "2610.30344",
+          "score": 8.038781462630338,
+          "title": "AQL-Lite: Enabling Efficient Knowledge Acquisition for Arabic LLMs via Data-Centric Continual Pretraining",
+          "abstract_excerpt": "Training Arabic large language models faces challenges from noisy web data, dialectal variation, and the high cost of continual pretraining (CPT). We introduce AQL-Lite (AQL: Arabic Quality Language), a time- and resource-efficient framework for adapting a multilingual LLM to Modern Standard Arabic (MSA). AQL-Lite couples a quality-first curation pipeline (structural cleaning, heuristic and model-based filtering, MSA selection, and deduplication) with a partial-parameter CPT recipe that trains RS-LoRA adapters across the network together with the last eight transformer blocks and the embedding matrix, under layer-wise learning rates. At a matched 1B-token budget, CPT on AQL-curated data raises a four-benchmark Arabic mean by 3.51 points over CPT on raw web text, which yields no gain over t",
+          "screened": true,
+          "assessment": {
+            "paper_id": "2610.30344",
+            "label": "relevant",
+            "reason": "Studies RS-LoRA adapters and partial-parameter continual pretraining for efficient language-model adaptation, directly addressing parameter-efficient training and quality-efficiency tradeoffs.",
+            "evidence_quote": "partial-parameter CPT recipe that trains RS-LoRA adapters across the network"
+          }
+        }
+      ],
+      "remaining_admission_slots": 70,
+      "note": "Query-specific scores over the fixed run corpus. Only screened IDs are selectable."
+    }
+  },
+  "last_error": null
+}

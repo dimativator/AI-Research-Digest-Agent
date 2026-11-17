@@ -1,0 +1,83 @@
+M2 ReAct: up-to-10 selection diagnostic, 17-11-2026
+
+Protocol
+100 manually labeled papers (69 label 0, 16 label 0.5, 15 label 1).
+Three repetitions, GPT-5.6-Luna, initial BM25 shortlist 30, digest-size 10,
+X disabled, unlimited decision/tool budgets, both exact quote checks disabled.
+Frozen documents and code fixtures reused from m2-no-quote-checks-20261117.
+All fixture capture times were zero. Labels were held out from model inputs.
+The configured profile is the historical M2 profile from eval/sample.json.
+Digest-size is a maximum, not an exact output count. Missing ranks contribute
+zero gain to nDCG@10, whose ideal ranking uses all 100 gold labels.
+
+Results
+Run  Returned  Interesting  Potential  Not interesting  nDCG@10  Calls  Steps  Tools
+1    6         5            0          1                0.649    7      4      2
+2    10        8            1          1                0.902    6      3      2
+3    10        7            0          3                0.791    8      5      4
+BM25 10        6            2          2                0.797    0      0      0
+
+All three runs completed. Mean agent nDCG@10 was 0.781, compared with
+0.797 for BM25. Only run 2 exceeded this deterministic baseline.
+This is one corpus and one profile, not three independent evaluation tasks.
+There is no same-protocol abstract-only LLM baseline in this experiment.
+Do not attribute differences to tools without an ablation.
+
+Observed problems and potential fixes
+1. Size repair is unstable. Run 1 first returned 12 papers, triggering
+   'Digest contains too many papers', then returned only six. A critic could
+   check omissions and size, or an explicit top-k contract could require ten.
+   This experiment preserved the existing maximum-size behavior.
+2. Recurring false positive: 2610.29189 was selected in all three runs despite
+   gold label 0. Its relevance explanation connects it to building the digest
+   agent. Reconcile the historical profile with the user's actual reading
+   preferences, and test a critic against explicit inclusion/exclusion criteria.
+3. Inspections ask for baselines, experimental controls, and compute details
+   on strong matches. They may be excessive for personal relevance selection.
+   A selective-inspection variant should state which ambiguity could change
+   inclusion before calling the tool. These runs do not prove tool causality.
+4. Run 3 searched for memory-efficient pretraining and optimizer-state
+   compression. The search returned new_ids=[] and left screened count at 30.
+   Test whether search should preferentially explore unseen candidates.
+5. Initial top30 includes only 10 of 15 interesting papers and 4 of 16
+   potentially interesting papers. Evaluate retrieval coverage separately.
+6. Quote matching is intentionally disabled. Successful completion does not
+   establish that evidence strings are verbatim. analysis.json's legacy field
+   'rejected_quotes' contains diagnostic nonmatches, not validation rejections.
+
+Tool actions: seven inspections and one search across the three runs.
+No expand_shortlist or find_code calls. One rejected finish, no quote retries.
+
+Resource accounting
+{
+  "completed": 3,
+  "mean_ndcg_at_10": 0.7805152695579932,
+  "bm25_top10": {
+    "ndcg_at_10": 0.7971389170873965,
+    "selected_labels": [
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      1.0,
+      0.5,
+      0.0,
+      0.5,
+      0.0
+    ],
+    "interesting": 6,
+    "potentially_interesting": 2,
+    "not_interesting": 2
+  },
+  "input_tokens": 421848,
+  "output_tokens": 15891,
+  "estimated_api_cost_usd": 0.1034388,
+  "mean_latency_seconds": 125.96077951399882
+}
+
+Cost is an API-equivalent estimate, not actual Codex subscription billing.
+Per-call accounting and assumptions are retained in traces and summary.json.
+
+Artifacts: manifest/source snapshot, calls.jsonl, trace.jsonl, SQLite and state
+per repetition, fixture hashes, summary.json, analysis.json and aggregate.json.

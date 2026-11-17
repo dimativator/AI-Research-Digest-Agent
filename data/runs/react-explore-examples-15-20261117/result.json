@@ -1,0 +1,381 @@
+{
+  "run_id": "657b6d936ed4423d92f967ba3a88d1a1",
+  "status": "completed",
+  "user_id": "dmitrii",
+  "profile_fingerprint": "a2480e0075ad9cdf236d40e30f74f9bfd87a08dd948530b42e6b57e4a123bfc0",
+  "pipeline_version": "react-v2",
+  "categories": [
+    "cs.LG",
+    "cs.CL",
+    "stat.ML",
+    "cs.AI",
+    "cs.IR"
+  ],
+  "date_from": "2026-11-03",
+  "date_to": "2026-11-16",
+  "papers": [
+    {
+      "paper_id": "2611.10212",
+      "summary": "DisMUSE develops distributed singular-spectrum optimization with Muon-style orthogonalized momentum, variance reduction, Newton-Schulz approximation, and low-rank momentum communication.",
+      "relevance": "Directly matches spectral optimization, Newton-Schulz methods, distributed training, and communication-quality tradeoffs.",
+      "evidence": [
+        {
+          "source": "abstract",
+          "quote": "communication-efficient variant based on low-rank (LR) momentum transmission"
+        }
+      ],
+      "title": "DisMUSE: An Efficient Distributed Singular-Spectrum-Based Optimization Approach with Theoretical Convergence Guarantee",
+      "url": "https://arxiv.org/abs/2611.10212v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.05022",
+      "summary": "Analyzes how finite Newton-Schulz depth changes rank selection and can cause matrix-factorization trajectories to bypass early saddles.",
+      "relevance": "Strong theoretical match for Newton-Schulz optimization, rank dynamics, and low-rank training geometry.",
+      "evidence": [
+        {
+          "source": "abstract",
+          "quote": "the number of Newton-Schulz steps can change the rank selected during the early stages of training"
+        }
+      ],
+      "title": "Finite Spectral Depth Controls Gaussian Entrance Rank and Avoidance of the First Gradient-Flow Saddle",
+      "url": "https://arxiv.org/abs/2611.05022v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.08924",
+      "summary": "ResQAdam combines BF16 residual momentum, low-rank adaptive states, and a sign residual update for quantization-aware LLM training.",
+      "relevance": "Directly addresses optimizer-state memory, throughput, quality, and comparisons with AdamW, GaLore, and LDAdam.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "It reduces optimizer-state memory by 71% to 74% relative to AdamW, stays close to AdamW in most settings, and lowers training throughput by less than 2%."
+        },
+        {
+          "source": "inspection",
+          "quote": "Total peak memory is defined as the maximum GPU memory consumed during training, encompassing weights, activations, gradients, and optimizer states."
+        }
+      ],
+      "title": "ResQAdam: Residual-Preserving Adaptive Optimization for Memory-Efficient Quantization Aware Training",
+      "url": "https://arxiv.org/abs/2611.08924v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.07349",
+      "summary": "GEAR uses tangent-normal geometry and normal-spectrum estimates to evolve LoRA ranks toward task-relevant directions.",
+      "relevance": "Directly addresses dynamic rank allocation, spectral information, and the geometry of LoRA optimization.",
+      "evidence": [
+        {
+          "source": "abstract",
+          "quote": "the leading normal singular directions yield the locally optimal rank expansion"
+        }
+      ],
+      "title": "From What Is Used to What Is Missing: Rethinking Dynamic Rank in LoRA",
+      "url": "https://arxiv.org/abs/2611.07349v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.08414",
+      "summary": "Studies singular-spectrum and subspace dynamics of LoRA updates in supervised fine-tuning and reinforcement learning, attributing differences partly to group-mean baseline subtraction.",
+      "relevance": "Highly relevant to understanding how training objectives and optimization affect LoRA spectra and effective rank.",
+      "evidence": [
+        {
+          "source": "abstract",
+          "quote": "Tracking the singular spectrum and subspaces of LoRA updates"
+        }
+      ],
+      "title": "Spectral and Subspace Dynamics of LoRA in Supervised Fine-Tuning and Reinforcement Learning",
+      "url": "https://arxiv.org/abs/2611.08414v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.13331",
+      "summary": "Analyzes frozen and periodically resampled LoRA factors as stochastic projections and relates adaptation rank to gradient signal-to-noise ratio.",
+      "relevance": "Relevant to LoRA optimization geometry, rank-dependent learning rates, convergence, and communication efficiency.",
+      "evidence": [
+        {
+          "source": "abstract",
+          "quote": "the adaptation rank $r$ directly governs the signal-to-noise ratio (SNR) of the perturbed gradients"
+        }
+      ],
+      "title": "Stochastic Projections and Rank-Aware Learning Rates for Federated LoRA",
+      "url": "https://arxiv.org/abs/2611.13331v2",
+      "version": 2,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.13306",
+      "summary": "HiLo and Spar reduce distributed LoRA synchronization by disseminating compressed gradients and replaying local optimizer updates with spectral rank allocation.",
+      "relevance": "Directly studies communication cost, spectral compression, adaptive rank, and quality at scale.",
+      "evidence": [
+        {
+          "source": "abstract",
+          "quote": "maintains learning quality close to full synchronization while transmitting as little as 1.6% of the adapter bytes"
+        }
+      ],
+      "title": "Train High, Ship Low: Efficient LoRA Synchronization for Distributed On-Policy Post-Training",
+      "url": "https://arxiv.org/abs/2611.13306v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.10188",
+      "summary": "BiMuon introduces Muon-style orthogonalized matrix updates into stochastic bilevel optimization and addresses spectral imbalance in bilevel geometry.",
+      "relevance": "Matches interests in matrix optimization, Muon, spectral geometry, and optimization complexity.",
+      "evidence": [
+        {
+          "source": "abstract",
+          "quote": "the lower-level (LL) problem curvature can induce significant spectral imbalance in the upper-level (UL) geometry"
+        }
+      ],
+      "title": "BiMuon: A Geometry-Aware Stochastic Bilevel Optimization Approach",
+      "url": "https://arxiv.org/abs/2611.10188v2",
+      "version": 2,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.19477",
+      "summary": "Studies how learning rules, weight decay, and optimizer choices steer grokking circuits between memorization and generalization, affecting circuit size and compressibility.",
+      "relevance": "Directly connects optimization and regularization to memorization, generalization, robustness, and effective structural complexity.",
+      "evidence": [
+        {
+          "source": "abstract",
+          "quote": "Learning rule choice thus steers circuit size, trading robustness against compressibility and transfer speed"
+        }
+      ],
+      "title": "Grokking Can Be Steered: Selecting Desirable Solutions By Choice Of Learning Rule",
+      "url": "https://arxiv.org/abs/2611.19477v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.04462",
+      "summary": "SaMA generalizes Kronecker-based adaptation to obtain higher practical rank under a fixed parameter budget and reduce optimizer-unfriendly invariances.",
+      "relevance": "Relevant to low-rank PEFT, rank scaling, optimization geometry, and parameter-efficiency tradeoffs.",
+      "evidence": [
+        {
+          "source": "abstract",
+          "quote": "its invariance manifold induces flat directions in the loss landscape, creating an optimization bottleneck for adaptive optimizers"
+        }
+      ],
+      "title": "SaMA: Morpho Adaptation via Asymmetric Expansion of Kronecker Product",
+      "url": "https://arxiv.org/abs/2611.04462v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.10610",
+      "summary": "Uses activation-angle concentration and SVD components to select rank reductions in LLM adaptation using forward-only passes.",
+      "relevance": "Addresses singular-value-based compressibility, adaptation quality, peak memory, and speed without gradient-based search.",
+      "evidence": [
+        {
+          "source": "abstract",
+          "quote": "our forward-only search then efficiently identifies the weight matrix with the highest dispersion that merits rank reduction"
+        }
+      ],
+      "title": "Efficient LLM Adaptation with Forward-Only Passes",
+      "url": "https://arxiv.org/abs/2611.10610v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.10248",
+      "summary": "FedLoVA trains LoRA on query and value projections locally while communicating only value adapters to reduce federated communication.",
+      "relevance": "Directly covers LoRA, communication efficiency, convergence, and quality tradeoffs in LLM fine-tuning.",
+      "evidence": [
+        {
+          "source": "abstract",
+          "quote": "This approach reduces communication overhead while improving convergence efficiency."
+        }
+      ],
+      "title": "FedLoVA: Value-Only Aggregation for Federated LoRA Fine-Tuning of Large Language Models",
+      "url": "https://arxiv.org/abs/2611.10248v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.17784",
+      "summary": "SCALAR adapts LLMs using learned scalar coefficients over fixed task-calibrated directions, reducing trainable parameters, peak memory, and throughput cost relative to LoRA.",
+      "relevance": "Strong practical match for memory-efficient PEFT and quality-memory-throughput tradeoffs.",
+      "evidence": [
+        {
+          "source": "abstract",
+          "quote": "SCALAR achieves performance comparable to LoRA with substantially fewer trainable parameters, lower peak training memory, and higher throughput."
+        }
+      ],
+      "title": "Direction or Magnitude? Learning Scalars over Task-Calibrated Directions",
+      "url": "https://arxiv.org/abs/2611.17784v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.06598",
+      "summary": "Defines behavioral rate as the compressed adapter size needed to preserve fine-tuning behavior and studies how it varies across datasets and frozen base models.",
+      "relevance": "Directly addresses behavioral compressibility, adapter compression, singular directions, and robustness to corrupted training data.",
+      "evidence": [
+        {
+          "source": "abstract",
+          "quote": "fine-tuning compressibility is a property of the dataset--receiver pair rather than of the dataset alone"
+        }
+      ],
+      "title": "The Behavioral Rate of Fine-Tuning: Compression as a Measure of Useful Information",
+      "url": "https://arxiv.org/abs/2611.06598v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.17876",
+      "summary": "Studies temporary weight decay in Muon-trained Transformers across model scales and explains delayed effects through weight-norm dynamics.",
+      "relevance": "Relevant to spectral or norm-based regularization, Muon optimization, and scale-dependent training behavior.",
+      "evidence": [
+        {
+          "source": "abstract",
+          "quote": "temporary weight decay in Muon-trained decoder-only Transformers"
+        }
+      ],
+      "title": "Delayed Effects of Temporary Weight Decay in Muon Pretraining",
+      "url": "https://arxiv.org/abs/2611.17876v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    }
+  ],
+  "x_feature": null,
+  "limitations": [
+    "Most evidence comes from abstracts, several of which are truncated.",
+    "Only ResQAdam received detailed inspection; experimental controls and measured tradeoffs for the other papers remain unverified.",
+    "Code availability and reproducibility were not checked.",
+    "X analysis was disabled, so no attention signal is included.",
+    "inspect:2611.08924: only question-relevant HTML passages were inspected, not the whole paper."
+  ],
+  "stats": {
+    "fetched_count": 4655,
+    "candidate_count": 4655,
+    "llm_calls": 2,
+    "steps": 2,
+    "inspections": 1,
+    "expansions": 0,
+    "screened": 30,
+    "usage": {
+      "recorded_calls": 2,
+      "llm_latency_seconds": 46.243584666997776,
+      "input_tokens": 47412,
+      "output_tokens": 2006,
+      "estimated_api_cost_usd": 0.0118896,
+      "calls_without_usage": 0,
+      "cost_note": "API-equivalent estimate using standard GPT-5.6-Luna rates checked 2026-11-17: $0.20/M input, $1.20/M output; above 272K input, $0.40/M and $1.80/M. Assumes all input is uncached; excludes cache writes and external tools. Not actual Codex subscription billing. Unknown usage/model yields null cost.",
+      "price_source": "https://developers.openai.com/api/docs/models/gpt-5.6-luna"
+    },
+    "tool_calls": 1,
+    "tool_latency_seconds": 0.7060104999982286
+  }
+}

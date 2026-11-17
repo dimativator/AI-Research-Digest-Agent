@@ -1,0 +1,224 @@
+{
+  "run_id": "5791ea20ffc646a18ea7d440dd5c0696",
+  "status": "completed",
+  "user_id": "dmitrii",
+  "profile_fingerprint": "a2480e0075ad9cdf236d40e30f74f9bfd87a08dd948530b42e6b57e4a123bfc0",
+  "pipeline_version": "react-v2",
+  "categories": [
+    "cs.AI",
+    "cs.CG",
+    "cs.CL",
+    "cs.CR",
+    "cs.CV",
+    "cs.DB",
+    "cs.DC",
+    "cs.DS",
+    "cs.GR",
+    "cs.HC",
+    "cs.IR",
+    "cs.LG",
+    "cs.LO",
+    "cs.MA",
+    "cs.NE",
+    "cs.NI",
+    "cs.RO",
+    "cs.SD",
+    "cs.SE",
+    "eess.AS",
+    "eess.IV",
+    "eess.SP",
+    "eess.SY",
+    "math.AP",
+    "math.OC",
+    "math.PR",
+    "nlin.CD",
+    "q-bio.NC",
+    "stat.ML"
+  ],
+  "date_from": "2018-02-27",
+  "date_to": "2026-10-22",
+  "papers": [
+    {
+      "paper_id": "2610.11730",
+      "summary": "Introduces decoupled nuclear-norm spectral weight decay that shrinks smaller singular values, lowers effective rank, and improves low-rank compression and noisy-label robustness. At 500M parameters and 4% distortion, it reports 1.89× compression and 1.18× inference speedup versus 1.14× and 1.01× with standard weight decay.",
+      "relevance": "Direct match for spectral regularization, effective rank, compressibility, inference tradeoffs, and generalization under label noise.",
+      "evidence": [
+        {
+          "source": "abstract",
+          "quote": "spectral weight decay lowers effective rank and improves SVD-LLM compression at matched validation loss"
+        },
+        {
+          "source": "inspection",
+          "quote": "The additive shrinkage acts more strongly on smaller singular values and concentrates the spectrum."
+        },
+        {
+          "source": "inspection",
+          "quote": "For the 500 M model and a 4 % distortion budget, it supports 1.89 × compression, compared with 1.14 × after standard weight decay."
+        }
+      ],
+      "title": "Spectral Weight Decay: Inducing Low-Rank Structure in Neural Network Weights",
+      "url": "https://arxiv.org/abs/2610.11730v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2609.40127",
+      "summary": "Presents Learnable Subspace Projections, which learn compression subspaces end-to-end against the model output rather than using local spectral or reconstruction criteria. Across LLMs and ViT, it reports stronger quality under compression, up to 1.56× faster decoding, and 13.5× lower combined weight and KV-cache memory at 128k context.",
+      "relevance": "Strong match for low-rank compression, functional versus spectral redundancy, rank allocation, and quality-memory-speed tradeoffs at multiple model scales.",
+      "evidence": [
+        {
+          "source": "abstract",
+          "quote": "At −70% compression, LSP brings Llama-2-7B to 10.9 WikiText-2 perplexity and 42.2% mean zero-shot accuracy, versus 13.3 and 36.0% for the strongest baseline."
+        },
+        {
+          "source": "inspection",
+          "quote": "LSP therefore selects the removed subspaces against the network output: it allocates ranks by measured output KL and optimizes all projectors jointly, with the pretrained weights frozen."
+        },
+        {
+          "source": "inspection",
+          "quote": "Its shared latent reduces the memory of weights and KV cache by 13.5 × at a 128k-token context."
+        }
+      ],
+      "title": "Learning Functional Subspaces for Neural Network Compression",
+      "url": "https://arxiv.org/abs/2609.40127v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2608.14492",
+      "summary": "Introduces sMuon, a matmul-only approximation of the Muon objective for LoRA updates. It compares against AdamW, per-factor Muon, LoRA-Muon, and Riemannion across four models and eleven SFT benchmarks, and ties Riemannion for best ReLoRA validation loss while being approximately 30% faster.",
+      "relevance": "Directly addresses optimization geometry and convergence for LoRA, low-rank parameterizations, Muon, and ReLoRA pretraining efficiency.",
+      "evidence": [
+        {
+          "source": "abstract",
+          "quote": "using Muon for low-rank fine-tuning provides moderate performance improvements"
+        },
+        {
+          "source": "inspection",
+          "quote": "We compare sMuon to regular LoRA with AdamW, per-factor Muon, LoRA-Muon, and Riemannion."
+        },
+        {
+          "source": "inspection",
+          "quote": "our method attains the lowest final validation loss, tying with Riemannion, but being ∼30% faster."
+        }
+      ],
+      "title": "Approximate Muon with low-rank adapters",
+      "url": "https://arxiv.org/abs/2608.14492v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2608.31036",
+      "summary": "Proposes NoRA and NoRA-init, which normalize LoRA's down-projection along the rank dimension during training or only at initialization. The paper evaluates them in pretraining, SFT, and RL with ablations over normalization and initialization choices, reporting improved convergence, stability, downstream performance, and resistance to catastrophic forgetting without extra trainable parameters or inference computation.",
+      "relevance": "Strong match for LoRA optimization dynamics, parameter-efficient fine-tuning, spectral normalization, and practical training overhead.",
+      "evidence": [
+        {
+          "source": "abstract",
+          "quote": "Across pretraining, supervised finetuning, and reinforcement learning, NoRA consistently accelerates convergence, improves performance and training stability, and mitigates catastrophic forgetting."
+        },
+        {
+          "source": "inspection",
+          "quote": "NoRA-init normalizes A only once at initialization and subsequently optimizes it without constraints during training."
+        },
+        {
+          "source": "inspection",
+          "quote": "These benefits require neither additional trainable parameters nor inference-time computation."
+        }
+      ],
+      "title": "Normalized Low-Rank Adaptation",
+      "url": "https://arxiv.org/abs/2608.31036v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2609.37725",
+      "summary": "Introduces Context Language Models that treat context as a file the model can update, extending the approach to multiple agent contexts. The abstract reports higher accuracy with fewer FLOPs on several agent benchmarks and improved held-out context-management performance through skill optimization.",
+      "relevance": "Best match among the supplied candidates for the user's AI research-digest agent, context-management, and multi-agent orchestration interests, though it is less connected to low-rank optimization.",
+      "evidence": [
+        {
+          "source": "abstract",
+          "quote": "We introduce Context Language Models (CLMs), language models that natively manage their own context."
+        },
+        {
+          "source": "abstract",
+          "quote": "11.4% higher accuracy with 21.5% fewer FLOPs on BrowseComp-Plus"
+        },
+        {
+          "source": "abstract",
+          "quote": "CLMs naturally enable both in-context and parametric learning of context-management strategies."
+        }
+      ],
+      "title": "Context Language Models",
+      "url": "https://arxiv.org/abs/2609.37725v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    }
+  ],
+  "x_feature": null,
+  "limitations": [
+    "X analysis is disabled, so no attention signal is available.",
+    "The retrieved inspection passages are not full-paper verification; some tables, implementation details, and limitations remain unexamined.",
+    "The NoRA inspection confirms the experimental scope and claimed benefits but does not provide detailed quantitative gains or a clear failure-case analysis in the retrieved passages.",
+    "The context-management recommendation relies on the abstract only and has less detailed experimental support than the four inspected optimization/compression papers.",
+    "inspect:2610.11730: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2608.14492: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2609.40127: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2608.31036: only question-relevant HTML passages were inspected, not the whole paper."
+  ],
+  "stats": {
+    "fetched_count": 100,
+    "candidate_count": 100,
+    "llm_calls": 8,
+    "steps": 5,
+    "inspections": 4,
+    "expansions": 0,
+    "screened": 30,
+    "usage": {
+      "recorded_calls": 8,
+      "llm_latency_seconds": 123.70055512600811,
+      "input_tokens": 181635,
+      "output_tokens": 4866,
+      "estimated_api_cost_usd": 0.0421662,
+      "calls_without_usage": 0,
+      "cost_note": "API-equivalent estimate using standard GPT-5.6-Luna rates checked 2026-11-17: $0.20/M input, $1.20/M output; above 272K input, $0.40/M and $1.80/M. Assumes all input is uncached; excludes cache writes and external tools. Not actual Codex subscription billing. Unknown usage/model yields null cost.",
+      "price_source": "https://developers.openai.com/api/docs/models/gpt-5.6-luna"
+    },
+    "tool_calls": 4,
+    "tool_latency_seconds": 0.9974280429742066
+  }
+}

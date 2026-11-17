@@ -1,0 +1,86 @@
+{
+  "status": "completed",
+  "run_id": "657b6d936ed4423d92f967ba3a88d1a1",
+  "selected": 15,
+  "stats": {
+    "fetched_count": 4655,
+    "candidate_count": 4655,
+    "llm_calls": 2,
+    "steps": 2,
+    "inspections": 1,
+    "expansions": 0,
+    "screened": 30,
+    "usage": {
+      "recorded_calls": 2,
+      "llm_latency_seconds": 46.243584666997776,
+      "input_tokens": 47412,
+      "output_tokens": 2006,
+      "estimated_api_cost_usd": 0.0118896,
+      "calls_without_usage": 0,
+      "cost_note": "API-equivalent estimate using standard GPT-5.6-Luna rates checked 2026-11-17: $0.20/M input, $1.20/M output; above 272K input, $0.40/M and $1.80/M. Assumes all input is uncached; excludes cache writes and external tools. Not actual Codex subscription billing. Unknown usage/model yields null cost.",
+      "price_source": "https://developers.openai.com/api/docs/models/gpt-5.6-luna"
+    },
+    "tool_calls": 1,
+    "tool_latency_seconds": 0.7060104999982286
+  },
+  "calls": [
+    {
+      "call": 1,
+      "purpose": "agent_decision",
+      "instructions_chars": 3978,
+      "payload_chars": 62401,
+      "schema_chars": 1101,
+      "total_chars": 67480,
+      "payload_sections_chars": {
+        "profile": 3234,
+        "tools": 3813,
+        "candidates": 54900,
+        "featured_x_paper_id": 4,
+        "observations": 2,
+        "last_error": 4,
+        "last_observation": 4,
+        "bounds": 197,
+        "remaining": 95
+      },
+      "input_tokens": 19713,
+      "output_tokens": 192
+    },
+    {
+      "call": 2,
+      "purpose": "agent_decision",
+      "instructions_chars": 3978,
+      "payload_chars": 94450,
+      "schema_chars": 1101,
+      "total_chars": 99529,
+      "payload_sections_chars": {
+        "profile": 3234,
+        "tools": 3813,
+        "candidates": 54900,
+        "featured_x_paper_id": 4,
+        "observations": 16116,
+        "last_error": 4,
+        "last_observation": 15939,
+        "bounds": 197,
+        "remaining": 95
+      },
+      "input_tokens": 27699,
+      "output_tokens": 1814
+    }
+  ],
+  "actions": [
+    {
+      "action": "inspect_paper",
+      "paper_id": "2611.08924",
+      "question": "What baselines and experimental controls are used, and how are optimizer-state memory, training throughput, and model quality measured relative to AdamW, GaLore, and LDAdam?",
+      "reason": "ResQAdam is a particularly strong fit for memory-efficient LLM training, low-rank optimizer states, and quality-throughput tradeoffs, but the abstract alone does not establish the baseline coverage, measured memory accounting, or experimental controls needed to recommend it confidently."
+    },
+    {
+      "action": "finish",
+      "paper_id": "",
+      "question": "",
+      "reason": "Selected 15 papers with the strongest direct coverage of spectral optimization, low-rank parameterization, memory-efficient training, LoRA, compressibility, and scale-dependent efficiency. Remaining uncertainty: most candidates were screened from abstracts only, so detailed baselines, controls, and reproducibility remain unverified except for ResQAdam."
+    }
+  ],
+  "overlap_with_previous_digest": 12,
+  "comparison_note": "Same dates, corpus and settings; new prompt examples. Metadata and screening cached. One stochastic run does not establish a prompt effect; no human labels for this corpus."
+}

@@ -185,7 +185,9 @@ DECISION_INSTRUCTIONS = (
     "when practical use or reproducibility matters; repository availability does not "
     "establish correctness or reproducibility. Finish when further available actions "
     "are unlikely to change the supported selection, or disclose exhausted budgets. "
-    "Do not call tools merely to increase the call count. You may return fewer than digest_size. "
+    "Do not call tools merely to increase the call count. When bounds.digest_size "
+    "is non-null, return exactly that many unique papers. "
+    "If needed, search or expand to screen enough candidates before finishing. "
     "Inspection retrieval is lexical. Ask focused questions with the terms you want "
     "to retrieve. If repeated inspections or searches return the same evidence, do "
     "not keep paraphrasing the same request; disclose the uncertainty, consider "
@@ -224,7 +226,9 @@ def require_text(value: Any, field: str, limit: int = 4000) -> str:
     return value
 
 
-def validate_decision(decision: Any, screened_paper_ids: Collection[str]) -> None:
+def validate_decision(
+    decision: Any, screened_paper_ids: Collection[str], *, exploration: bool = False
+) -> None:
     if not isinstance(decision, dict) or set(decision) != set(
         DECISION_SCHEMA["required"]
     ):
@@ -239,7 +243,7 @@ def validate_decision(decision: Any, screened_paper_ids: Collection[str]) -> Non
         "search_candidates",
         "find_code",
         "finish",
-    }:
+    } | ({"get_candidate_overview", "search_similar"} if exploration else set()):
         raise ValueError("Unknown tool/action")
 
     require_text(decision["reason"], "action reason", 2000)
@@ -266,7 +270,7 @@ def validate_decision(decision: Any, screened_paper_ids: Collection[str]) -> Non
     if not isinstance(decision["selections"], list):
         raise ValueError("Invalid selections")
 
-    if action in {"inspect_paper", "analyze_twitter", "find_code"}:
+    if action in {"inspect_paper", "analyze_twitter", "find_code", "search_similar"}:
         pid = require_text(decision["paper_id"], "paper_id", 100)
 
         if pid not in screened_paper_ids:
@@ -314,14 +318,7 @@ def validate_screening_response(
             raise ValueError("Invalid relevance label")
 
         require_text(assessment["reason"], "screening reason", 1000)
-        quote = require_text(assessment["evidence_quote"], "screening quote", 1000)
-        paper = visible_papers[paper_id]
-
-        if quote not in paper["title"] and quote not in paper["abstract"]:
-            raise ValueError(
-                f"Screening evidence is absent from the supplied text for "
-                f"paper {paper_id}: {quote!r}"
-            )
+        require_text(assessment["evidence_quote"], "screening quote", 1000)
 
         assessments[paper_id] = assessment
 

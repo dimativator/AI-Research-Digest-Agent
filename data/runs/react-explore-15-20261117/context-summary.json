@@ -1,0 +1,116 @@
+{
+  "status": "completed",
+  "selected": 15,
+  "stats": {
+    "fetched_count": 4655,
+    "candidate_count": 4655,
+    "llm_calls": 5,
+    "steps": 2,
+    "inspections": 1,
+    "expansions": 0,
+    "screened": 30,
+    "usage": {
+      "recorded_calls": 5,
+      "llm_latency_seconds": 99.10803112498252,
+      "input_tokens": 76746,
+      "output_tokens": 4381,
+      "estimated_api_cost_usd": 0.0206064,
+      "calls_without_usage": 0,
+      "cost_note": "API-equivalent estimate using standard GPT-5.6-Luna rates checked 2026-11-17: $0.20/M input, $1.20/M output; above 272K input, $0.40/M and $1.80/M. Assumes all input is uncached; excludes cache writes and external tools. Not actual Codex subscription billing. Unknown usage/model yields null cost.",
+      "price_source": "https://developers.openai.com/api/docs/models/gpt-5.6-luna"
+    },
+    "tool_calls": 1,
+    "tool_latency_seconds": 0.7432070420036325
+  },
+  "calls": [
+    {
+      "call": 1,
+      "purpose": "screen_papers",
+      "instructions_chars": 761,
+      "payload_chars": 19027,
+      "schema_chars": 445,
+      "total_chars": 20233,
+      "payload_sections_chars": {
+        "profile": 3234,
+        "papers": 15768
+      },
+      "input_tokens": 9499,
+      "output_tokens": 698
+    },
+    {
+      "call": 2,
+      "purpose": "screen_papers",
+      "instructions_chars": 761,
+      "payload_chars": 19922,
+      "schema_chars": 445,
+      "total_chars": 21128,
+      "payload_sections_chars": {
+        "profile": 3234,
+        "papers": 16663
+      },
+      "input_tokens": 9510,
+      "output_tokens": 868
+    },
+    {
+      "call": 3,
+      "purpose": "screen_papers",
+      "instructions_chars": 761,
+      "payload_chars": 20091,
+      "schema_chars": 445,
+      "total_chars": 21297,
+      "payload_sections_chars": {
+        "profile": 3234,
+        "papers": 16832
+      },
+      "input_tokens": 9494,
+      "output_tokens": 845
+    },
+    {
+      "call": 4,
+      "purpose": "agent_decision",
+      "instructions_chars": 3806,
+      "payload_chars": 60980,
+      "schema_chars": 1101,
+      "total_chars": 65887,
+      "payload_sections_chars": {
+        "profile": 3234,
+        "tools": 2392,
+        "candidates": 54900,
+        "featured_x_paper_id": 4,
+        "observations": 2,
+        "last_error": 4,
+        "last_observation": 4,
+        "bounds": 197,
+        "remaining": 95
+      },
+      "input_tokens": 19151,
+      "output_tokens": 188
+    },
+    {
+      "call": 5,
+      "purpose": "agent_decision",
+      "instructions_chars": 3806,
+      "payload_chars": 93551,
+      "schema_chars": 1101,
+      "total_chars": 98458,
+      "payload_sections_chars": {
+        "profile": 3234,
+        "tools": 2392,
+        "candidates": 54900,
+        "featured_x_paper_id": 4,
+        "observations": 16406,
+        "last_error": 4,
+        "last_observation": 16171,
+        "bounds": 197,
+        "remaining": 95
+      },
+      "input_tokens": 29092,
+      "output_tokens": 1782
+    }
+  ],
+  "actions": [
+    "inspect_paper",
+    "finish"
+  ],
+  "note": "Character counts measure harness instructions + JSON payload + schema, not CLI internal overhead. Input tokens are reported by Codex CLI."
+}

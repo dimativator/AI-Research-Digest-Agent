@@ -1,0 +1,41 @@
+M2 validation rerun — 17-11-2026
+
+All three repetitions ended. Two completed, one failed screening. The previous unlimited run was explicitly stopped for this rerun; all its artifacts remain in m2-diagnostic-20261117.
+
+Protocol: same 100-paper labeled corpus, M2 profile, GPT-5.6-Luna, initial BM25 top30, five-paper digest, X disabled, unlimited decision/call budgets. Final quote substring checks removed; evidence structure/source availability and screening quote checks retained. Same production ReAct prompts and tools. Each repetition has fresh SQLite state. Existing tool fixtures copied from prior diagnostic; newly requested tool responses captured on first use. Labels hidden from agent.
+
+RESULTS
+Run 1: completed, 3 interesting + 2 not interesting, nDCG@5 0.7227; 8 LLM calls, 4 decisions, 3 inspections; 151186 input + 5351 output tokens; 131.13 seconds; estimated API-equivalent $0.0366584.
+Run 2: completed, 5 interesting, nDCG@5 1.0000; 8 calls, 5 decisions, 4 inspections; 181635 input + 4866 output tokens; 124.83 seconds, including 0.96 seconds of new fixture capture; estimate $0.0421662.
+Run 3: failed first screening batch after 3 invalid responses; 3 calls, 0 decisions/tools; 28388 input + 2477 output tokens; 57.35 seconds; estimate $0.0086500. No relevance prediction assigned to this failure.
+Total: 19 calls, 361209 input + 12694 output tokens; estimate $0.0874746. Completion 2/3; mean nDCG among completed runs 0.8614. If failure is assigned zero end-to-end utility, mean nDCG is 0.5742; this is distinct from conditional ranking quality.
+Estimates use standard uncached GPT-5.6-Luna API rates checked 17-11-2026, not actual Codex subscription billing. Full rate assumptions recorded in usage fields.
+
+BASELINE
+BM25 top5: 2610.11730, 2609.40127, 2608.14492, 2608.31036, 2010.01412. All labels are 1, so nDCG@5=1.0 with no LLM calls. No claim of general superiority: this is a topic-stratified convenience sample containing prior likes, one profile and one corpus.
+
+DIAGNOSIS AND VARIANT IDEAS
+1. Removing final exact matching eliminated the observed finish-repair loop in both completed repetitions: each finished on its first finish action. This establishes completion under the modified validator, not factual accuracy of summaries or quotes. Exact quotations are no longer mechanically guaranteed.
+
+2. Screening can still abort the entire run. Run3 trace lines 4, 7, 10 repeat the same unsupported quote for NoRA (2608.31036). This is three consecutive failures despite paper/quote-specific feedback. Unlike the final loop, the three-attempt screening cap terminates the run. Potential common repair: evidence by source ID, or failure isolation per paper with explicit uncertainty rather than aborting the whole batch. Evaluate separately; no change applied here.
+
+3. Personal-interest selection is unstable. Run1 selected gold-0 papers Signals and Queries (2610.29326) and Reasoning-Search-Augmented LLMs (2610.29189). Run2 replaced them with gold-1 2609.40127 and Context Language Models (2609.37725). Both share three gold-1 papers: spectral weight decay, approximate Muon with adapters, and NoRA. The sets overlap on 3/5 entries, Jaccard 3/7. A selection critic could compare broad agent-related matches with stronger unselected optimization papers. This is a hypothesis; no critic evaluation yet.
+
+4. Prompt-induced over-investigation persists. Run1 trace line19 calls spectral weight decay the strongest direct match, then asks for baselines and label-noise controls. Run2 line16 does the same. All seven tool calls across completed runs are inspections. No find_code, search_candidates, or expand_shortlist calls. A selective-investigation variant could require a concrete personal-relevance ambiguity before inspecting, reducing calls and context growth. It may still lose useful disambiguation; test against abstract-only selection.
+
+5. Earlier annotations can anchor later decisions. Both completed screenings call four gold-0 papers relevant (RIFT, AQL-Lite, Signals and Queries, reasoning-search survey). Initial shortlist contains 10 gold-1, four gold-0.5, sixteen gold-0. All ten gold-1 were screened relevant in both successful runs. Initial coverage is limited but enough high-rated candidates exist for five recommendations. Compare draft selection with and without the earlier screening labels as a future controlled ablation.
+
+6. Source text remains imperfect. Fixture passages retain duplicate math/LaTeX representations. The validator change allows completion but does not repair extraction. Source normalization and manual summary-support checks remain separate work.
+
+LIMITATIONS
+Three repetitions of a single corpus task are not 300 independent tasks. There is no same-protocol one-call LLM baseline run here. Labels evaluate interest, not redundancy, scientific truth, or summary faithfulness. Original M2 20-paper evaluation was not rerun. Tool fixtures were captured on first use, not all frozen before the original diagnostic; future comparisons must reuse these files and record any new fixture capture. Input snippets are truncated in the production decision context. Exact model snapshot/reasoning effort is not independently pinned beyond model name and recorded CLI version.
+
+RECOMMENDED NEXT EXPERIMENT
+Fix screening failure handling as shared infrastructure, retaining this real failed trace. Compare corrected ReAct, abstract-only selector, and selection critic on identical inputs/fixtures. Test selective investigation afterward to isolate its effect. Keep BM25 top5 as a cheap baseline. Do not tune the profile using hidden evaluation labels and then present the same sample as untouched validation.
+
+ARTIFACTS
+summary.json: original run summaries (failed-run usage absent there).
+summary-with-failure-accounting.json: complete costs, including failed run recovered from saved state.
+analysis.json: actions, screening confusion, and nonmatching quote diagnostics (not validator rejections after this change).
+run-N/result.json, state.json, run.sqlite3, calls.jsonl, trace.jsonl: per-run evidence.
+manifest.json, source/, working_changes.patch, profile.json, sample.json, bm25.json, fixture_hashes.json, fixtures/: reproducibility artifacts.

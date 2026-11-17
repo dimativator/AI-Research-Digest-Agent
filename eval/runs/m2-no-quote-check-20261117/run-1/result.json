@@ -1,0 +1,214 @@
+{
+  "run_id": "13dc34a56bac4bb59869808f4ce7dba6",
+  "status": "completed",
+  "user_id": "dmitrii",
+  "profile_fingerprint": "a2480e0075ad9cdf236d40e30f74f9bfd87a08dd948530b42e6b57e4a123bfc0",
+  "pipeline_version": "react-v2",
+  "categories": [
+    "cs.AI",
+    "cs.CG",
+    "cs.CL",
+    "cs.CR",
+    "cs.CV",
+    "cs.DB",
+    "cs.DC",
+    "cs.DS",
+    "cs.GR",
+    "cs.HC",
+    "cs.IR",
+    "cs.LG",
+    "cs.LO",
+    "cs.MA",
+    "cs.NE",
+    "cs.NI",
+    "cs.RO",
+    "cs.SD",
+    "cs.SE",
+    "eess.AS",
+    "eess.IV",
+    "eess.SP",
+    "eess.SY",
+    "math.AP",
+    "math.OC",
+    "math.PR",
+    "nlin.CD",
+    "q-bio.NC",
+    "stat.ML"
+  ],
+  "date_from": "2018-02-27",
+  "date_to": "2026-10-22",
+  "papers": [
+    {
+      "paper_id": "2610.11730",
+      "summary": "Introduces decoupled nuclear-norm spectral weight decay that additively shrinks singular values, lowers effective rank, improves SVD compression, and reduces memorization under label noise.",
+      "relevance": "Directly matches spectral regularization, low-rank compressibility, effective rank, and noisy-label generalization.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "Across 124 M to 500 M LLaMA models trained with Adam-family optimizers, the resulting low-effective-rank structure improves post-training compression under matched validation-loss budgets."
+        },
+        {
+          "source": "inspection",
+          "quote": "At 500 M and a 4% distortion budget, we obtain 1.89× compression and 1.18× GPU inference speedup."
+        },
+        {
+          "source": "inspection",
+          "quote": "At 60% label noise, mean clean-test accuracy gains over matched ℓ2 regularization reach 17.78 points on MNIST and 4.59 points on four BERT-base tasks."
+        }
+      ],
+      "title": "Spectral Weight Decay: Inducing Low-Rank Structure in Neural Network Weights",
+      "url": "https://arxiv.org/abs/2610.11730v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2608.14492",
+      "summary": "Proposes sMuon, a matmul-only approximation of Muon for LoRA, and evaluates it on SFT and ReLoRA pretraining against AdamW and other low-rank Muon variants.",
+      "relevance": "Directly addresses optimization geometry and practical training of LoRA and other low-rank parameterizations.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "We derive a method for training LoRA adapters with Muon by taking a first-order approximation of the spectral-norm-regularized steepest descent objective."
+        },
+        {
+          "source": "inspection",
+          "quote": "In the ReLoRA pretraining setting, we illustrate that Muon LoRA methods are generally stronger than AdamW LoRA."
+        },
+        {
+          "source": "inspection",
+          "quote": "Our method attains the lowest final validation loss, tying with Riemannion, but being ∼30% faster."
+        }
+      ],
+      "title": "Approximate Muon with low-rank adapters",
+      "url": "https://arxiv.org/abs/2608.14492v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2608.31036",
+      "summary": "Introduces NoRA and NoRA-init, which normalize LoRA's down-projection during training or only at initialization to improve conditioning, convergence, stability, and resistance to forgetting.",
+      "relevance": "Strong match for LoRA optimization, parameter-efficient fine-tuning, and the geometry of low-rank updates.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "NoRA continuously normalizes the down-projection matrix A along the low-rank dimension throughout training."
+        },
+        {
+          "source": "inspection",
+          "quote": "NoRA-init normalizes A only once at initialization and subsequently optimizes it without constraints during training."
+        },
+        {
+          "source": "abstract",
+          "quote": "These benefits require neither additional trainable parameters nor inference-time computation."
+        }
+      ],
+      "title": "Normalized Low-Rank Adaptation",
+      "url": "https://arxiv.org/abs/2608.31036v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.29326",
+      "summary": "Presents Signals and Queries, an embedding-based first-stage relevance filter that removes at least 30% of candidate policies while preserving high recall and improving precision over top-K and cosine-threshold retrieval.",
+      "relevance": "Directly useful for a handwritten research-digest agent that needs efficient paper retrieval and relevance ranking.",
+      "evidence": [
+        {
+          "source": "abstract",
+          "quote": "a lightweight first-stage relevance filter developed for Parlant 4.0 that removes at least 30% of candidate policies before downstream evaluation while preserving high recall."
+        },
+        {
+          "source": "abstract",
+          "quote": "S&Q achieves higher precision than top-K and cosine-threshold retrieval at every evaluated recall level."
+        }
+      ],
+      "title": "Signals and Queries: Token-Efficient Agentic Context Discovery",
+      "url": "https://arxiv.org/abs/2610.29326v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.29189",
+      "summary": "Reviews reasoning-search systems that interleave planning, querying, retrieval, evidence integration, verification, and stopping, organizing them by retrieval coupling and controller design.",
+      "relevance": "Matches the user's interest in research-digest agents, context management, tool orchestration, grounding, and paper retrieval.",
+      "evidence": [
+        {
+          "source": "abstract",
+          "quote": "Recent work addresses these limitations by tightly coupling step-by-step reasoning with interactive search, treating retrieval as an action within an iterative agentic loop rather than a one-shot preprocessing step."
+        },
+        {
+          "source": "abstract",
+          "quote": "We analyze these systems through four architectural axes: retrieval coupling, controller design, knowledge source, and grounding strictness."
+        }
+      ],
+      "title": "Reasoning-Search-Augmented LLMs: An Operational Taxonomy, Benchmark Analysis and Controlled Evidence Synthesis",
+      "url": "https://arxiv.org/abs/2610.29189v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    }
+  ],
+  "x_feature": null,
+  "limitations": [
+    "X analysis is disabled, so no attention signal is available.",
+    "The detailed NoRA experimental tables, baselines, and quantitative differences were not present in the retrieved passages.",
+    "The abstracts for Reasoning-Search-Augmented LLMs and several other agent papers are truncated, so their full scope cannot be assessed.",
+    "inspect:2610.11730: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2608.14492: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2608.31036: only question-relevant HTML passages were inspected, not the whole paper."
+  ],
+  "stats": {
+    "fetched_count": 100,
+    "candidate_count": 100,
+    "llm_calls": 8,
+    "steps": 4,
+    "inspections": 3,
+    "expansions": 0,
+    "screened": 30,
+    "usage": {
+      "recorded_calls": 8,
+      "llm_latency_seconds": 130.97506149901892,
+      "input_tokens": 151186,
+      "output_tokens": 5351,
+      "estimated_api_cost_usd": 0.0366584,
+      "calls_without_usage": 0,
+      "cost_note": "API-equivalent estimate using standard GPT-5.6-Luna rates checked 2026-11-17: $0.20/M input, $1.20/M output; above 272K input, $0.40/M and $1.80/M. Assumes all input is uncached; excludes cache writes and external tools. Not actual Codex subscription billing. Unknown usage/model yields null cost.",
+      "price_source": "https://developers.openai.com/api/docs/models/gpt-5.6-luna"
+    },
+    "tool_calls": 3,
+    "tool_latency_seconds": 0.03132670800550841
+  }
+}

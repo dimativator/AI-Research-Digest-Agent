@@ -84,7 +84,7 @@ def config(**kwargs):
             batch_size=1,
             expansion_size=1,
             max_candidates=3,
-            digest_size=2,
+            digest_size=1,
             model="test-model",
         ),
         **kwargs,
@@ -244,6 +244,35 @@ class ArxivTests(unittest.TestCase):
             result = client.inspect(paper())
         self.assertEqual(result["status"], "unavailable")
         self.assertEqual(result["text"], "")
+
+    def test_rate_limit_waits_75_seconds_or_longer_server_delay(self):
+        for header, expected in (
+            (None, 75),
+            ("3", 75),
+            ("120", 120),
+            ("invalid", 75),
+            ("Thu, 01 Jan 1970 00:03:20 GMT", 200),
+        ):
+            with self.subTest(header=header):
+                headers = {} if header is None else {"Retry-After": header}
+                error = HTTPError(
+                    "https://export.arxiv.org", 429, "Busy", headers, None
+                )
+                with (
+                    patch(
+                        "research_digest.retrieval.arxiv_source.urlopen",
+                        side_effect=[error, io.BytesIO(b"ok")],
+                    ),
+                    patch("research_digest.retrieval.arxiv_source.time.sleep") as sleep,
+                    patch(
+                        "research_digest.retrieval.arxiv_source.time.time",
+                        return_value=0,
+                    ),
+                ):
+                    self.assertEqual(
+                        ArxivClient(retries=1)._get("https://export.arxiv.org"), "ok"
+                    )
+                    self.assertEqual(sleep.call_args_list[1].args[0], expected)
 
     def test_http_retry_and_download_limit(self):
         client = ArxivClient(retries=1)
@@ -425,6 +454,65 @@ class AgentTests(unittest.TestCase):
         run_id = agent.start(profile(), config() if settings is None else settings)
         return agent, agent.run(run_id)
 
+    def test_readable_log_references_full_records_and_survives_resume(self):
+        agent, result = self.run_agent()
+        root = agent.log_directory
+        records = [
+            json.loads(line)
+            for line in (root / "details.jsonl").read_text().splitlines()
+        ]
+        text = (root / "activity.log").read_text()
+        self.assertEqual(len(records), len({row["id"] for row in records}))
+        for row in records:
+            self.assertIn("[ref=" + row["id"] + "]", text)
+        inputs = [
+            row["event"] for row in records if row["event"]["type"] == "model_input"
+        ]
+        self.assertTrue(inputs)
+        self.assertIn("instructions", inputs[0])
+        self.assertNotIn(inputs[0]["instructions"], text)
+        self.assertTrue(any(row["event"]["type"] == "llm_response" for row in records))
+        self.assertEqual(records[-1]["event"]["result"], result)
+        requests = [
+            row["event"] for row in records if row["event"]["type"] == "llm_request"
+        ]
+        for request, model_input in zip(requests, inputs):
+            expected = (
+                len(model_input["instructions"])
+                + len(model_input["input"])
+                + len(json.dumps(model_input["schema"], ensure_ascii=False))
+            )
+            self.assertEqual(request["context"]["total_chars"], expected)
+        self.assertIn("; context ", text)
+        self.assertIn("Decision: finish", text)
+        agent.run(agent.run_id)
+        self.assertEqual((root / "activity.log").read_text(), text)
+
+    def test_exact_digest_size_rejects_short_and_long_lists_then_recovers(self):
+        attempts = 0
+
+        def policy(context):
+            nonlocal attempts
+            attempts += 1
+            response = finish(context)
+            if attempts == 1:
+                response["selections"] = []
+            elif attempts == 2:
+                self.assertIn("exactly 1", context["last_error"])
+                response["selections"] *= 2
+            else:
+                self.assertIn("received 2", context["last_error"])
+            return response
+
+        _, result = self.run_agent(FakeLLM(policy))
+        self.assertEqual(result["status"], "completed")
+        self.assertEqual(len(result["papers"]), 1)
+        self.assertEqual(attempts, 3)
+
+    def test_exact_digest_size_fails_when_corpus_is_too_small(self):
+        with self.assertRaisesRegex(ValueError, "Cannot select exactly 4"):
+            self.run_agent(settings=config(digest_size=4))
+
     def test_disabled_x_skips_collection_and_removes_tool_and_feature(self):
         client = FakeLLM()
         agent, result = self.run_agent(client, config(x_enabled=False))
@@ -504,7 +592,30 @@ class AgentTests(unittest.TestCase):
             "No papers were selected", format_digest({**result, "status": "completed"})
         )
 
-    def test_screening_retries_bad_quote_with_feedback_and_charges_calls(self):
+    def test_screening_accepts_nonmatching_quote_without_retry(self):
+        client = FakeLLM()
+        create = client.responses.create
+
+        def normalized_quote(**kwargs):
+            response = create(**kwargs)
+            if kwargs["text"]["format"]["name"] == "screen_papers":
+                data = json.loads(response.output_text)
+                data["assessments"][0]["evidence_quote"] = "Normalized evidence text."
+                response.output_text = json.dumps(data)
+            return response
+
+        client.responses.create = normalized_quote
+        agent, result = self.run_agent(client)
+        self.assertEqual(result["status"], "completed")
+        self.assertEqual(result["stats"]["llm_calls"], 2)
+        self.assertFalse(
+            any(
+                e["type"] == "invalid_screening"
+                for e in self.store.events(agent.run_id)
+            )
+        )
+
+    def test_screening_retries_bad_label_with_feedback_and_charges_calls(self):
         client = FakeLLM()
         create = client.responses.create
         screening_payloads = []
@@ -515,7 +626,7 @@ class AgentTests(unittest.TestCase):
                 screening_payloads.append(json.loads(kwargs["input"]))
                 if len(screening_payloads) == 1:
                     data = json.loads(response.output_text)
-                    data["assessments"][0]["evidence_quote"] = "Invented quotation"
+                    data["assessments"][0]["label"] = "invalid"
                     return SimpleNamespace(output_text=json.dumps(data))
             return response
 
@@ -524,7 +635,9 @@ class AgentTests(unittest.TestCase):
         self.assertEqual(result["status"], "completed")
         self.assertEqual(result["stats"]["llm_calls"], 3)
         self.assertEqual(len(screening_payloads), 2)
-        self.assertIn("Invented quotation", screening_payloads[1]["validation_error"])
+        self.assertIn(
+            "Invalid relevance label", screening_payloads[1]["validation_error"]
+        )
         self.assertEqual(
             screening_payloads[0]["papers"], screening_payloads[1]["papers"]
         )
@@ -542,13 +655,13 @@ class AgentTests(unittest.TestCase):
         def always_invalid(**kwargs):
             response = create(**kwargs)
             data = json.loads(response.output_text)
-            data["assessments"][0]["evidence_quote"] = "Invented quotation"
+            data["assessments"][0]["label"] = "invalid"
             return SimpleNamespace(output_text=json.dumps(data))
 
         client.responses.create = always_invalid
         agent = DigestAgent(self.store, client=client, arxiv=self.arxiv)
         run_id = agent.start(profile(), config())
-        with self.assertRaisesRegex(ValueError, "Invented quotation"):
+        with self.assertRaisesRegex(ValueError, "Invalid relevance label"):
             agent.run(run_id)
         self.assertEqual(len(client.calls), 3)
         self.assertEqual(self.store.load_run(run_id)[1]["screened"], {})
@@ -674,7 +787,7 @@ class AgentTests(unittest.TestCase):
     def test_empty_corpus_needs_no_llm(self):
         self.arxiv.papers = []
         client = FakeLLM()
-        _, result = self.run_agent(client)
+        _, result = self.run_agent(client, config(digest_size=-1))
         self.assertEqual(result["status"], "completed")
         self.assertEqual(result["papers"], [])
         self.assertEqual(client.calls, [])
@@ -697,31 +810,24 @@ class AgentTests(unittest.TestCase):
         ]
         self.assertEqual(len(invalid_events), 2)
         self.assertEqual(invalid_events[0]["decision"]["action"], "shell")
-        self.assertEqual(
-            invalid_events[1]["decision"]["paper_id"], "../../etc/passwd"
-        )
+        self.assertEqual(invalid_events[1]["decision"]["paper_id"], "../../etc/passwd")
 
-    def test_fabricated_final_evidence_is_rejected(self):
-        count = 0
-
+    def test_final_evidence_does_not_require_exact_text_match(self):
         def policy(context):
-            nonlocal count
-            count += 1
             output = finish(context)
-            if count == 1:
-                output["selections"][0]["evidence"][0][
-                    "quote"
-                ] = "This quote is invented."
+            output["selections"][0]["evidence"][0][
+                "quote"
+            ] = "Normalized evidence text."
             return output
 
         agent, result = self.run_agent(FakeLLM(policy))
         self.assertEqual(result["status"], "completed")
-        self.assertEqual(result["stats"]["steps"], 2)
-        self.assertTrue(
+        self.assertEqual(result["stats"]["steps"], 1)
+        self.assertFalse(
             any(x["type"] == "invalid_action" for x in self.store.events(agent.run_id))
         )
 
-    def test_screening_requires_every_id_and_exact_evidence(self):
+    def test_screening_requires_every_id(self):
         for assessments in (
             [],
             [
@@ -852,7 +958,7 @@ class AgentTests(unittest.TestCase):
                     )
                     return decision(action, pid)
                 observations.append(context["last_observation"]["result"]["status"])
-                return decision("finish")
+                return finish(context)
 
             with self.subTest(action=action):
                 _, result = self.run_agent(FakeLLM(policy), settings)

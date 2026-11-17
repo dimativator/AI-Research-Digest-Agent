@@ -1,0 +1,290 @@
+{
+  "runs": [
+    {
+      "run": 1,
+      "status": "completed",
+      "before": {
+        "ndcg_at_10": 0.8603818544462508,
+        "selected_labels": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          0.0,
+          1.0,
+          0.0,
+          1.0
+        ],
+        "interesting": 8,
+        "potentially_interesting": 0,
+        "not_interesting": 2
+      },
+      "after": {
+        "ndcg_at_10": 0.8630152897016882,
+        "selected_labels": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          0.0,
+          1.0,
+          1.0,
+          0.0
+        ],
+        "interesting": 8,
+        "potentially_interesting": 0,
+        "not_interesting": 2
+      },
+      "review": {
+        "verdict": "revise",
+        "weak_selection_ids": [
+          "2610.30344",
+          "2010.01412"
+        ],
+        "overlooked_candidate_ids": [
+          "2610.25858",
+          "2610.29189"
+        ],
+        "missing_topics": [
+          "Memory-efficient LLM pretraining and optimizer-state compression"
+        ],
+        "reason": "AQL-Lite is mainly an Arabic data-curation and adaptation recipe, while SAM is a broad, older generalization baseline rather than a direct study of memorization under label noise. The self-evolving-agent paper directly examines agents that revise a handwritten harness, and the reasoning-search paper is closer to the digest\u2019s retrieval and evidence-synthesis goal. No proposed paper directly covers the stated memory-efficient pretraining interest. These known candidates support revision without another retrieval action.",
+        "search": null
+      },
+      "review_calls": 1,
+      "review_input_tokens": 16060,
+      "review_chars": [
+        39067
+      ],
+      "actions": {
+        "inspect_paper": 3,
+        "search_candidates": 3,
+        "finish": 2
+      },
+      "removed": [
+        {
+          "id": "2610.30344",
+          "label": 0.0
+        },
+        {
+          "id": "2010.01412",
+          "label": 1.0
+        }
+      ],
+      "added": [
+        {
+          "id": "2610.25858",
+          "label": 1.0
+        },
+        {
+          "id": "2610.29189",
+          "label": 0.0
+        }
+      ],
+      "calls": 14,
+      "input_tokens": 391155,
+      "output_tokens": 9025,
+      "latency_seconds": 231.06492974999128,
+      "fixture_capture_seconds": 0.0,
+      "max_context_chars": 194823,
+      "validation_errors": 0
+    },
+    {
+      "run": 2,
+      "status": "completed",
+      "before": {
+        "ndcg_at_10": 0.8572048559638626,
+        "selected_labels": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          0.0,
+          0.0,
+          1.0,
+          1.0
+        ],
+        "interesting": 8,
+        "potentially_interesting": 0,
+        "not_interesting": 2
+      },
+      "after": {
+        "ndcg_at_10": 0.8285714603467751,
+        "selected_labels": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          0.0,
+          1.0,
+          0.0,
+          0.5
+        ],
+        "interesting": 7,
+        "potentially_interesting": 1,
+        "not_interesting": 2
+      },
+      "review": {
+        "verdict": "revise",
+        "weak_selection_ids": [
+          "2610.30344",
+          "2610.30191",
+          "2010.01412"
+        ],
+        "overlooked_candidate_ids": [
+          "2610.25858",
+          "2610.29189",
+          "2610.29357"
+        ],
+        "missing_topics": [
+          "Memory-efficient LLM pretraining through low-rank gradients or optimizer-state compression",
+          "Memorization and generalization under label noise"
+        ],
+        "reason": "The core low-rank, spectral, LoRA, and optimizer selections fit well. AQL-Lite is mainly Arabic data curation and adaptation; the continual-SFT paper is only tangentially related to low-rank updates; SAM does not directly address noisy labels in the supplied excerpt. The three overlooked agent papers more directly support the stated research-digest harness goal through harness adaptation, interactive retrieval, and memory. No additional retrieval is needed to make these revisions.",
+        "search": null
+      },
+      "review_calls": 1,
+      "review_input_tokens": 16396,
+      "review_chars": [
+        40848
+      ],
+      "actions": {
+        "search_candidates": 4,
+        "inspect_paper": 7,
+        "finish": 2
+      },
+      "removed": [
+        {
+          "id": "2610.30344",
+          "label": 0.0
+        },
+        {
+          "id": "2010.01412",
+          "label": 1.0
+        },
+        {
+          "id": "2610.30191",
+          "label": 1.0
+        }
+      ],
+      "added": [
+        {
+          "id": "2610.25858",
+          "label": 1.0
+        },
+        {
+          "id": "2610.29189",
+          "label": 0.0
+        },
+        {
+          "id": "2610.29357",
+          "label": 0.5
+        }
+      ],
+      "calls": 21,
+      "input_tokens": 725838,
+      "output_tokens": 12205,
+      "latency_seconds": 340.1359017089999,
+      "fixture_capture_seconds": 1.5596693319675978,
+      "max_context_chars": 261018,
+      "validation_errors": 0
+    },
+    {
+      "run": 3,
+      "status": "completed",
+      "before": {
+        "ndcg_at_10": 0.8572048559638626,
+        "selected_labels": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          0.0,
+          0.0,
+          1.0,
+          1.0
+        ],
+        "interesting": 8,
+        "potentially_interesting": 0,
+        "not_interesting": 2
+      },
+      "after": {
+        "ndcg_at_10": 0.8630152897016882,
+        "selected_labels": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          0.0,
+          1.0,
+          1.0,
+          0.0
+        ],
+        "interesting": 8,
+        "potentially_interesting": 0,
+        "not_interesting": 2
+      },
+      "review": {
+        "verdict": "revise",
+        "weak_selection_ids": [
+          "2610.30344"
+        ],
+        "overlooked_candidate_ids": [
+          "2610.29189",
+          "2610.29357"
+        ],
+        "missing_topics": [
+          "Memory-efficient LLM pretraining, especially low-rank gradients and optimizer-state compression"
+        ],
+        "reason": "The core spectral, compression, and LoRA selections fit well. AQL-Lite is chiefly an Arabic continual-pretraining and data-curation study, so its connection to the stated efficiency goals is weaker. The unselected papers on reasoning with interactive search and memory-driven agent improvement more directly support the research-digest harness. No selected paper directly covers the profile\u2019s memory-efficient pretraining interest. The reported topic coverage is lexical overlap, not evidence that this gap is filled.",
+        "search": null
+      },
+      "review_calls": 1,
+      "review_input_tokens": 16095,
+      "review_chars": [
+        39173
+      ],
+      "actions": {
+        "inspect_paper": 6,
+        "search_candidates": 3,
+        "finish": 2
+      },
+      "removed": [
+        {
+          "id": "2610.30344",
+          "label": 0.0
+        }
+      ],
+      "added": [
+        {
+          "id": "2610.29189",
+          "label": 0.0
+        }
+      ],
+      "calls": 17,
+      "input_tokens": 576547,
+      "output_tokens": 9512,
+      "latency_seconds": 267.7100707089994,
+      "fixture_capture_seconds": 0.0,
+      "max_context_chars": 227934,
+      "validation_errors": 0
+    }
+  ],
+  "mean_before_ndcg": 0.858263855457992,
+  "mean_after_ndcg": 0.8515340132500505,
+  "total_input_tokens": 1693540,
+  "total_output_tokens": 30742,
+  "mean_latency_seconds": 279.6369673893302
+}

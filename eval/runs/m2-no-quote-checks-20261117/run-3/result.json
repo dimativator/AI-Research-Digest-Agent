@@ -1,0 +1,200 @@
+{
+  "run_id": "84d75740672c495ebb225f90fe8c2bae",
+  "status": "completed",
+  "user_id": "dmitrii",
+  "profile_fingerprint": "a2480e0075ad9cdf236d40e30f74f9bfd87a08dd948530b42e6b57e4a123bfc0",
+  "pipeline_version": "react-v2",
+  "categories": [
+    "cs.AI",
+    "cs.CG",
+    "cs.CL",
+    "cs.CR",
+    "cs.CV",
+    "cs.DB",
+    "cs.DC",
+    "cs.DS",
+    "cs.GR",
+    "cs.HC",
+    "cs.IR",
+    "cs.LG",
+    "cs.LO",
+    "cs.MA",
+    "cs.NE",
+    "cs.NI",
+    "cs.RO",
+    "cs.SD",
+    "cs.SE",
+    "eess.AS",
+    "eess.IV",
+    "eess.SP",
+    "eess.SY",
+    "math.AP",
+    "math.OC",
+    "math.PR",
+    "nlin.CD",
+    "q-bio.NC",
+    "stat.ML"
+  ],
+  "date_from": "2018-02-27",
+  "date_to": "2026-10-22",
+  "papers": [
+    {
+      "paper_id": "2610.11730",
+      "summary": "Introduces decoupled nuclear-norm spectral weight decay to concentrate singular values and induce low-effective-rank weights. Across 124M–500M-parameter LLaMA models, it improves compression and inference speed at matched validation loss, and improves clean-test accuracy under 60% label noise.",
+      "relevance": "Direct match for spectral regularization, effective rank, low-rank compressibility, SVD compression, and memorization under label noise.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "At 500M and a 4% distortion budget, it reaches 1.89× compression and a 1.18× GPU inference speedup, compared with 1.14× and 1.01× after standard weight decay."
+        },
+        {
+          "source": "inspection",
+          "quote": "At the end of training, λ = 0.7 reduces mean effective rank by a factor of 2.17 relative to λ = 0, with a 1.10% increase in validation loss."
+        }
+      ],
+      "title": "Spectral Weight Decay: Inducing Low-Rank Structure in Neural Network Weights",
+      "url": "https://arxiv.org/abs/2610.11730v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2608.14492",
+      "summary": "Presents sMuon, an efficient approximation to the Muon objective for low-rank adapters using linearization and least squares, with matmul-only implementation. It reports moderate improvements across supervised fine-tuning and a ReLoRA pretraining experiment.",
+      "relevance": "Directly addresses optimization for LoRA, low-rank parameterizations, Muon, and ReLoRA pretraining.",
+      "evidence": [
+        {
+          "source": "abstract",
+          "quote": "Our method, sMuon (small Muon), performs favourably across SFT and a ReLoRA pretraining experiment."
+        },
+        {
+          "source": "abstract",
+          "quote": "we find overall that using Muon for low-rank fine-tuning provides moderate performance improvements."
+        }
+      ],
+      "title": "Approximate Muon with low-rank adapters",
+      "url": "https://arxiv.org/abs/2608.14492v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2608.31036",
+      "summary": "Introduces NoRA, which normalizes LoRA down-projection matrices during training or only at initialization. The method is evaluated across pretraining, supervised fine-tuning, and reinforcement learning, where it reportedly improves convergence, stability, performance, and catastrophic-forgetting behavior without extra trainable parameters or inference computation.",
+      "relevance": "Strong fit for the geometry and optimization dynamics of LoRA and other low-rank updates.",
+      "evidence": [
+        {
+          "source": "abstract",
+          "quote": "Because LoRA initializes the up-projection to zero, its early optimization dynamics are largely governed by the down-projection."
+        },
+        {
+          "source": "abstract",
+          "quote": "Across pretraining, supervised finetuning, and reinforcement learning, NoRA consistently accelerates convergence, improves performance and training stability, and mitigates catastrophic forgetting."
+        }
+      ],
+      "title": "Normalized Low-Rank Adaptation",
+      "url": "https://arxiv.org/abs/2608.31036v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2510.05491",
+      "summary": "Proposes NorMuon, combining Muon's orthogonalization with neuron-wise adaptive normalization and an efficient distributed FSDP2 implementation. It targets non-uniform neuron update norms and practical scalability in LLM training.",
+      "relevance": "Relevant to Muon optimization, conditioning, distributed training, and efficiency at language-model scale.",
+      "evidence": [
+        {
+          "source": "abstract",
+          "quote": "NorMuon addresses this imbalance by maintaining second-order momentum statistics for each neuron and applying row-wise normalization after orthogonalization."
+        },
+        {
+          "source": "abstract",
+          "quote": "To enable practical deployment at scale, we develop an efficient distributed implementation under the FSDP2 framework."
+        }
+      ],
+      "title": "NorMuon: Making Muon more efficient and scalable",
+      "url": "https://arxiv.org/abs/2510.05491v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2609.37725",
+      "summary": "Introduces Context Language Models that treat context as a file the model can update, extending the approach to multi-agent contexts. The abstract reports improved accuracy and reduced FLOPs over context-management baselines, as well as gains from natural-language steering and skill optimization.",
+      "relevance": "Directly supports the user's goal of building an AI research-digest agent with explicit context management and tool-like context operations.",
+      "evidence": [
+        {
+          "source": "abstract",
+          "quote": "We introduce Context Language Models (CLMs), language models that natively manage their own context."
+        },
+        {
+          "source": "abstract",
+          "quote": "This allows the model to learn what is most important to maintain in context, and naturally extends to multi-agent systems where multiple agent contexts coexist as files."
+        }
+      ],
+      "title": "Context Language Models",
+      "url": "https://arxiv.org/abs/2609.37725v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    }
+  ],
+  "x_feature": null,
+  "limitations": [
+    "Only Spectral Weight Decay received full-text inspection. The remaining selections rely on abstracts, some of which are truncated or provide limited baseline and compute details.",
+    "Code availability and reproducibility were not independently checked.",
+    "X analysis was disabled, so no attention or popularity signal is included.",
+    "inspect:2610.11730: only question-relevant HTML passages were inspected, not the whole paper."
+  ],
+  "stats": {
+    "fetched_count": 100,
+    "candidate_count": 100,
+    "llm_calls": 5,
+    "steps": 2,
+    "inspections": 1,
+    "expansions": 0,
+    "screened": 30,
+    "usage": {
+      "recorded_calls": 5,
+      "llm_latency_seconds": 89.8273938740167,
+      "input_tokens": 74614,
+      "output_tokens": 3883,
+      "estimated_api_cost_usd": 0.0195824,
+      "calls_without_usage": 0,
+      "cost_note": "API-equivalent estimate using standard GPT-5.6-Luna rates checked 2026-11-17: $0.20/M input, $1.20/M output; above 272K input, $0.40/M and $1.80/M. Assumes all input is uncached; excludes cache writes and external tools. Not actual Codex subscription billing. Unknown usage/model yields null cost.",
+      "price_source": "https://developers.openai.com/api/docs/models/gpt-5.6-luna"
+    },
+    "tool_calls": 1,
+    "tool_latency_seconds": 0.010588874996756203
+  }
+}
