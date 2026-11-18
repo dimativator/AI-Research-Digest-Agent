@@ -1,0 +1,1977 @@
+{
+  "status": "ok",
+  "source": "https://arxiv.org/html/2610.28072v1",
+  "extractor_version": "article-v1",
+  "chunks": [
+    {
+      "chunk_id": "chunk-0001",
+      "section": "MuPACE: Learning to Pace Muon for LoRA Fine-Tuning",
+      "text": "Jan Kobiolka Affiliation: Department of Computer Science Affiliation: University of Technology Nuremberg Christian Frey & Josif Grabocka Affiliation: Nuremberg, Germany Affiliation: {jan.kobiolka, christian.frey,josif.grabocka}@utn.de",
+      "source": "https://arxiv.org/html/2610.28072v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0002",
+      "section": "Abstract",
+      "text": "Learning rate schedules are typically fixed before training begins, yet when fine-tuning large language models with low-rank adapters (LoRA), the appropriate scale varies substantially with the model, task, and adapter configuration. Practitioners re-tune a schedule for every new problem, yet a tuned schedule still cannot react to the training dynamics it encounters. We instead amortize learning rate selection across LoRA fine-tuning problems. We leave the base optimizer, Muon, untouched, so that its normalized update fixes the direction, and meta-learn only the global step size. Our method MuPACE is a small recurrent policy, meta-trained across a distribution of fine-tuning runs, that conditions on the observed trajectory and emits bounded adjustments to an interpretable analytic schedule. On 64 fine-tuning problems, MuPACE outperforms standard fixed schedules at a strong shared default on 64–78% of problems and is on par with the same schedules with per-task tuned peaks. Meta-trained only on models with up to 16 layers, MuPACE transfers one-shot to unseen tasks on models as deep as 64 layers, such as Qwen3-32B and Qwen3.8-27B, where a single run remains competitive with swept schedules.",
+      "source": "https://arxiv.org/html/2610.28072v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0003",
+      "section": "1 Introduction",
+      "text": "Modern deep learning optimizers increasingly decouple the update direction from its overall scale. Adaptive methods such as Adam ( Kingma and Ba, 2015 ) and AdamW ( Loshchilov and Hutter, 2019 ) rescale gradients coordinate-wise, while more recent matrix-aware optimizers such as Shampoo ( Gupta et al., 2018 ) , SOAP ( Vyas et al., 2025 ) , and Muon ( Jordan et al., 2024 ) exploit the structure of neural network parameters. Muon, in particular, constructs updates for matrix-valued parameters by orthogonalizing the momentum update and has shown promising performance in language-model pre-training ( Liu et al., 2025 ) and LoRA ( Hu et al., 2022 ) fine-tuning ( Qu et al., 2026 ) . The perspective of separating the update direction from the step size is also reflected in the norm-based view of steepest descent ( Bernstein and Newhouse, 2024 ) . At iteration t t , the optimizer forms an optimization signal s t s_{t} from the gradient g t = ∇ θ ℓ ​ ( θ t ) g_{t}=\\nabla_{\\theta}\\ell(\\theta_{t}) , such as the gradient itself or the momentum estimate. We denote by 𝒪 \\mathcal{O} the optimizer-specific map from the optimization signal s t ∈ ℝ m × n s_{t}\\in\\mathbb{R}^{m\\times n} of an m × n m\\times n matrix to an update direction d t ∈ ℝ m × n d_{t}\\in\\mathbb{R}^{m\\times n} of the same shape, with the update scaled by the learning rate η t ∈ ℝ + \\eta_{t}\\in\\mathbb{R}^{+} , i.e.: d t = 𝒪 ⁡ ( s t ) , d t ∈ arg ⁡ max ‖ d t ‖ ≤ 1 ​ ⟨ s t , d t ⟩ , θ t + 1 = θ t − η t ​ d t . d_{t}=\\mathcal{O}(s_{t}),\\qquad d_{t}\\in\\arg\\max_{\\|d_{t}\\|\\leq 1}\\langle s_{t},d_{t}\\rangle,\\qquad\\theta_{t+1}=\\theta_{t}-\\eta_{t}d_{t}.",
+      "source": "https://arxiv.org/html/2610.28072v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0004",
+      "section": "1 Introduction",
+      "text": "The norm determines the geometry of d t d_{t} , while the step size η t \\eta_{t} sets its magnitude. For example, the Euclidean norm yields the normalized direction s t / ‖ s t ‖ 2 s_{t}/\\|s_{t}\\|_{2} , whereas the infinity norm yields the element-wise sign direction. For a matrix-valued signal s t = U t ​ Σ t ​ V t ⊤ s_{t}=U_{t}\\Sigma_{t}V_{t}^{\\top} , Muon uses the corresponding spectral-norm direction d t = U t ​ V t ⊤ d_{t}=U_{t}V_{t}^{\\top} , approximated in practice with a small number of Newton–Schulz iterations ( Jordan et al., 2024 ) . For normalized optimizers, the learning rate therefore plays a particularly important role. Normalization can improve progress in challenging landscapes such as river valleys ( Shen et al., 2026 ) , but it also reduces the influence of gradient magnitude on the update size. A small residual gradient can still be mapped to a direction of approximately fixed norm, leaving η t \\eta_{t} responsible for determining whether the optimizer makes useful progress or overshoots the local solution. Step-size selection is therefore an important and distinct control problem.",
+      "source": "https://arxiv.org/html/2610.28072v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0005",
+      "section": "1 Introduction",
+      "text": "In practice, this control problem is often solved by committing to a learning rate schedule before training begins. Common choices such as cosine decay ( Loshchilov and Hutter, 2017 ) and warmup-stable-decay (WSD) ( Hu et al., 2024 ) set η t \\eta_{t} primarily as a function of training progress, while their overall scale is selected through hyperparameter optimization. This is expensive because finding a good learning rate schedule can require several training runs, and the resulting setting does not transfer across fine-tuning problems, as the appropriate schedule varies with the downstream task, adapter parameterization, batch size, and optimization budget ( Biderman et al., 2024 ; Lee and Lee, 2026 ) . This lack of transfer makes fixed schedules especially costly, since tuning the peak learning rate for every new problem adds an extra search procedure, while the resulting schedule still cannot react to the optimization trajectory.",
+      "source": "https://arxiv.org/html/2610.28072v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0006",
+      "section": "1 Introduction",
+      "text": "We therefore ask the following question: Can learning rate schedule selection instead be amortized across LoRA fine-tuning problems? We introduce MuPACE ( Mu on P olicy for A daptive C ontrol across LoRA Fine-tuning E pisodes), a learned, trajectory-conditioned learning rate scheduler for LoRA. LoRA fine-tuning is especially relevant because only a few large organizations train large language models from scratch, while most users adapt existing pretrained models ( Bommasani et al., 2021 ) . Unlike previous learned optimizers that meta-learn the update rule itself ( Metz et al., 2022b ; Moudgil et al., 2025 ) , we leave Muon unchanged and meta-learn only its global step-size schedule. A small recurrent policy observes the optimization trajectory and predicts bounded modifications to an analytic schedule family, explicitly separating changes in overall scale from changes in schedule shape. The scheduler is meta-trained across a distribution of fine-tuning episodes and then applied one-shot to new problems, producing an adaptive schedule within a single training run without hyperparameter search or downstream-specific tuning.",
+      "source": "https://arxiv.org/html/2610.28072v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0007",
+      "section": "1 Introduction",
+      "text": "To assess the effectiveness of our approach, we evaluate whether a single meta-trained scheduler can replace per-task learning rate search across a broad range of fine-tuning settings, spanning pretrained models, downstream tasks, adapter configurations, batch sizes, and training horizons. On 64 problems, MuPACE outperforms strong fixed defaults on 64–78% of tasks and performs on par with schedules tuned separately for each problem, while requiring only a single trial. Moreover, despite being meta-trained only on models with up to 16 layers, MuPACE generalizes in a one-shot manner to large-scale models such as Qwen3-32B and Qwen3.8-27B (both with 64 layers) on unseen downstream tasks. It achieves competitive performance close to that of swept schedules while requiring only a single run. Our key contributions are: • We introduce MuPACE , a meta-learned, trajectory-conditioned learning rate scheduler for LoRA fine-tuning that adapts a bounded analytic schedule while leaving the base optimizer, Muon, unchanged, enabling one-shot application without target-task learning rate search. • We show that a single meta-trained scheduler generalizes across fine-tuning problems and model scales. On 64 problems, MuPACE outperforms strong fixed defaults and performs comparably to per-task tuned schedules, while transferring one-shot to Qwen3-32B and Qwen3.8-27B on unseen tasks, where it remains competitive with tuned learning rate schedules in a single run.",
+      "source": "https://arxiv.org/html/2610.28072v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0008",
+      "section": "Learning rate scaling and schedules.",
+      "text": "The maximal update parameterization ( μ \\mu P) jointly defines width-dependent initialization, parameter multipliers, and per-layer learning rates, enabling near-optimal hyperparameters to transfer across width ( Yang et al., 2021 ) . Depth- μ \\mu P extends this principle to residual networks with single-layer blocks ( Yang et al., 2024 ) . Transfer has been related to approximately width- and depth-independent Hessian sharpness under feature learning ( Noci et al., 2024 ) , though for Adam-trained Transformer language models, standard parameterization with suitable per-layer learning rates also transfers and can outperform μ \\mu P when per-layer constants are tuned ( Everett et al., 2024 ) . A parallel line of work concerns the shape of the schedule rather than its scale. Cosine annealing ( Loshchilov and Hutter, 2017 ) remains common in LLM pretraining, alongside warmup-stable-decay (WSD) schedules that maintain a constant learning rate before a terminal cooldown ( Hu et al., 2024 ) . Additional approaches include linear decay to zero ( Bergsma et al., 2025 ) and schedule-free optimization ( Defazio et al., 2024 ) . However, frontier labs remain divided on the choice of learning rate schedule. Kimi K2 ( Team et al., 2025b ) uses WSD, DeepSeek V4 ( Xu et al., 2026 ) uses a warmup, long constant plateau, and terminal cosine cooldown, whereas GLM-4.5 ( Team et al., 2025a ) and Kimi K3 ( Team et al., 2026 ) report favoring cosine over WSD. Fixed-horizon theory similarly predicts power decay in easier regimes and a WSD-like schedule in harder ones ( Li et al., 2026 ) . Much of this work, however, concerns pretraining from random initialization over a known token budget, and does not establish that either the learning rate scale or the schedule shape transfers across LoRA",
+      "source": "https://arxiv.org/html/2610.28072v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0009",
+      "section": "Learning rate scaling and schedules.",
+      "text": "of this work, however, concerns pretraining from random initialization over a known token budget, and does not establish that either the learning rate scale or the schedule shape transfers across LoRA fine-tuning problems.",
+      "source": "https://arxiv.org/html/2610.28072v1",
+      "offset": 1598
+    },
+    {
+      "chunk_id": "chunk-0010",
+      "section": "Online learning rate adaptation.",
+      "text": "Learning rates can also be adapted during training using heuristic or learned rules, rather than prescribed by a fixed schedule in advance. For example, the heuristic ReduceLROnPlateau scheduler ( Krizhevsky et al., 2012 ) reduces the learning rate when a monitored metric stops improving. More flexible schedules can be learned by differentiating through the training trajectory ( Maclaurin et al., 2015 ) , while Hypergradient Descent adapts learning rates online using hypergradients ( Baydin et al., 2018 ) . Related approaches include Self-Tuning Networks for bilevel online hyperparameter optimization ( Mackay et al., 2019 ) , D-Adaptation for automatically estimating an appropriate learning rate scale ( Defazio and Mishchenko, 2023 ) , and MetaOptimize for adapting step sizes based on their longer-term effects on future losses ( Sharifnassab et al., 2025 ) . In contrast, we amortize learning rate adaptation across a distribution of fine-tuning problems. After meta-training, a frozen trajectory-conditioned policy adapts one-shot to new problems within a single fine-tuning run, without downstream specific hyperparameter search.",
+      "source": "https://arxiv.org/html/2610.28072v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0011",
+      "section": "Learned optimizers and schedulers.",
+      "text": "Learning-to-learn replaces hand-designed update rules with meta-learned ones ( Andrychowicz et al., 2016 ; Metz et al., 2022a ) . VeLO ( Metz et al., 2022b ) scales this methodology to a general-purpose optimizer using a hierarchical architecture in which a per-tensor LSTM hypernetwork generates the weights of a small per-parameter MLP update rule. It requires no per-task optimizer hyperparameter tuning but incurs roughly 4,000 TPU months of meta-training. Celo ( Moudgil et al., 2025 ) obtains strong out-of-distribution meta-generalization with only 24 GPU hours by combining task augmentation with a learned per-parameter MLP update rule and a learned global scheduler, meta-trained in two stages. Celo2 ( Moudgil et al., 2026 ) further separates update-rule learning from step-size selection. It meta-learns only the update rule, leaves the step size tunable, and defers learning a generally applicable scheduler to future work. Closest to our setting, L3RS specializes learned optimization to fine-tuning pretrained models and learns, for each layer, both an update magnitude and a mixture of directions supplied by base optimizers using temporal and optimization-statistic features ( Kristiansen et al., 2024 ) . Our approach instead focuses on a smaller part of the optimization process. We keep the update direction from a fixed base optimizer, Muon, and meta-learn only the global learning-rate schedule for low-rank fine-tuning.",
+      "source": "https://arxiv.org/html/2610.28072v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0012",
+      "section": "3.1 Problem Setting",
+      "text": "We consider low-rank fine-tuning problems of the form θ ⋆ ∈ arg ⁡ min θ ​ ℓ tr ​ ( θ , 𝒯 ) , 𝒯 ∼ p ⁡ ( 𝒯 ) \\theta^{\\star}\\in\\arg\\min_{\\theta}\\ell_{\\mathrm{tr}}(\\theta;\\mathcal{T}),\\mathcal{T}\\sim p(\\mathcal{T}) , where θ \\theta denotes the trainable adapter factors of a frozen pretrained model, ℓ tr \\ell_{\\mathrm{tr}} is the training loss, and p ⁡ ( 𝒯 ) p(\\mathcal{T}) is a distribution over fine-tuning task instances.",
+      "source": "https://arxiv.org/html/2610.28072v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0013",
+      "section": "Definition 3.1 (Fine-tuning Task Instance)",
+      "text": "A task instance 𝒯 = ( m , r , 𝒟 , a , T , b , ξ ) \\mathcal{T}=(m,r,\\mathcal{D},a,T,b,\\xi) specifies adaptation of a pretrained model m m by replacing each target weight W ∈ ℝ d out × d in W\\in\\mathbb{R}^{d^{\\mathrm{out}}\\times d^{\\mathrm{in}}} with W + a r ​ B ​ A , B ∈ ℝ d out × r , A ∈ ℝ r × d in , r ≪ min ⁡ ( d out , d in ) . W+\\tfrac{a}{r}\\,BA,\\qquad B\\in\\mathbb{R}^{d^{\\mathrm{out}}\\times r},\\;A\\in\\mathbb{R}^{r\\times d^{\\mathrm{in}}},\\qquad r\\ll\\min(d^{\\mathrm{out}},d^{\\mathrm{in}}). (1) Only the adapter factors θ = { ( A , B ) } \\theta=\\{(A,B)\\} are trained on a dataset 𝒟 \\mathcal{D} , with splits ( 𝒟 tr , 𝒟 val ) (\\mathcal{D}^{\\mathrm{tr}},\\mathcal{D}^{\\mathrm{val}}) , for T T steps at batch size b b . The seed ξ \\xi fixes initialization and data order. One such run is an episode . The training loss is the mean next-token cross-entropy over target tokens in 𝒟 tr \\mathcal{D}^{\\mathrm{tr}} . We record the episode’s trajectory after t t steps as τ ⁡ ( t ) = { ( ℓ i , ℓ i val , g i , i / T ) } i = 1 t , \\tau(t)=\\big\\{\\,(\\ell_{i},\\;\\ell^{\\mathrm{val}}_{i},\\;g_{i},\\;i/T)\\,\\big\\}_{i=1}^{t}, (2) where ℓ i \\ell_{i} and ℓ i val \\ell^{\\mathrm{val}}_{i} are mini-batch training and validation losses, g i g_{i} is the adapter gradient of the training loss, and i / T i/T is normalized progress. Validation batches come from 𝒟 val \\mathcal{D}^{\\mathrm{val}} . Their losses are provided to the scheduler as trajectory information, but their gradients are not computed or used for optimization.",
+      "source": "https://arxiv.org/html/2610.28072v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0014",
+      "section": "Definition 3.1 (Fine-tuning Task Instance)",
+      "text": "Both the learning rate scale and schedule shape can depend on the model, sub-task, adapter, and training configuration. Standard schedules, however, are fixed functions of t / T t/T and ignore the training dynamics they are applied to. We instead propose to learn a policy with meta-parameters ϕ \\phi , η t = π ϕ ​ ( z t ) , \\eta_{t}=\\pi_{\\phi}(z_{t}), (3) where z t z_{t} summarizes static task descriptors and training statistics τ ⁡ ( t ) \\tau(t) available before the update at step t t (Section 3.3 ). The policy learns only the scalar step size. The underlying optimizer, Muon, determines the update direction. We meta-train the policy across task instances to minimize a validation-loss objective within each episode’s budget (Section 3.4 ).",
+      "source": "https://arxiv.org/html/2610.28072v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0015",
+      "section": "Optimization Step.",
+      "text": "We keep the base weights frozen, so every trainable parameter of a task instance is a LoRA factor A A or B B and hence matrix-shaped. We can therefore update the entire adapter with Muon and require no element-wise fallback rule. The inner update is θ t + 1 = θ t − η t ​ d t \\theta_{t+1}=\\theta_{t}-\\eta_{t}d_{t} , with d t = 𝒪 ⁡ ( s t ) d_{t}=\\mathcal{O}(s_{t}) denoting the Muon direction. We post-scale each Muon update to unit RMS ( Moudgil et al., 2026 ) before applying the learning rate, compensating for its RMS decreasing with matrix size ( Liu et al., 2025 ) .",
+      "source": "https://arxiv.org/html/2610.28072v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0016",
+      "section": "Schedule Family.",
+      "text": "We do not emit η t \\eta_{t} as a free function of the trajectory. Instead, we constrain the policy to a hand-designed analytic family and let it emit bounded deviations from it. For normalized progress x = t / T x=t/T , η ⁡ ( x ) \\displaystyle\\eta(x) = λ 1 ⋅ s ⁡ ( x ) , \\displaystyle=\\lambda_{1}\\cdot s(x), (4) s ⁡ ( x ) \\displaystyle s(x) = warmup ⁡ ( x , λ 5 ) ⋅ [ ( 1 − λ 4 ) ​ decay ​ ( x , λ 2 , λ 3 ) + λ 4 ] , \\displaystyle=\\mathrm{warmup}(x;\\lambda_{5})\\cdot\\big[(1-\\lambda_{4})\\,\\mathrm{decay}(x;\\lambda_{2},\\lambda_{3})+\\lambda_{4}\\big], warmup ⁡ ( x , λ 5 ) \\displaystyle\\mathrm{warmup}(x;\\lambda_{5}) = 1 − exp ( − x / λ 5 ) , decay ( x ; λ 2 , λ 3 ) = clip ( cos ( π 2 x λ 3 ) , δ , 1 ) λ 2 . \\displaystyle=1-\\exp(-x/\\lambda_{5}),\\qquad\\mathrm{decay}(x;\\lambda_{2},\\lambda_{3})=\\mathrm{clip}\\!\\left(\\cos\\!\\left(\\tfrac{\\pi}{2}x^{\\lambda_{3}}\\right),\\delta,1\\right)^{\\lambda_{2}}.",
+      "source": "https://arxiv.org/html/2610.28072v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0017",
+      "section": "Schedule Family.",
+      "text": "The family is controlled by a 5-dimensional vector λ = ( λ 1 , … , λ 5 ) \\lambda=(\\lambda_{1},\\ldots,\\lambda_{5}) , which is what the policy emits. The parameters split into a scale and a shape. λ 1 \\lambda_{1} sets the overall scale of the schedule, while the other four parameters determine its shape. Specifically, λ 2 \\lambda_{2} controls the decay rate, λ 3 \\lambda_{3} shifts the knee in time, λ 4 \\lambda_{4} sets the tail floor, and λ 5 \\lambda_{5} controls the warmup timescale. Figure 1 illustrates the effect of each parameter. The policy re-emits λ 1 , … , λ 4 \\lambda_{1},\\ldots,\\lambda_{4} at every inner step, and the resulting η t \\eta_{t} is the global learning rate of the adapter. The warmup constant λ 5 \\lambda_{5} is emitted once, at the start of the episode, and held fixed for its remainder. This analytic form combines gradual warmup with flexible cosine decay, keeping the policy’s output space low-dimensional and interpretable while allowing bounded adjustments to a known-good default. Figure 1: Shape-normalized schedules varying one parameter at a time, default in dark.",
+      "source": "https://arxiv.org/html/2610.28072v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0018",
+      "section": "Shape Normalization.",
+      "text": "Changing the shape parameters also changes the schedule’s overall magnitude. Meta-training could therefore exploit the shape parameters to adjust magnitude rather than the shape. To separate shape from scale, we normalize each curve to the default shape’s RMS. η ⁡ ( x ) = λ 1 ⋅ ∥ s 0 ∥ ∥ s ∥ ​ s ​ ( x ) , ∥ s ∥ = ( ∫ 0 1 s ​ ( u ) 2 ​ 𝑑 u ) 1 / 2 , \\eta(x)=\\lambda_{1}\\cdot\\frac{\\lVert s_{0}\\rVert}{\\lVert s\\rVert}\\,s(x),\\qquad\\lVert s\\rVert=\\Big(\\textstyle\\int_{0}^{1}s(u)^{2}\\,\\mathrm{d}u\\Big)^{1/2}, (5) where s 0 s_{0} is the default shape. At each step, we approximate the norm using 65 uniformly spaced points on [ 0 , 1 ] [0,1] . This leaves the default schedule unchanged and lets λ 1 \\lambda_{1} control each curve’s RMS scale. The normalization applies to the curve defined by the current parameters, not to the full trajectory as those parameters change across steps.",
+      "source": "https://arxiv.org/html/2610.28072v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0019",
+      "section": "Depth Scaling.",
+      "text": "The emitted step size is finally rescaled by a fixed factor depending only on the depth L d L_{\\mathrm{d}} , i.e. the number of layers, of the base model, η t ← ( L ref L d ) 1 / 2 ​ η t , \\eta_{t}\\;\\leftarrow\\;\\left(\\frac{L_{\\mathrm{ref}}}{L_{\\mathrm{d}}}\\right)^{\\!1/2}\\eta_{t}, (6) following Depth- μ \\mu P ( Yang et al., 2024 ) , which prescribes η ∝ 1 / L d \\eta\\propto 1/\\sqrt{L_{\\mathrm{d}}} for a scale-invariant update. We set L ref L_{\\mathrm{ref}} to the geometric center of the meta-training depths, so the factor is 1 1 in the middle of that range and shrinks the step size for deeper models.",
+      "source": "https://arxiv.org/html/2610.28072v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0020",
+      "section": "3.3 Meta-Model",
+      "text": "We parameterize π ϕ \\pi_{\\phi} as a small LSTM f ϕ f_{\\phi} with one linear head per schedule parameter, evaluated once per inner step so that it can condition on the episode so far. Each raw output h i , t h_{i,t} becomes a bounded multiplicative deviation from a hand-picked default λ i 0 \\lambda_{i}^{0} , λ i , t = λ i 0 ⋅ exp ( c i tanh h i , t ) , i = 1 , … , 5 , \\lambda_{i,t}=\\lambda_{i}^{0}\\cdot\\exp\\!\\left(c_{i}\\tanh h_{i,t}\\right),\\qquad i=1,\\ldots,5, (7) which keeps λ i , t \\lambda_{i,t} within [ λ i 0 ​ e − c i , λ i 0 ​ e c i ] \\left[\\lambda^{0}_{i}e^{-c_{i}},\\,\\lambda^{0}_{i}e^{c_{i}}\\right] . The hyperparameter c i c_{i} sets the width of this range. We compute λ 5 \\lambda_{5} once from the static features and log ⁡ T \\log T before the first step and update the other four parameters at every step, as discussed in Section 3.2 . The output layer is zero-initialized, so meta-training starts exactly from the default schedule.",
+      "source": "https://arxiv.org/html/2610.28072v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0021",
+      "section": "Features.",
+      "text": "We feed f ϕ f_{\\phi} a 20 20 -dimensional feature vector in three groups. Time (4) contains [ x , sin ⁡ π ​ x , cos ⁡ π ​ x ] [x,\\sin\\pi x,\\cos\\pi x] , where x = t / T x=t/T , providing a smooth low-frequency encoding of position within the episode. We also include the total budget log ⁡ T \\log T . Static (5) is fixed throughout an episode. It contains the base-model width log ⁡ W \\log W and layer count depth \\mathrm{depth} , the factor log ⁡ ( a / r ) \\log(a/r) by which the adapter enters the model, and the individual rank log ⁡ r \\log r and scaling log ⁡ a \\log a . Dynamic (11) is recomputed at every step to summarize τ ⁡ ( t ) \\tau(t) . It includes the initial loss level, the training loss relative to that initial value, and its local slope measured by the ratio of a fast to a slow EMA. For validation loss, we include the ratio of its fast EMA to its initial loss and the ratio of its fast EMA to its slow EMA. We also include the ratio of validation to training fast EMAs as an overfitting signal. The initial validation loss is used only for normalization and is not a separate feature. The remaining features are the cosine similarity between the current gradient and momentum, a gradient signal-to-noise proxy based on the bias-corrected momentum and second-moment accumulators, parameter-RMS growth relative to initialization, and the log parameter- and gradient-RMS of the adapter.",
+      "source": "https://arxiv.org/html/2610.28072v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0022",
+      "section": "Scale Augmentation.",
+      "text": "Inferring the adapter scale from the trajectory only pays off if meta-training varies it. We therefore reparameterize every sampled task instance. A scalar κ \\kappa is drawn log-uniformly, the adapter factors are initialized at 1 / κ 1/\\kappa times their usual value, and the forward pass multiplies them back by κ \\kappa ( Moudgil et al., 2025 ) . This leaves the function at step t = 0 t=0 and the optimization problem unchanged, but not the parameter RMS, the gradient RMS, or the step size that suits them. The static features alone are therefore no longer enough to determine the right step size, and the policy has to adjust it as the scale becomes visible in the trajectory.",
+      "source": "https://arxiv.org/html/2610.28072v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0023",
+      "section": "Objective.",
+      "text": "We train the policy parameters ϕ \\phi to minimize the expected validation loss across a distribution of fine-tuning tasks min ϕ ⁡ 𝔼 𝒯 ∼ p ⁡ ( 𝒯 ) ​ 𝔼 τ ∼ π ϕ ​ ( 𝒯 ) ​ ℒ final ​ ( τ ⁡ ( T ) ) . \\min_{\\phi}\\;\\mathbb{E}_{\\mathcal{T}\\sim p(\\mathcal{T})}\\,\\mathbb{E}_{\\tau\\sim\\pi_{\\phi}(\\mathcal{T})}\\,\\mathcal{L}_{\\mathrm{final}}(\\tau(T)). (8) For each episode, we skip the first T 0 = ⌊ f ​ T ⌋ T_{0}=\\lfloor fT\\rfloor steps and average the remaining losses: ℒ final ​ ( τ ⁡ ( T ) ) = 1 T − T 0 ​ ∑ t = T 0 + 1 T ℓ ~ t val , \\mathcal{L}_{\\mathrm{final}}(\\tau(T))=\\frac{1}{T-T_{0}}\\sum_{t=T_{0}+1}^{T}\\tilde{\\ell}^{\\mathrm{val}}_{t}, (9) Here f ∈ [ 0 , 1 ) f\\in[0,1) is the fraction of steps we skip, and ℓ ~ t val \\tilde{\\ell}^{\\mathrm{val}}_{t} is the log validation loss smoothed with an exponential moving average. Taking the log focuses on relative improvements, while skipping the early steps ensures the score reflects the model’s performance during the later stages of training, rather than being dominated by the large initial loss. The policy observes validation loss, but inner updates use only training-loss gradients.",
+      "source": "https://arxiv.org/html/2610.28072v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0024",
+      "section": "Meta-Gradient.",
+      "text": "We estimate the meta-gradient with truncated PES ( Vicol et al., 2021 ) . Each outer iteration unrolls an antithetic pair ϕ ± ε \\phi\\pm\\varepsilon , ε ∼ 𝒩 ⁡ ( 0 , σ 2 ​ I ) \\varepsilon\\sim\\mathcal{N}(0,\\sigma^{2}I) , for L L inner steps on N N task instances in parallel, and each instance is resampled once it reaches its budget T T . Since the meta-loss has to be emitted per inner step, we emit ℓ ~ t val \\tilde{\\ell}^{\\mathrm{val}}_{t} masked to t > T 0 t>T_{0} and rescaled by T / ( T − T 0 ) T/(T-T_{0}) . Averaged over the episode, this recovers Equation 9 .",
+      "source": "https://arxiv.org/html/2610.28072v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0025",
+      "section": "4 Experimental Protocol",
+      "text": "We meta-train MuPACE on a distribution over LoRA fine-tuning tasks built from a deck of 37 37 pretrained nanochat models ( Karpathy, 2025 ) spanning depths { 8 , 12 , 16 } \\{8,12,16\\} and widths 128 128 to 2048 2048 , trained on 100 100 Lots-of-LoRAs sub-tasks ( Wang et al., 2022 ) , ranks r ∈ { 8 , 16 , 32 } r\\in\\{8,16,32\\} and batch sizes b ∈ { 8 , 16 , 32 } b\\in\\{8,16,32\\} . Conditioned on such a cell, the adapter scaling is drawn as a ∼ LogUniform ⁡ [ 8 , 32 ] a\\sim\\mathrm{LogUniform}[8,32] , the budget as T ∼ LogUniform ⁡ [ 100,300 ] T\\sim\\mathrm{LogUniform}[100,300] , and the seed ξ \\xi . We place adapters on the query and value ( Q Q and V V ) projections of every attention block ( Hu et al., 2022 ) . We initialize A A with a random Gaussian distribution and B = 0 B=0 , so training starts from the pretrained model, and scale the update B ​ A BA by a / r a/r ( Hu et al., 2022 ) . MuPACE therefore must handle combinations of model scale, adapter capacity and scaling, downstream task, and training length. Full parameter ranges, the deck listing, and the sub-task ids are given in Appendix A . We open-source our implementation to foster future research 1 1 1 https://anonymous.4open.science/r/MUPACE-3F54/README.md .",
+      "source": "https://arxiv.org/html/2610.28072v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0026",
+      "section": "4.1 Architecture and Training",
+      "text": "MuPACE is an LSTM with a hidden width of 48 48 with one linear head per schedule parameter, ∼ 20 {\\sim}20 K meta-parameters in total. We estimate the meta-gradient with PES at σ = 0.01 \\sigma=0.01 over a truncation window of L = 50 L=50 inner steps, keeping N = 8 N=8 task instances in flight and averaging the estimate over them. We train on the objective in Equation 9 with f = 0.2 f=0.2 , scoring the smoothed log validation loss over the last 80 % 80\\% of each episode to emphasize consistent performance beyond the initial loss drop. An EMA with decay 0.9 0.9 reduces batch noise. Each task runs for its budget T T and then is resampled. The scale augmentation of Section 3.4 draws κ ∼ LogUniform ⁡ [ 0.05 , 20 ] \\kappa\\sim\\mathrm{LogUniform}[0.05,20] . For the depth factor of Equation 6 we set L ref = 8 ⋅ 16 ≈ 11.31 L_{\\mathrm{ref}}=\\sqrt{8\\cdot 16}\\approx 11.31 , the geometric centre of the meta-training depths. Meta-parameters are updated with AdamW at an outer learning rate of 10 − 3 10^{-3} on a cosine decay with gradient clipping. We train for 9000 9000 outer iterations, which takes roughly 72 72 hours on four NVIDIA H100 GPUs. Remaining hyperparameters are reported in Appendix B .",
+      "source": "https://arxiv.org/html/2610.28072v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0027",
+      "section": "4.2 Baselines",
+      "text": "We compare MuPACE against three fixed learning rate schedules, cosine ( Loshchilov and Hutter, 2017 ) , constant (warmup to a flat peak) and WSD ( Hu et al., 2024 ) , which we run at a default peak of 10 − 3 10^{-3} , matching MuPACE’s default schedule scale for λ 1 0 \\lambda^{0}_{1} (H1 in Section 5 ) and with the peak tuned per task by validation loss (H2 in Section 5 ). In the out-of-distribution setting (H3 in Section 5 ) we add Hypergradient Descent ( Baydin et al., 2018 ) , which adapts the learning rate online from the dot product of consecutive gradients and, like MuPACE, needs no per-task sweep. We run it as published and with the depth- μ \\mu P post-scaling of Equation 6 applied to its learning rate, so that it receives the same multiplier as our learned scheduler. Every method runs the same Muon update from the same adapter initialization, so only the learning rate over time differs.",
+      "source": "https://arxiv.org/html/2610.28072v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0028",
+      "section": "In-distribution performance.",
+      "text": "We evaluate MuPACE on 64 64 configurations sampled from the meta-training distribution with scale augmentation disabled, each fixing the model, dataset, rank, scaling, batch size, and budget. All methods share the initialization and data order. The fixed schedules run either at their default peak learning rate of 10 − 3 10^{-3} , which is at or near the best fixed rate for all three families (H1), or at a peak selected per task from seven log-spaced values in [ 10 − 4 , 10 − 2 ] [10^{-4},10^{-2}] (H2). MuPACE uses a single run. We report test loss at the iteration with the lowest validation loss.",
+      "source": "https://arxiv.org/html/2610.28072v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0029",
+      "section": "Out-of-distribution transfer.",
+      "text": "We transfer MuPACE one-shot to Qwen3-32B ( Yang et al., 2025 ) and Qwen3.8-27B ( Qwen Team, 2026 ) . Both have 64 64 layers and width 5120 5120 , against at most 16 16 layers and width 2048 2048 in the meta-training deck. Further, Qwen3.8-27B adds a hybrid Gated DeltaNet linear-attention architecture the policy never saw. Adapters use r = 8 r=8 , a = 16 a=16 and T = 200 T=200 steps on eight unseen datasets spanning instruction following, math, code, summarization, question answering and translation ( Section A.1 ). We report test loss at the iteration with the lowest validation loss. For fixed-schedule baselines, we additionally select the peak learning rate from five log-spaced values in [ 10 − 5 , 10 − 3 ] [10^{-5},10^{-3}] , while MuPACE and each Hypergradient Descent variant use a single run.",
+      "source": "https://arxiv.org/html/2610.28072v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0030",
+      "section": "5 Experiments",
+      "text": "Figure 2: Learned scheduler versus defaults on 64 64 tasks. (a) Win rates and Holm-adjusted sign-test p p values. (b) Relative test-loss reduction versus each baseline, where positive favors learned. Dots show tasks, diamonds medians, and bars interquartile ranges.",
+      "source": "https://arxiv.org/html/2610.28072v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0031",
+      "section": "H1: Meta-learned schedulers can outperform standard default learning rate schedules on in-distribution fine-tuning problems.",
+      "text": "By default, MuPACE learns a bounded correction to a cosine learning-rate schedule, where the base schedule is scaled to have a peak learning rate of 10 − 3 10^{-3} . H1 therefore tests the value of this learned correction against cosine, WSD, and constant schedules at that same fixed peak. Win rates are tested against 50% using two-sided exact paired sign tests ( Dixon and Mood, 1946 ) with Holm correction ( Holm, 1979 ) across the three baselines ( α = 0.05 \\alpha=0.05 ). The learned scheduler achieves lower test loss on 78%, 66%, and 64% of draws against cosine, WSD, and constant, respectively, all significant after correction (Figure 2 ). Median improvements are 2–4% across the three comparisons. A further check against cosine at its best global scale ( 2.154 × 10 − 3 2.154\\times 10^{-3} ) 2 2 2 39 of 64 draws, sign test p = 0.10. gives a smaller, non-significant win-rate advantage, while the learned scheduler retains a median reduction of about 4%. Overall, the learned correction provides gains beyond a strong fixed default by adapting the schedule to the task and to the observed training trajectory (Figure 5 ).",
+      "source": "https://arxiv.org/html/2610.28072v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0032",
+      "section": "H2: Meta-learned schedulers can eliminate per-task learning rate search while retaining competitive performance on in-distribution fine-tuning problems.",
+      "text": "We repeat the H1 comparison against the per-task tuned baselines, comparing their validation-based learning rate search with our learned scheduler, which requires no per-task sweep. Sign tests are applied as in H1. Figure 3 shows that the learned scheduler approaches the performance of per-task tuned schedules without the cost of a learning rate sweep. Our learned scheduler wins on 44 % 44\\% , 45 % 45\\% , and 38 % 38\\% of draws against tuned cosine, WSD, and constant, with median relative differences of − 0.28 % -0.28\\% , − 0.24 % -0.24\\% , and − 0.90 % -0.90\\% . None of these win rates differs significantly from 50 % 50\\% . Per-task tuning matters here as the best peak varies by roughly a factor of five across the baselines. To quantify how much of that tuning the learned scheduler makes unnecessary, we take the draws where tuning lowers test loss by at least 0.5 % 0.5\\% over the default and measure the fraction of that gain the learned scheduler achieves in one run, ( L default − L learned ) / ( L default − L tuned ) (L_{\\mathrm{default}}-L_{\\mathrm{learned}})/(L_{\\mathrm{default}}-L_{\\mathrm{tuned}}) . The median recovery is 80 % 80\\% , 83 % 83\\% and 78 % 78\\% against cosine, WSD and constant (Figure 5 ). Figure 3: Learned scheduler versus validation-tuned baselines on 64 64 tasks. (a) Win rates and Holm-adjusted sign-test p p values. (b) Relative test-loss reduction versus each tuned baseline, where positive favors learned. Dots show tasks, diamonds medians, and bars interquartile ranges. Figure 4: Learning rate applied by the learned scheduler on 16 16 of the 64 64 in-distribution tasks. Figure 5: Median fraction of the per-task tuning gain recovered by the learned scheduler in one run, on the draws where tuning improves test loss by at least 0.5 % 0.5\\% .",
+      "source": "https://arxiv.org/html/2610.28072v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0033",
+      "section": "H3: Meta-learned schedulers can transfer one-shot to out-of-distribution fine-tuning problems, avoiding per-task learning rate search while retaining competitive performance.",
+      "text": "Figure 6 evaluates MuPACE on models and datasets that were both unseen during policy training, comparing a single MuPACE run against fixed schedules with the peak tuned by a five-trial sweep on each dataset. The tuned baselines reach slightly lower test loss, with median relative differences of 1.13 % 1.13\\% – 2.43 % 2.43\\% on Qwen3-32B and 2.59 % 2.59\\% – 3.02 % 3.02\\% on Qwen3.8-27B, and MuPACE wins on 2 2 of 8 8 datasets per model. This gap is the price of one run versus five. Given only one trial, the fixed schedules perform worse than MuPACE by 14 % 14\\% – 18 % 18\\% on average and need two to three trials to reach the same performance (Appendix C ). Against Hypergradient Descent, the other sweep-free method, MuPACE achieves lower test loss on every dataset for both models, whether Hypergradient Descent is used with or without μ \\mu P post-scaling. Figure 6: MuPACE versus validation-tuned baselines and Hypergradient Descent on (a) Qwen3-32B and (b) Qwen3.8-27B. Values show baseline minus MuPACE test loss (positive favors MuPACE).",
+      "source": "https://arxiv.org/html/2610.28072v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0034",
+      "section": "Design Ablations",
+      "text": "We ablate MuPACE’s meta-training, schedule parameterization, shape normalization, and depth-dependent scaling to assess the contribution of each module to its performance. Effect of meta-training. We compare against the same scheduler architecture with no meta-training, fixing all output heads at zero so it follows the default cosine schedule from Figure 1 . Meta-training lowers median in-distribution test loss and improves performance on Qwen3-32B (Appendix D ). Analytic schedule parameterization. We ablate the analytic schedule family by replacing the five heads defining Equation 4 with a single head that predicts the learning rate directly. Direct prediction has similar typical in-distribution performance but a heavier tail of poor runs and no wins against the baselines in the OOD setting, suggesting that the analytic parameterization primarily improves robustness (Appendix E ). Shape normalization. We remove the shape normalization of Equation 5 , so the shape parameters can also change the schedule’s overall magnitude. This has no in-distribution effect, and on Qwen3-32B normalization is better on five of eight datasets, a possible but not significant transfer benefit (Appendix F ). Depth-scaled baseline (fixed) schedules. We apply the same depth-dependent scaling Equation 6 to each fixed-schedule baseline at (i) its default peak and (ii) its best peak from an in-distribution sweep. On both models, MuPACE achieves lower test loss in nearly all comparisons. These results suggest that MuPACE improves beyond transferring depth-scaled schedules, with in-distribution tuned peaks (Appendix G ).",
+      "source": "https://arxiv.org/html/2610.28072v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0035",
+      "section": "Design Ablations",
+      "text": "Depth-dependent post-scaling. We meta-train a variant without depth-dependent post-scaling. In-distribution performance is similar, but scaling improves test loss on all eight Qwen3-32B datasets, suggesting a benefit for one-shot transfer to larger models (Appendix G.2 ).",
+      "source": "https://arxiv.org/html/2610.28072v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0036",
+      "section": "6 Conclusion",
+      "text": "We introduce MuPACE, a recurrent learning rate scheduler that adapts an interpretable analytic schedule to the observed optimization trajectory while leaving Muon’s update rule unchanged. Across 64 fine-tuning problems, it outperforms strong default schedules and recovers 78–83% of the benefit of per-task tuning in a single training run. Although meta-trained only on models with up to 16 layers, it transfers one-shot to 64-layer models and unseen tasks, where a single run remains competitive with swept schedules. These results suggest that amortizing learning-rate selection can remove per-task learning rate search while retaining competitive performance.",
+      "source": "https://arxiv.org/html/2610.28072v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0037",
+      "section": "AI use statement",
+      "text": "In this work, generative AI tools were used to assist with code implementation, support the authors’ understanding of relevant concepts, improve the clarity and readability of author-written text, and refine the visual presentation of plots. Generative AI tools were not used to formulate the original research question. Most of the related literature was identified independently by the authors, with AI tools used to supplement this process by suggesting additional relevant work. All AI-assisted outputs were reviewed and verified by the authors. AI-assisted code was checked for correctness by the authors, literature-related suggestions were verified against the original sources, and all text and visual edits were reviewed before inclusion. The authors take full responsibility for the final content, claims, results, and artifacts presented in this work.",
+      "source": "https://arxiv.org/html/2610.28072v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0038",
+      "section": "Reproducibility statement",
+      "text": "We open source our code for meta-training and evaluation, together with the meta-trained MuPACE checkpoint, at https://anonymous.4open.science/r/MUPACE-3F54/README.md . The out-of-distribution base models (Qwen3-32B ( Yang et al., 2025 ) and Qwen3.8-27B ( Qwen Team, 2026 ) ) are publicly available, and the nanochat models used for meta-training can be retrained with the open-source nanochat implementation ( Karpathy, 2025 ) . All datasets are publicly available ( ( Wang et al., 2022 ) ; Section A.1 ). Section 3 fully specifies the method, including the analytic schedule family (Equations 4 – 6 ), the policy and its input features ( Section 3.3 ), and the meta-training objective and gradient estimator ( Section 3.4 ). Section 4 describes the experimental protocol, including the meta-training setup and compute budget ( Section 4.1 ) and the evaluation and checkpoint-selection procedure ( Section 4.3 ). Appendix A lists the complete meta-training distribution, including all model configurations ( Table 2 ) and dataset identifiers ( Table 3 ), and Appendix B reports the remaining hyperparameters.",
+      "source": "https://arxiv.org/html/2610.28072v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0039",
+      "section": "Acknowledgments",
+      "text": "Josif Grabocka acknowledges the funding support from the ”Bayerisches Landesamt für Steuern” for the Bavarian AI Taxation Laboratory. Josif Grabocka acknowledges the funding by The Carl Zeiss Foundation through the research network ”Responsive and Scalable Learning for Robots Assisting Humans” (ReScaLe) of the University of Freiburg. Josif Grabocka acknowledges the financial support from the Albanian-American Development Foundation through the READ program. Moreover, we gratefully acknowledge the scientific support and HPC resources provided by the Erlangen National High Performance Computing Center (NHR@FAU) of the Friedrich-Alexander-Universität Erlangen-Nürnberg (FAU). NHR@FAU hardware is partially funded by the German Research Foundation (DFG) – 440719683.",
+      "source": "https://arxiv.org/html/2610.28072v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0040",
+      "section": "References",
+      "text": "Andrychowicz et al. (2016) M. Andrychowicz, M. Denil, S. Gomez, M. W. Hoffman, D. Pfau, T. Schaul, B. Shillingford, and N. De Freitas Learning to learn by gradient descent by gradient descent . Advances in neural information processing systems 29 . Cited by: §2 . Austin et al. (2021) J. Austin, A. Odena, M. Nye, M. Bosma, H. Michalewski, D. Dohan, E. Jiang, C. Cai, M. Terry, Q. Le, et al. Program synthesis with large language models . arXiv preprint arXiv:2108.07732 . Cited by: Table 4 . Baydin et al. (2018) A. G. Baydin, R. Cornish, D. M. Rubio, M. Schmidt, and F. Wood Online learning rate adaptation with hypergradient descent . In International Conference on Learning Representations , Cited by: §2 , §4.2 . Bergsma et al. (2025) S. Bergsma, N. Dey, G. Gosal, G. Gray, D. Soboleva, and J. Hestness Straight to zero: why linearly decaying the learning rate to zero works best for llms . In International Conference on Learning Representations , Vol. 2025 , pp. 22102–22133 . Cited by: §2 . Bernstein and Newhouse (2024) J. Bernstein and L. Newhouse Old optimizer, new norm: an anthology . In OPT 2024: Optimization for Machine Learning , Cited by: §1 . Biderman et al. (2024) D. Biderman, J. Portes, J. J. G. Ortiz, M. Paul, P. Greengard, C. Jennings, D. King, S. Havens, V. Chiley, J. Frankle, C. Blakeney, and J. P. Cunningham LoRA learns less and forgets less . Transactions on Machine Learning Research . Note: Featured Certification External Links: ISSN 2835-8856 Cited by: §1 .",
+      "source": "https://arxiv.org/html/2610.28072v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0041",
+      "section": "References",
+      "text": "Bojar et al. (2014) O. Bojar, C. Buck, C. Federmann, B. Haddow, P. Koehn, J. Leveling, C. Monz, P. Pecina, M. Post, H. Saint-Amand, R. Soricut, L. Specia, and A. s. Tamchyna Findings of the 2014 workshop on statistical machine translation . In Proceedings of the Ninth Workshop on Statistical Machine Translation , Baltimore, Maryland, USA , pp. 12–58 . External Links: Link Cited by: Table 4 . Bommasani et al. (2021) R. Bommasani, D. A. Hudson, E. Adeli, R. Altman, S. Arora, S. von Arx, M. S. Bernstein, J. Bohg, A. Bosselut, E. Brunskill, et al. On the opportunities and risks of foundation models . arXiv preprint arXiv:2108.07258 . Cited by: §1 . Clark et al. (2019) C. Clark, K. Lee, M. Chang, T. Kwiatkowski, M. Collins, and K. Toutanova BoolQ: exploring the surprising difficulty of natural yes/no questions . In NAACL , Cited by: Table 4 . Cobbe et al. (2021) K. Cobbe, V. Kosaraju, M. Bavarian, M. Chen, H. Jun, L. Kaiser, M. Plappert, J. Tworek, J. Hilton, R. Nakano, C. Hesse, and J. Schulman Training verifiers to solve math word problems . arXiv preprint arXiv:2110.14168 . Cited by: Table 4 . Defazio and Mishchenko (2023) A. Defazio and K. Mishchenko Learning-rate-free learning by d-adaptation . In International conference on machine learning , pp. 7449–7479 . Cited by: §2 . Defazio et al. (2024) A. Defazio, X. Yang, H. Mehta, K. Mishchenko, A. Khaled, and A. Cutkosky The road less scheduled . Advances in Neural Information Processing Systems 37 , pp. 9974–10007 . Cited by: §2 . Dixon and Mood (1946) W. J. Dixon and A. M. Mood The statistical sign test . Journal of the American Statistical Association 41 ( 236 ), pp. 557–566 . External Links: Document Cited by: §5 .",
+      "source": "https://arxiv.org/html/2610.28072v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0042",
+      "section": "References",
+      "text": "Everett et al. (2024) K. Everett, L. Xiao, M. Wortsman, A. A. Alemi, R. Novak, P. J. Liu, I. Gur, J. Sohl-Dickstein, L. P. Kaelbling, J. Lee, and J. Pennington Scaling exponents across parameterizations and optimizers . In Proceedings of the 41st International Conference on Machine Learning , ICML’24 . Cited by: §2 . Gliwa et al. (2019) B. Gliwa, I. Mochol, M. Biesek, and A. Wawer SAMSum corpus: a human-annotated dialogue dataset for abstractive summarization . In Proceedings of the 2nd Workshop on New Frontiers in Summarization , Hong Kong, China , pp. 70–79 . External Links: Link , Document Cited by: Table 4 . Gupta et al. (2018) V. Gupta, T. Koren, and Y. Singer Shampoo: preconditioned stochastic tensor optimization . In Proceedings of the 35th International Conference on Machine Learning , Proceedings of Machine Learning Research , Vol. 80 , pp. 1842–1850 . Cited by: §1 . Holm (1979) S. Holm A simple sequentially rejective multiple test procedure . Scandinavian Journal of Statistics 6 , pp. 65–70 . Cited by: §5 . Hu et al. (2022) E. J. Hu, yelong shen, P. Wallis, Z. Allen-Zhu, Y. Li, S. Wang, L. Wang, and W. Chen LoRA: low-rank adaptation of large language models . In International Conference on Learning Representations , Cited by: §1 , §4 . Hu et al. (2024) S. Hu, Y. Tu, X. Han, G. Cui, C. He, W. Zhao, X. Long, Z. Zheng, Y. Fang, Y. Huang, X. Zhang, Z. L. Thai, C. Wang, Y. Yao, C. Zhao, J. Zhou, J. Cai, Z. Zhai, N. Ding, C. Jia, G. Zeng, dahai li, Z. Liu, and M. Sun MiniCPM: unveiling the potential of small language models with scalable training strategies . In First Conference on Language Modeling , Cited by: §1 , §2 , §4.2 .",
+      "source": "https://arxiv.org/html/2610.28072v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0043",
+      "section": "References",
+      "text": "Jordan et al. (2024) K. Jordan, Y. Jin, V. Boza, J. You, F. Cesista, L. Newhouse, and J. Bernstein Muon: an optimizer for hidden layers in neural networks . External Links: Link Cited by: §1 , §1 . Karpathy (2025) A. Karpathy Nanochat: the best chatgpt that $100 can buy . GitHub . External Links: Link Cited by: §4 , §6 . Kingma and Ba (2015) D. P. Kingma and J. Ba Adam: A method for stochastic optimization . In 3rd International Conference on Learning Representations, ICLR 2015, San Diego, CA, USA, May 7-9, 2015, Conference Track Proceedings , Y. Bengio and Y. LeCun (Eds.) , Cited by: §1 . Kristiansen et al. (2024) G. Kristiansen, M. Sandler, A. Zhmoginov, N. Miller, A. Goyal, J. Lee, and M. Vladymyrov Narrowing the focus: learned optimizers for pretrained models . arXiv preprint arXiv:2408.09310 . Cited by: §2 . Krizhevsky et al. (2012) A. Krizhevsky, I. Sutskever, and G. E. Hinton ImageNet classification with deep convolutional neural networks . In Proceedings of the 26th International Conference on Neural Information Processing Systems - Volume 1 , NIPS’12 , Red Hook, NY, USA , pp. 1097–1105 . Cited by: §2 . Lee and Lee (2026) S. Lee and J. Lee Beware of the batch size: hyperparameter bias in evaluating lora . arXiv preprint arXiv:2602.09492 . Cited by: §1 . Li et al. (2026) B. Li, Z. Wang, F. Chen, S. Zhao, R. Zheng, and L. Wu Optimal learning-rate schedules under functional scaling laws: power decay and warmup-stable-decay . In ICLR 2026 2nd Workshop on Deep Generative Model in Machine Learning: Theory, Principle and Efficacy , Cited by: §2 .",
+      "source": "https://arxiv.org/html/2610.28072v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0044",
+      "section": "References",
+      "text": "Liu et al. (2025) J. Liu, J. Su, X. Yao, Z. Jiang, G. Lai, Y. Du, Y. Qin, W. Xu, E. Lu, J. Yan, Y. Chen, H. Zheng, Y. Liu, S. Liu, B. Yin, W. He, H. Zhu, Y. Wang, J. Wang, M. Dong, Z. Zhang, Y. Kang, H. Zhang, X. Xu, Y. Zhang, Y. Wu, X. Zhou, and Z. Yang Muon is scalable for llm training . External Links: 2502.16982 Cited by: §1 , §3.2 . Loshchilov and Hutter (2017) I. Loshchilov and F. Hutter SGDR: stochastic gradient descent with warm restarts . In International Conference on Learning Representations , Cited by: §1 , §2 , §4.2 . Loshchilov and Hutter (2019) I. Loshchilov and F. Hutter Decoupled weight decay regularization . In International Conference on Learning Representations , Cited by: §1 . Mackay et al. (2019) M. Mackay, P. Vicol, J. Lorraine, D. Duvenaud, and R. Grosse Self-tuning networks: bilevel optimization of hyperparameters using structured best-response functions . In International Conference on Learning Representations , Cited by: §2 . Maclaurin et al. (2015) D. Maclaurin, D. Duvenaud, and R. Adams Gradient-based hyperparameter optimization through reversible learning . In Proceedings of the 32nd International Conference on Machine Learning , F. Bach and D. Blei (Eds.) , Proceedings of Machine Learning Research , Vol. 37 , Lille, France , pp. 2113–2122 . Cited by: §2 . Metz et al. (2022a) L. Metz, C. D. Freeman, J. Harrison, N. Maheswaranathan, and J. Sohl-Dickstein Practical tradeoffs between memory, compute, and performance in learned optimizers . In Conference on Lifelong Learning Agents , pp. 142–164 . Cited by: §2 .",
+      "source": "https://arxiv.org/html/2610.28072v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0045",
+      "section": "References",
+      "text": "Metz et al. (2022b) L. Metz, J. Harrison, C. D. Freeman, A. Merchant, L. Beyer, J. Bradbury, N. Agrawal, B. Poole, I. Mordatch, A. Roberts, et al. Velo: training versatile learned optimizers by scaling up . arXiv preprint arXiv:2211.09760 . Cited by: §1 , §2 . Moudgil et al. (2026) A. Moudgil, B. Knyazev, and E. Belilovsky Celo2: towards learned optimization free lunch . In The Fourteenth International Conference on Learning Representations , Cited by: §2 , §3.2 . Moudgil et al. (2025) A. Moudgil, B. Knyazev, G. Lajoie, and E. Belilovsky Celo: training versatile learned optimizers on a compute diet . Transactions on Machine Learning Research . External Links: ISSN 2835-8856 Cited by: §1 , §2 , §3.4 . Narayan et al. (2018) S. Narayan, S. B. Cohen, and M. Lapata Don’t give me the details, just the summary! topic-aware convolutional neural networks for extreme summarization . ArXiv abs/1808.08745 . Cited by: Table 4 . Noci et al. (2024) L. Noci, A. Meterez, T. Hofmann, and A. Orvieto Super consistency of neural network landscapes and learning rate transfer . In Advances in Neural Information Processing Systems , A. Globerson, L. Mackey, D. Belgrave, A. Fan, U. Paquet, J. Tomczak, and C. Zhang (Eds.) , Vol. 37 , pp. 102696–102743 . External Links: Document Cited by: §2 . Qu et al. (2026) X. Qu, P. Huang, and S. Horvath Can muon fine-tune adam-pretrained models? . In International Conference on Machine Learning , Cited by: §1 . Qwen Team (2026) Qwen Team Qwen3.8-Max: a new bar for coding and cowork . External Links: Link Cited by: §4.3 , §6 . Rajani et al. (2023) N. Rajani, L. Tunstall, E. Beeching, N. Lambert, A. M. Rush, and T. Wolf No robots . Hugging Face . Cited by: Table 4 .",
+      "source": "https://arxiv.org/html/2610.28072v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0046",
+      "section": "References",
+      "text": "See et al. (2017) A. See, P. J. Liu, and C. D. Manning Get to the point: summarization with pointer-generator networks . In Proceedings of the 55th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) , Vancouver, Canada , pp. 1073–1083 . External Links: Link , Document Cited by: Table 4 . Sharifnassab et al. (2025) A. Sharifnassab, S. Salehkaleybar, and R. S. Sutton MetaOptimize: a framework for optimizing step sizes and other meta-parameters . In Forty-second International Conference on Machine Learning , Cited by: §2 . Shen et al. (2026) T. Shen, J. Yang, R. Shi, J. Ma, J. Teng, and Z. Ma Towards understanding the power and limits of the muon optimizer: a river-valley perspective . arXiv preprint arXiv:2606.21514 . Cited by: §1 .",
+      "source": "https://arxiv.org/html/2610.28072v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0047",
+      "section": "References",
+      "text": "Team et al. (2025a) G. Team, A. Zeng, X. Lv, Q. Zheng, Z. Hou, B. Chen, C. Xie, C. Wang, D. Yin, H. Zeng, J. Zhang, K. Wang, L. Zhong, M. Liu, R. Lu, S. Cao, X. Zhang, X. Huang, Y. Wei, Y. Cheng, Y. An, Y. Niu, Y. Wen, Y. Bai, Z. Du, Z. Wang, Z. Zhu, B. Zhang, B. Wen, B. Wu, B. Xu, C. Huang, C. Zhao, C. Cai, C. Yu, C. Li, C. Ge, C. Huang, C. Zhang, C. Xu, C. Zhu, C. Li, C. Yin, D. Lin, D. Yang, D. Jiang, D. Ai, E. Zhu, F. Wang, G. Pan, G. Wang, H. Sun, H. Li, H. Li, H. Hu, H. Zhang, H. Peng, H. Tai, H. Zhang, H. Wang, H. Yang, H. Liu, H. Zhao, H. Liu, H. Yan, H. Liu, H. Chen, J. Li, J. Zhao, J. Ren, J. Jiao, J. Zhao, J. Yan, J. Wang, J. Gui, J. Zhao, J. Liu, J. Li, J. Li, J. Lu, J. Wang, J. Yuan, J. Li, J. Du, J. Du, J. Liu, J. Zhi, J. Gao, K. Wang, L. Yang, L. Xu, L. Fan, L. Wu, L. Ding, L. Wang, M. Zhang, M. Li, M. Xu, M. Zhao, M. Zhai, P. Du, Q. Dong, S. Lei, S. Tu, S. Yang, S. Lu, S. Li, S. Li, Shuang-Li, S. Yang, S. Yi, T. Yu, W. Tian, W. Wang, W. Yu, W. L. Tam, W. Liang, W. Liu, X. Wang, X. Jia, X. Gu, X. Ling, X. Wang, X. Fan, X. Pan, X. Zhang, X. Zhang, X. Fu, X. Zhang, Y. Xu, Y. Wu, Y. Lu, Y. Wang, Y. Zhou, Y. Pan, Y. Zhang, Y. Wang, Y. Li, Y. Su, Y. Geng, Y. Zhu, Y. Yang, Y. Li, Y. Wu, Y. Li, Y. Liu, Y. Wang, Y. Li, Y. Zhang, Z. Liu, Z. Yang, Z. Zhou, Z. Qiao, Z. Feng, Z. Liu, Z. Zhang, Z. Wang, Z. Yao, Z. Wang, Z. Liu, Z. Chai, Z. Li, Z. Zhao, W. Chen, J. Zhai, B. Xu, M. Huang, H. Wang, J. Li, Y. Dong, and J. Tang GLM-4.5: agentic, reasoning, and coding (arc) foundation models . External Links: 2508.06471 Cited by: §2 . Team et al. (2026) K. Team, T. Bai, Y. Bai, Y. Bao, J. Cai, X. Cai, P. Cao, Y. Cao, Z. Chai, Y. Charles, et al. Kimi k3: open frontier intelligence . arXiv preprint arXiv:2607.24653 . Cited by: §2 .",
+      "source": "https://arxiv.org/html/2610.28072v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0048",
+      "section": "References",
+      "text": "Team et al. (2025b) K. Team, Y. Bai, Y. Bao, Y. Charles, C. Chen, G. Chen, H. Chen, H. Chen, J. Chen, N. Chen, et al. Kimi k2: open agentic intelligence . arXiv preprint arXiv:2507.20534 . Cited by: §2 . Vicol et al. (2021) P. Vicol, L. Metz, and J. Sohl-Dickstein Unbiased gradient estimation in unrolled computation graphs with persistent evolution strategies . In International Conference on Machine Learning , pp. 10553–10563 . Cited by: §3.4 . Vyas et al. (2025) N. Vyas, D. Morwani, R. Zhao, I. Shapira, D. Brandfonbrener, L. Janson, and S. Kakade SOAP: improving and stabilizing shampoo using adam for language modeling . In International Conference on Learning Representations , Vol. 2025 , pp. 93423–93444 . Cited by: §1 . Wang et al. (2022) Y. Wang, S. Mishra, P. Alipoormolabashi, Y. Kordi, A. Mirzaei, A. Naik, A. Ashok, A. S. Dhanasekaran, A. Arunkumar, D. Stap, E. Pathak, G. Karamanolakis, H. Lai, I. Purohit, I. Mondal, J. Anderson, K. Kuznia, K. Doshi, K. K. Pal, M. Patel, M. Moradshahi, M. Parmar, M. Purohit, N. Varshney, P. R. Kaza, P. Verma, R. S. Puri, R. Karia, S. Doshi, S. K. Sampat, S. Mishra, S. Reddy A, S. Patro, T. Dixit, and X. Shen Super-NaturalInstructions: generalization via declarative instructions on 1600+ NLP tasks . In Proceedings of the 2022 Conference on Empirical Methods in Natural Language Processing , Y. Goldberg, Z. Kozareva, and Y. Zhang (Eds.) , Abu Dhabi, United Arab Emirates . Cited by: Appendix A , §4 , §6 . Xu et al. (2026) A. Xu, B. Lin, B. Xue, B. Wang, B. Xu, B. Wu, B. Zhang, C. Lin, C. Dong, C. Ling, et al. Deepseek-v4: towards highly efficient million-token context intelligence . arXiv preprint arXiv:2606.19348 . Cited by: §2 .",
+      "source": "https://arxiv.org/html/2610.28072v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0049",
+      "section": "References",
+      "text": "Yang et al. (2025) A. Yang, A. Li, B. Yang, B. Zhang, B. Hui, B. Zheng, B. Yu, C. Gao, C. Huang, C. Lv, et al. Qwen3 technical report . arXiv preprint arXiv:2505.09388 . Cited by: §4.3 , §6 . Yang et al. (2021) G. Yang, E. Hu, I. Babuschkin, S. Sidor, X. Liu, D. Farhi, N. Ryder, J. Pachocki, W. Chen, and J. Gao Tuning large neural networks via zero-shot hyperparameter transfer . In Advances in Neural Information Processing Systems , M. Ranzato, A. Beygelzimer, Y. Dauphin, P.S. Liang, and J. W. Vaughan (Eds.) , Vol. 34 , pp. 17084–17097 . Cited by: §2 . Yang et al. (2024) G. Yang, D. Yu, C. Zhu, and S. Hayou Tensor programs vi: feature learning in infinite depth neural networks . In International Conference on Learning Representations , B. Kim, Y. Yue, S. Chaudhuri, K. Fragkiadaki, M. Khan, and Y. Sun (Eds.) , Vol. 2024 , pp. 55099–55150 . Cited by: §2 , §3.2 .",
+      "source": "https://arxiv.org/html/2610.28072v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0050",
+      "section": "Appendix A Task Distribution",
+      "text": "The meta-training distribution combines pretrained nanochat models with 100 100 English Lots-of-LoRAs sub-tasks, including classification, question answering, paraphrasing, reasoning, summarization, and text generation. Each episode fine-tunes LoRA adapters on the Q and V projections of every attention block, with the base model frozen. Table 1 summarizes the meta-training configuration. Table 1: Meta-training task distribution. Scale augmentation is disabled at evaluation. Component Values or sampling range Base-model deck 37 37 nanochat checkpoints Model depth / width { 8 , 12 , 16 } \\{8,12,16\\} / 128 128 – 2048 2048 Dataset 100 100 Lots-of-LoRAs sub-tasks LoRA rank r r { 8 , 16 , 32 } \\{8,16,32\\} LoRA scaling a a LogUniform ⁡ [ 8 , 32 ] \\mathrm{LogUniform}[8,32] Batch size b b { 8 , 16 , 32 } \\{8,16,32\\} Episode budget T T LogUniform ⁡ [ 100,300 ] \\mathrm{LogUniform}[100,300] (integer steps) Sequence length 128 128 tokens Global scale augmentation κ \\kappa LogUniform ⁡ [ 0.05 , 20 ] \\mathrm{LogUniform}[0.05,20]",
+      "source": "https://arxiv.org/html/2610.28072v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0051",
+      "section": "Model list.",
+      "text": "The 37 37 checkpoint identifiers are listed below, grouped by depth; in d L L _w W W , L L denotes the number of layers and W W the hidden width. Table 2: Model list used during Meta-training Depth Checkpoint identifiers 8 d8_w128 , d8_w256 , d8_w384 , d8_w512 , d8_w640 , d8_w768 , d8_w896 , d8_w1024 , d8_w1152 , d8_w1280 , d8_w1408 , d8_w1536 , d8_w1664 , d8_w1792 , d8_w1920 , d8_w2048 12 d12_w128 , d12_w256 , d12_w384 , d12_w512 , d12_w640 , d12_w768 , d12_w896 , d12_w1024 , d12_w1152 , d12_w1280 , d12_w1408 , d12_w1664 16 d16_w128 , d16_w256 , d16_w384 , d16_w512 , d16_w640 , d16_w896 , d16_w1024 , d16_w1280 , d16_w1408",
+      "source": "https://arxiv.org/html/2610.28072v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0052",
+      "section": "Dataset list.",
+      "text": "The following 100 100 identifiers appear in launch-script order. Each is prefixed with Lots-of-LoRAs/ to obtain the full dataset name ( Wang et al., 2022 ) . Table 3: Lots-of-LoRAs sub-tasks used for meta-training.",
+      "source": "https://arxiv.org/html/2610.28072v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0053",
+      "section": "Dataset list.",
+      "text": "No. Dataset identifier (without organization prefix) 1 task045_miscellaneous_sentence_paraphrasing 2 task588_amazonfood_rating_classification 3 task461_qasper_question_generation 4 task083_babi_t1_single_supporting_fact_answer_generation 5 task280_stereoset_classification_stereotype_type 6 task1332_check_leap_year 7 task296_storycloze_correct_end_classification 8 task209_stancedetection_classification 9 task400_paws_paraphrase_classification 10 task316_crows-pairs_classification_stereotype 11 task1565_triviaqa_classification 12 task1592_yahoo_answers_topics_classfication 13 task284_imdb_classification 14 task137_detoxifying-lms_classification_toxicity 15 task1645_medical_question_pair_dataset_text_classification 16 task328_jigsaw_classification_insult 17 task1286_openbookqa_question_answering 18 task703_mmmlu_answer_generation_high_school_geography 19 task686_mmmlu_answer_generation_college_biology 20 task648_answer_generation 21 task492_mwsc_incorrect_answer_generation 22 task1598_nyc_long_text_generation 23 task593_sciq_explanation_generation 24 task110_logic2text_sentence_generation 25 task183_rhyme_generation 26 task294_storycommonsense_motiv_text_generation 27 task568_circa_question_generation 28 task1729_personachat_generate_next 29 task275_enhanced_wsc_paraphrase_generation 30 task770_pawsx_english_text_modification 31 task116_com2sense_commonsense_reasoning 32 task1421_mathqa_other 33 task632_dbpedia_14_classification 34 task746_yelp_restaurant_review_classification 35 task846_pubmedqa_classification 36 task297_storycloze_incorrect_end_classification 37 task1705_ljspeech_classification 38 task1531_daily_dialog_type_classification 39 task1721_civil_comments_obscenity_classification 40 task1575_amazon_reviews_multi_sentiment_classification 41",
+      "source": "https://arxiv.org/html/2610.28072v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0054",
+      "section": "Dataset list.",
+      "text": "cation 37 task1705_ljspeech_classification 38 task1531_daily_dialog_type_classification 39 task1721_civil_comments_obscenity_classification 40 task1575_amazon_reviews_multi_sentiment_classification 41 task1488_sarcasmdetection_headline_classification 42 task379_agnews_topic_classification 43 task322_jigsaw_classification_threat 44 task1495_adverse_drug_event_classification 45 task108_contextualabusedetection_classification 46 task472_haspart_classification 47 task521_trivia_question_classification 48 task495_semeval_headline_classification 49 task1593_yahoo_answers_topics_classification 50 task1216_atomic_classification_causes 51 task1722_civil_comments_threat_classification 52 task838_cdt_classification 53 task081_piqa_wrong_answer_generation 54 task667_mmmlu_answer_generation_business_ethics 55 task1327_qa_zre_answer_generation_from_question 56 task344_hybridqa_answer_generation 57 task1581_eqasc-perturbed_answer_generation 58 task471_haspart_answer_generation 59 task307_jeopardy_answer_generation_final 60 task073_commonsenseqa_answer_generation 61 task727_mmmlu_answer_generation_prehistory 62 task1549_wiqa_answer_generation_missing_step 63 task033_winogrande_answer_generation 64 task1557_jfleg_answer_generation 65 task1326_qa_zre_question_generation_from_answer 66 task074_squad1.1_question_generation 67 task1325_qa_zre_question_generation_on_subject_relation 68 task167_strategyqa_question_generation 69 task442_com_qa_paraphrase_question_generation 70 task897_freebase_qa_topic_question_generation 71 task754_svamp_common-division_question_answering 72 task753_svamp_addition_question_answering 73 task868_mawps_singleop_question_answering 74 task866_mawps_multidiv_question_answering 75 task671_ambigqa_text_generation 76",
+      "source": "https://arxiv.org/html/2610.28072v1",
+      "offset": 1578
+    },
+    {
+      "chunk_id": "chunk-0055",
+      "section": "Dataset list.",
+      "text": "division_question_answering 72 task753_svamp_addition_question_answering 73 task868_mawps_singleop_question_answering 74 task866_mawps_multidiv_question_answering 75 task671_ambigqa_text_generation 76 task131_scan_long_text_generation_action_command_long 77 task1711_poki_text_generation 78 task128_scan_structured_text_generation_command_action_short 79 task210_logic2text_structured_text_generation 80 task899_freebase_qa_topic_generation 81 task1582_bless_hypernym_generation 82 task300_storycloze_order_generation 83 task102_commongen_sentence_generation 84 task926_coached_conv_pref_word_generation 85 task675_google_wellformed_query_sentence_generation 86 task828_copa_commonsense_cause_effect 87 task291_semeval_2020_task4_commonsense_validation 88 task1152_bard_analogical_reasoning_causation 89 task1507_boolean_temporal_reasoning 90 task181_outcome_extraction 91 task1510_evalution_relation_extraction 92 task1452_location_entity_extraction_btc_corpus 93 task1562_zest_text_modification 94 task121_zest_text_modification 95 task645_summarization 96 task288_gigaword_summarization 97 task1285_kpa_keypoint_matching 98 task755_find_longest_substring_and_replace_its_sorted_lowercase_version_in_both_lists 99 task206_collatz_conjecture 100 task1502_hatexplain_classification",
+      "source": "https://arxiv.org/html/2610.28072v1",
+      "offset": 3126
+    },
+    {
+      "chunk_id": "chunk-0056",
+      "section": "A.1 OOD Evaluation Datasets",
+      "text": "Table 4 lists the eight publicly available datasets used for out-of-distribution evaluation, none of which are among the 100 meta-training sub-tasks from Table 3 . Table 4: Out-of-distribution evaluation datasets. Dataset Domain No Robots ( Rajani et al., 2023 ) Instruction following GSM8K ( Cobbe et al., 2021 ) Mathematical reasoning MBPP ( Austin et al., 2021 ) Code generation SAMSum ( Gliwa et al., 2019 ) Dialogue summarization CNN/DailyMail ( See et al., 2017 ) News summarization XSum ( Narayan et al., 2018 ) Extreme (single-sentence) summarization BoolQ ( Clark et al., 2019 ) Question answering (yes/no) WMT14 En → \\rightarrow De ( Bojar et al., 2014 ) Machine translation",
+      "source": "https://arxiv.org/html/2610.28072v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0057",
+      "section": "Appendix B Hyperparameters",
+      "text": "Tables 5 and 6 summarize the settings used for meta-training. The task distribution is specified in Appendix A . Table 5: Policy architecture and meta-training hyperparameters. Hyperparameter Value Input features / LSTM hidden width 20 20 / 48 48 Meta-parameters 19,877 19{,}877 Output head initialization Zero Outer optimizer AdamW, weight decay 10 − 4 10^{-4} Outer learning rate 10 − 3 10^{-3} , cosine decay Meta-gradient clipping Global norm 1 1 Outer iterations 9000 9000 PES perturbation standard deviation 0.01 0.01 PES truncation / parallel task instances 50 50 steps / 8 8 Objective start fraction f f 0.2 0.2 (last 80 % 80\\% of each episode) Fast / slow loss-feature EMA decays 0.9 0.9 / 0.97 0.97 Muon momentum / Newton–Schulz iterations 0.95 0.95 / 5 5 Depth-scaling exponent / reference depth 0.5 0.5 / 11.3137 11.3137 Table 6: Schedule defaults and adjustment ranges. Each head emits λ i = λ i 0 exp ( c i tanh h i ) \\lambda_{i}=\\lambda_{i}^{0}\\exp(c_{i}\\tanh h_{i}) , giving the range [ λ i 0 ​ e − c i , λ i 0 ​ e c i ] [\\lambda_{i}^{0}e^{-c_{i}},\\lambda_{i}^{0}e^{c_{i}}] . Parameter Default λ i 0 \\lambda_{i}^{0} Reach c i c_{i} Level λ 1 \\lambda_{1} 10 − 3 10^{-3} 4.5 4.5 Decay exponent λ 2 \\lambda_{2} 2 2 1.0 1.0 Time-warp exponent λ 3 \\lambda_{3} 1 1 1.4 1.4 Tail floor λ 4 \\lambda_{4} 0.01 0.01 2.3 2.3 Warmup time constant λ 5 \\lambda_{5} 0.03 0.03 0.7 0.7 The warmup parameter is fixed after the first policy evaluation of each episode. Shape normalization uses 65 65 uniformly spaced points on [ 0 , 1 ] [0,1] , with cosine clamp δ = 10 − 4 \\delta=10^{-4} . The normalized shape is capped at three times the default shape’s peak before applying the level and depth factors.",
+      "source": "https://arxiv.org/html/2610.28072v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0058",
+      "section": "Appendix C Tuning Budget and MuPACE Loss Curves",
+      "text": "Figure 7 shows how baseline performance changes when we allow more learning-rate trials, while MuPACE uses only one. For each budget from one to five trials, we consider every possible group of that size. In each group, we select the trial with the lowest validation loss and record its test loss. We then average these results. The plot shows the percentage reduction in test loss relative to MuPACE, so positive values favor the baseline. Each dataset has equal weight, and the overall panel combines both models. Figure 7: Expected test performance under validation-based trial selection. Shading shows the interquartile range across task expectations, not confidence intervals. Figure 8: Illustrative MuPACE train, validation, and test evaluation losses on MBPP and CNN/DailyMail.",
+      "source": "https://arxiv.org/html/2610.28072v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0059",
+      "section": "Appendix D Ablation: Untrained Scheduler",
+      "text": "We compare MuPACE against its untrained counterpart, whose output head is fixed to zero, corresponding to its initialization before meta-learning. This variant therefore produces the default cosine schedule shown in Figure 1 , together with depth-dependent post-scaling. The comparison isolates the contribution of meta-training beyond the schedule initialization. On the 64 64 in-distribution draws, our meta-learned MuPACE wins on 44 44 and reduces median test loss by 1.61 % 1.61\\% (two-sided exact sign test p = 0.0037 p=0.0037 ). On Qwen3-32B, it wins on 7 / 8 7/8 datasets, with a median reduction of 6.66 % 6.66\\% (sign test p = 0.0703 p=0.0703 ). Figure 9 shows the comparisons. Figure 9: MuPACE versus the untrained zero-head policy on in-distribution draws (top) and Qwen3-32B (bottom).",
+      "source": "https://arxiv.org/html/2610.28072v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0060",
+      "section": "Appendix E Ablation: Direct Learning-Rate Head",
+      "text": "In the following ablation, we replace the five schedule heads of Equation 4 with a single head that directly predicts a learning rate before depth- μ \\mu P post-scaling. We extend its range downward (approximately [ 1.1 × 10 − 8 , 9.0 × 10 − 2 ] [1.1\\times 10^{-8},\\,9.0\\times 10^{-2}] ) to accommodate the small learning rates produced by the normalized analytic schedule (especially λ 4 \\lambda_{4} ). Everything else remains unchanged. At initialization, this head outputs a constant 10 − 3 10^{-3} before post-scaling, so it must learn how the rate changes over time, including warm-up. The policy is meta-trained for 9000 9000 outer iterations. Figure 10 shows example schedules after meta-training, demonstrating that warm-up emerges through learning rather than being set by the initialization. The direct head clearly outperforms default cosine and WSD, but not default constant, and performs worse than tuned constant (Figure 11 ). Its median performance is close to that of the analytic scheduler, with a difference of only 0.4 % 0.4\\% that is not significant ( p = 0.38 p=0.38 ), although it performs worse on a few tasks. On Qwen3-32B, it trails all tuned baselines across the eight datasets but consistently outperforms Hypergradient Descent (Figure 12 ). Overall, the analytic parameterization appears to improve robustness more than typical performance. Figure 10: Learning rates applied by the direct LR head on 16 16 in-distribution tasks. (a) versus default schedules (b) versus tuned schedules Figure 11: Direct learning-rate head on the same 64 64 in-distribution draws. (a) compares against the default schedules, while (b) compares against the swept baselines.",
+      "source": "https://arxiv.org/html/2610.28072v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0061",
+      "section": "Appendix E Ablation: Direct Learning-Rate Head",
+      "text": "Figure 12: Direct learning-rate head transferred one-shot to Qwen3-32B. Bars show baseline minus learned test loss, where positive values favor the learned scheduler.",
+      "source": "https://arxiv.org/html/2610.28072v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0062",
+      "section": "Appendix F Ablation: Shape Normalization",
+      "text": "In the following ablation, we remove the shape normalization of Equation 5 , so the shape parameters can also change the overall magnitude of the schedule. All other components remain unchanged, and both policies are meta-trained for 9000 9000 outer iterations. On the 64 64 in-distribution draws, the normalized scheduler wins on 33 33 and reduces median test loss by 0.15 % 0.15\\% (two-sided exact sign test p = 0.90 p=0.90 ), so we find no in-distribution effect. On Qwen3-32B, it wins on 5 / 8 5/8 datasets, with a median reduction of 1.37 % 1.37\\% (sign test p = 0.73 p=0.73 ). The differences are small on most datasets, but large where normalization helps, most clearly on mbpp ( 15.4 % 15.4\\% ) and wmt14_en_de ( 8.3 % 8.3\\% ). With eight datasets, this suggests a possible transfer benefit rather than a significant one. Figure 13 shows the comparisons. Figure 13: Comparison of MuPACE with and without shape normalization on in-distribution draws (top) and Qwen3-32B (bottom). Positive values mean shape normalization performs better.",
+      "source": "https://arxiv.org/html/2610.28072v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0063",
+      "section": "G.1 Depth-scaled Baseline fixed schedules",
+      "text": "We ask whether MuPACE still outperforms the fixed schedules when the latter are given the same depth-dependent scaling and their learning-rate peaks are selected without any target-task search. Specifically, we apply the learned policy’s depth- μ \\mu P multiplier from Equation 6 to cosine, WSD, and constant schedules on both out-of-distribution models. For each schedule family, we transfer (i) the default peak of 10 − 3 10^{-3} and (ii) the best fixed peak from a sweep on the in-distribution evaluation, denoted p ∗ p^{*} . For WSD and constant, the source-selected and default peaks coincide. Thus, the comparison tests whether MuPACE provides gains beyond transferring either default or source-tuned depth-scaled fixed schedules. All arms report test loss at their own best-validation checkpoint. MuPACE outperforms every depth-scaled fixed control on every dataset of both models except default-peak cosine on GSM8K for Qwen3-32B (Figure 14 ). This supports gains beyond applying the same depth-scaling rule to default or source-tuned fixed schedules without target-task search. Figure 14: Depth-scaled fixed schedules versus MuPACE on Qwen3-32B (left) and Qwen3.8-27B (right). Positive differences favor the learned policy. Target-tuned schedules and Hypergradient Descent are shown for context. Depth-scaled fixed schedules use no target-task peak selection.",
+      "source": "https://arxiv.org/html/2610.28072v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0064",
+      "section": "G.2 Depth-dependent post-scaling of the learned policy",
+      "text": "In the following ablation, we meta-train a separate variant without the depth-dependent multiplier from Equation 6 , while retaining depth as a policy input. We compare the two policies on the same 64 64 in-distribution draws and eight Qwen3-32B datasets, reporting test loss at each arm’s best-validation checkpoint. In-distribution performance is similar, with MuPACE winning on 32 / 64 32/64 draws and achieving a median relative test-loss reduction of − 0.03 % -0.03\\% (two-sided exact sign test p = 1.00 p=1.00 ). On Qwen3-32B, MuPACE wins on all eight datasets, suggesting a benefit for one-shot transfer (Figure 15 ). Figure 15: MuPACE versus a separately meta-trained variant without depth-dependent post-scaling on in-distribution draws (top) and Qwen3-32B datasets (bottom). Positive values favor the full scheduler.",
+      "source": "https://arxiv.org/html/2610.28072v1",
+      "offset": 0
+    }
+  ],
+  "links": [
+    {
+      "href": "#bib.bib10",
+      "text": "Kingma and Ba, 2015",
+      "section": "1 Introduction",
+      "context": "Modern deep learning optimizers increasingly decouple the update direction from its overall scale. Adaptive methods such as Adam ( Kingma and Ba, 2015",
+      "url": "https://arxiv.org/html/2610.28072v1#bib.bib10"
+    },
+    {
+      "href": "#bib.bib15",
+      "text": "Loshchilov and Hutter, 2019",
+      "section": "1 Introduction",
+      "context": "Modern deep learning optimizers increasingly decouple the update direction from its overall scale. Adaptive methods such as Adam ( Kingma and Ba, 2015 ) and AdamW ( Loshchilov and Hutter, 2019",
+      "url": "https://arxiv.org/html/2610.28072v1#bib.bib15"
+    },
+    {
+      "href": "#bib.bib11",
+      "text": "Gupta et al., 2018",
+      "section": "1 Introduction",
+      "context": "Modern deep learning optimizers increasingly decouple the update direction from its overall scale. Adaptive methods such as Adam ( Kingma and Ba, 2015 ) and AdamW ( Loshchilov and Hutter, 2019 ) rescale gradients coordinate-wise, while more recent matrix-aware optimizers such as Shampoo ( Gupta et al., 2018",
+      "url": "https://arxiv.org/html/2610.28072v1#bib.bib11"
+    },
+    {
+      "href": "#bib.bib12",
+      "text": "Vyas et al., 2025",
+      "section": "1 Introduction",
+      "context": "Modern deep learning optimizers increasingly decouple the update direction from its overall scale. Adaptive methods such as Adam ( Kingma and Ba, 2015 ) and AdamW ( Loshchilov and Hutter, 2019 ) rescale gradients coordinate-wise, while more recent matrix-aware optimizers such as Shampoo ( Gupta et al., 2018 ) , SOAP ( Vyas et al., 2025",
+      "url": "https://arxiv.org/html/2610.28072v1#bib.bib12"
+    },
+    {
+      "href": "#bib.bib2",
+      "text": "Jordan et al., 2024",
+      "section": "1 Introduction",
+      "context": "Modern deep learning optimizers increasingly decouple the update direction from its overall scale. Adaptive methods such as Adam ( Kingma and Ba, 2015 ) and AdamW ( Loshchilov and Hutter, 2019 ) rescale gradients coordinate-wise, while more recent matrix-aware optimizers such as Shampoo ( Gupta et al., 2018 ) , SOAP ( Vyas et al., 2025 ) , and Muon ( Jordan et al., 2024",
+      "url": "https://arxiv.org/html/2610.28072v1#bib.bib2"
+    },
+    {
+      "href": "#bib.bib16",
+      "text": "Liu et al., 2025",
+      "section": "1 Introduction",
+      "context": " optimizers increasingly decouple the update direction from its overall scale. Adaptive methods such as Adam ( Kingma and Ba, 2015 ) and AdamW ( Loshchilov and Hutter, 2019 ) rescale gradients coordinate-wise, while more recent matrix-aware optimizers such as Shampoo ( Gupta et al., 2018 ) , SOAP ( Vyas et al., 2025 ) , and Muon ( Jordan et al., 2024 ) exploit the structure of neural network parameters. Muon, in particular, constructs updates for matrix-valued parameters by orthogonalizing the momentum update and has shown promising performance in language-model pre-training ( Liu et al., 2025",
+      "url": "https://arxiv.org/html/2610.28072v1#bib.bib16"
+    },
+    {
+      "href": "#bib.bib14",
+      "text": "Hu et al., 2022",
+      "section": "1 Introduction",
+      "context": "uple the update direction from its overall scale. Adaptive methods such as Adam ( Kingma and Ba, 2015 ) and AdamW ( Loshchilov and Hutter, 2019 ) rescale gradients coordinate-wise, while more recent matrix-aware optimizers such as Shampoo ( Gupta et al., 2018 ) , SOAP ( Vyas et al., 2025 ) , and Muon ( Jordan et al., 2024 ) exploit the structure of neural network parameters. Muon, in particular, constructs updates for matrix-valued parameters by orthogonalizing the momentum update and has shown promising performance in language-model pre-training ( Liu et al., 2025 ) and LoRA ( Hu et al., 2022",
+      "url": "https://arxiv.org/html/2610.28072v1#bib.bib14"
+    },
+    {
+      "href": "#bib.bib5",
+      "text": "Qu et al., 2026",
+      "section": "1 Introduction",
+      "context": "ts overall scale. Adaptive methods such as Adam ( Kingma and Ba, 2015 ) and AdamW ( Loshchilov and Hutter, 2019 ) rescale gradients coordinate-wise, while more recent matrix-aware optimizers such as Shampoo ( Gupta et al., 2018 ) , SOAP ( Vyas et al., 2025 ) , and Muon ( Jordan et al., 2024 ) exploit the structure of neural network parameters. Muon, in particular, constructs updates for matrix-valued parameters by orthogonalizing the momentum update and has shown promising performance in language-model pre-training ( Liu et al., 2025 ) and LoRA ( Hu et al., 2022 ) fine-tuning ( Qu et al., 2026",
+      "url": "https://arxiv.org/html/2610.28072v1#bib.bib5"
+    },
+    {
+      "href": "#bib.bib13",
+      "text": "Bernstein and Newhouse, 2024",
+      "section": "1 Introduction",
+      "context": "The perspective of separating the update direction from the step size is also reflected in the norm-based view of steepest descent ( Bernstein and Newhouse, 2024",
+      "url": "https://arxiv.org/html/2610.28072v1#bib.bib13"
+    },
+    {
+      "href": "#bib.bib2",
+      "text": "Jordan et al., 2024",
+      "section": "1 Introduction",
+      "context": "The norm determines the geometry of d t d_{t} , while the step size η t \\eta_{t} sets its magnitude. For example, the Euclidean norm yields the normalized direction s t / ‖ s t ‖ 2 s_{t}/\\|s_{t}\\|_{2} , whereas the infinity norm yields the element-wise sign direction. For a matrix-valued signal s t = U t ​ Σ t ​ V t ⊤ s_{t}=U_{t}\\Sigma_{t}V_{t}^{\\top} , Muon uses the corresponding spectral-norm direction d t = U t ​ V t ⊤ d_{t}=U_{t}V_{t}^{\\top} , approximated in practice with a small number of Newton–Schulz iterations ( Jordan et al., 2024",
+      "url": "https://arxiv.org/html/2610.28072v1#bib.bib2"
+    },
+    {
+      "href": "#bib.bib1",
+      "text": "Shen et al., 2026",
+      "section": "1 Introduction",
+      "context": "For normalized optimizers, the learning rate therefore plays a particularly important role. Normalization can improve progress in challenging landscapes such as river valleys ( Shen et al., 2026",
+      "url": "https://arxiv.org/html/2610.28072v1#bib.bib1"
+    },
+    {
+      "href": "#bib.bib21",
+      "text": "Loshchilov and Hutter, 2017",
+      "section": "1 Introduction",
+      "context": "In practice, this control problem is often solved by committing to a learning rate schedule before training begins. Common choices such as cosine decay ( Loshchilov and Hutter, 2017",
+      "url": "https://arxiv.org/html/2610.28072v1#bib.bib21"
+    },
+    {
+      "href": "#bib.bib22",
+      "text": "Hu et al., 2024",
+      "section": "1 Introduction",
+      "context": "In practice, this control problem is often solved by committing to a learning rate schedule before training begins. Common choices such as cosine decay ( Loshchilov and Hutter, 2017 ) and warmup-stable-decay (WSD) ( Hu et al., 2024",
+      "url": "https://arxiv.org/html/2610.28072v1#bib.bib22"
+    },
+    {
+      "href": "#bib.bib6",
+      "text": "Biderman et al., 2024",
+      "section": "1 Introduction",
+      "context": "e before training begins. Common choices such as cosine decay ( Loshchilov and Hutter, 2017 ) and warmup-stable-decay (WSD) ( Hu et al., 2024 ) set η t \\eta_{t} primarily as a function of training progress, while their overall scale is selected through hyperparameter optimization. This is expensive because finding a good learning rate schedule can require several training runs, and the resulting setting does not transfer across fine-tuning problems, as the appropriate schedule varies with the downstream task, adapter parameterization, batch size, and optimization budget ( Biderman et al., 2024",
+      "url": "https://arxiv.org/html/2610.28072v1#bib.bib6"
+    },
+    {
+      "href": "#bib.bib41",
+      "text": "Lee and Lee, 2026",
+      "section": "1 Introduction",
+      "context": "gins. Common choices such as cosine decay ( Loshchilov and Hutter, 2017 ) and warmup-stable-decay (WSD) ( Hu et al., 2024 ) set η t \\eta_{t} primarily as a function of training progress, while their overall scale is selected through hyperparameter optimization. This is expensive because finding a good learning rate schedule can require several training runs, and the resulting setting does not transfer across fine-tuning problems, as the appropriate schedule varies with the downstream task, adapter parameterization, batch size, and optimization budget ( Biderman et al., 2024 ; Lee and Lee, 2026",
+      "url": "https://arxiv.org/html/2610.28072v1#bib.bib41"
+    },
+    {
+      "href": "#bib.bib4",
+      "text": "Bommasani et al., 2021",
+      "section": "1 Introduction",
+      "context": "We therefore ask the following question: Can learning rate schedule selection instead be amortized across LoRA fine-tuning problems? We introduce MuPACE ( Mu on P olicy for A daptive C ontrol across LoRA Fine-tuning E pisodes), a learned, trajectory-conditioned learning rate scheduler for LoRA. LoRA fine-tuning is especially relevant because only a few large organizations train large language models from scratch, while most users adapt existing pretrained models ( Bommasani et al., 2021",
+      "url": "https://arxiv.org/html/2610.28072v1#bib.bib4"
+    },
+    {
+      "href": "#bib.bib49",
+      "text": "Metz et al., 2022b",
+      "section": "1 Introduction",
+      "context": "We therefore ask the following question: Can learning rate schedule selection instead be amortized across LoRA fine-tuning problems? We introduce MuPACE ( Mu on P olicy for A daptive C ontrol across LoRA Fine-tuning E pisodes), a learned, trajectory-conditioned learning rate scheduler for LoRA. LoRA fine-tuning is especially relevant because only a few large organizations train large language models from scratch, while most users adapt existing pretrained models ( Bommasani et al., 2021 ) . Unlike previous learned optimizers that meta-learn the update rule itself ( Metz et al., 2022b",
+      "url": "https://arxiv.org/html/2610.28072v1#bib.bib49"
+    },
+    {
+      "href": "#bib.bib53",
+      "text": "Moudgil et al., 2025",
+      "section": "1 Introduction",
+      "context": "ask the following question: Can learning rate schedule selection instead be amortized across LoRA fine-tuning problems? We introduce MuPACE ( Mu on P olicy for A daptive C ontrol across LoRA Fine-tuning E pisodes), a learned, trajectory-conditioned learning rate scheduler for LoRA. LoRA fine-tuning is especially relevant because only a few large organizations train large language models from scratch, while most users adapt existing pretrained models ( Bommasani et al., 2021 ) . Unlike previous learned optimizers that meta-learn the update rule itself ( Metz et al., 2022b ; Moudgil et al., 2025",
+      "url": "https://arxiv.org/html/2610.28072v1#bib.bib53"
+    },
+    {
+      "href": "#bib.bib17",
+      "text": "Yang et al., 2021",
+      "section": "Learning rate scaling and schedules.",
+      "context": "The maximal update parameterization ( μ \\mu P) jointly defines width-dependent initialization, parameter multipliers, and per-layer learning rates, enabling near-optimal hyperparameters to transfer across width ( Yang et al., 2021",
+      "url": "https://arxiv.org/html/2610.28072v1#bib.bib17"
+    },
+    {
+      "href": "#bib.bib18",
+      "text": "Yang et al., 2024",
+      "section": "Learning rate scaling and schedules.",
+      "context": "The maximal update parameterization ( μ \\mu P) jointly defines width-dependent initialization, parameter multipliers, and per-layer learning rates, enabling near-optimal hyperparameters to transfer across width ( Yang et al., 2021 ) . Depth- μ \\mu P extends this principle to residual networks with single-layer blocks ( Yang et al., 2024",
+      "url": "https://arxiv.org/html/2610.28072v1#bib.bib18"
+    },
+    {
+      "href": "#bib.bib19",
+      "text": "Noci et al., 2024",
+      "section": "Learning rate scaling and schedules.",
+      "context": "The maximal update parameterization ( μ \\mu P) jointly defines width-dependent initialization, parameter multipliers, and per-layer learning rates, enabling near-optimal hyperparameters to transfer across width ( Yang et al., 2021 ) . Depth- μ \\mu P extends this principle to residual networks with single-layer blocks ( Yang et al., 2024 ) . Transfer has been related to approximately width- and depth-independent Hessian sharpness under feature learning ( Noci et al., 2024",
+      "url": "https://arxiv.org/html/2610.28072v1#bib.bib19"
+    },
+    {
+      "href": "#bib.bib20",
+      "text": "Everett et al., 2024",
+      "section": "Learning rate scaling and schedules.",
+      "context": "rameter multipliers, and per-layer learning rates, enabling near-optimal hyperparameters to transfer across width ( Yang et al., 2021 ) . Depth- μ \\mu P extends this principle to residual networks with single-layer blocks ( Yang et al., 2024 ) . Transfer has been related to approximately width- and depth-independent Hessian sharpness under feature learning ( Noci et al., 2024 ) , though for Adam-trained Transformer language models, standard parameterization with suitable per-layer learning rates also transfers and can outperform μ \\mu P when per-layer constants are tuned ( Everett et al., 2024",
+      "url": "https://arxiv.org/html/2610.28072v1#bib.bib20"
+    },
+    {
+      "href": "#bib.bib21",
+      "text": "Loshchilov and Hutter, 2017",
+      "section": "Learning rate scaling and schedules.",
+      "context": " ) . Depth- μ \\mu P extends this principle to residual networks with single-layer blocks ( Yang et al., 2024 ) . Transfer has been related to approximately width- and depth-independent Hessian sharpness under feature learning ( Noci et al., 2024 ) , though for Adam-trained Transformer language models, standard parameterization with suitable per-layer learning rates also transfers and can outperform μ \\mu P when per-layer constants are tuned ( Everett et al., 2024 ) . A parallel line of work concerns the shape of the schedule rather than its scale. Cosine annealing ( Loshchilov and Hutter, 2017",
+      "url": "https://arxiv.org/html/2610.28072v1#bib.bib21"
+    },
+    {
+      "href": "#bib.bib22",
+      "text": "Hu et al., 2024",
+      "section": "Learning rate scaling and schedules.",
+      "context": "depth-independent Hessian sharpness under feature learning ( Noci et al., 2024 ) , though for Adam-trained Transformer language models, standard parameterization with suitable per-layer learning rates also transfers and can outperform μ \\mu P when per-layer constants are tuned ( Everett et al., 2024 ) . A parallel line of work concerns the shape of the schedule rather than its scale. Cosine annealing ( Loshchilov and Hutter, 2017 ) remains common in LLM pretraining, alongside warmup-stable-decay (WSD) schedules that maintain a constant learning rate before a terminal cooldown ( Hu et al., 2024",
+      "url": "https://arxiv.org/html/2610.28072v1#bib.bib22"
+    },
+    {
+      "href": "#bib.bib23",
+      "text": "Bergsma et al., 2025",
+      "section": "Learning rate scaling and schedules.",
+      "context": " ) , though for Adam-trained Transformer language models, standard parameterization with suitable per-layer learning rates also transfers and can outperform μ \\mu P when per-layer constants are tuned ( Everett et al., 2024 ) . A parallel line of work concerns the shape of the schedule rather than its scale. Cosine annealing ( Loshchilov and Hutter, 2017 ) remains common in LLM pretraining, alongside warmup-stable-decay (WSD) schedules that maintain a constant learning rate before a terminal cooldown ( Hu et al., 2024 ) . Additional approaches include linear decay to zero ( Bergsma et al., 2025",
+      "url": "https://arxiv.org/html/2610.28072v1#bib.bib23"
+    },
+    {
+      "href": "#bib.bib24",
+      "text": "Defazio et al., 2024",
+      "section": "Learning rate scaling and schedules.",
+      "context": ", standard parameterization with suitable per-layer learning rates also transfers and can outperform μ \\mu P when per-layer constants are tuned ( Everett et al., 2024 ) . A parallel line of work concerns the shape of the schedule rather than its scale. Cosine annealing ( Loshchilov and Hutter, 2017 ) remains common in LLM pretraining, alongside warmup-stable-decay (WSD) schedules that maintain a constant learning rate before a terminal cooldown ( Hu et al., 2024 ) . Additional approaches include linear decay to zero ( Bergsma et al., 2025 ) and schedule-free optimization ( Defazio et al., 2024",
+      "url": "https://arxiv.org/html/2610.28072v1#bib.bib24"
+    },
+    {
+      "href": "#bib.bib45",
+      "text": "Team et al., 2025b",
+      "section": "Learning rate scaling and schedules.",
+      "context": "n per-layer constants are tuned ( Everett et al., 2024 ) . A parallel line of work concerns the shape of the schedule rather than its scale. Cosine annealing ( Loshchilov and Hutter, 2017 ) remains common in LLM pretraining, alongside warmup-stable-decay (WSD) schedules that maintain a constant learning rate before a terminal cooldown ( Hu et al., 2024 ) . Additional approaches include linear decay to zero ( Bergsma et al., 2025 ) and schedule-free optimization ( Defazio et al., 2024 ) . However, frontier labs remain divided on the choice of learning rate schedule. Kimi K2 ( Team et al., 2025b",
+      "url": "https://arxiv.org/html/2610.28072v1#bib.bib45"
+    },
+    {
+      "href": "#bib.bib44",
+      "text": "Xu et al., 2026",
+      "section": "Learning rate scaling and schedules.",
+      "context": "et al., 2024 ) . A parallel line of work concerns the shape of the schedule rather than its scale. Cosine annealing ( Loshchilov and Hutter, 2017 ) remains common in LLM pretraining, alongside warmup-stable-decay (WSD) schedules that maintain a constant learning rate before a terminal cooldown ( Hu et al., 2024 ) . Additional approaches include linear decay to zero ( Bergsma et al., 2025 ) and schedule-free optimization ( Defazio et al., 2024 ) . However, frontier labs remain divided on the choice of learning rate schedule. Kimi K2 ( Team et al., 2025b ) uses WSD, DeepSeek V4 ( Xu et al., 2026",
+      "url": "https://arxiv.org/html/2610.28072v1#bib.bib44"
+    },
+    {
+      "href": "#bib.bib43",
+      "text": "Team et al., 2025a",
+      "section": "Learning rate scaling and schedules.",
+      "context": "nnealing ( Loshchilov and Hutter, 2017 ) remains common in LLM pretraining, alongside warmup-stable-decay (WSD) schedules that maintain a constant learning rate before a terminal cooldown ( Hu et al., 2024 ) . Additional approaches include linear decay to zero ( Bergsma et al., 2025 ) and schedule-free optimization ( Defazio et al., 2024 ) . However, frontier labs remain divided on the choice of learning rate schedule. Kimi K2 ( Team et al., 2025b ) uses WSD, DeepSeek V4 ( Xu et al., 2026 ) uses a warmup, long constant plateau, and terminal cosine cooldown, whereas GLM-4.5 ( Team et al., 2025a",
+      "url": "https://arxiv.org/html/2610.28072v1#bib.bib43"
+    },
+    {
+      "href": "#bib.bib46",
+      "text": "Team et al., 2026",
+      "section": "Learning rate scaling and schedules.",
+      "context": "2017 ) remains common in LLM pretraining, alongside warmup-stable-decay (WSD) schedules that maintain a constant learning rate before a terminal cooldown ( Hu et al., 2024 ) . Additional approaches include linear decay to zero ( Bergsma et al., 2025 ) and schedule-free optimization ( Defazio et al., 2024 ) . However, frontier labs remain divided on the choice of learning rate schedule. Kimi K2 ( Team et al., 2025b ) uses WSD, DeepSeek V4 ( Xu et al., 2026 ) uses a warmup, long constant plateau, and terminal cosine cooldown, whereas GLM-4.5 ( Team et al., 2025a ) and Kimi K3 ( Team et al., 2026",
+      "url": "https://arxiv.org/html/2610.28072v1#bib.bib46"
+    },
+    {
+      "href": "#bib.bib25",
+      "text": "Li et al., 2026",
+      "section": "Learning rate scaling and schedules.",
+      "context": "al., 2024 ) . Additional approaches include linear decay to zero ( Bergsma et al., 2025 ) and schedule-free optimization ( Defazio et al., 2024 ) . However, frontier labs remain divided on the choice of learning rate schedule. Kimi K2 ( Team et al., 2025b ) uses WSD, DeepSeek V4 ( Xu et al., 2026 ) uses a warmup, long constant plateau, and terminal cosine cooldown, whereas GLM-4.5 ( Team et al., 2025a ) and Kimi K3 ( Team et al., 2026 ) report favoring cosine over WSD. Fixed-horizon theory similarly predicts power decay in easier regimes and a WSD-like schedule in harder ones ( Li et al., 2026",
+      "url": "https://arxiv.org/html/2610.28072v1#bib.bib25"
+    },
+    {
+      "href": "#bib.bib3",
+      "text": "Krizhevsky et al., 2012",
+      "section": "Online learning rate adaptation.",
+      "context": "Learning rates can also be adapted during training using heuristic or learned rules, rather than prescribed by a fixed schedule in advance. For example, the heuristic ReduceLROnPlateau scheduler ( Krizhevsky et al., 2012",
+      "url": "https://arxiv.org/html/2610.28072v1#bib.bib3"
+    },
+    {
+      "href": "#bib.bib27",
+      "text": "Maclaurin et al., 2015",
+      "section": "Online learning rate adaptation.",
+      "context": "Learning rates can also be adapted during training using heuristic or learned rules, rather than prescribed by a fixed schedule in advance. For example, the heuristic ReduceLROnPlateau scheduler ( Krizhevsky et al., 2012 ) reduces the learning rate when a monitored metric stops improving. More flexible schedules can be learned by differentiating through the training trajectory ( Maclaurin et al., 2015",
+      "url": "https://arxiv.org/html/2610.28072v1#bib.bib27"
+    },
+    {
+      "href": "#bib.bib28",
+      "text": "Baydin et al., 2018",
+      "section": "Online learning rate adaptation.",
+      "context": "Learning rates can also be adapted during training using heuristic or learned rules, rather than prescribed by a fixed schedule in advance. For example, the heuristic ReduceLROnPlateau scheduler ( Krizhevsky et al., 2012 ) reduces the learning rate when a monitored metric stops improving. More flexible schedules can be learned by differentiating through the training trajectory ( Maclaurin et al., 2015 ) , while Hypergradient Descent adapts learning rates online using hypergradients ( Baydin et al., 2018",
+      "url": "https://arxiv.org/html/2610.28072v1#bib.bib28"
+    },
+    {
+      "href": "#bib.bib29",
+      "text": "Mackay et al., 2019",
+      "section": "Online learning rate adaptation.",
+      "context": "apted during training using heuristic or learned rules, rather than prescribed by a fixed schedule in advance. For example, the heuristic ReduceLROnPlateau scheduler ( Krizhevsky et al., 2012 ) reduces the learning rate when a monitored metric stops improving. More flexible schedules can be learned by differentiating through the training trajectory ( Maclaurin et al., 2015 ) , while Hypergradient Descent adapts learning rates online using hypergradients ( Baydin et al., 2018 ) . Related approaches include Self-Tuning Networks for bilevel online hyperparameter optimization ( Mackay et al., 2019",
+      "url": "https://arxiv.org/html/2610.28072v1#bib.bib29"
+    },
+    {
+      "href": "#bib.bib30",
+      "text": "Defazio and Mishchenko, 2023",
+      "section": "Online learning rate adaptation.",
+      "context": "or example, the heuristic ReduceLROnPlateau scheduler ( Krizhevsky et al., 2012 ) reduces the learning rate when a monitored metric stops improving. More flexible schedules can be learned by differentiating through the training trajectory ( Maclaurin et al., 2015 ) , while Hypergradient Descent adapts learning rates online using hypergradients ( Baydin et al., 2018 ) . Related approaches include Self-Tuning Networks for bilevel online hyperparameter optimization ( Mackay et al., 2019 ) , D-Adaptation for automatically estimating an appropriate learning rate scale ( Defazio and Mishchenko, 2023",
+      "url": "https://arxiv.org/html/2610.28072v1#bib.bib30"
+    },
+    {
+      "href": "#bib.bib31",
+      "text": "Sharifnassab et al., 2025",
+      "section": "Online learning rate adaptation.",
+      "context": "metric stops improving. More flexible schedules can be learned by differentiating through the training trajectory ( Maclaurin et al., 2015 ) , while Hypergradient Descent adapts learning rates online using hypergradients ( Baydin et al., 2018 ) . Related approaches include Self-Tuning Networks for bilevel online hyperparameter optimization ( Mackay et al., 2019 ) , D-Adaptation for automatically estimating an appropriate learning rate scale ( Defazio and Mishchenko, 2023 ) , and MetaOptimize for adapting step sizes based on their longer-term effects on future losses ( Sharifnassab et al., 2025",
+      "url": "https://arxiv.org/html/2610.28072v1#bib.bib31"
+    },
+    {
+      "href": "#bib.bib47",
+      "text": "Andrychowicz et al., 2016",
+      "section": "Learned optimizers and schedulers.",
+      "context": "Learning-to-learn replaces hand-designed update rules with meta-learned ones ( Andrychowicz et al., 2016",
+      "url": "https://arxiv.org/html/2610.28072v1#bib.bib47"
+    },
+    {
+      "href": "#bib.bib48",
+      "text": "Metz et al., 2022a",
+      "section": "Learned optimizers and schedulers.",
+      "context": "Learning-to-learn replaces hand-designed update rules with meta-learned ones ( Andrychowicz et al., 2016 ; Metz et al., 2022a",
+      "url": "https://arxiv.org/html/2610.28072v1#bib.bib48"
+    },
+    {
+      "href": "#bib.bib49",
+      "text": "Metz et al., 2022b",
+      "section": "Learned optimizers and schedulers.",
+      "context": "Learning-to-learn replaces hand-designed update rules with meta-learned ones ( Andrychowicz et al., 2016 ; Metz et al., 2022a ) . VeLO ( Metz et al., 2022b",
+      "url": "https://arxiv.org/html/2610.28072v1#bib.bib49"
+    },
+    {
+      "href": "#bib.bib53",
+      "text": "Moudgil et al., 2025",
+      "section": "Learned optimizers and schedulers.",
+      "context": "Learning-to-learn replaces hand-designed update rules with meta-learned ones ( Andrychowicz et al., 2016 ; Metz et al., 2022a ) . VeLO ( Metz et al., 2022b ) scales this methodology to a general-purpose optimizer using a hierarchical architecture in which a per-tensor LSTM hypernetwork generates the weights of a small per-parameter MLP update rule. It requires no per-task optimizer hyperparameter tuning but incurs roughly 4,000 TPU months of meta-training. Celo ( Moudgil et al., 2025",
+      "url": "https://arxiv.org/html/2610.28072v1#bib.bib53"
+    },
+    {
+      "href": "#bib.bib50",
+      "text": "Moudgil et al., 2026",
+      "section": "Learned optimizers and schedulers.",
+      "context": "O ( Metz et al., 2022b ) scales this methodology to a general-purpose optimizer using a hierarchical architecture in which a per-tensor LSTM hypernetwork generates the weights of a small per-parameter MLP update rule. It requires no per-task optimizer hyperparameter tuning but incurs roughly 4,000 TPU months of meta-training. Celo ( Moudgil et al., 2025 ) obtains strong out-of-distribution meta-generalization with only 24 GPU hours by combining task augmentation with a learned per-parameter MLP update rule and a learned global scheduler, meta-trained in two stages. Celo2 ( Moudgil et al., 2026",
+      "url": "https://arxiv.org/html/2610.28072v1#bib.bib50"
+    },
+    {
+      "href": "#bib.bib52",
+      "text": "Kristiansen et al., 2024",
+      "section": "Learned optimizers and schedulers.",
+      "context": "-parameter MLP update rule and a learned global scheduler, meta-trained in two stages. Celo2 ( Moudgil et al., 2026 ) further separates update-rule learning from step-size selection. It meta-learns only the update rule, leaves the step size tunable, and defers learning a generally applicable scheduler to future work. Closest to our setting, L3RS specializes learned optimization to fine-tuning pretrained models and learns, for each layer, both an update magnitude and a mixture of directions supplied by base optimizers using temporal and optimization-statistic features ( Kristiansen et al., 2024",
+      "url": "https://arxiv.org/html/2610.28072v1#bib.bib52"
+    },
+    {
+      "href": "#S3.SS3",
+      "text": "3.3",
+      "section": "Definition 3.1 (Fine-tuning Task Instance)",
+      "context": "where z t z_{t} summarizes static task descriptors and training statistics τ ⁡ ( t ) \\tau(t) available before the update at step t t (Section 3.3",
+      "url": "https://arxiv.org/html/2610.28072v1#S3.SS3"
+    },
+    {
+      "href": "#S3.SS4",
+      "text": "3.4",
+      "section": "Definition 3.1 (Fine-tuning Task Instance)",
+      "context": "where z t z_{t} summarizes static task descriptors and training statistics τ ⁡ ( t ) \\tau(t) available before the update at step t t (Section 3.3 ). The policy learns only the scalar step size. The underlying optimizer, Muon, determines the update direction. We meta-train the policy across task instances to minimize a validation-loss objective within each episode’s budget (Section 3.4",
+      "url": "https://arxiv.org/html/2610.28072v1#S3.SS4"
+    },
+    {
+      "href": "#bib.bib50",
+      "text": "Moudgil et al., 2026",
+      "section": "Optimization Step.",
+      "context": "We keep the base weights frozen, so every trainable parameter of a task instance is a LoRA factor A A or B B and hence matrix-shaped. We can therefore update the entire adapter with Muon and require no element-wise fallback rule. The inner update is θ t + 1 = θ t − η t ​ d t \\theta_{t+1}=\\theta_{t}-\\eta_{t}d_{t} , with d t = 𝒪 ⁡ ( s t ) d_{t}=\\mathcal{O}(s_{t}) denoting the Muon direction. We post-scale each Muon update to unit RMS ( Moudgil et al., 2026",
+      "url": "https://arxiv.org/html/2610.28072v1#bib.bib50"
+    },
+    {
+      "href": "#bib.bib16",
+      "text": "Liu et al., 2025",
+      "section": "Optimization Step.",
+      "context": "We keep the base weights frozen, so every trainable parameter of a task instance is a LoRA factor A A or B B and hence matrix-shaped. We can therefore update the entire adapter with Muon and require no element-wise fallback rule. The inner update is θ t + 1 = θ t − η t ​ d t \\theta_{t+1}=\\theta_{t}-\\eta_{t}d_{t} , with d t = 𝒪 ⁡ ( s t ) d_{t}=\\mathcal{O}(s_{t}) denoting the Muon direction. We post-scale each Muon update to unit RMS ( Moudgil et al., 2026 ) before applying the learning rate, compensating for its RMS decreasing with matrix size ( Liu et al., 2025",
+      "url": "https://arxiv.org/html/2610.28072v1#bib.bib16"
+    },
+    {
+      "href": "#S3.F1",
+      "text": "Figure   1",
+      "section": "Schedule Family.",
+      "context": "The family is controlled by a 5-dimensional vector λ = ( λ 1 , … , λ 5 ) \\lambda=(\\lambda_{1},\\ldots,\\lambda_{5}) , which is what the policy emits. The parameters split into a scale and a shape. λ 1 \\lambda_{1} sets the overall scale of the schedule, while the other four parameters determine its shape. Specifically, λ 2 \\lambda_{2} controls the decay rate, λ 3 \\lambda_{3} shifts the knee in time, λ 4 \\lambda_{4} sets the tail floor, and λ 5 \\lambda_{5} controls the warmup timescale. Figure 1",
+      "url": "https://arxiv.org/html/2610.28072v1#S3.F1"
+    },
+    {
+      "href": "#bib.bib18",
+      "text": "Yang et al., 2024",
+      "section": "Depth Scaling.",
+      "context": "following Depth- μ \\mu P ( Yang et al., 2024",
+      "url": "https://arxiv.org/html/2610.28072v1#bib.bib18"
+    },
+    {
+      "href": "#S3.SS2",
+      "text": "Section   3.2",
+      "section": "3.3 Meta-Model",
+      "context": "which keeps λ i , t \\lambda_{i,t} within [ λ i 0 ​ e − c i , λ i 0 ​ e c i ] \\left[\\lambda^{0}_{i}e^{-c_{i}},\\,\\lambda^{0}_{i}e^{c_{i}}\\right] . The hyperparameter c i c_{i} sets the width of this range. We compute λ 5 \\lambda_{5} once from the static features and log ⁡ T \\log T before the first step and update the other four parameters at every step, as discussed in Section 3.2",
+      "url": "https://arxiv.org/html/2610.28072v1#S3.SS2"
+    },
+    {
+      "href": "#bib.bib53",
+      "text": "Moudgil et al., 2025",
+      "section": "Scale Augmentation.",
+      "context": "Inferring the adapter scale from the trajectory only pays off if meta-training varies it. We therefore reparameterize every sampled task instance. A scalar κ \\kappa is drawn log-uniformly, the adapter factors are initialized at 1 / κ 1/\\kappa times their usual value, and the forward pass multiplies them back by κ \\kappa ( Moudgil et al., 2025",
+      "url": "https://arxiv.org/html/2610.28072v1#bib.bib53"
+    },
+    {
+      "href": "#bib.bib51",
+      "text": "Vicol et al., 2021",
+      "section": "Meta-Gradient.",
+      "context": "We estimate the meta-gradient with truncated PES ( Vicol et al., 2021",
+      "url": "https://arxiv.org/html/2610.28072v1#bib.bib51"
+    },
+    {
+      "href": "#S3.E9",
+      "text": "9",
+      "section": "Meta-Gradient.",
+      "context": "We estimate the meta-gradient with truncated PES ( Vicol et al., 2021 ) . Each outer iteration unrolls an antithetic pair ϕ ± ε \\phi\\pm\\varepsilon , ε ∼ 𝒩 ⁡ ( 0 , σ 2 ​ I ) \\varepsilon\\sim\\mathcal{N}(0,\\sigma^{2}I) , for L L inner steps on N N task instances in parallel, and each instance is resampled once it reaches its budget T T . Since the meta-loss has to be emitted per inner step, we emit ℓ ~ t val \\tilde{\\ell}^{\\mathrm{val}}_{t} masked to t > T 0 t>T_{0} and rescaled by T / ( T − T 0 ) T/(T-T_{0}) . Averaged over the episode, this recovers Equation 9",
+      "url": "https://arxiv.org/html/2610.28072v1#S3.E9"
+    },
+    {
+      "href": "#bib.bib26",
+      "text": "Karpathy, 2025",
+      "section": "4 Experimental Protocol",
+      "context": "We meta-train MuPACE on a distribution over LoRA fine-tuning tasks built from a deck of 37 37 pretrained nanochat models ( Karpathy, 2025",
+      "url": "https://arxiv.org/html/2610.28072v1#bib.bib26"
+    },
+    {
+      "href": "#bib.bib33",
+      "text": "Wang et al., 2022",
+      "section": "4 Experimental Protocol",
+      "context": "We meta-train MuPACE on a distribution over LoRA fine-tuning tasks built from a deck of 37 37 pretrained nanochat models ( Karpathy, 2025 ) spanning depths { 8 , 12 , 16 } \\{8,12,16\\} and widths 128 128 to 2048 2048 , trained on 100 100 Lots-of-LoRAs sub-tasks ( Wang et al., 2022",
+      "url": "https://arxiv.org/html/2610.28072v1#bib.bib33"
+    },
+    {
+      "href": "#bib.bib14",
+      "text": "Hu et al., 2022",
+      "section": "4 Experimental Protocol",
+      "context": " models ( Karpathy, 2025 ) spanning depths { 8 , 12 , 16 } \\{8,12,16\\} and widths 128 128 to 2048 2048 , trained on 100 100 Lots-of-LoRAs sub-tasks ( Wang et al., 2022 ) , ranks r ∈ { 8 , 16 , 32 } r\\in\\{8,16,32\\} and batch sizes b ∈ { 8 , 16 , 32 } b\\in\\{8,16,32\\} . Conditioned on such a cell, the adapter scaling is drawn as a ∼ LogUniform ⁡ [ 8 , 32 ] a\\sim\\mathrm{LogUniform}[8,32] , the budget as T ∼ LogUniform ⁡ [ 100,300 ] T\\sim\\mathrm{LogUniform}[100,300] , and the seed ξ \\xi . We place adapters on the query and value ( Q Q and V V ) projections of every attention block ( Hu et al., 2022",
+      "url": "https://arxiv.org/html/2610.28072v1#bib.bib14"
+    },
+    {
+      "href": "#bib.bib14",
+      "text": "Hu et al., 2022",
+      "section": "4 Experimental Protocol",
+      "context": " { 8 , 16 , 32 } r\\in\\{8,16,32\\} and batch sizes b ∈ { 8 , 16 , 32 } b\\in\\{8,16,32\\} . Conditioned on such a cell, the adapter scaling is drawn as a ∼ LogUniform ⁡ [ 8 , 32 ] a\\sim\\mathrm{LogUniform}[8,32] , the budget as T ∼ LogUniform ⁡ [ 100,300 ] T\\sim\\mathrm{LogUniform}[100,300] , and the seed ξ \\xi . We place adapters on the query and value ( Q Q and V V ) projections of every attention block ( Hu et al., 2022 ) . We initialize A A with a random Gaussian distribution and B = 0 B=0 , so training starts from the pretrained model, and scale the update B ​ A BA by a / r a/r ( Hu et al., 2022",
+      "url": "https://arxiv.org/html/2610.28072v1#bib.bib14"
+    },
+    {
+      "href": "#A1",
+      "text": "A",
+      "section": "4 Experimental Protocol",
+      "context": "et as T ∼ LogUniform ⁡ [ 100,300 ] T\\sim\\mathrm{LogUniform}[100,300] , and the seed ξ \\xi . We place adapters on the query and value ( Q Q and V V ) projections of every attention block ( Hu et al., 2022 ) . We initialize A A with a random Gaussian distribution and B = 0 B=0 , so training starts from the pretrained model, and scale the update B ​ A BA by a / r a/r ( Hu et al., 2022 ) . MuPACE therefore must handle combinations of model scale, adapter capacity and scaling, downstream task, and training length. Full parameter ranges, the deck listing, and the sub-task ids are given in Appendix A",
+      "url": "https://arxiv.org/html/2610.28072v1#A1"
+    },
+    {
+      "href": "https://anonymous.4open.science/r/MUPACE-3F54/README.md",
+      "text": "https://anonymous.4open.science/r/MUPACE-3F54/README.md",
+      "section": "4 Experimental Protocol",
+      "context": "nd value ( Q Q and V V ) projections of every attention block ( Hu et al., 2022 ) . We initialize A A with a random Gaussian distribution and B = 0 B=0 , so training starts from the pretrained model, and scale the update B ​ A BA by a / r a/r ( Hu et al., 2022 ) . MuPACE therefore must handle combinations of model scale, adapter capacity and scaling, downstream task, and training length. Full parameter ranges, the deck listing, and the sub-task ids are given in Appendix A . We open-source our implementation to foster future research 1 1 1 https://anonymous.4open.science/r/MUPACE-3F54/README.md",
+      "url": "https://anonymous.4open.science/r/MUPACE-3F54/README.md"
+    },
+    {
+      "href": "#S3.E9",
+      "text": "9",
+      "section": "4.1 Architecture and Training",
+      "context": "MuPACE is an LSTM with a hidden width of 48 48 with one linear head per schedule parameter, ∼ 20 {\\sim}20 K meta-parameters in total. We estimate the meta-gradient with PES at σ = 0.01 \\sigma=0.01 over a truncation window of L = 50 L=50 inner steps, keeping N = 8 N=8 task instances in flight and averaging the estimate over them. We train on the objective in Equation 9",
+      "url": "https://arxiv.org/html/2610.28072v1#S3.E9"
+    },
+    {
+      "href": "#S3.SS4",
+      "text": "3.4",
+      "section": "4.1 Architecture and Training",
+      "context": " parameter, ∼ 20 {\\sim}20 K meta-parameters in total. We estimate the meta-gradient with PES at σ = 0.01 \\sigma=0.01 over a truncation window of L = 50 L=50 inner steps, keeping N = 8 N=8 task instances in flight and averaging the estimate over them. We train on the objective in Equation 9 with f = 0.2 f=0.2 , scoring the smoothed log validation loss over the last 80 % 80\\% of each episode to emphasize consistent performance beyond the initial loss drop. An EMA with decay 0.9 0.9 reduces batch noise. Each task runs for its budget T T and then is resampled. The scale augmentation of Section 3.4",
+      "url": "https://arxiv.org/html/2610.28072v1#S3.SS4"
+    },
+    {
+      "href": "#S3.E6",
+      "text": "6",
+      "section": "4.1 Architecture and Training",
+      "context": ".01 over a truncation window of L = 50 L=50 inner steps, keeping N = 8 N=8 task instances in flight and averaging the estimate over them. We train on the objective in Equation 9 with f = 0.2 f=0.2 , scoring the smoothed log validation loss over the last 80 % 80\\% of each episode to emphasize consistent performance beyond the initial loss drop. An EMA with decay 0.9 0.9 reduces batch noise. Each task runs for its budget T T and then is resampled. The scale augmentation of Section 3.4 draws κ ∼ LogUniform ⁡ [ 0.05 , 20 ] \\kappa\\sim\\mathrm{LogUniform}[0.05,20] . For the depth factor of Equation 6",
+      "url": "https://arxiv.org/html/2610.28072v1#S3.E6"
+    },
+    {
+      "href": "#A2",
+      "text": "B",
+      "section": "4.1 Architecture and Training",
+      "context": "s for its budget T T and then is resampled. The scale augmentation of Section 3.4 draws κ ∼ LogUniform ⁡ [ 0.05 , 20 ] \\kappa\\sim\\mathrm{LogUniform}[0.05,20] . For the depth factor of Equation 6 we set L ref = 8 ⋅ 16 ≈ 11.31 L_{\\mathrm{ref}}=\\sqrt{8\\cdot 16}\\approx 11.31 , the geometric centre of the meta-training depths. Meta-parameters are updated with AdamW at an outer learning rate of 10 − 3 10^{-3} on a cosine decay with gradient clipping. We train for 9000 9000 outer iterations, which takes roughly 72 72 hours on four NVIDIA H100 GPUs. Remaining hyperparameters are reported in Appendix B",
+      "url": "https://arxiv.org/html/2610.28072v1#A2"
+    },
+    {
+      "href": "#bib.bib21",
+      "text": "Loshchilov and Hutter, 2017",
+      "section": "4.2 Baselines",
+      "context": "We compare MuPACE against three fixed learning rate schedules, cosine ( Loshchilov and Hutter, 2017",
+      "url": "https://arxiv.org/html/2610.28072v1#bib.bib21"
+    },
+    {
+      "href": "#bib.bib22",
+      "text": "Hu et al., 2024",
+      "section": "4.2 Baselines",
+      "context": "We compare MuPACE against three fixed learning rate schedules, cosine ( Loshchilov and Hutter, 2017 ) , constant (warmup to a flat peak) and WSD ( Hu et al., 2024",
+      "url": "https://arxiv.org/html/2610.28072v1#bib.bib22"
+    },
+    {
+      "href": "#S5.SS0.SSS0.Px3",
+      "text": "Section   5",
+      "section": "4.2 Baselines",
+      "context": "We compare MuPACE against three fixed learning rate schedules, cosine ( Loshchilov and Hutter, 2017 ) , constant (warmup to a flat peak) and WSD ( Hu et al., 2024 ) , which we run at a default peak of 10 − 3 10^{-3} , matching MuPACE’s default schedule scale for λ 1 0 \\lambda^{0}_{1} (H1 in Section 5",
+      "url": "https://arxiv.org/html/2610.28072v1#S5.SS0.SSS0.Px3"
+    },
+    {
+      "href": "#S5.SS0.SSS0.Px3",
+      "text": "Section   5",
+      "section": "4.2 Baselines",
+      "context": "We compare MuPACE against three fixed learning rate schedules, cosine ( Loshchilov and Hutter, 2017 ) , constant (warmup to a flat peak) and WSD ( Hu et al., 2024 ) , which we run at a default peak of 10 − 3 10^{-3} , matching MuPACE’s default schedule scale for λ 1 0 \\lambda^{0}_{1} (H1 in Section 5 ) and with the peak tuned per task by validation loss (H2 in Section 5",
+      "url": "https://arxiv.org/html/2610.28072v1#S5.SS0.SSS0.Px3"
+    },
+    {
+      "href": "#S5.SS0.SSS0.Px3",
+      "text": "Section   5",
+      "section": "4.2 Baselines",
+      "context": "We compare MuPACE against three fixed learning rate schedules, cosine ( Loshchilov and Hutter, 2017 ) , constant (warmup to a flat peak) and WSD ( Hu et al., 2024 ) , which we run at a default peak of 10 − 3 10^{-3} , matching MuPACE’s default schedule scale for λ 1 0 \\lambda^{0}_{1} (H1 in Section 5 ) and with the peak tuned per task by validation loss (H2 in Section 5 ). In the out-of-distribution setting (H3 in Section 5",
+      "url": "https://arxiv.org/html/2610.28072v1#S5.SS0.SSS0.Px3"
+    },
+    {
+      "href": "#bib.bib28",
+      "text": "Baydin et al., 2018",
+      "section": "4.2 Baselines",
+      "context": "We compare MuPACE against three fixed learning rate schedules, cosine ( Loshchilov and Hutter, 2017 ) , constant (warmup to a flat peak) and WSD ( Hu et al., 2024 ) , which we run at a default peak of 10 − 3 10^{-3} , matching MuPACE’s default schedule scale for λ 1 0 \\lambda^{0}_{1} (H1 in Section 5 ) and with the peak tuned per task by validation loss (H2 in Section 5 ). In the out-of-distribution setting (H3 in Section 5 ) we add Hypergradient Descent ( Baydin et al., 2018",
+      "url": "https://arxiv.org/html/2610.28072v1#bib.bib28"
+    },
+    {
+      "href": "#S3.E6",
+      "text": "6",
+      "section": "4.2 Baselines",
+      "context": "tter, 2017 ) , constant (warmup to a flat peak) and WSD ( Hu et al., 2024 ) , which we run at a default peak of 10 − 3 10^{-3} , matching MuPACE’s default schedule scale for λ 1 0 \\lambda^{0}_{1} (H1 in Section 5 ) and with the peak tuned per task by validation loss (H2 in Section 5 ). In the out-of-distribution setting (H3 in Section 5 ) we add Hypergradient Descent ( Baydin et al., 2018 ) , which adapts the learning rate online from the dot product of consecutive gradients and, like MuPACE, needs no per-task sweep. We run it as published and with the depth- μ \\mu P post-scaling of Equation 6",
+      "url": "https://arxiv.org/html/2610.28072v1#S3.E6"
+    },
+    {
+      "href": "#bib.bib32",
+      "text": "Yang et al., 2025",
+      "section": "Out-of-distribution transfer.",
+      "context": "We transfer MuPACE one-shot to Qwen3-32B ( Yang et al., 2025",
+      "url": "https://arxiv.org/html/2610.28072v1#bib.bib32"
+    },
+    {
+      "href": "#bib.bib9",
+      "text": "Qwen Team, 2026",
+      "section": "Out-of-distribution transfer.",
+      "context": "We transfer MuPACE one-shot to Qwen3-32B ( Yang et al., 2025 ) and Qwen3.8-27B ( Qwen Team, 2026",
+      "url": "https://arxiv.org/html/2610.28072v1#bib.bib9"
+    },
+    {
+      "href": "#A1.SS1",
+      "text": "Section   A.1",
+      "section": "Out-of-distribution transfer.",
+      "context": "We transfer MuPACE one-shot to Qwen3-32B ( Yang et al., 2025 ) and Qwen3.8-27B ( Qwen Team, 2026 ) . Both have 64 64 layers and width 5120 5120 , against at most 16 16 layers and width 2048 2048 in the meta-training deck. Further, Qwen3.8-27B adds a hybrid Gated DeltaNet linear-attention architecture the policy never saw. Adapters use r = 8 r=8 , a = 16 a=16 and T = 200 T=200 steps on eight unseen datasets spanning instruction following, math, code, summarization, question answering and translation ( Section A.1",
+      "url": "https://arxiv.org/html/2610.28072v1#A1.SS1"
+    },
+    {
+      "href": "#bib.bib8",
+      "text": "Dixon and Mood, 1946",
+      "section": "H1: Meta-learned schedulers can outperform standard default learning rate schedules on in-distribution fine-tuning problems.",
+      "context": "By default, MuPACE learns a bounded correction to a cosine learning-rate schedule, where the base schedule is scaled to have a peak learning rate of 10 − 3 10^{-3} . H1 therefore tests the value of this learned correction against cosine, WSD, and constant schedules at that same fixed peak. Win rates are tested against 50% using two-sided exact paired sign tests ( Dixon and Mood, 1946",
+      "url": "https://arxiv.org/html/2610.28072v1#bib.bib8"
+    },
+    {
+      "href": "#bib.bib7",
+      "text": "Holm, 1979",
+      "section": "H1: Meta-learned schedulers can outperform standard default learning rate schedules on in-distribution fine-tuning problems.",
+      "context": "By default, MuPACE learns a bounded correction to a cosine learning-rate schedule, where the base schedule is scaled to have a peak learning rate of 10 − 3 10^{-3} . H1 therefore tests the value of this learned correction against cosine, WSD, and constant schedules at that same fixed peak. Win rates are tested against 50% using two-sided exact paired sign tests ( Dixon and Mood, 1946 ) with Holm correction ( Holm, 1979",
+      "url": "https://arxiv.org/html/2610.28072v1#bib.bib7"
+    },
+    {
+      "href": "#S5.F2",
+      "text": "2",
+      "section": "H1: Meta-learned schedulers can outperform standard default learning rate schedules on in-distribution fine-tuning problems.",
+      "context": "The learned scheduler achieves lower test loss on 78%, 66%, and 64% of draws against cosine, WSD, and constant, respectively, all significant after correction (Figure 2",
+      "url": "https://arxiv.org/html/2610.28072v1#S5.F2"
+    },
+    {
+      "href": "#S5.F5",
+      "text": "5",
+      "section": "H1: Meta-learned schedulers can outperform standard default learning rate schedules on in-distribution fine-tuning problems.",
+      "context": "%, 66%, and 64% of draws against cosine, WSD, and constant, respectively, all significant after correction (Figure 2 ). Median improvements are 2–4% across the three comparisons. A further check against cosine at its best global scale ( 2.154 × 10 − 3 2.154\\times 10^{-3} ) 2 2 2 39 of 64 draws, sign test p = 0.10. gives a smaller, non-significant win-rate advantage, while the learned scheduler retains a median reduction of about 4%. Overall, the learned correction provides gains beyond a strong fixed default by adapting the schedule to the task and to the observed training trajectory (Figure 5",
+      "url": "https://arxiv.org/html/2610.28072v1#S5.F5"
+    },
+    {
+      "href": "#S5.F3",
+      "text": "3",
+      "section": "H2: Meta-learned schedulers can eliminate per-task learning rate search while retaining competitive performance on in-distribution fine-tuning problems.",
+      "context": "Figure 3",
+      "url": "https://arxiv.org/html/2610.28072v1#S5.F3"
+    },
+    {
+      "href": "#S5.F5",
+      "text": "5",
+      "section": "H2: Meta-learned schedulers can eliminate per-task learning rate search while retaining competitive performance on in-distribution fine-tuning problems.",
+      "context": "% 50\\% . Per-task tuning matters here as the best peak varies by roughly a factor of five across the baselines. To quantify how much of that tuning the learned scheduler makes unnecessary, we take the draws where tuning lowers test loss by at least 0.5 % 0.5\\% over the default and measure the fraction of that gain the learned scheduler achieves in one run, ( L default − L learned ) / ( L default − L tuned ) (L_{\\mathrm{default}}-L_{\\mathrm{learned}})/(L_{\\mathrm{default}}-L_{\\mathrm{tuned}}) . The median recovery is 80 % 80\\% , 83 % 83\\% and 78 % 78\\% against cosine, WSD and constant (Figure 5",
+      "url": "https://arxiv.org/html/2610.28072v1#S5.F5"
+    },
+    {
+      "href": "#S5.F6",
+      "text": "6",
+      "section": "H3: Meta-learned schedulers can transfer one-shot to out-of-distribution fine-tuning problems, avoiding per-task learning rate search while retaining competitive performance.",
+      "context": "Figure 6",
+      "url": "https://arxiv.org/html/2610.28072v1#S5.F6"
+    },
+    {
+      "href": "#A3",
+      "text": "C",
+      "section": "H3: Meta-learned schedulers can transfer one-shot to out-of-distribution fine-tuning problems, avoiding per-task learning rate search while retaining competitive performance.",
+      "context": "both unseen during policy training, comparing a single MuPACE run against fixed schedules with the peak tuned by a five-trial sweep on each dataset. The tuned baselines reach slightly lower test loss, with median relative differences of 1.13 % 1.13\\% – 2.43 % 2.43\\% on Qwen3-32B and 2.59 % 2.59\\% – 3.02 % 3.02\\% on Qwen3.8-27B, and MuPACE wins on 2 2 of 8 8 datasets per model. This gap is the price of one run versus five. Given only one trial, the fixed schedules perform worse than MuPACE by 14 % 14\\% – 18 % 18\\% on average and need two to three trials to reach the same performance (Appendix C",
+      "url": "https://arxiv.org/html/2610.28072v1#A3"
+    },
+    {
+      "href": "#S3.F1",
+      "text": "Figure   1",
+      "section": "Design Ablations",
+      "context": "Effect of meta-training. We compare against the same scheduler architecture with no meta-training, fixing all output heads at zero so it follows the default cosine schedule from Figure 1",
+      "url": "https://arxiv.org/html/2610.28072v1#S3.F1"
+    },
+    {
+      "href": "#A4",
+      "text": "D",
+      "section": "Design Ablations",
+      "context": "Effect of meta-training. We compare against the same scheduler architecture with no meta-training, fixing all output heads at zero so it follows the default cosine schedule from Figure 1 . Meta-training lowers median in-distribution test loss and improves performance on Qwen3-32B (Appendix D",
+      "url": "https://arxiv.org/html/2610.28072v1#A4"
+    },
+    {
+      "href": "#S3.E4",
+      "text": "Equation   4",
+      "section": "Design Ablations",
+      "context": "Analytic schedule parameterization. We ablate the analytic schedule family by replacing the five heads defining Equation 4",
+      "url": "https://arxiv.org/html/2610.28072v1#S3.E4"
+    },
+    {
+      "href": "#A5",
+      "text": "E",
+      "section": "Design Ablations",
+      "context": "Analytic schedule parameterization. We ablate the analytic schedule family by replacing the five heads defining Equation 4 with a single head that predicts the learning rate directly. Direct prediction has similar typical in-distribution performance but a heavier tail of poor runs and no wins against the baselines in the OOD setting, suggesting that the analytic parameterization primarily improves robustness (Appendix E",
+      "url": "https://arxiv.org/html/2610.28072v1#A5"
+    },
+    {
+      "href": "#S3.E5",
+      "text": "Equation   5",
+      "section": "Design Ablations",
+      "context": "Shape normalization. We remove the shape normalization of Equation 5",
+      "url": "https://arxiv.org/html/2610.28072v1#S3.E5"
+    },
+    {
+      "href": "#A6",
+      "text": "F",
+      "section": "Design Ablations",
+      "context": "Shape normalization. We remove the shape normalization of Equation 5 , so the shape parameters can also change the schedule’s overall magnitude. This has no in-distribution effect, and on Qwen3-32B normalization is better on five of eight datasets, a possible but not significant transfer benefit (Appendix F",
+      "url": "https://arxiv.org/html/2610.28072v1#A6"
+    },
+    {
+      "href": "#S3.E6",
+      "text": "Equation   6",
+      "section": "Design Ablations",
+      "context": "Depth-scaled baseline (fixed) schedules. We apply the same depth-dependent scaling Equation 6",
+      "url": "https://arxiv.org/html/2610.28072v1#S3.E6"
+    },
+    {
+      "href": "#A7",
+      "text": "G",
+      "section": "Design Ablations",
+      "context": "Depth-scaled baseline (fixed) schedules. We apply the same depth-dependent scaling Equation 6 to each fixed-schedule baseline at (i) its default peak and (ii) its best peak from an in-distribution sweep. On both models, MuPACE achieves lower test loss in nearly all comparisons. These results suggest that MuPACE improves beyond transferring depth-scaled schedules, with in-distribution tuned peaks (Appendix G",
+      "url": "https://arxiv.org/html/2610.28072v1#A7"
+    },
+    {
+      "href": "#A7.SS2",
+      "text": "G.2",
+      "section": "Design Ablations",
+      "context": "Depth-dependent post-scaling. We meta-train a variant without depth-dependent post-scaling. In-distribution performance is similar, but scaling improves test loss on all eight Qwen3-32B datasets, suggesting a benefit for one-shot transfer to larger models (Appendix G.2",
+      "url": "https://arxiv.org/html/2610.28072v1#A7.SS2"
+    },
+    {
+      "href": "https://anonymous.4open.science/r/MUPACE-3F54/README.md",
+      "text": "https://anonymous.4open.science/r/MUPACE-3F54/README.md",
+      "section": "Reproducibility statement",
+      "context": "We open source our code for meta-training and evaluation, together with the meta-trained MuPACE checkpoint, at https://anonymous.4open.science/r/MUPACE-3F54/README.md",
+      "url": "https://anonymous.4open.science/r/MUPACE-3F54/README.md"
+    },
+    {
+      "href": "#bib.bib32",
+      "text": "Yang et al., 2025",
+      "section": "Reproducibility statement",
+      "context": "We open source our code for meta-training and evaluation, together with the meta-trained MuPACE checkpoint, at https://anonymous.4open.science/r/MUPACE-3F54/README.md . The out-of-distribution base models (Qwen3-32B ( Yang et al., 2025",
+      "url": "https://arxiv.org/html/2610.28072v1#bib.bib32"
+    },
+    {
+      "href": "#bib.bib9",
+      "text": "Qwen Team, 2026",
+      "section": "Reproducibility statement",
+      "context": "We open source our code for meta-training and evaluation, together with the meta-trained MuPACE checkpoint, at https://anonymous.4open.science/r/MUPACE-3F54/README.md . The out-of-distribution base models (Qwen3-32B ( Yang et al., 2025 ) and Qwen3.8-27B ( Qwen Team, 2026",
+      "url": "https://arxiv.org/html/2610.28072v1#bib.bib9"
+    },
+    {
+      "href": "#bib.bib26",
+      "text": "Karpathy, 2025",
+      "section": "Reproducibility statement",
+      "context": "We open source our code for meta-training and evaluation, together with the meta-trained MuPACE checkpoint, at https://anonymous.4open.science/r/MUPACE-3F54/README.md . The out-of-distribution base models (Qwen3-32B ( Yang et al., 2025 ) and Qwen3.8-27B ( Qwen Team, 2026 ) ) are publicly available, and the nanochat models used for meta-training can be retrained with the open-source nanochat implementation ( Karpathy, 2025",
+      "url": "https://arxiv.org/html/2610.28072v1#bib.bib26"
+    },
+    {
+      "href": "#bib.bib33",
+      "text": "Wang et al., 2022",
+      "section": "Reproducibility statement",
+      "context": "We open source our code for meta-training and evaluation, together with the meta-trained MuPACE checkpoint, at https://anonymous.4open.science/r/MUPACE-3F54/README.md . The out-of-distribution base models (Qwen3-32B ( Yang et al., 2025 ) and Qwen3.8-27B ( Qwen Team, 2026 ) ) are publicly available, and the nanochat models used for meta-training can be retrained with the open-source nanochat implementation ( Karpathy, 2025 ) . All datasets are publicly available ( ( Wang et al., 2022",
+      "url": "https://arxiv.org/html/2610.28072v1#bib.bib33"
+    },
+    {
+      "href": "#A1.SS1",
+      "text": "Section   A.1",
+      "section": "Reproducibility statement",
+      "context": "We open source our code for meta-training and evaluation, together with the meta-trained MuPACE checkpoint, at https://anonymous.4open.science/r/MUPACE-3F54/README.md . The out-of-distribution base models (Qwen3-32B ( Yang et al., 2025 ) and Qwen3.8-27B ( Qwen Team, 2026 ) ) are publicly available, and the nanochat models used for meta-training can be retrained with the open-source nanochat implementation ( Karpathy, 2025 ) . All datasets are publicly available ( ( Wang et al., 2022 ) ; Section A.1",
+      "url": "https://arxiv.org/html/2610.28072v1#A1.SS1"
+    },
+    {
+      "href": "#S3",
+      "text": "Section   3",
+      "section": "Reproducibility statement",
+      "context": "We open source our code for meta-training and evaluation, together with the meta-trained MuPACE checkpoint, at https://anonymous.4open.science/r/MUPACE-3F54/README.md . The out-of-distribution base models (Qwen3-32B ( Yang et al., 2025 ) and Qwen3.8-27B ( Qwen Team, 2026 ) ) are publicly available, and the nanochat models used for meta-training can be retrained with the open-source nanochat implementation ( Karpathy, 2025 ) . All datasets are publicly available ( ( Wang et al., 2022 ) ; Section A.1 ). Section 3",
+      "url": "https://arxiv.org/html/2610.28072v1#S3"
+    },
+    {
+      "href": "#S3.E4",
+      "text": "4",
+      "section": "Reproducibility statement",
+      "context": "We open source our code for meta-training and evaluation, together with the meta-trained MuPACE checkpoint, at https://anonymous.4open.science/r/MUPACE-3F54/README.md . The out-of-distribution base models (Qwen3-32B ( Yang et al., 2025 ) and Qwen3.8-27B ( Qwen Team, 2026 ) ) are publicly available, and the nanochat models used for meta-training can be retrained with the open-source nanochat implementation ( Karpathy, 2025 ) . All datasets are publicly available ( ( Wang et al., 2022 ) ; Section A.1 ). Section 3 fully specifies the method, including the analytic schedule family (Equations 4",
+      "url": "https://arxiv.org/html/2610.28072v1#S3.E4"
+    },
+    {
+      "href": "#S3.E6",
+      "text": "6",
+      "section": "Reproducibility statement",
+      "context": "We open source our code for meta-training and evaluation, together with the meta-trained MuPACE checkpoint, at https://anonymous.4open.science/r/MUPACE-3F54/README.md . The out-of-distribution base models (Qwen3-32B ( Yang et al., 2025 ) and Qwen3.8-27B ( Qwen Team, 2026 ) ) are publicly available, and the nanochat models used for meta-training can be retrained with the open-source nanochat implementation ( Karpathy, 2025 ) . All datasets are publicly available ( ( Wang et al., 2022 ) ; Section A.1 ). Section 3 fully specifies the method, including the analytic schedule family (Equations 4 – 6",
+      "url": "https://arxiv.org/html/2610.28072v1#S3.E6"
+    },
+    {
+      "href": "#S3.SS3",
+      "text": "Section   3.3",
+      "section": "Reproducibility statement",
+      "context": "ation, together with the meta-trained MuPACE checkpoint, at https://anonymous.4open.science/r/MUPACE-3F54/README.md . The out-of-distribution base models (Qwen3-32B ( Yang et al., 2025 ) and Qwen3.8-27B ( Qwen Team, 2026 ) ) are publicly available, and the nanochat models used for meta-training can be retrained with the open-source nanochat implementation ( Karpathy, 2025 ) . All datasets are publicly available ( ( Wang et al., 2022 ) ; Section A.1 ). Section 3 fully specifies the method, including the analytic schedule family (Equations 4 – 6 ), the policy and its input features ( Section 3.3",
+      "url": "https://arxiv.org/html/2610.28072v1#S3.SS3"
+    },
+    {
+      "href": "#S3.SS4",
+      "text": "Section   3.4",
+      "section": "Reproducibility statement",
+      "context": "ymous.4open.science/r/MUPACE-3F54/README.md . The out-of-distribution base models (Qwen3-32B ( Yang et al., 2025 ) and Qwen3.8-27B ( Qwen Team, 2026 ) ) are publicly available, and the nanochat models used for meta-training can be retrained with the open-source nanochat implementation ( Karpathy, 2025 ) . All datasets are publicly available ( ( Wang et al., 2022 ) ; Section A.1 ). Section 3 fully specifies the method, including the analytic schedule family (Equations 4 – 6 ), the policy and its input features ( Section 3.3 ), and the meta-training objective and gradient estimator ( Section 3.4",
+      "url": "https://arxiv.org/html/2610.28072v1#S3.SS4"
+    },
+    {
+      "href": "#S4",
+      "text": "Section   4",
+      "section": "Reproducibility statement",
+      "context": "cience/r/MUPACE-3F54/README.md . The out-of-distribution base models (Qwen3-32B ( Yang et al., 2025 ) and Qwen3.8-27B ( Qwen Team, 2026 ) ) are publicly available, and the nanochat models used for meta-training can be retrained with the open-source nanochat implementation ( Karpathy, 2025 ) . All datasets are publicly available ( ( Wang et al., 2022 ) ; Section A.1 ). Section 3 fully specifies the method, including the analytic schedule family (Equations 4 – 6 ), the policy and its input features ( Section 3.3 ), and the meta-training objective and gradient estimator ( Section 3.4 ). Section 4",
+      "url": "https://arxiv.org/html/2610.28072v1#S4"
+    },
+    {
+      "href": "#S4.SS1",
+      "text": "Section   4.1",
+      "section": "Reproducibility statement",
+      "context": "d Qwen3.8-27B ( Qwen Team, 2026 ) ) are publicly available, and the nanochat models used for meta-training can be retrained with the open-source nanochat implementation ( Karpathy, 2025 ) . All datasets are publicly available ( ( Wang et al., 2022 ) ; Section A.1 ). Section 3 fully specifies the method, including the analytic schedule family (Equations 4 – 6 ), the policy and its input features ( Section 3.3 ), and the meta-training objective and gradient estimator ( Section 3.4 ). Section 4 describes the experimental protocol, including the meta-training setup and compute budget ( Section 4.1",
+      "url": "https://arxiv.org/html/2610.28072v1#S4.SS1"
+    },
+    {
+      "href": "#S4.SS3",
+      "text": "Section   4.3",
+      "section": "Reproducibility statement",
+      "context": "nochat models used for meta-training can be retrained with the open-source nanochat implementation ( Karpathy, 2025 ) . All datasets are publicly available ( ( Wang et al., 2022 ) ; Section A.1 ). Section 3 fully specifies the method, including the analytic schedule family (Equations 4 – 6 ), the policy and its input features ( Section 3.3 ), and the meta-training objective and gradient estimator ( Section 3.4 ). Section 4 describes the experimental protocol, including the meta-training setup and compute budget ( Section 4.1 ) and the evaluation and checkpoint-selection procedure ( Section 4.3",
+      "url": "https://arxiv.org/html/2610.28072v1#S4.SS3"
+    },
+    {
+      "href": "#A1",
+      "text": "Appendix   A",
+      "section": "Reproducibility statement",
+      "context": "used for meta-training can be retrained with the open-source nanochat implementation ( Karpathy, 2025 ) . All datasets are publicly available ( ( Wang et al., 2022 ) ; Section A.1 ). Section 3 fully specifies the method, including the analytic schedule family (Equations 4 – 6 ), the policy and its input features ( Section 3.3 ), and the meta-training objective and gradient estimator ( Section 3.4 ). Section 4 describes the experimental protocol, including the meta-training setup and compute budget ( Section 4.1 ) and the evaluation and checkpoint-selection procedure ( Section 4.3 ). Appendix A",
+      "url": "https://arxiv.org/html/2610.28072v1#A1"
+    },
+    {
+      "href": "#A1.T2",
+      "text": "Table   2",
+      "section": "Reproducibility statement",
+      "context": "thy, 2025 ) . All datasets are publicly available ( ( Wang et al., 2022 ) ; Section A.1 ). Section 3 fully specifies the method, including the analytic schedule family (Equations 4 – 6 ), the policy and its input features ( Section 3.3 ), and the meta-training objective and gradient estimator ( Section 3.4 ). Section 4 describes the experimental protocol, including the meta-training setup and compute budget ( Section 4.1 ) and the evaluation and checkpoint-selection procedure ( Section 4.3 ). Appendix A lists the complete meta-training distribution, including all model configurations ( Table 2",
+      "url": "https://arxiv.org/html/2610.28072v1#A1.T2"
+    },
+    {
+      "href": "#A1.T3",
+      "text": "Table   3",
+      "section": "Reproducibility statement",
+      "context": "cly available ( ( Wang et al., 2022 ) ; Section A.1 ). Section 3 fully specifies the method, including the analytic schedule family (Equations 4 – 6 ), the policy and its input features ( Section 3.3 ), and the meta-training objective and gradient estimator ( Section 3.4 ). Section 4 describes the experimental protocol, including the meta-training setup and compute budget ( Section 4.1 ) and the evaluation and checkpoint-selection procedure ( Section 4.3 ). Appendix A lists the complete meta-training distribution, including all model configurations ( Table 2 ) and dataset identifiers ( Table 3",
+      "url": "https://arxiv.org/html/2610.28072v1#A1.T3"
+    },
+    {
+      "href": "#A2",
+      "text": "Appendix   B",
+      "section": "Reproducibility statement",
+      "context": "Wang et al., 2022 ) ; Section A.1 ). Section 3 fully specifies the method, including the analytic schedule family (Equations 4 – 6 ), the policy and its input features ( Section 3.3 ), and the meta-training objective and gradient estimator ( Section 3.4 ). Section 4 describes the experimental protocol, including the meta-training setup and compute budget ( Section 4.1 ) and the evaluation and checkpoint-selection procedure ( Section 4.3 ). Appendix A lists the complete meta-training distribution, including all model configurations ( Table 2 ) and dataset identifiers ( Table 3 ), and Appendix B",
+      "url": "https://arxiv.org/html/2610.28072v1#A2"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px3.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Andrychowicz et al. (2016) M. Andrychowicz, M. Denil, S. Gomez, M. W. Hoffman, D. Pfau, T. Schaul, B. Shillingford, and N. De Freitas Learning to learn by gradient descent by gradient descent . Advances in neural information processing systems 29 . Cited by: §2",
+      "url": "https://arxiv.org/html/2610.28072v1#S2.SS0.SSS0.Px3.p1.1"
+    },
+    {
+      "href": "#A1.T4.2.4.1",
+      "text": "Table 4",
+      "section": "References",
+      "context": "Austin et al. (2021) J. Austin, A. Odena, M. Nye, M. Bosma, H. Michalewski, D. Dohan, E. Jiang, C. Cai, M. Terry, Q. Le, et al. Program synthesis with large language models . arXiv preprint arXiv:2108.07732 . Cited by: Table 4",
+      "url": "https://arxiv.org/html/2610.28072v1#A1.T4.2.4.1"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px2.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Baydin et al. (2018) A. G. Baydin, R. Cornish, D. M. Rubio, M. Schmidt, and F. Wood Online learning rate adaptation with hypergradient descent . In International Conference on Learning Representations , Cited by: §2",
+      "url": "https://arxiv.org/html/2610.28072v1#S2.SS0.SSS0.Px2.p1.1"
+    },
+    {
+      "href": "#S4.SS2.p1.1",
+      "text": "§4.2",
+      "section": "References",
+      "context": "Baydin et al. (2018) A. G. Baydin, R. Cornish, D. M. Rubio, M. Schmidt, and F. Wood Online learning rate adaptation with hypergradient descent . In International Conference on Learning Representations , Cited by: §2 , §4.2",
+      "url": "https://arxiv.org/html/2610.28072v1#S4.SS2.p1.1"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px1.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Bergsma et al. (2025) S. Bergsma, N. Dey, G. Gosal, G. Gray, D. Soboleva, and J. Hestness Straight to zero: why linearly decaying the learning rate to zero works best for llms . In International Conference on Learning Representations , Vol. 2025 , pp. 22102–22133 . Cited by: §2",
+      "url": "https://arxiv.org/html/2610.28072v1#S2.SS0.SSS0.Px1.p1.1"
+    },
+    {
+      "href": "#S1.p2.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Bernstein and Newhouse (2024) J. Bernstein and L. Newhouse Old optimizer, new norm: an anthology . In OPT 2024: Optimization for Machine Learning , Cited by: §1",
+      "url": "https://arxiv.org/html/2610.28072v1#S1.p2.1"
+    },
+    {
+      "href": "#S1.p4.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Biderman et al. (2024) D. Biderman, J. Portes, J. J. G. Ortiz, M. Paul, P. Greengard, C. Jennings, D. King, S. Havens, V. Chiley, J. Frankle, C. Blakeney, and J. P. Cunningham LoRA learns less and forgets less . Transactions on Machine Learning Research . Note: Featured Certification External Links: ISSN 2835-8856 Cited by: §1",
+      "url": "https://arxiv.org/html/2610.28072v1#S1.p4.1"
+    },
+    {
+      "href": "http://www.aclweb.org/anthology/W/W14/W14-3302",
+      "text": "Link",
+      "section": "References",
+      "context": "Bojar et al. (2014) O. Bojar, C. Buck, C. Federmann, B. Haddow, P. Koehn, J. Leveling, C. Monz, P. Pecina, M. Post, H. Saint-Amand, R. Soricut, L. Specia, and A. s. Tamchyna Findings of the 2014 workshop on statistical machine translation . In Proceedings of the Ninth Workshop on Statistical Machine Translation , Baltimore, Maryland, USA , pp. 12–58 . External Links: Link",
+      "url": "http://www.aclweb.org/anthology/W/W14/W14-3302"
+    },
+    {
+      "href": "#A1.T4.2.9.1",
+      "text": "Table 4",
+      "section": "References",
+      "context": "Bojar et al. (2014) O. Bojar, C. Buck, C. Federmann, B. Haddow, P. Koehn, J. Leveling, C. Monz, P. Pecina, M. Post, H. Saint-Amand, R. Soricut, L. Specia, and A. s. Tamchyna Findings of the 2014 workshop on statistical machine translation . In Proceedings of the Ninth Workshop on Statistical Machine Translation , Baltimore, Maryland, USA , pp. 12–58 . External Links: Link Cited by: Table 4",
+      "url": "https://arxiv.org/html/2610.28072v1#A1.T4.2.9.1"
+    },
+    {
+      "href": "#S1.p5.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Bommasani et al. (2021) R. Bommasani, D. A. Hudson, E. Adeli, R. Altman, S. Arora, S. von Arx, M. S. Bernstein, J. Bohg, A. Bosselut, E. Brunskill, et al. On the opportunities and risks of foundation models . arXiv preprint arXiv:2108.07258 . Cited by: §1",
+      "url": "https://arxiv.org/html/2610.28072v1#S1.p5.1"
+    },
+    {
+      "href": "#A1.T4.2.8.1",
+      "text": "Table 4",
+      "section": "References",
+      "context": "Clark et al. (2019) C. Clark, K. Lee, M. Chang, T. Kwiatkowski, M. Collins, and K. Toutanova BoolQ: exploring the surprising difficulty of natural yes/no questions . In NAACL , Cited by: Table 4",
+      "url": "https://arxiv.org/html/2610.28072v1#A1.T4.2.8.1"
+    },
+    {
+      "href": "#A1.T4.2.3.1",
+      "text": "Table 4",
+      "section": "References",
+      "context": "Cobbe et al. (2021) K. Cobbe, V. Kosaraju, M. Bavarian, M. Chen, H. Jun, L. Kaiser, M. Plappert, J. Tworek, J. Hilton, R. Nakano, C. Hesse, and J. Schulman Training verifiers to solve math word problems . arXiv preprint arXiv:2110.14168 . Cited by: Table 4",
+      "url": "https://arxiv.org/html/2610.28072v1#A1.T4.2.3.1"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px2.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Defazio and Mishchenko (2023) A. Defazio and K. Mishchenko Learning-rate-free learning by d-adaptation . In International conference on machine learning , pp. 7449–7479 . Cited by: §2",
+      "url": "https://arxiv.org/html/2610.28072v1#S2.SS0.SSS0.Px2.p1.1"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px1.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Defazio et al. (2024) A. Defazio, X. Yang, H. Mehta, K. Mishchenko, A. Khaled, and A. Cutkosky The road less scheduled . Advances in Neural Information Processing Systems 37 , pp. 9974–10007 . Cited by: §2",
+      "url": "https://arxiv.org/html/2610.28072v1#S2.SS0.SSS0.Px1.p1.1"
+    },
+    {
+      "href": "https://dx.doi.org/10.1080/01621459.1946.10501898",
+      "text": "Document",
+      "section": "References",
+      "context": "Dixon and Mood (1946) W. J. Dixon and A. M. Mood The statistical sign test . Journal of the American Statistical Association 41 ( 236 ), pp. 557–566 . External Links: Document",
+      "url": "https://dx.doi.org/10.1080/01621459.1946.10501898"
+    },
+    {
+      "href": "#S5.SS0.SSS0.Px1.p1.1",
+      "text": "§5",
+      "section": "References",
+      "context": "Dixon and Mood (1946) W. J. Dixon and A. M. Mood The statistical sign test . Journal of the American Statistical Association 41 ( 236 ), pp. 557–566 . External Links: Document Cited by: §5",
+      "url": "https://arxiv.org/html/2610.28072v1#S5.SS0.SSS0.Px1.p1.1"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px1.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Everett et al. (2024) K. Everett, L. Xiao, M. Wortsman, A. A. Alemi, R. Novak, P. J. Liu, I. Gur, J. Sohl-Dickstein, L. P. Kaelbling, J. Lee, and J. Pennington Scaling exponents across parameterizations and optimizers . In Proceedings of the 41st International Conference on Machine Learning , ICML’24 . Cited by: §2",
+      "url": "https://arxiv.org/html/2610.28072v1#S2.SS0.SSS0.Px1.p1.1"
+    },
+    {
+      "href": "https://www.aclweb.org/anthology/D19-5409",
+      "text": "Link",
+      "section": "References",
+      "context": "Gliwa et al. (2019) B. Gliwa, I. Mochol, M. Biesek, and A. Wawer SAMSum corpus: a human-annotated dialogue dataset for abstractive summarization . In Proceedings of the 2nd Workshop on New Frontiers in Summarization , Hong Kong, China , pp. 70–79 . External Links: Link",
+      "url": "https://www.aclweb.org/anthology/D19-5409"
+    },
+    {
+      "href": "https://dx.doi.org/10.18653/v1/D19-5409",
+      "text": "Document",
+      "section": "References",
+      "context": "Gliwa et al. (2019) B. Gliwa, I. Mochol, M. Biesek, and A. Wawer SAMSum corpus: a human-annotated dialogue dataset for abstractive summarization . In Proceedings of the 2nd Workshop on New Frontiers in Summarization , Hong Kong, China , pp. 70–79 . External Links: Link , Document",
+      "url": "https://dx.doi.org/10.18653/v1/D19-5409"
+    },
+    {
+      "href": "#A1.T4.2.5.1",
+      "text": "Table 4",
+      "section": "References",
+      "context": "Gliwa et al. (2019) B. Gliwa, I. Mochol, M. Biesek, and A. Wawer SAMSum corpus: a human-annotated dialogue dataset for abstractive summarization . In Proceedings of the 2nd Workshop on New Frontiers in Summarization , Hong Kong, China , pp. 70–79 . External Links: Link , Document Cited by: Table 4",
+      "url": "https://arxiv.org/html/2610.28072v1#A1.T4.2.5.1"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Gupta et al. (2018) V. Gupta, T. Koren, and Y. Singer Shampoo: preconditioned stochastic tensor optimization . In Proceedings of the 35th International Conference on Machine Learning , Proceedings of Machine Learning Research , Vol. 80 , pp. 1842–1850 . Cited by: §1",
+      "url": "https://arxiv.org/html/2610.28072v1#S1.p1.1"
+    },
+    {
+      "href": "#S5.SS0.SSS0.Px1.p1.1",
+      "text": "§5",
+      "section": "References",
+      "context": "Holm (1979) S. Holm A simple sequentially rejective multiple test procedure . Scandinavian Journal of Statistics 6 , pp. 65–70 . Cited by: §5",
+      "url": "https://arxiv.org/html/2610.28072v1#S5.SS0.SSS0.Px1.p1.1"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Hu et al. (2022) E. J. Hu, yelong shen, P. Wallis, Z. Allen-Zhu, Y. Li, S. Wang, L. Wang, and W. Chen LoRA: low-rank adaptation of large language models . In International Conference on Learning Representations , Cited by: §1",
+      "url": "https://arxiv.org/html/2610.28072v1#S1.p1.1"
+    },
+    {
+      "href": "#S4.p1.1",
+      "text": "§4",
+      "section": "References",
+      "context": "Hu et al. (2022) E. J. Hu, yelong shen, P. Wallis, Z. Allen-Zhu, Y. Li, S. Wang, L. Wang, and W. Chen LoRA: low-rank adaptation of large language models . In International Conference on Learning Representations , Cited by: §1 , §4",
+      "url": "https://arxiv.org/html/2610.28072v1#S4.p1.1"
+    },
+    {
+      "href": "#S1.p4.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Hu et al. (2024) S. Hu, Y. Tu, X. Han, G. Cui, C. He, W. Zhao, X. Long, Z. Zheng, Y. Fang, Y. Huang, X. Zhang, Z. L. Thai, C. Wang, Y. Yao, C. Zhao, J. Zhou, J. Cai, Z. Zhai, N. Ding, C. Jia, G. Zeng, dahai li, Z. Liu, and M. Sun MiniCPM: unveiling the potential of small language models with scalable training strategies . In First Conference on Language Modeling , Cited by: §1",
+      "url": "https://arxiv.org/html/2610.28072v1#S1.p4.1"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px1.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Hu et al. (2024) S. Hu, Y. Tu, X. Han, G. Cui, C. He, W. Zhao, X. Long, Z. Zheng, Y. Fang, Y. Huang, X. Zhang, Z. L. Thai, C. Wang, Y. Yao, C. Zhao, J. Zhou, J. Cai, Z. Zhai, N. Ding, C. Jia, G. Zeng, dahai li, Z. Liu, and M. Sun MiniCPM: unveiling the potential of small language models with scalable training strategies . In First Conference on Language Modeling , Cited by: §1 , §2",
+      "url": "https://arxiv.org/html/2610.28072v1#S2.SS0.SSS0.Px1.p1.1"
+    },
+    {
+      "href": "#S4.SS2.p1.1",
+      "text": "§4.2",
+      "section": "References",
+      "context": "Hu et al. (2024) S. Hu, Y. Tu, X. Han, G. Cui, C. He, W. Zhao, X. Long, Z. Zheng, Y. Fang, Y. Huang, X. Zhang, Z. L. Thai, C. Wang, Y. Yao, C. Zhao, J. Zhou, J. Cai, Z. Zhai, N. Ding, C. Jia, G. Zeng, dahai li, Z. Liu, and M. Sun MiniCPM: unveiling the potential of small language models with scalable training strategies . In First Conference on Language Modeling , Cited by: §1 , §2 , §4.2",
+      "url": "https://arxiv.org/html/2610.28072v1#S4.SS2.p1.1"
+    },
+    {
+      "href": "https://kellerjordan.github.io/posts/muon/",
+      "text": "Link",
+      "section": "References",
+      "context": "Jordan et al. (2024) K. Jordan, Y. Jin, V. Boza, J. You, F. Cesista, L. Newhouse, and J. Bernstein Muon: an optimizer for hidden layers in neural networks . External Links: Link",
+      "url": "https://kellerjordan.github.io/posts/muon/"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Jordan et al. (2024) K. Jordan, Y. Jin, V. Boza, J. You, F. Cesista, L. Newhouse, and J. Bernstein Muon: an optimizer for hidden layers in neural networks . External Links: Link Cited by: §1",
+      "url": "https://arxiv.org/html/2610.28072v1#S1.p1.1"
+    },
+    {
+      "href": "#S1.p2.2",
+      "text": "§1",
+      "section": "References",
+      "context": "Jordan et al. (2024) K. Jordan, Y. Jin, V. Boza, J. You, F. Cesista, L. Newhouse, and J. Bernstein Muon: an optimizer for hidden layers in neural networks . External Links: Link Cited by: §1 , §1",
+      "url": "https://arxiv.org/html/2610.28072v1#S1.p2.2"
+    },
+    {
+      "href": "https://github.com/karpathy/nanochat",
+      "text": "Link",
+      "section": "References",
+      "context": "Karpathy (2025) A. Karpathy Nanochat: the best chatgpt that $100 can buy . GitHub . External Links: Link",
+      "url": "https://github.com/karpathy/nanochat"
+    },
+    {
+      "href": "#S4.p1.1",
+      "text": "§4",
+      "section": "References",
+      "context": "Karpathy (2025) A. Karpathy Nanochat: the best chatgpt that $100 can buy . GitHub . External Links: Link Cited by: §4",
+      "url": "https://arxiv.org/html/2610.28072v1#S4.p1.1"
+    },
+    {
+      "href": "#S6.SSx2.p1.1",
+      "text": "§6",
+      "section": "References",
+      "context": "Karpathy (2025) A. Karpathy Nanochat: the best chatgpt that $100 can buy . GitHub . External Links: Link Cited by: §4 , §6",
+      "url": "https://arxiv.org/html/2610.28072v1#S6.SSx2.p1.1"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Kingma and Ba (2015) D. P. Kingma and J. Ba Adam: A method for stochastic optimization . In 3rd International Conference on Learning Representations, ICLR 2015, San Diego, CA, USA, May 7-9, 2015, Conference Track Proceedings , Y. Bengio and Y. LeCun (Eds.) , Cited by: §1",
+      "url": "https://arxiv.org/html/2610.28072v1#S1.p1.1"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px3.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Kristiansen et al. (2024) G. Kristiansen, M. Sandler, A. Zhmoginov, N. Miller, A. Goyal, J. Lee, and M. Vladymyrov Narrowing the focus: learned optimizers for pretrained models . arXiv preprint arXiv:2408.09310 . Cited by: §2",
+      "url": "https://arxiv.org/html/2610.28072v1#S2.SS0.SSS0.Px3.p1.1"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px2.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Krizhevsky et al. (2012) A. Krizhevsky, I. Sutskever, and G. E. Hinton ImageNet classification with deep convolutional neural networks . In Proceedings of the 26th International Conference on Neural Information Processing Systems - Volume 1 , NIPS’12 , Red Hook, NY, USA , pp. 1097–1105 . Cited by: §2",
+      "url": "https://arxiv.org/html/2610.28072v1#S2.SS0.SSS0.Px2.p1.1"
+    },
+    {
+      "href": "#S1.p4.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Lee and Lee (2026) S. Lee and J. Lee Beware of the batch size: hyperparameter bias in evaluating lora . arXiv preprint arXiv:2602.09492 . Cited by: §1",
+      "url": "https://arxiv.org/html/2610.28072v1#S1.p4.1"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px1.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Li et al. (2026) B. Li, Z. Wang, F. Chen, S. Zhao, R. Zheng, and L. Wu Optimal learning-rate schedules under functional scaling laws: power decay and warmup-stable-decay . In ICLR 2026 2nd Workshop on Deep Generative Model in Machine Learning: Theory, Principle and Efficacy , Cited by: §2",
+      "url": "https://arxiv.org/html/2610.28072v1#S2.SS0.SSS0.Px1.p1.1"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Liu et al. (2025) J. Liu, J. Su, X. Yao, Z. Jiang, G. Lai, Y. Du, Y. Qin, W. Xu, E. Lu, J. Yan, Y. Chen, H. Zheng, Y. Liu, S. Liu, B. Yin, W. He, H. Zhu, Y. Wang, J. Wang, M. Dong, Z. Zhang, Y. Kang, H. Zhang, X. Xu, Y. Zhang, Y. Wu, X. Zhou, and Z. Yang Muon is scalable for llm training . External Links: 2502.16982 Cited by: §1",
+      "url": "https://arxiv.org/html/2610.28072v1#S1.p1.1"
+    },
+    {
+      "href": "#S3.SS2.SSS0.Px1.p1.1",
+      "text": "§3.2",
+      "section": "References",
+      "context": "Liu et al. (2025) J. Liu, J. Su, X. Yao, Z. Jiang, G. Lai, Y. Du, Y. Qin, W. Xu, E. Lu, J. Yan, Y. Chen, H. Zheng, Y. Liu, S. Liu, B. Yin, W. He, H. Zhu, Y. Wang, J. Wang, M. Dong, Z. Zhang, Y. Kang, H. Zhang, X. Xu, Y. Zhang, Y. Wu, X. Zhou, and Z. Yang Muon is scalable for llm training . External Links: 2502.16982 Cited by: §1 , §3.2",
+      "url": "https://arxiv.org/html/2610.28072v1#S3.SS2.SSS0.Px1.p1.1"
+    },
+    {
+      "href": "#S1.p4.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Loshchilov and Hutter (2017) I. Loshchilov and F. Hutter SGDR: stochastic gradient descent with warm restarts . In International Conference on Learning Representations , Cited by: §1",
+      "url": "https://arxiv.org/html/2610.28072v1#S1.p4.1"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px1.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Loshchilov and Hutter (2017) I. Loshchilov and F. Hutter SGDR: stochastic gradient descent with warm restarts . In International Conference on Learning Representations , Cited by: §1 , §2",
+      "url": "https://arxiv.org/html/2610.28072v1#S2.SS0.SSS0.Px1.p1.1"
+    },
+    {
+      "href": "#S4.SS2.p1.1",
+      "text": "§4.2",
+      "section": "References",
+      "context": "Loshchilov and Hutter (2017) I. Loshchilov and F. Hutter SGDR: stochastic gradient descent with warm restarts . In International Conference on Learning Representations , Cited by: §1 , §2 , §4.2",
+      "url": "https://arxiv.org/html/2610.28072v1#S4.SS2.p1.1"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Loshchilov and Hutter (2019) I. Loshchilov and F. Hutter Decoupled weight decay regularization . In International Conference on Learning Representations , Cited by: §1",
+      "url": "https://arxiv.org/html/2610.28072v1#S1.p1.1"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px2.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Mackay et al. (2019) M. Mackay, P. Vicol, J. Lorraine, D. Duvenaud, and R. Grosse Self-tuning networks: bilevel optimization of hyperparameters using structured best-response functions . In International Conference on Learning Representations , Cited by: §2",
+      "url": "https://arxiv.org/html/2610.28072v1#S2.SS0.SSS0.Px2.p1.1"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px2.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Maclaurin et al. (2015) D. Maclaurin, D. Duvenaud, and R. Adams Gradient-based hyperparameter optimization through reversible learning . In Proceedings of the 32nd International Conference on Machine Learning , F. Bach and D. Blei (Eds.) , Proceedings of Machine Learning Research , Vol. 37 , Lille, France , pp. 2113–2122 . Cited by: §2",
+      "url": "https://arxiv.org/html/2610.28072v1#S2.SS0.SSS0.Px2.p1.1"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px3.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Metz et al. (2022a) L. Metz, C. D. Freeman, J. Harrison, N. Maheswaranathan, and J. Sohl-Dickstein Practical tradeoffs between memory, compute, and performance in learned optimizers . In Conference on Lifelong Learning Agents , pp. 142–164 . Cited by: §2",
+      "url": "https://arxiv.org/html/2610.28072v1#S2.SS0.SSS0.Px3.p1.1"
+    },
+    {
+      "href": "#S1.p5.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Metz et al. (2022b) L. Metz, J. Harrison, C. D. Freeman, A. Merchant, L. Beyer, J. Bradbury, N. Agrawal, B. Poole, I. Mordatch, A. Roberts, et al. Velo: training versatile learned optimizers by scaling up . arXiv preprint arXiv:2211.09760 . Cited by: §1",
+      "url": "https://arxiv.org/html/2610.28072v1#S1.p5.1"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px3.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Metz et al. (2022b) L. Metz, J. Harrison, C. D. Freeman, A. Merchant, L. Beyer, J. Bradbury, N. Agrawal, B. Poole, I. Mordatch, A. Roberts, et al. Velo: training versatile learned optimizers by scaling up . arXiv preprint arXiv:2211.09760 . Cited by: §1 , §2",
+      "url": "https://arxiv.org/html/2610.28072v1#S2.SS0.SSS0.Px3.p1.1"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px3.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Moudgil et al. (2026) A. Moudgil, B. Knyazev, and E. Belilovsky Celo2: towards learned optimization free lunch . In The Fourteenth International Conference on Learning Representations , Cited by: §2",
+      "url": "https://arxiv.org/html/2610.28072v1#S2.SS0.SSS0.Px3.p1.1"
+    },
+    {
+      "href": "#S3.SS2.SSS0.Px1.p1.1",
+      "text": "§3.2",
+      "section": "References",
+      "context": "Moudgil et al. (2026) A. Moudgil, B. Knyazev, and E. Belilovsky Celo2: towards learned optimization free lunch . In The Fourteenth International Conference on Learning Representations , Cited by: §2 , §3.2",
+      "url": "https://arxiv.org/html/2610.28072v1#S3.SS2.SSS0.Px1.p1.1"
+    },
+    {
+      "href": "#S1.p5.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Moudgil et al. (2025) A. Moudgil, B. Knyazev, G. Lajoie, and E. Belilovsky Celo: training versatile learned optimizers on a compute diet . Transactions on Machine Learning Research . External Links: ISSN 2835-8856 Cited by: §1",
+      "url": "https://arxiv.org/html/2610.28072v1#S1.p5.1"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px3.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Moudgil et al. (2025) A. Moudgil, B. Knyazev, G. Lajoie, and E. Belilovsky Celo: training versatile learned optimizers on a compute diet . Transactions on Machine Learning Research . External Links: ISSN 2835-8856 Cited by: §1 , §2",
+      "url": "https://arxiv.org/html/2610.28072v1#S2.SS0.SSS0.Px3.p1.1"
+    },
+    {
+      "href": "#S3.SS4.SSS0.Px1.p1.1",
+      "text": "§3.4",
+      "section": "References",
+      "context": "Moudgil et al. (2025) A. Moudgil, B. Knyazev, G. Lajoie, and E. Belilovsky Celo: training versatile learned optimizers on a compute diet . Transactions on Machine Learning Research . External Links: ISSN 2835-8856 Cited by: §1 , §2 , §3.4",
+      "url": "https://arxiv.org/html/2610.28072v1#S3.SS4.SSS0.Px1.p1.1"
+    },
+    {
+      "href": "#A1.T4.2.7.1",
+      "text": "Table 4",
+      "section": "References",
+      "context": "Narayan et al. (2018) S. Narayan, S. B. Cohen, and M. Lapata Don’t give me the details, just the summary! topic-aware convolutional neural networks for extreme summarization . ArXiv abs/1808.08745 . Cited by: Table 4",
+      "url": "https://arxiv.org/html/2610.28072v1#A1.T4.2.7.1"
+    },
+    {
+      "href": "https://dx.doi.org/10.52202/079017-3262",
+      "text": "Document",
+      "section": "References",
+      "context": "Noci et al. (2024) L. Noci, A. Meterez, T. Hofmann, and A. Orvieto Super consistency of neural network landscapes and learning rate transfer . In Advances in Neural Information Processing Systems , A. Globerson, L. Mackey, D. Belgrave, A. Fan, U. Paquet, J. Tomczak, and C. Zhang (Eds.) , Vol. 37 , pp. 102696–102743 . External Links: Document",
+      "url": "https://dx.doi.org/10.52202/079017-3262"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px1.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Noci et al. (2024) L. Noci, A. Meterez, T. Hofmann, and A. Orvieto Super consistency of neural network landscapes and learning rate transfer . In Advances in Neural Information Processing Systems , A. Globerson, L. Mackey, D. Belgrave, A. Fan, U. Paquet, J. Tomczak, and C. Zhang (Eds.) , Vol. 37 , pp. 102696–102743 . External Links: Document Cited by: §2",
+      "url": "https://arxiv.org/html/2610.28072v1#S2.SS0.SSS0.Px1.p1.1"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Qu et al. (2026) X. Qu, P. Huang, and S. Horvath Can muon fine-tune adam-pretrained models? . In International Conference on Machine Learning , Cited by: §1",
+      "url": "https://arxiv.org/html/2610.28072v1#S1.p1.1"
+    },
+    {
+      "href": "https://qwen.ai/blog?id=qwen3.8",
+      "text": "Link",
+      "section": "References",
+      "context": "Qwen Team (2026) Qwen Team Qwen3.8-Max: a new bar for coding and cowork . External Links: Link",
+      "url": "https://qwen.ai/blog?id=qwen3.8"
+    },
+    {
+      "href": "#S4.SS3.SSS0.Px2.p1.1",
+      "text": "§4.3",
+      "section": "References",
+      "context": "Qwen Team (2026) Qwen Team Qwen3.8-Max: a new bar for coding and cowork . External Links: Link Cited by: §4.3",
+      "url": "https://arxiv.org/html/2610.28072v1#S4.SS3.SSS0.Px2.p1.1"
+    },
+    {
+      "href": "#S6.SSx2.p1.1",
+      "text": "§6",
+      "section": "References",
+      "context": "Qwen Team (2026) Qwen Team Qwen3.8-Max: a new bar for coding and cowork . External Links: Link Cited by: §4.3 , §6",
+      "url": "https://arxiv.org/html/2610.28072v1#S6.SSx2.p1.1"
+    },
+    {
+      "href": "#A1.T4.2.2.1",
+      "text": "Table 4",
+      "section": "References",
+      "context": "Rajani et al. (2023) N. Rajani, L. Tunstall, E. Beeching, N. Lambert, A. M. Rush, and T. Wolf No robots . Hugging Face . Cited by: Table 4",
+      "url": "https://arxiv.org/html/2610.28072v1#A1.T4.2.2.1"
+    },
+    {
+      "href": "https://www.aclweb.org/anthology/P17-1099",
+      "text": "Link",
+      "section": "References",
+      "context": "See et al. (2017) A. See, P. J. Liu, and C. D. Manning Get to the point: summarization with pointer-generator networks . In Proceedings of the 55th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) , Vancouver, Canada , pp. 1073–1083 . External Links: Link",
+      "url": "https://www.aclweb.org/anthology/P17-1099"
+    },
+    {
+      "href": "https://dx.doi.org/10.18653/v1/P17-1099",
+      "text": "Document",
+      "section": "References",
+      "context": "See et al. (2017) A. See, P. J. Liu, and C. D. Manning Get to the point: summarization with pointer-generator networks . In Proceedings of the 55th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) , Vancouver, Canada , pp. 1073–1083 . External Links: Link , Document",
+      "url": "https://dx.doi.org/10.18653/v1/P17-1099"
+    },
+    {
+      "href": "#A1.T4.2.6.1",
+      "text": "Table 4",
+      "section": "References",
+      "context": "See et al. (2017) A. See, P. J. Liu, and C. D. Manning Get to the point: summarization with pointer-generator networks . In Proceedings of the 55th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) , Vancouver, Canada , pp. 1073–1083 . External Links: Link , Document Cited by: Table 4",
+      "url": "https://arxiv.org/html/2610.28072v1#A1.T4.2.6.1"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px2.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Sharifnassab et al. (2025) A. Sharifnassab, S. Salehkaleybar, and R. S. Sutton MetaOptimize: a framework for optimizing step sizes and other meta-parameters . In Forty-second International Conference on Machine Learning , Cited by: §2",
+      "url": "https://arxiv.org/html/2610.28072v1#S2.SS0.SSS0.Px2.p1.1"
+    },
+    {
+      "href": "#S1.p3.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Shen et al. (2026) T. Shen, J. Yang, R. Shi, J. Ma, J. Teng, and Z. Ma Towards understanding the power and limits of the muon optimizer: a river-valley perspective . arXiv preprint arXiv:2606.21514 . Cited by: §1",
+      "url": "https://arxiv.org/html/2610.28072v1#S1.p3.1"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px1.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": " W. Wang, W. Yu, W. L. Tam, W. Liang, W. Liu, X. Wang, X. Jia, X. Gu, X. Ling, X. Wang, X. Fan, X. Pan, X. Zhang, X. Zhang, X. Fu, X. Zhang, Y. Xu, Y. Wu, Y. Lu, Y. Wang, Y. Zhou, Y. Pan, Y. Zhang, Y. Wang, Y. Li, Y. Su, Y. Geng, Y. Zhu, Y. Yang, Y. Li, Y. Wu, Y. Li, Y. Liu, Y. Wang, Y. Li, Y. Zhang, Z. Liu, Z. Yang, Z. Zhou, Z. Qiao, Z. Feng, Z. Liu, Z. Zhang, Z. Wang, Z. Yao, Z. Wang, Z. Liu, Z. Chai, Z. Li, Z. Zhao, W. Chen, J. Zhai, B. Xu, M. Huang, H. Wang, J. Li, Y. Dong, and J. Tang GLM-4.5: agentic, reasoning, and coding (arc) foundation models . External Links: 2508.06471 Cited by: §2",
+      "url": "https://arxiv.org/html/2610.28072v1#S2.SS0.SSS0.Px1.p1.1"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px1.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Team et al. (2026) K. Team, T. Bai, Y. Bai, Y. Bao, J. Cai, X. Cai, P. Cao, Y. Cao, Z. Chai, Y. Charles, et al. Kimi k3: open frontier intelligence . arXiv preprint arXiv:2607.24653 . Cited by: §2",
+      "url": "https://arxiv.org/html/2610.28072v1#S2.SS0.SSS0.Px1.p1.1"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px1.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Team et al. (2025b) K. Team, Y. Bai, Y. Bao, Y. Charles, C. Chen, G. Chen, H. Chen, H. Chen, J. Chen, N. Chen, et al. Kimi k2: open agentic intelligence . arXiv preprint arXiv:2507.20534 . Cited by: §2",
+      "url": "https://arxiv.org/html/2610.28072v1#S2.SS0.SSS0.Px1.p1.1"
+    },
+    {
+      "href": "#S3.SS4.SSS0.Px3.p1.1",
+      "text": "§3.4",
+      "section": "References",
+      "context": "Vicol et al. (2021) P. Vicol, L. Metz, and J. Sohl-Dickstein Unbiased gradient estimation in unrolled computation graphs with persistent evolution strategies . In International Conference on Machine Learning , pp. 10553–10563 . Cited by: §3.4",
+      "url": "https://arxiv.org/html/2610.28072v1#S3.SS4.SSS0.Px3.p1.1"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Vyas et al. (2025) N. Vyas, D. Morwani, R. Zhao, I. Shapira, D. Brandfonbrener, L. Janson, and S. Kakade SOAP: improving and stabilizing shampoo using adam for language modeling . In International Conference on Learning Representations , Vol. 2025 , pp. 93423–93444 . Cited by: §1",
+      "url": "https://arxiv.org/html/2610.28072v1#S1.p1.1"
+    },
+    {
+      "href": "#A1.SS0.SSS0.Px2.p1.1",
+      "text": "Appendix A",
+      "section": "References",
+      "context": ", A. Arunkumar, D. Stap, E. Pathak, G. Karamanolakis, H. Lai, I. Purohit, I. Mondal, J. Anderson, K. Kuznia, K. Doshi, K. K. Pal, M. Patel, M. Moradshahi, M. Parmar, M. Purohit, N. Varshney, P. R. Kaza, P. Verma, R. S. Puri, R. Karia, S. Doshi, S. K. Sampat, S. Mishra, S. Reddy A, S. Patro, T. Dixit, and X. Shen Super-NaturalInstructions: generalization via declarative instructions on 1600+ NLP tasks . In Proceedings of the 2022 Conference on Empirical Methods in Natural Language Processing , Y. Goldberg, Z. Kozareva, and Y. Zhang (Eds.) , Abu Dhabi, United Arab Emirates . Cited by: Appendix A",
+      "url": "https://arxiv.org/html/2610.28072v1#A1.SS0.SSS0.Px2.p1.1"
+    },
+    {
+      "href": "#S4.p1.1",
+      "text": "§4",
+      "section": "References",
+      "context": "Arunkumar, D. Stap, E. Pathak, G. Karamanolakis, H. Lai, I. Purohit, I. Mondal, J. Anderson, K. Kuznia, K. Doshi, K. K. Pal, M. Patel, M. Moradshahi, M. Parmar, M. Purohit, N. Varshney, P. R. Kaza, P. Verma, R. S. Puri, R. Karia, S. Doshi, S. K. Sampat, S. Mishra, S. Reddy A, S. Patro, T. Dixit, and X. Shen Super-NaturalInstructions: generalization via declarative instructions on 1600+ NLP tasks . In Proceedings of the 2022 Conference on Empirical Methods in Natural Language Processing , Y. Goldberg, Z. Kozareva, and Y. Zhang (Eds.) , Abu Dhabi, United Arab Emirates . Cited by: Appendix A , §4",
+      "url": "https://arxiv.org/html/2610.28072v1#S4.p1.1"
+    },
+    {
+      "href": "#S6.SSx2.p1.1",
+      "text": "§6",
+      "section": "References",
+      "context": "umar, D. Stap, E. Pathak, G. Karamanolakis, H. Lai, I. Purohit, I. Mondal, J. Anderson, K. Kuznia, K. Doshi, K. K. Pal, M. Patel, M. Moradshahi, M. Parmar, M. Purohit, N. Varshney, P. R. Kaza, P. Verma, R. S. Puri, R. Karia, S. Doshi, S. K. Sampat, S. Mishra, S. Reddy A, S. Patro, T. Dixit, and X. Shen Super-NaturalInstructions: generalization via declarative instructions on 1600+ NLP tasks . In Proceedings of the 2022 Conference on Empirical Methods in Natural Language Processing , Y. Goldberg, Z. Kozareva, and Y. Zhang (Eds.) , Abu Dhabi, United Arab Emirates . Cited by: Appendix A , §4 , §6",
+      "url": "https://arxiv.org/html/2610.28072v1#S6.SSx2.p1.1"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px1.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Xu et al. (2026) A. Xu, B. Lin, B. Xue, B. Wang, B. Xu, B. Wu, B. Zhang, C. Lin, C. Dong, C. Ling, et al. Deepseek-v4: towards highly efficient million-token context intelligence . arXiv preprint arXiv:2606.19348 . Cited by: §2",
+      "url": "https://arxiv.org/html/2610.28072v1#S2.SS0.SSS0.Px1.p1.1"
+    },
+    {
+      "href": "#S4.SS3.SSS0.Px2.p1.1",
+      "text": "§4.3",
+      "section": "References",
+      "context": "Yang et al. (2025) A. Yang, A. Li, B. Yang, B. Zhang, B. Hui, B. Zheng, B. Yu, C. Gao, C. Huang, C. Lv, et al. Qwen3 technical report . arXiv preprint arXiv:2505.09388 . Cited by: §4.3",
+      "url": "https://arxiv.org/html/2610.28072v1#S4.SS3.SSS0.Px2.p1.1"
+    },
+    {
+      "href": "#S6.SSx2.p1.1",
+      "text": "§6",
+      "section": "References",
+      "context": "Yang et al. (2025) A. Yang, A. Li, B. Yang, B. Zhang, B. Hui, B. Zheng, B. Yu, C. Gao, C. Huang, C. Lv, et al. Qwen3 technical report . arXiv preprint arXiv:2505.09388 . Cited by: §4.3 , §6",
+      "url": "https://arxiv.org/html/2610.28072v1#S6.SSx2.p1.1"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px1.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Yang et al. (2021) G. Yang, E. Hu, I. Babuschkin, S. Sidor, X. Liu, D. Farhi, N. Ryder, J. Pachocki, W. Chen, and J. Gao Tuning large neural networks via zero-shot hyperparameter transfer . In Advances in Neural Information Processing Systems , M. Ranzato, A. Beygelzimer, Y. Dauphin, P.S. Liang, and J. W. Vaughan (Eds.) , Vol. 34 , pp. 17084–17097 . Cited by: §2",
+      "url": "https://arxiv.org/html/2610.28072v1#S2.SS0.SSS0.Px1.p1.1"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px1.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Yang et al. (2024) G. Yang, D. Yu, C. Zhu, and S. Hayou Tensor programs vi: feature learning in infinite depth neural networks . In International Conference on Learning Representations , B. Kim, Y. Yue, S. Chaudhuri, K. Fragkiadaki, M. Khan, and Y. Sun (Eds.) , Vol. 2024 , pp. 55099–55150 . Cited by: §2",
+      "url": "https://arxiv.org/html/2610.28072v1#S2.SS0.SSS0.Px1.p1.1"
+    },
+    {
+      "href": "#S3.SS2.SSS0.Px4.p1.2",
+      "text": "§3.2",
+      "section": "References",
+      "context": "Yang et al. (2024) G. Yang, D. Yu, C. Zhu, and S. Hayou Tensor programs vi: feature learning in infinite depth neural networks . In International Conference on Learning Representations , B. Kim, Y. Yue, S. Chaudhuri, K. Fragkiadaki, M. Khan, and Y. Sun (Eds.) , Vol. 2024 , pp. 55099–55150 . Cited by: §2 , §3.2",
+      "url": "https://arxiv.org/html/2610.28072v1#S3.SS2.SSS0.Px4.p1.2"
+    },
+    {
+      "href": "#A1.T1",
+      "text": "1",
+      "section": "Appendix A Task Distribution",
+      "context": "The meta-training distribution combines pretrained nanochat models with 100 100 English Lots-of-LoRAs sub-tasks, including classification, question answering, paraphrasing, reasoning, summarization, and text generation. Each episode fine-tunes LoRA adapters on the Q and V projections of every attention block, with the base model frozen. Table 1",
+      "url": "https://arxiv.org/html/2610.28072v1#A1.T1"
+    },
+    {
+      "href": "#bib.bib33",
+      "text": "Wang et al., 2022",
+      "section": "Dataset list.",
+      "context": "The following 100 100 identifiers appear in launch-script order. Each is prefixed with Lots-of-LoRAs/ to obtain the full dataset name ( Wang et al., 2022",
+      "url": "https://arxiv.org/html/2610.28072v1#bib.bib33"
+    },
+    {
+      "href": "#A1.T4",
+      "text": "Table   4",
+      "section": "A.1 OOD Evaluation Datasets",
+      "context": "Table 4",
+      "url": "https://arxiv.org/html/2610.28072v1#A1.T4"
+    },
+    {
+      "href": "#A1.T3",
+      "text": "Table   3",
+      "section": "A.1 OOD Evaluation Datasets",
+      "context": "Table 4 lists the eight publicly available datasets used for out-of-distribution evaluation, none of which are among the 100 meta-training sub-tasks from Table 3",
+      "url": "https://arxiv.org/html/2610.28072v1#A1.T3"
+    },
+    {
+      "href": "#bib.bib42",
+      "text": "Rajani et al., 2023",
+      "section": "A.1 OOD Evaluation Datasets",
+      "context": "Dataset Domain No Robots ( Rajani et al., 2023",
+      "url": "https://arxiv.org/html/2610.28072v1#bib.bib42"
+    },
+    {
+      "href": "#bib.bib34",
+      "text": "Cobbe et al., 2021",
+      "section": "A.1 OOD Evaluation Datasets",
+      "context": "Dataset Domain No Robots ( Rajani et al., 2023 ) Instruction following GSM8K ( Cobbe et al., 2021",
+      "url": "https://arxiv.org/html/2610.28072v1#bib.bib34"
+    },
+    {
+      "href": "#bib.bib40",
+      "text": "Austin et al., 2021",
+      "section": "A.1 OOD Evaluation Datasets",
+      "context": "Dataset Domain No Robots ( Rajani et al., 2023 ) Instruction following GSM8K ( Cobbe et al., 2021 ) Mathematical reasoning MBPP ( Austin et al., 2021",
+      "url": "https://arxiv.org/html/2610.28072v1#bib.bib40"
+    },
+    {
+      "href": "#bib.bib39",
+      "text": "Gliwa et al., 2019",
+      "section": "A.1 OOD Evaluation Datasets",
+      "context": "Dataset Domain No Robots ( Rajani et al., 2023 ) Instruction following GSM8K ( Cobbe et al., 2021 ) Mathematical reasoning MBPP ( Austin et al., 2021 ) Code generation SAMSum ( Gliwa et al., 2019",
+      "url": "https://arxiv.org/html/2610.28072v1#bib.bib39"
+    },
+    {
+      "href": "#bib.bib35",
+      "text": "See et al., 2017",
+      "section": "A.1 OOD Evaluation Datasets",
+      "context": "Dataset Domain No Robots ( Rajani et al., 2023 ) Instruction following GSM8K ( Cobbe et al., 2021 ) Mathematical reasoning MBPP ( Austin et al., 2021 ) Code generation SAMSum ( Gliwa et al., 2019 ) Dialogue summarization CNN/DailyMail ( See et al., 2017",
+      "url": "https://arxiv.org/html/2610.28072v1#bib.bib35"
+    },
+    {
+      "href": "#bib.bib38",
+      "text": "Narayan et al., 2018",
+      "section": "A.1 OOD Evaluation Datasets",
+      "context": "Dataset Domain No Robots ( Rajani et al., 2023 ) Instruction following GSM8K ( Cobbe et al., 2021 ) Mathematical reasoning MBPP ( Austin et al., 2021 ) Code generation SAMSum ( Gliwa et al., 2019 ) Dialogue summarization CNN/DailyMail ( See et al., 2017 ) News summarization XSum ( Narayan et al., 2018",
+      "url": "https://arxiv.org/html/2610.28072v1#bib.bib38"
+    },
+    {
+      "href": "#bib.bib37",
+      "text": "Clark et al., 2019",
+      "section": "A.1 OOD Evaluation Datasets",
+      "context": "Dataset Domain No Robots ( Rajani et al., 2023 ) Instruction following GSM8K ( Cobbe et al., 2021 ) Mathematical reasoning MBPP ( Austin et al., 2021 ) Code generation SAMSum ( Gliwa et al., 2019 ) Dialogue summarization CNN/DailyMail ( See et al., 2017 ) News summarization XSum ( Narayan et al., 2018 ) Extreme (single-sentence) summarization BoolQ ( Clark et al., 2019",
+      "url": "https://arxiv.org/html/2610.28072v1#bib.bib37"
+    },
+    {
+      "href": "#bib.bib36",
+      "text": "Bojar et al., 2014",
+      "section": "A.1 OOD Evaluation Datasets",
+      "context": "Dataset Domain No Robots ( Rajani et al., 2023 ) Instruction following GSM8K ( Cobbe et al., 2021 ) Mathematical reasoning MBPP ( Austin et al., 2021 ) Code generation SAMSum ( Gliwa et al., 2019 ) Dialogue summarization CNN/DailyMail ( See et al., 2017 ) News summarization XSum ( Narayan et al., 2018 ) Extreme (single-sentence) summarization BoolQ ( Clark et al., 2019 ) Question answering (yes/no) WMT14 En → \\rightarrow De ( Bojar et al., 2014",
+      "url": "https://arxiv.org/html/2610.28072v1#bib.bib36"
+    },
+    {
+      "href": "#A2.T5",
+      "text": "5",
+      "section": "Appendix B Hyperparameters",
+      "context": "Tables 5",
+      "url": "https://arxiv.org/html/2610.28072v1#A2.T5"
+    },
+    {
+      "href": "#A2.T6",
+      "text": "6",
+      "section": "Appendix B Hyperparameters",
+      "context": "Tables 5 and 6",
+      "url": "https://arxiv.org/html/2610.28072v1#A2.T6"
+    },
+    {
+      "href": "#A1",
+      "text": "A",
+      "section": "Appendix B Hyperparameters",
+      "context": "Tables 5 and 6 summarize the settings used for meta-training. The task distribution is specified in Appendix A",
+      "url": "https://arxiv.org/html/2610.28072v1#A1"
+    },
+    {
+      "href": "#A3.F7",
+      "text": "7",
+      "section": "Appendix C Tuning Budget and MuPACE Loss Curves",
+      "context": "Figure 7",
+      "url": "https://arxiv.org/html/2610.28072v1#A3.F7"
+    },
+    {
+      "href": "#S3.F1",
+      "text": "Figure   1",
+      "section": "Appendix D Ablation: Untrained Scheduler",
+      "context": "We compare MuPACE against its untrained counterpart, whose output head is fixed to zero, corresponding to its initialization before meta-learning. This variant therefore produces the default cosine schedule shown in Figure 1",
+      "url": "https://arxiv.org/html/2610.28072v1#S3.F1"
+    },
+    {
+      "href": "#A4.F9",
+      "text": "9",
+      "section": "Appendix D Ablation: Untrained Scheduler",
+      "context": "On the 64 64 in-distribution draws, our meta-learned MuPACE wins on 44 44 and reduces median test loss by 1.61 % 1.61\\% (two-sided exact sign test p = 0.0037 p=0.0037 ). On Qwen3-32B, it wins on 7 / 8 7/8 datasets, with a median reduction of 6.66 % 6.66\\% (sign test p = 0.0703 p=0.0703 ). Figure 9",
+      "url": "https://arxiv.org/html/2610.28072v1#A4.F9"
+    },
+    {
+      "href": "#S3.E4",
+      "text": "Equation   4",
+      "section": "Appendix E Ablation: Direct Learning-Rate Head",
+      "context": "In the following ablation, we replace the five schedule heads of Equation 4",
+      "url": "https://arxiv.org/html/2610.28072v1#S3.E4"
+    },
+    {
+      "href": "#A5.F10",
+      "text": "10",
+      "section": "Appendix E Ablation: Direct Learning-Rate Head",
+      "context": "ds of Equation 4 with a single head that directly predicts a learning rate before depth- μ \\mu P post-scaling. We extend its range downward (approximately [ 1.1 × 10 − 8 , 9.0 × 10 − 2 ] [1.1\\times 10^{-8},\\,9.0\\times 10^{-2}] ) to accommodate the small learning rates produced by the normalized analytic schedule (especially λ 4 \\lambda_{4} ). Everything else remains unchanged. At initialization, this head outputs a constant 10 − 3 10^{-3} before post-scaling, so it must learn how the rate changes over time, including warm-up. The policy is meta-trained for 9000 9000 outer iterations. Figure 10",
+      "url": "https://arxiv.org/html/2610.28072v1#A5.F10"
+    },
+    {
+      "href": "#A5.F11",
+      "text": "11",
+      "section": "Appendix E Ablation: Direct Learning-Rate Head",
+      "context": "The direct head clearly outperforms default cosine and WSD, but not default constant, and performs worse than tuned constant (Figure 11",
+      "url": "https://arxiv.org/html/2610.28072v1#A5.F11"
+    },
+    {
+      "href": "#A5.F12",
+      "text": "12",
+      "section": "Appendix E Ablation: Direct Learning-Rate Head",
+      "context": "The direct head clearly outperforms default cosine and WSD, but not default constant, and performs worse than tuned constant (Figure 11 ). Its median performance is close to that of the analytic scheduler, with a difference of only 0.4 % 0.4\\% that is not significant ( p = 0.38 p=0.38 ), although it performs worse on a few tasks. On Qwen3-32B, it trails all tuned baselines across the eight datasets but consistently outperforms Hypergradient Descent (Figure 12",
+      "url": "https://arxiv.org/html/2610.28072v1#A5.F12"
+    },
+    {
+      "href": "#S3.E5",
+      "text": "5",
+      "section": "Appendix F Ablation: Shape Normalization",
+      "context": "In the following ablation, we remove the shape normalization of Equation 5",
+      "url": "https://arxiv.org/html/2610.28072v1#S3.E5"
+    },
+    {
+      "href": "#A6.F13",
+      "text": "13",
+      "section": "Appendix F Ablation: Shape Normalization",
+      "context": "On the 64 64 in-distribution draws, the normalized scheduler wins on 33 33 and reduces median test loss by 0.15 % 0.15\\% (two-sided exact sign test p = 0.90 p=0.90 ), so we find no in-distribution effect. On Qwen3-32B, it wins on 5 / 8 5/8 datasets, with a median reduction of 1.37 % 1.37\\% (sign test p = 0.73 p=0.73 ). The differences are small on most datasets, but large where normalization helps, most clearly on mbpp ( 15.4 % 15.4\\% ) and wmt14_en_de ( 8.3 % 8.3\\% ). With eight datasets, this suggests a possible transfer benefit rather than a significant one. Figure 13",
+      "url": "https://arxiv.org/html/2610.28072v1#A6.F13"
+    },
+    {
+      "href": "#S3.E6",
+      "text": "6",
+      "section": "G.1 Depth-scaled Baseline fixed schedules",
+      "context": "We ask whether MuPACE still outperforms the fixed schedules when the latter are given the same depth-dependent scaling and their learning-rate peaks are selected without any target-task search. Specifically, we apply the learned policy’s depth- μ \\mu P multiplier from Equation 6",
+      "url": "https://arxiv.org/html/2610.28072v1#S3.E6"
+    },
+    {
+      "href": "#A7.F14",
+      "text": "14",
+      "section": "G.1 Depth-scaled Baseline fixed schedules",
+      "context": "MuPACE outperforms every depth-scaled fixed control on every dataset of both models except default-peak cosine on GSM8K for Qwen3-32B (Figure 14",
+      "url": "https://arxiv.org/html/2610.28072v1#A7.F14"
+    },
+    {
+      "href": "#S3.E6",
+      "text": "6",
+      "section": "G.2 Depth-dependent post-scaling of the learned policy",
+      "context": "In the following ablation, we meta-train a separate variant without the depth-dependent multiplier from Equation 6",
+      "url": "https://arxiv.org/html/2610.28072v1#S3.E6"
+    },
+    {
+      "href": "#A7.F15",
+      "text": "15",
+      "section": "G.2 Depth-dependent post-scaling of the learned policy",
+      "context": "In-distribution performance is similar, with MuPACE winning on 32 / 64 32/64 draws and achieving a median relative test-loss reduction of − 0.03 % -0.03\\% (two-sided exact sign test p = 1.00 p=1.00 ). On Qwen3-32B, MuPACE wins on all eight datasets, suggesting a benefit for one-shot transfer (Figure 15",
+      "url": "https://arxiv.org/html/2610.28072v1#A7.F15"
+    }
+  ],
+  "note": "Extracted HTML text; equations and table formatting may be imperfect. No PDF extraction was attempted."
+}

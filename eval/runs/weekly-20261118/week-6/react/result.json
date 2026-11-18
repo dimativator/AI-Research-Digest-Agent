@@ -1,0 +1,246 @@
+{
+  "run_id": "8762702e04194d2c810a2aeac3248c7a",
+  "status": "completed",
+  "user_id": "dmitrii",
+  "profile_fingerprint": "a2480e0075ad9cdf236d40e30f74f9bfd87a08dd948530b42e6b57e4a123bfc0",
+  "pipeline_version": "react-v2",
+  "categories": [
+    "cs.LG",
+    "cs.CL",
+    "stat.ML",
+    "cs.AI",
+    "cs.IR"
+  ],
+  "date_from": "2026-11-02",
+  "date_to": "2026-11-08",
+  "papers": [
+    {
+      "paper_id": "2611.02529",
+      "summary": "Re-tuning Muon’s constant-weight-decay baseline removes about 90% of the apparent benefit of scaled weight decay at small scale. A smaller benefit remains and grows across the studied model sizes.",
+      "relevance": "Directly informs spectral-optimizer comparisons and how weight-decay conclusions change with scale.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "Most of the advantage reported for Muon’s scaled weight decay is a tuning gap: when constant decay’s LR ⋅ \\cdot WD product is tuned as carefully as the method’s, about 90% of the gain disappears at small scale."
+        },
+        {
+          "source": "inspection",
+          "quote": "A tuned comparison of Muon-SW and constant decay under the MAI-Base-2 LR ⋅ \\cdot WD protocol on a source-scaled MoE ladder (three rungs, 1.9M to 15M active parameters, 81 completed runs)."
+        }
+      ],
+      "title": "Tune the Baseline First: Most of Muon's Scaled Weight Decay Gain Is a Tuning Gap, but Its Small Real Advantage Grows With Model Size",
+      "url": "https://arxiv.org/abs/2611.02529v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.08924",
+      "summary": "ResQAdam preserves a BF16 momentum residual outside a low-rank adaptive subspace for quantization-aware training. In the reported hardware tests, it reduces optimizer-state memory by over 71% versus AdamW, with less than 2% throughput loss.",
+      "relevance": "Addresses the quality, memory, and throughput tradeoffs of low-rank optimizer-state compression for LLM training.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "A considerable part of the QAT momentum lies outside its top- r r singular subspace, and projection-based methods discard this part at every step."
+        },
+        {
+          "source": "inspection",
+          "quote": "This efficiency directly translates to a 15.3% to 19.5% reduction in total peak memory. This substantial memory reduction incurs minimal computational overhead. The training throughput decreases by less than 2% compared to standard AdamW in all evaluated cases."
+        }
+      ],
+      "title": "ResQAdam: Residual-Preserving Adaptive Optimization for Memory-Efficient Quantization Aware Training",
+      "url": "https://arxiv.org/abs/2611.08924v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.08414",
+      "summary": "Tracks LoRA update spectra in supervised fine-tuning and reinforcement learning. The authors report spectral concentration under RL, expansion under SFT at moderate learning rates, and identify group-mean baseline subtraction as a key source of the contrast.",
+      "relevance": "Closely matches the interest in LoRA optimization, effective rank, and practical fine-tuning dynamics.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "Our experiments show that RL effective rank consistently decreases during training across the learning rates considered, while for models that benefit from SFT, the growth of effective rank accompanies better SFT performance at intermediate learning rates."
+        },
+        {
+          "source": "inspection",
+          "quote": "Controlled comparisons identify group-mean baseline subtraction as a key source of these differences."
+        }
+      ],
+      "title": "Spectral and Subspace Dynamics of LoRA in Supervised Fine-Tuning and Reinforcement Learning",
+      "url": "https://arxiv.org/abs/2611.08414v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.07349",
+      "summary": "GEAR uses the normal spectrum of the low-rank manifold to decide when and how to expand LoRA rank. The authors report a higher LLaMA3-8B commonsense score with fewer trainable parameters, while rank audits add computation.",
+      "relevance": "Provides a geometric account of which task-relevant directions fixed-rank LoRA factor gradients cannot observe.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "We characterize the first-order information boundary of standard factor gradients, showing that their unobservable subspace coincides with the normal space of the low-rank manifold."
+        },
+        {
+          "source": "inspection",
+          "quote": "On LLaMA3-8B, it raises the average commonsense score from 86.61 to 88.45 while reducing trainable parameters from 42.0M to 14.4M."
+        },
+        {
+          "source": "inspection",
+          "quote": "The main audit overhead therefore comes from the additional backward probes and candidate forward evaluations rather than large-scale matrix operations."
+        }
+      ],
+      "title": "From What Is Used to What Is Missing: Rethinking Dynamic Rank in LoRA",
+      "url": "https://arxiv.org/abs/2611.07349v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.06598",
+      "summary": "Defines LoRA compressibility by the serialized adapter size needed to retain held-out fine-tuning gain. Its experiments show that lower weight-reconstruction error need not preserve behavior, and that compressibility depends on the frozen base model as well as the dataset.",
+      "relevance": "Directly informs how to measure useful low-rank compression and connects singular directions to behavior under corrupted supervision.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "R ⋆ ​ ( 0.90 ) R^{\\star}(0.90) is therefore an operational, codec-dependent behavioral rate: the smallest measured reloadable adapter preserving at least 90% of the original fine-tuning gain."
+        },
+        {
+          "source": "inspection",
+          "quote": "near one bit per value, the adaptive code achieves lower relative weight RMSE than uniform quantization (0.54 versus 0.56), yet retains only 3% of the held-out gain, compared with 86% for the uniform code."
+        },
+        {
+          "source": "inspection",
+          "quote": "The damage is unevenly concentrated in the adapter’s leading singular directions, which compression appears to filter."
+        }
+      ],
+      "title": "The Behavioral Rate of Fine-Tuning: Compression as a Measure of Useful Information",
+      "url": "https://arxiv.org/abs/2611.06598v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.07859",
+      "summary": "CORE is a training-free deep-research harness that retrieves passages, returns selected snippets, and manages repeated evidence. In controlled closed-search comparisons, it reports higher answer accuracy and evidence recall than two harness baselines.",
+      "relevance": "Offers concrete retrieval and context-management design choices for a handwritten research-digest agent.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "Context management lets the agent expand the context around sources it has already retrieved and suppresses repeated snippets."
+        },
+        {
+          "source": "inspection",
+          "quote": "Across three agent models and three benchmarks, CORE achieves higher answer accuracy and evidence recall than Tongyi DeepResearch and OpenResearcher in every model–benchmark comparison, while returning substantially fewer tokens per search than Tongyi DeepResearch."
+        }
+      ],
+      "title": "CORE: Coarse-to-Fine Search with Context Management for Deep Research",
+      "url": "https://arxiv.org/abs/2611.07859v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.07174",
+      "summary": "MapHub scores daily arXiv submissions against researcher portfolios. In a small blind-rating test, its top-ranked 10% captured about 70% of raters’ top 5% papers, versus 33% for a TF-IDF baseline.",
+      "relevance": "A direct comparison point for profile-based paper ranking in the proposed digest agent.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "MapHub’s top 5% of papers hold about a third of it, and its top 10% about 70%, against 33% for a term-frequency baseline (TF-IDF 3 3 3 https://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.TfidfVectorizer.html of title and abstract against the portfolio) reading the same share."
+        },
+        {
+          "source": "inspection",
+          "quote": "MapHub is still under development, and the test is small. Its ratings are subjective: The first author, who built the tool, rated three of the five columns, and a rating shifts with the papers read just before it."
+        }
+      ],
+      "title": "MapHub: Daily Relevance Heatmaps of New arXiv Preprints for a Research Community",
+      "url": "https://arxiv.org/abs/2611.07174v2",
+      "version": 2,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    }
+  ],
+  "x_feature": null,
+  "limitations": [
+    "No selected paper directly tests whether pretraining makes full model weights more compressible at preserved quality.",
+    "GEAR’s retrieved resource measurements are for a ViT task, not LLaMA3-8B training overhead.",
+    "ResQAdam’s reported hardware comparison uses quantization-aware training on one H200; it does not establish the same tradeoff for ordinary pretraining.",
+    "MapHub’s relevance study is small and based primarily on astro-ph ratings; transfer to this user’s digest is untested.",
+    "Repository links or code availability were not independently checked, and none of the reported results were reproduced.",
+    "inspect:2611.02529: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2611.08924: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2611.08414: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2611.07349: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2611.07859: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2611.06598: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2611.05022: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2611.10212: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2611.07174: only question-relevant HTML passages were inspected, not the whole paper."
+  ],
+  "stats": {
+    "fetched_count": 2673,
+    "candidate_count": 2673,
+    "llm_calls": 22,
+    "steps": 14,
+    "inspections": 9,
+    "expansions": 4,
+    "screened": 71,
+    "usage": {
+      "recorded_calls": 22,
+      "llm_latency_seconds": 309.5200742931338,
+      "input_tokens": 988422,
+      "output_tokens": 10211,
+      "estimated_api_cost_usd": null,
+      "calls_without_usage": 0,
+      "cost_note": "API-equivalent estimate using standard GPT-5.6-Luna rates checked 2026-11-17: $0.20/M input, $1.20/M output; above 272K input, $0.40/M and $1.80/M. Assumes all input is uncached; excludes cache writes and external tools. Not actual Codex subscription billing. Unknown usage/model yields null cost.",
+      "price_source": "https://developers.openai.com/api/docs/models/gpt-5.6-luna"
+    },
+    "tool_calls": 13,
+    "tool_latency_seconds": 91.26710366693442
+  }
+}

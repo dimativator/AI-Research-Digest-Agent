@@ -1,0 +1,249 @@
+{
+  "run_id": "125e6ef7edbe483e8dc4c0d48a95a088",
+  "status": "completed",
+  "user_id": "dmitrii",
+  "profile_fingerprint": "a2480e0075ad9cdf236d40e30f74f9bfd87a08dd948530b42e6b57e4a123bfc0",
+  "pipeline_version": "react-v2",
+  "categories": [
+    "cs.LG",
+    "cs.CL",
+    "stat.ML",
+    "cs.AI",
+    "cs.IR"
+  ],
+  "date_from": "2026-10-12",
+  "date_to": "2026-10-18",
+  "papers": [
+    {
+      "paper_id": "2610.23571",
+      "summary": "BMuon changes Muon’s geometry to favor channel pruning. In a 1B language model, it preserves perplexity through 80% MLP-channel pruning, but its unpruned perplexity is worse than Muon’s (12.84 versus 10.92).",
+      "relevance": "Direct test of whether training improves compressibility while preserving quality, though the compression is structured channel pruning rather than low-rank factorization.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "On the unpruned models, Muon achieves lower perplexity ( 10.92 10.92 versus 12.84 12.84 for BMuon), but its performance degrades rapidly under pruning."
+        },
+        {
+          "source": "inspection",
+          "quote": "BMuon preserves its unpruned performance up to 80 % 80\\% pruning, reaching 12.86 12.86 with activation ranking and 12.85 12.85 with μ \\mu ranking."
+        }
+      ],
+      "title": "BMuon: Budgeting Muon's Spectral Geometry for Structured Compressibility",
+      "url": "https://arxiv.org/abs/2610.23571v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.17429",
+      "summary": "Monarch–Muon trains structured weights with matrix-aware updates. Its matched-structure quality runs improve on Monarch–AdamW, while separate 6.89B-reference systems measurements report 52.94 versus 68.87 GB peak memory and 1638.6 versus 2986.9 ms full-step time against dense Muon.",
+      "relevance": "Addresses the quality, memory, and throughput tradeoff of compressed parameterizations in pretraining.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "Monarch–Muon, 2 blocks 3.06 224M 224M Monarch–AdamW, 4 blocks 3.16 164M 164M"
+        },
+        {
+          "source": "inspection",
+          "quote": "Dense Muon 6.26 0.72 14.35 1.98 20.51 3.29 39.71 7.58 68.87 14.60 Monarch–Muon 6.38 0.53 14.07 1.16 18.94 1.79 33.15 3.75 52.94 6.77"
+        },
+        {
+          "source": "inspection",
+          "quote": "Dense Muon 146.5 (26.2) 428.2 (88.9) 650.4 (156.7) 1473.0 (505.2) 2986.9 (1288.3) Monarch–Muon 165.8 (8.0) 399.8 (29.2) 535.7 (50.5) 997.9 (140.5) 1638.6 (304.4)"
+        }
+      ],
+      "title": "Monarch-Muon: Structure-Aware Muon for Fast and Memory-Efficient Pretraining",
+      "url": "https://arxiv.org/abs/2610.17429v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.22794",
+      "summary": "Ori tracks drifting gradient subspaces for low-rank LLM pretraining. At rank 16 on a 130M model, reported validation perplexity is 43.61 versus GaLore’s 60.29. Its 1B rank-32 optimizer-step peak memory is 0.2487 GB versus GaLore’s 0.3385 GB.",
+      "relevance": "Directly informs low-rank gradient optimization under stringent memory constraints.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "when training the 130M model at an aggressively low rank of just 16, Ori achieves a validation perplexity of 43.61, substantially outperforming GaLore (60.29) and OSD (54.05)."
+        },
+        {
+          "source": "inspection",
+          "quote": "at rank 32, Ori requires only 0.2487 GB, which is 12.1% less than OSD (0.2832 GB) and 26.5% less than GaLore (0.3385 GB)."
+        }
+      ],
+      "title": "Ori: Drift-Aware Streaming $k$-PCA for Very Low-Rank LLM Training",
+      "url": "https://arxiv.org/abs/2610.22794v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.23343",
+      "summary": "A theoretical account of why trace-norm-regularized adaptation can have low-rank global minimizers: frozen activations create a finite-rank observation bottleneck. It also relates balanced LoRA weight decay to nuclear-norm regularization, but does not rule out spurious local minima.",
+      "relevance": "Closely matches nuclear-norm regularization and the geometry of low-rank fine-tuning.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "Trace-norm regularization then selects a low-rank representative among all matrices that induce the same observed output."
+        },
+        {
+          "source": "inspection",
+          "quote": "By the standard equivalence between nuclear-norm regularization and balanced weight decay"
+        },
+        {
+          "source": "inspection",
+          "quote": "This is a first-order exclusion theorem, not a no-spurious-local-minima theorem; Proposition 4.9 gives an explicit limitation."
+        }
+      ],
+      "title": "How Finite-Rank Bottlenecks Shape the Low-Rank Adaptation Landscape",
+      "url": "https://arxiv.org/abs/2610.23343v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.17730",
+      "summary": "DT-LoRA refreshes a dynamic branch using principal residual-gradient directions outside the current LoRA tangent space. On GLUE, it reports an 88.7 average, 1.1 points above LoRA at the same parameter budget; the measured iteration time is 0.89 seconds, 70 ms above LoRA.",
+      "relevance": "Combines LoRA optimization geometry with practical fine-tuning and runtime measurements.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "On GLUE ( Tab. 6 ), DT-LoRA achieves the highest average score of 88.7, outperforming LoRA under the same parameter budget by 1.1 points"
+        },
+        {
+          "source": "inspection",
+          "quote": "With τ = 5 \\tau=5 , it requires 0.89 0.89 s per iteration, only 70 70 ms more than LoRA"
+        }
+      ],
+      "title": "DT-LoRA: Reaching Beyond the Tangent Space of Low-Rank Adaptation",
+      "url": "https://arxiv.org/abs/2610.17730v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.20112",
+      "summary": "For separable linear classification, the paper proves that fixed finite Newton–Schulz iterations plus positive stabilization change Muon’s asymptotic selection from spectral to Frobenius max-margin. The result does not establish the same behavior for stochastic LLM training.",
+      "relevance": "Directly addresses how practical Newton–Schulz approximations alter spectral optimization bias.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "Muon with a fixed number of Newton-Schulz iterations and positive stabilization leads to Frobenius max-margin selection on linear classification problems."
+        },
+        {
+          "source": "inspection",
+          "quote": "Our results focus on full-batch linear classification, leaving stochastic optimization and nonlinear neural networks beyond the present analysis."
+        }
+      ],
+      "title": "From Spectral to Frobenius: When Muon Loses Its Spectral Implicit Bias",
+      "url": "https://arxiv.org/abs/2610.20112v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.22438",
+      "summary": "Fine-tuning updates can have a few strong singular directions and a long tail. Across 13 released model pairs, different rank measures give sharply different impressions relative to shape-matched noise; the paper argues that rank claims need a noise baseline.",
+      "relevance": "A methodological check on using effective rank or singular spectra as proxies for useful low-rank compressibility.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "the updates have a few strong directions and a long tail that holds most of the energy."
+        },
+        {
+          "source": "inspection",
+          "quote": "report any rank measure of a weight update next to its value on a random matrix of the same shape"
+        }
+      ],
+      "title": "Rank Measures of Fine-Tuning Updates Need a Noise Baseline",
+      "url": "https://arxiv.org/abs/2610.22438v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    }
+  ],
+  "x_feature": null,
+  "limitations": [
+    "BMuon studies channel pruning, not low-rank weight factorization, and sacrifices unpruned language-model quality.",
+    "Monarch–Muon’s large-model memory and speed measurements are systems benchmarks separate from its complete quality runs; projection-method timings exclude periodic refreshes.",
+    "Ori’s cited memory figure measures the additional peak during the optimizer step, not total training memory.",
+    "The LoRA bottleneck paper is primarily theoretical; the retrieved evidence does not establish practical fine-tuning gains.",
+    "DT-LoRA’s cited timing does not establish end-to-end memory savings.",
+    "The Muon implicit-bias theorem is limited to full-batch linear classification.",
+    "Rank concentration alone does not establish retained model quality after low-rank compression.",
+    "inspect:2610.22794: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.23571: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.23343: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.17429: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.17730: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.22438: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.19761: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.20112: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.19844: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.18516: only question-relevant HTML passages were inspected, not the whole paper."
+  ],
+  "stats": {
+    "fetched_count": 3194,
+    "candidate_count": 3194,
+    "llm_calls": 21,
+    "steps": 14,
+    "inspections": 11,
+    "expansions": 2,
+    "screened": 53,
+    "usage": {
+      "recorded_calls": 21,
+      "llm_latency_seconds": 322.5801824569644,
+      "input_tokens": 921059,
+      "output_tokens": 10486,
+      "estimated_api_cost_usd": null,
+      "calls_without_usage": 0,
+      "cost_note": "API-equivalent estimate using standard GPT-5.6-Luna rates checked 2026-11-17: $0.20/M input, $1.20/M output; above 272K input, $0.40/M and $1.80/M. Assumes all input is uncached; excludes cache writes and external tools. Not actual Codex subscription billing. Unknown usage/model yields null cost.",
+      "price_source": "https://developers.openai.com/api/docs/models/gpt-5.6-luna"
+    },
+    "tool_calls": 13,
+    "tool_latency_seconds": 63.80738470808137
+  }
+}

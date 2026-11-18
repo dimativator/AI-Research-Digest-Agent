@@ -1,0 +1,237 @@
+{
+  "run_id": "37b11b3a76054c79a8d63d9672dbf08d",
+  "status": "completed",
+  "user_id": "dmitrii",
+  "profile_fingerprint": "a2480e0075ad9cdf236d40e30f74f9bfd87a08dd948530b42e6b57e4a123bfc0",
+  "pipeline_version": "react-v2",
+  "categories": [
+    "cs.LG",
+    "cs.CL",
+    "stat.ML",
+    "cs.AI",
+    "cs.IR"
+  ],
+  "date_from": "2026-10-05",
+  "date_to": "2026-10-11",
+  "papers": [
+    {
+      "paper_id": "2610.11730",
+      "summary": "Spectral weight decay lowers effective rank and improves SVD-LLM compression at matched validation loss. At 500M parameters and a 4% distortion budget, the reported compression is 1.89× versus 1.14× with standard weight decay.",
+      "relevance": "Directly addresses training for low-rank compressibility, spectral regularization, and label-noise robustness.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "For the 500 500 M model and a 4 % 4\\% distortion budget, it supports 1.89 × 1.89\\times compression, compared with 1.14 × 1.14\\times after standard weight decay."
+        },
+        {
+          "source": "inspection",
+          "quote": "The factorized models outperform their dense counterparts only at large batch sizes, so we measure forward-pass latency with a batch size of 256 256 on a single GPU."
+        }
+      ],
+      "title": "Spectral Weight Decay: Inducing Low-Rank Structure in Neural Network Weights",
+      "url": "https://arxiv.org/abs/2610.11730v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.06116",
+      "summary": "ORCA applies soft orthogonality regularization early in LLM training and then removes it. The inspected results report lower final validation loss than Muon across several architectures, including MoE models up to 8B parameters.",
+      "relevance": "Tests how temporary spectral control changes optimization and effective-rank dynamics at multiple model scales.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "In most experiments, the reduction is 0.02–0.04, comparable to or greater than Muon’s gain over Adam."
+        },
+        {
+          "source": "inspection",
+          "quote": "Across these MoE experiments, ORCA reduces final validation loss by 0.020 0.020 – 0.025 0.025 relative to Muon."
+        }
+      ],
+      "title": "ORCA: The Annealed Spectral Conditioning Optimizer for Faster, Better LLM Training",
+      "url": "https://arxiv.org/abs/2610.06116v2",
+      "version": 2,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.07497",
+      "summary": "BulkBoost reweights Muon updates using two spectral bands. In Pythia continued pretraining, its adaptive variant reports token savings where it beats Muon, but incurs substantially longer steps.",
+      "relevance": "Connects singular-value structure to an explicit quality-versus-compute tradeoff in matrix optimization.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "Among settings where it outperforms Muon , BB-Adaptive reaches Muon ’s final loss using 7.99 % 7.99\\% fewer tokens on average, with a median saving of 8.01 % 8.01\\% (Table 2 )."
+        },
+        {
+          "source": "inspection",
+          "quote": "At 70M–410M, measured per-step runtimes are 1.36 1.36 – 1.50 × 1.50\\times Muon ’s for BB-Adaptive , compared with 1.19 1.19 – 1.27 × 1.27\\times for the measured static configurations (Appendix G )."
+        }
+      ],
+      "title": "Does Muon Need Fine-Grained Spectral Shaping?",
+      "url": "https://arxiv.org/abs/2610.07497v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.06621",
+      "summary": "A controlled LoRA study separates the choice of frozen factor from the choice of pretrained-weight spectral band. At rank 2, factor orientation has the larger effect, and the contrast weakens as rank rises.",
+      "relevance": "Offers practical guidance on low-rank parameterization and spectral-subspace choices in language-model fine-tuning.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "We use a two-by-two design: freeze A A or B B , each on the top or bottom band, while retaining the same pretrained model, data, adapted modules and training budget."
+        },
+        {
+          "source": "inspection",
+          "quote": "At rank 2, the frozen-factor contrast exceeds the contrast between spectral extremes. The A-frozen advantage survives count and module controls and, on two pairs, a random input basis. It weakens with rank and varies by task and model."
+        }
+      ],
+      "title": "Frozen Factor or Spectral Band? Disentangling Two Choices in Low-Rank LoRA",
+      "url": "https://arxiv.org/abs/2610.06621v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.12444",
+      "summary": "ZIP-SR and ZE-EDEN redesign 4-bit AdamW optimizer-state quantization. Across paired GPT- and Llama-style pretraining runs, both reduce TorchAO 4-bit AdamW's validation-loss gap to 32-bit AdamW.",
+      "relevance": "Directly addresses the model-quality side of optimizer-state compression for memory-efficient LLM pretraining.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "We pretrain GPT-style models at 162M, 405M, 1.4B, and 2.7B parameters and Llama-style models at 130M, 350M, and 1.1B with three paired seeds. Table 4 reports absolute 32-bit AdamW validation loss and paired 4-bit gaps. Both methods reduce TorchAO’s mean gap at every model size."
+        },
+        {
+          "source": "inspection",
+          "quote": "For each model size, the selected learning rate and the remaining training hyperparameters are shared across optimizer configurations."
+        }
+      ],
+      "title": "Rounding in Preconditioner Space: Redesigning 4-bit AdamW Optimizer-State Quantization",
+      "url": "https://arxiv.org/abs/2610.12444v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.14393",
+      "summary": "SciCurateBench evaluates verification of experimental criteria in scientific papers. LangPoli combines policy-guided tool creation with evidence-gap feedback and is also evaluated on retrieval re-ranking benchmarks.",
+      "relevance": "Provides directly applicable paper-classification and retrieval evaluations for a research-digest agent.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "LangPoli is the only method that performs consistently well on both tasks of SciCurateBench, reaching 83.16% F1 on paper classification (vs. 58.22% for its base LLM) and 69.43% F1 on structured information retrieval (vs. 59.13% for the strongest baseline)."
+        },
+        {
+          "source": "inspection",
+          "quote": "Second, the current benchmark focuses on life science research, and extending it to additional scientific domains remains an important direction."
+        }
+      ],
+      "title": "SciCurateBench: Curating Experimental Data from Heterogeneous Scientific Literature with Verbal-Action Agents",
+      "url": "https://arxiv.org/abs/2610.14393v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.10590",
+      "summary": "A Python harness lets an agent replace past tool results with short notes while retaining recoverable originals. One noisy debugging case reduced cumulative input tokens and estimated cost, but contrasting tasks did not consistently preserve those gains.",
+      "relevance": "Directly informs explicit context management in a handwritten, tool-using digest harness.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "A Python harness exposes batch archival and explicit recovery without task-specific model training, while protecting user instructions and assistant messages from these operations."
+        },
+        {
+          "source": "inspection",
+          "quote": "The method made more requests and took 17% longer. A contrasting application-development pair produced no context or cost saving, and an earlier continuation exhibited lower manually assessed quality despite reduced context."
+        }
+      ],
+      "title": "Agent-Controlled Forgetting for Tool-Using Agents: Reversible Context Curation in Practice",
+      "url": "https://arxiv.org/abs/2610.10590v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    }
+  ],
+  "x_feature": null,
+  "limitations": [
+    "The 4-bit AdamW passages establish validation-loss comparisons, not measured peak GPU-memory savings or step-time costs; no such savings are claimed here.",
+    "BulkBoost's strongest static configuration selects its fraction separately for each setting, and its evaluation is limited to Pythia continued pretraining.",
+    "SciCurateBench focuses on life sciences; the context-curation study uses software tasks. Neither directly validates a research-digest workflow.",
+    "X analysis was disabled; no attention claims are made.",
+    "inspect:2610.11730: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.06116: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.08049: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.12444: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.10965: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.10590: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.06621: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.14393: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.07497: only question-relevant HTML passages were inspected, not the whole paper."
+  ],
+  "stats": {
+    "fetched_count": 3311,
+    "candidate_count": 3311,
+    "llm_calls": 22,
+    "steps": 14,
+    "inspections": 10,
+    "expansions": 3,
+    "screened": 67,
+    "usage": {
+      "recorded_calls": 22,
+      "llm_latency_seconds": 311.7303534599778,
+      "input_tokens": 1054677,
+      "output_tokens": 10590,
+      "estimated_api_cost_usd": null,
+      "calls_without_usage": 0,
+      "cost_note": "API-equivalent estimate using standard GPT-5.6-Luna rates checked 2026-11-17: $0.20/M input, $1.20/M output; above 272K input, $0.40/M and $1.80/M. Assumes all input is uncached; excludes cache writes and external tools. Not actual Codex subscription billing. Unknown usage/model yields null cost.",
+      "price_source": "https://developers.openai.com/api/docs/models/gpt-5.6-luna"
+    },
+    "tool_calls": 13,
+    "tool_latency_seconds": 83.51675812707981
+  }
+}

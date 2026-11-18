@@ -1,0 +1,247 @@
+{
+  "run_id": "9770b3e9063649298a27ba5375498ace",
+  "status": "completed",
+  "user_id": "dmitrii",
+  "profile_fingerprint": "a2480e0075ad9cdf236d40e30f74f9bfd87a08dd948530b42e6b57e4a123bfc0",
+  "pipeline_version": "react-v2",
+  "categories": [
+    "cs.LG",
+    "cs.CL",
+    "stat.ML",
+    "cs.AI",
+    "cs.IR"
+  ],
+  "date_from": "2026-11-02",
+  "date_to": "2026-11-08",
+  "papers": [
+    {
+      "paper_id": "2611.06598",
+      "summary": "Defines behavioral compression rate as the smallest serialized LoRA adapter retaining a fixed fraction of held-out fine-tuning gain. The measured rate depends on both dataset and frozen base model; its proposed shrinkability predictor remains retrospectively validated.",
+      "relevance": "Directly informs how to measure useful low-rank compressibility rather than relying on adapter rank or reconstruction error.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "the smallest serialized size of a compressed adapter that, once reloaded into the frozen base model, retains a fixed fraction of its held-out fine-tuning gain"
+        },
+        {
+          "source": "inspection",
+          "quote": "We therefore interpret Equation 7 as a retrospective empirical approximation rather than a prospectively validated prediction law."
+        }
+      ],
+      "title": "The Behavioral Rate of Fine-Tuning: Compression as a Measure of Useful Information",
+      "url": "https://arxiv.org/abs/2611.06598v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.08414",
+      "summary": "Compares LoRA spectra and subspaces during supervised fine-tuning and reinforcement learning. Controlled intermediate settings identify group-mean baseline subtraction as a source of their differing dynamics.",
+      "relevance": "Closely matches the interest in singular-value dynamics and stage-specific LoRA optimization.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "both contrasts appear only once a group-mean baseline is subtracted from the reward"
+        },
+        {
+          "source": "inspection",
+          "quote": "Both configurations achieve the highest reported mean accuracy in most evaluated settings."
+        }
+      ],
+      "title": "Spectral and Subspace Dynamics of LoRA in Supervised Fine-Tuning and Reinforcement Learning",
+      "url": "https://arxiv.org/abs/2611.08414v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.07349",
+      "summary": "GEAR uses normal-space spectral information to decide when a LoRA update should gain rank. Its reported LLaMA3-8B commonsense score rises from 86.61 to 88.45 while trainable parameters fall from 42.0M to 14.4M; rank audits add computation.",
+      "relevance": "Addresses which task-relevant directions factor gradients cannot access and how to expand a low-rank parameterization.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "their unobservable subspace coincides with the normal space of the low-rank manifold"
+        },
+        {
+          "source": "inspection",
+          "quote": "On LLaMA3-8B, it raises the average commonsense score from 86.61 to 88.45 while reducing trainable parameters from 42.0M to 14.4M."
+        },
+        {
+          "source": "inspection",
+          "quote": "The main audit overhead therefore comes from the additional backward probes and candidate forward evaluations rather than large-scale matrix operations."
+        }
+      ],
+      "title": "From What Is Used to What Is Missing: Rethinking Dynamic Rank in LoRA",
+      "url": "https://arxiv.org/abs/2611.07349v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.10792",
+      "summary": "Formulates forward-only LLM fine-tuning on fixed-rank matrix manifolds. On an OPT-13B SQuAD profile, ZO-RGD and LOZO both use about 39.4 GB peak reserved memory, but ZO-RGD takes 3.51 versus 1.93 seconds per update.",
+      "relevance": "Connects low-rank optimization geometry to measured memory–runtime tradeoffs in LLM fine-tuning.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "constrain each additive update block to a fixed-rank matrix manifold while keeping the pretrained weights frozen"
+        },
+        {
+          "source": "inspection",
+          "quote": "ZO-RGD/ZO-RGD-S average 3.51 / 3.54 seconds per update versus LOZO’s 1.93, all at approximately 39.4 GB peak reserved memory"
+        }
+      ],
+      "title": "Zeroth-Order Riemannian Optimization on Fixed-Rank Manifolds for LLM Fine-Tuning",
+      "url": "https://arxiv.org/abs/2611.10792v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.10212",
+      "summary": "Develops distributed Muon-style spectral optimization with finite Newton–Schulz and low-rank communication variants. In its CIFAR-10 ResNet-20 experiment, rank-32 compression reduces simulated communication payload by 40.5% while lowering accuracy relative to the full-rank variant.",
+      "relevance": "Addresses spectral optimization and the communication–quality tradeoff, though the reported experiments do not establish LLM-scale performance.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "rank- 32 32 compression reduces the simulated communication payload by 40.5 % 40.5\\% , from 385.39 to 229.34 GB"
+        },
+        {
+          "source": "inspection",
+          "quote": "DisMUSE-LR and DisMUSE-Hybrid achieve test accuracies of 85.08% and 85.03%, respectively, illustrating the accuracy–communication trade-off."
+        },
+        {
+          "source": "inspection",
+          "quote": "We evaluate DisMUSE on image classification tasks"
+        }
+      ],
+      "title": "DisMUSE: An Efficient Distributed Singular-Spectrum-Based Optimization Approach with Theoretical Convergence Guarantee",
+      "url": "https://arxiv.org/abs/2611.10212v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.04199",
+      "summary": "Studies information-based measures of label-noise memorization across MNIST runs. Its memorization term rises on training samples but remains near zero on held-out samples with freshly drawn noisy labels; conclusions are limited to small image datasets and synthetic noise.",
+      "relevance": "Directly matches the interest in distinguishing memorization from generalization under label noise.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "the normalized memorization term rose with M on the training set, stayed near zero on held-out samples with freshly drawn noisy labels"
+        },
+        {
+          "source": "inspection",
+          "quote": "The study used one architecture, a multilayer perceptron, and two small image datasets. It considered only synthetic class-conditional noise"
+        }
+      ],
+      "title": "An Information Budget for Label-Noise Memorization, and What Statistical Complexity Tracks: A Study with Multilayer Perceptrons",
+      "url": "https://arxiv.org/abs/2611.04199v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.07859",
+      "summary": "CORE combines passage-level retrieval, snippet selection, and context management in a training-free research-agent harness. In controlled closed-search comparisons, it reports higher answer accuracy and evidence recall than two comparator harnesses across three models and benchmarks.",
+      "relevance": "Provides directly applicable ideas for retrieval and context handling in a handwritten research-digest agent.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "CORE searches at the passage level but returns evidence at the snippet level."
+        },
+        {
+          "source": "inspection",
+          "quote": "Across three agent models and three benchmarks, CORE achieves higher answer accuracy and evidence recall than Tongyi DeepResearch and OpenResearcher in every model–benchmark comparison"
+        }
+      ],
+      "title": "CORE: Coarse-to-Fine Search with Context Management for Deep Research",
+      "url": "https://arxiv.org/abs/2611.07859v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    }
+  ],
+  "x_feature": null,
+  "limitations": [
+    "Code availability and independent reproducibility were not checked.",
+    "DisMUSE communication savings are simulated and its reported experiments are not at LLM scale.",
+    "The label-noise study uses a multilayer perceptron, two small image datasets, and synthetic noise.",
+    "ZO-RGD's OPT-30B comparison cites baseline results with checkpoint selection that is not fully matched.",
+    "No selected paper directly tests whether pretraining makes full LLM weights more compressible without sacrificing quality.",
+    "inspect:2611.08924: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2611.08414: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2611.06598: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2611.07349: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2611.10212: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2611.03633: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2611.07859: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2611.10792: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2611.05022: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2611.04199: only question-relevant HTML passages were inspected, not the whole paper."
+  ],
+  "stats": {
+    "fetched_count": 2673,
+    "candidate_count": 2673,
+    "llm_calls": 27,
+    "steps": 19,
+    "inspections": 11,
+    "expansions": 5,
+    "screened": 57,
+    "usage": {
+      "recorded_calls": 27,
+      "llm_latency_seconds": 404.4135132469528,
+      "input_tokens": 1221649,
+      "output_tokens": 13288,
+      "estimated_api_cost_usd": null,
+      "calls_without_usage": 0,
+      "cost_note": "API-equivalent estimate using standard GPT-5.6-Luna rates checked 2026-11-17: $0.20/M input, $1.20/M output; above 272K input, $0.40/M and $1.80/M. Assumes all input is uncached; excludes cache writes and external tools. Not actual Codex subscription billing. Unknown usage/model yields null cost.",
+      "price_source": "https://developers.openai.com/api/docs/models/gpt-5.6-luna"
+    },
+    "tool_calls": 16,
+    "tool_latency_seconds": 87.09584616302163
+  }
+}

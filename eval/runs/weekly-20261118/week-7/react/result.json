@@ -1,0 +1,242 @@
+{
+  "run_id": "2440c4d2490942cca33e07271d421366",
+  "status": "completed",
+  "user_id": "dmitrii",
+  "profile_fingerprint": "a2480e0075ad9cdf236d40e30f74f9bfd87a08dd948530b42e6b57e4a123bfc0",
+  "pipeline_version": "react-v2",
+  "categories": [
+    "cs.LG",
+    "cs.CL",
+    "stat.ML",
+    "cs.AI",
+    "cs.IR"
+  ],
+  "date_from": "2026-11-09",
+  "date_to": "2026-11-15",
+  "papers": [
+    {
+      "paper_id": "2611.17191",
+      "summary": "Adds an SVD-free Rényi-2 effective-rank penalty to LoRA training. Mixed-domain rank sweeps report lower mean Wiki perplexity than unpenalized LoRA at every tested rank of at least 16 for λ = 0.01, though greater rank utilization does not always help.",
+      "relevance": "Directly addresses whether spectral regularization can improve low-rank adaptation while preserving learning and retention.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "a penalty weight of λ = 0.01 \\\\lambda=0.01 lowers mean Wiki perplexity at every tested rank of at least 16 16 relative to unpenalized LoRA."
+        },
+        {
+          "source": "inspection",
+          "quote": "Fuller spectral utilization need not improve every perplexity metric, so effective rank should be interpreted jointly with mixture fit and the held-out probes."
+        }
+      ],
+      "title": "Maximizing Capacity Utilization of LoRA Adapters for Mitigating the Learning-Forgetting Trade-off",
+      "url": "https://arxiv.org/abs/2611.17191v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.11752",
+      "summary": "Shows that low stable rank can coexist with a broad update spectrum in language-model post-training. Selected OLMo-2-7B PPO attention updates have stable ranks of 9.6–18.3 but need 532–1,222 components for 80% energy.",
+      "relevance": "Warns against treating stable rank alone as evidence that weight updates are cheaply compressible.",
+      "evidence": [
+        {
+          "source": "abstract",
+          "quote": "three proximal policy optimization (PPO) attention updates have stable ranks of 9.6-18.3 but require 532-1,222 singular components to capture 80% of their energy."
+        },
+        {
+          "source": "inspection",
+          "quote": "Assessing the task-level value of that energy requires evaluating models after spectral truncation."
+        }
+      ],
+      "title": "Spectral Rank and Step-Direction Dynamics in Language-Model Post-Training",
+      "url": "https://arxiv.org/abs/2611.11752v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.16905",
+      "summary": "FOAM reduces SOAP optimizer state through one-sided preconditioning and factored moments. In reported 124M–760M pretraining comparisons, it approaches SOAP validation loss with half SOAP's matrix-parameter state and substantially less wall-clock time.",
+      "relevance": "Provides measured quality, memory, and time trade-offs for matrix-structured LLM optimization.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "FOAM uses half of SOAP’s matrix-parameter state at every size, and its measured peak memory at small size is + 7.4 % +7.4\\\\% over AdamW against + 12.9 % +12.9\\\\% for SOAP."
+        },
+        {
+          "source": "inspection",
+          "quote": "SOAP attains the lowest validation loss at every scale, with FOAM behind by 0.004 0.004 , 0.008 0.008 , and 0.005 0.005 nats at small, medium, and large, each within about one seed std."
+        }
+      ],
+      "title": "Factored One-sided Adam-Moment for Practical and Scalable SOAP",
+      "url": "https://arxiv.org/abs/2611.16905v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.17876",
+      "summary": "Finds delayed effects of temporary weight decay in Muon pretraining: a schedule transferred from 162M to 1.4B is worse immediately after removal but improves final validation loss relative to no decay and a sampled constant-decay baseline.",
+      "relevance": "Connects regularization schedules, weight norms, and final model quality across pretraining scales.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "a schedule selected at 162M and transferred without retuning to 1.4B is 0.26 nats worse than no decay when removed, overtakes it only after 73% of training, and ultimately finishes 0.028 nats better while also outperforming the best sampled constant-decay baseline."
+        },
+        {
+          "source": "inspection",
+          "quote": "these runs do not locate the optimal duration."
+        }
+      ],
+      "title": "Delayed Effects of Temporary Weight Decay in Muon Pretraining",
+      "url": "https://arxiv.org/abs/2611.17876v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.13306",
+      "summary": "HiLo transmits compressed gradients for LoRA post-training while workers replay optimizer updates. Spar's spectral compression keeps training rank 64 and, on two reasoning tasks, approaches full-synchronization accuracy at small communication budgets.",
+      "relevance": "Directly tests the quality–communication–throughput trade-off without reducing LoRA training rank.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "Low-rank LoRA reduces the training rank to k k , whereas all HiLo variants keep rank 64 and compress only the communicated gradients"
+        },
+        {
+          "source": "inspection",
+          "quote": "On KK at rank 1 (1.6% of the bytes), HiLo + Spar reaches 81.6% pass@4 against 83.2% for Full Sync"
+        }
+      ],
+      "title": "Train High, Ship Low: Efficient LoRA Synchronization for Distributed On-Policy Post-Training",
+      "url": "https://arxiv.org/abs/2611.13306v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.17784",
+      "summary": "SCALAR trains scalar coefficients over fixed directions. On Qwen2.5-7B commonsense fine-tuning, reported accuracy is comparable to rank-8 LoRA with fewer trainable parameters, lower peak memory, and higher throughput.",
+      "relevance": "Offers a concrete PEFT comparison spanning adaptation quality, parameter budget, memory, and speed.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "At the largest reported coefficient budgets, SCALAR obtains average accuracies of 88.9 on Qwen2.5-7B and 87.3 on LLaMA3-8B, compared with 88.8 and 87.4 for rank-8 LoRA."
+        },
+        {
+          "source": "inspection",
+          "quote": "SCALAR achieves the lowest peak memory among the evaluated PEFT methods, using 20% less memory than LoRA"
+        },
+        {
+          "source": "inspection",
+          "quote": "Training throughput increases by 6% over LoRA"
+        }
+      ],
+      "title": "Direction or Magnitude? Learning Scalars over Task-Calibrated Directions",
+      "url": "https://arxiv.org/abs/2611.17784v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.15600",
+      "summary": "MemCredit learns memory-selection utility from counterfactual interventions, using semantic retrieval for candidate generation and predicted decision utility to allocate context. It outperforms BM25 memory retrieval on ALFWorld under a 500-token budget.",
+      "relevance": "Suggests a testable context-management design for a research-digest agent, though its evaluations are on other agent tasks.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "semantic relevance retrieves a broad candidate pool, while predicted utility determines which memories are retained under a fixed token budget."
+        },
+        {
+          "source": "inspection",
+          "quote": "On ALFWorld, MemCredit achieves 86.57 % 86.57\\\\% SR@50 under a 500-token historical-memory budget, compared with 65.67 % 65.67\\\\% for BM25 retrieval."
+        }
+      ],
+      "title": "MemCredit: From Relevance to Utility for Decision-Time Memory in Long-Horizon Web Agents",
+      "url": "https://arxiv.org/abs/2611.15600v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    }
+  ],
+  "x_feature": null,
+  "limitations": [
+    "The spectral-rank paper does not establish task-level quality after truncating updates; its full-SVD validation covers selected matrices.",
+    "FOAM's main reported scale comparison is 124M–760M, so frontier-scale behavior remains uncertain.",
+    "HiLo's reported speedups depend on bandwidth-constrained links, and its held-out accuracy comparison uses three seeds on two reasoning tasks.",
+    "SCALAR's memory and throughput measurements are for Qwen2.5-7B fine-tuning on two NVIDIA H20 GPUs; results need not generalize to other systems.",
+    "MemCredit was evaluated on ALFWorld and WebShop, not a research-digest workflow.",
+    "Code repositories were not independently checked for completeness or reproducibility. X analysis was disabled.",
+    "inspect:2611.17191: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2611.11752: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2611.16905: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2611.17876: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2611.13331: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2611.13306: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2611.17784: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2611.15600: only question-relevant HTML passages were inspected, not the whole paper."
+  ],
+  "stats": {
+    "fetched_count": 2141,
+    "candidate_count": 2141,
+    "llm_calls": 15,
+    "steps": 10,
+    "inspections": 8,
+    "expansions": 1,
+    "screened": 45,
+    "usage": {
+      "recorded_calls": 15,
+      "llm_latency_seconds": 222.94505908509018,
+      "input_tokens": 562214,
+      "output_tokens": 7388,
+      "estimated_api_cost_usd": null,
+      "calls_without_usage": 0,
+      "cost_note": "API-equivalent estimate using standard GPT-5.6-Luna rates checked 2026-11-17: $0.20/M input, $1.20/M output; above 272K input, $0.40/M and $1.80/M. Assumes all input is uncached; excludes cache writes and external tools. Not actual Codex subscription billing. Unknown usage/model yields null cost.",
+      "price_source": "https://developers.openai.com/api/docs/models/gpt-5.6-luna"
+    },
+    "tool_calls": 9,
+    "tool_latency_seconds": 104.51437474996783
+  }
+}

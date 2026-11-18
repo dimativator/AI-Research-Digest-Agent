@@ -1,0 +1,249 @@
+{
+  "run_id": "812f23591bdb4144a993424008b0abd2",
+  "status": "completed",
+  "user_id": "dmitrii",
+  "profile_fingerprint": "a2480e0075ad9cdf236d40e30f74f9bfd87a08dd948530b42e6b57e4a123bfc0",
+  "pipeline_version": "react-v2",
+  "categories": [
+    "cs.LG",
+    "cs.CL",
+    "stat.ML",
+    "cs.AI",
+    "cs.IR"
+  ],
+  "date_from": "2026-09-28",
+  "date_to": "2026-10-04",
+  "papers": [
+    {
+      "paper_id": "2610.04249",
+      "summary": "Analyzes how GD, Adam-like, Muon, Shampoo, and K-FAC update geometry changes singular-mode birth, decay, and effective-rank trajectories in matrix factorization. Its broader regression experiment finds different transient spectra despite similar final fits.",
+      "relevance": "Directly addresses how optimization shapes weight spectra and low-rank bias, while remaining a model-based rather than LLM-scale result.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "Under explicit balance and alignment assumptions, we derive birth, saturation, and decay laws for Euclidean GD, coordinate-wise updates of SignGD and an instantaneous Adam approximation, spectral updates of Muon and cumulative Shampoo, and a block curvature model of K-FAC."
+        },
+        {
+          "source": "inspection",
+          "quote": "All methods reach comparable final loss and final spectra of W W despite substantially different transient dynamics shown by the stable rank and effective rank throughout training."
+        }
+      ],
+      "title": "Optimizer Geometry Sets the Pace: Spectral Learning Dynamics in Matrix Factorization",
+      "url": "https://arxiv.org/abs/2610.04249v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2609.40127",
+      "summary": "Learns low-rank projection subspaces jointly against model-output KL while keeping pretrained weights frozen. At 70% compression on Llama-2-7B, it reports WikiText-2 perplexity of 10.9 versus 13.3 for the strongest baseline.",
+      "relevance": "Tests preservation of LLM quality under low-rank weight factorization. It is post-training compression, not evidence that pretraining itself improves compressibility.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "All projectors are optimized jointly against a global objective—the KL divergence to the dense model’s output distribution or the model’s original training loss—while the pretrained weights remain frozen."
+        },
+        {
+          "source": "inspection",
+          "quote": "At − 70 % -70\\% compression, LSP brings Llama-2-7B to 10.9 10.9 WikiText-2 perplexity and 42.2 % 42.2\\% mean zero-shot accuracy, versus 13.3 13.3 and 36.0 % 36.0\\% for the strongest baseline."
+        }
+      ],
+      "title": "Learning Functional Subspaces for Neural Network Compression",
+      "url": "https://arxiv.org/abs/2609.40127v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.04507",
+      "summary": "Uses module-matched, paired-seed LoRA rank sweeps under label noise. In its Qwen2.5-7B classification experiment, every sampled rank, including parameter parity, has higher test NLL than dense fine-tuning of the same modules.",
+      "relevance": "Combines LoRA rank, practical language-model fine-tuning, and generalization under noisy labels.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "We quantify this relation under label noise on four vision backbones and a 7 7 B language model with a module-matched rank sweep (MMRS), which extends past full rank and compares every rank with dense fine-tuning of the same modules, paired by seed."
+        },
+        {
+          "source": "inspection",
+          "quote": "Every sampled rank, parity included, remains behind dense in all three seeds, while the valley reference reads Rec > 1 \\mathrm{Rec}>1 at every sampled rank from r = 448 r{=}448 on."
+        }
+      ],
+      "title": "LoRA's Second Descent Extends Beyond Parameter Parity",
+      "url": "https://arxiv.org/abs/2610.04507v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2609.34264",
+      "summary": "Proposes a fixed-rank-manifold LoRA optimizer that accounts for factorization gauge symmetry. Reported supervised fine-tuning results show lower validation loss, while some downstream accuracy differences are small relative to seed variation.",
+      "relevance": "Directly addresses optimization geometry and practical language-model behavior of low-rank updates.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "Our optimizer applies row and column normalization in a conditioning frame defined by the left singular vectors of the tangent momentum, projects the resulting direction back onto the tangent space, and retracts to the fixed-rank manifold."
+        },
+        {
+          "source": "inspection",
+          "quote": "RoM obtains the highest mean accuracy on both downstream benchmarks for the Llama models, although the differences are small relative to variation across seeds."
+        }
+      ],
+      "title": "Rotated Manifold Optimization for Low-Rank Adaptation",
+      "url": "https://arxiv.org/abs/2609.34264v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.04204",
+      "summary": "Uses Nyström sketches and quantized optimizer states for LLM pretraining. For LLaMA-1.3B, Table 3 reports Q-Clean optimizer-state memory of 1.28G and peak memory of 50.24G, versus Muon’s 2.80G and 51.83G; Q-Clean’s perplexity is 12.10 versus Muon’s 11.78.",
+      "relevance": "Provides a concrete model-quality versus optimizer-state and peak-memory tradeoff for memory-efficient pretraining.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "Methods LLaMA-350M LLaMA-1.3B Perplexity Opt. Mem. Peak Mem. Perplexity Opt. Mem. Peak Mem. AdamW ( Kingma and Ba, 2014 ) 19.63 1.40G 47.93G 12.12 5.11G 54.13G SOAP ( Vyas et al., 2024 ) 15.12 7.64G 54.25G 11.52 13.62G 79.02G Muon ( Jordan et al., 2024 ) 16.97 0.83G 47.36G 11.78 2.80G 51.83G ALSO ( Romashov et al., 2026 ) 15.36 1.30G 47.88G 12.19 4.71G 53.82G Clean (Ours) 15.87 1.25G 47.68G 11.65 4.48G 53.44G Q-Clean (Ours) 16.44 0.38G 46.82G 12.10 1.28G 50.24G"
+        },
+        {
+          "source": "inspection",
+          "quote": "Peak memory in Table 3 is measured on a single GPU at this micro-batch size, without activation checkpointing."
+        }
+      ],
+      "title": "Clean: Second-order LLM Training at Linear Memory Cost via Nystr{ö}m Sketching",
+      "url": "https://arxiv.org/abs/2610.04204v3",
+      "version": 3,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2609.36692",
+      "summary": "Compares two spectral-preconditioning variants with AdamW, Muon, and MANO across GPT-2, LLaMA, and Qwen3 pretraining. At LLaMA-1.3B scale, NormPre-L reports validation loss of 2.8662 versus Muon’s 2.9037, with peak memory approximately equal to Muon’s and a shorter end-to-end step time.",
+      "relevance": "Connects Newton–Schulz and sketched spectral optimization to measured quality, throughput, and GPU-memory tradeoffs.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "Within each setting, all optimizers use matched model initialization, data order, training budget and evaluation protocol."
+        },
+        {
+          "source": "inspection",
+          "quote": "LLaMA-1.3B C4 2.9385 2.9037 2.8963 2.8571 2.8662"
+        },
+        {
+          "source": "inspection",
+          "quote": "LLaMA-1.3B C4 AdamW 25.1 22121.0 23.70 42.34 Muon 1010.1 23124.2 22.67 37.84 MANO 87.1 22210.3 23.61 37.84 NormPre-G 1054.2 ↑ \\uparrow 4.37% 23141.8 ↑ \\uparrow 0.08% 22.66 ↓ \\downarrow 0.04% 37.83 NormPre-L 333.3 ↓ \\downarrow 67.00% 22399.7 ↓ \\downarrow 3.13% 23.41 ↑ \\uparrow 3.26% 37.84"
+        }
+      ],
+      "title": "Normalize-Then-Precondition: A Hierarchical Approach to Marginal Scale and Interaction Geometry for LLM Training",
+      "url": "https://arxiv.org/abs/2609.36692v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.02202",
+      "summary": "Introduces author-judged retrieval of prior papers relevant to research questions. It reports 0.42 Recall@20 for agentic search versus 0.48 for embedding retrieval and identifies candidate coverage as a limiting factor.",
+      "relevance": "Directly informs retrieval and relevance-ranking decisions for the user’s research-digest agent.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "We introduce a retrieval task with author-provided judgments: given an initial research question, retrieve these papers from only the literature available when the project began."
+        },
+        {
+          "source": "inspection",
+          "quote": "Agentic search does no better than embedding retrieval (0.42 vs. 0.48 Recall@20) despite calling that same retriever as a tool."
+        },
+        {
+          "source": "inspection",
+          "quote": "Stronger rerankers benefit more from better candidate coverage."
+        }
+      ],
+      "title": "ScholarCatalyst: A Benchmark for Retrieving Papers That Inspire New Research",
+      "url": "https://arxiv.org/abs/2610.02202v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    }
+  ],
+  "x_feature": null,
+  "limitations": [
+    "The cited performance results come from the papers’ reported experiments, not independent replication.",
+    "The spectral-dynamics paper studies matrix factorization and regression, not measured LLM weight compressibility.",
+    "LSP compresses pretrained weights after training rather than testing training-induced compressibility.",
+    "The larger NormPre model results are single runs under matched budgets.",
+    "Clean’s 1.3B learning-rate comparison used a shortened sweep; its reported 13B feasibility should not be conflated with the measured 1.3B comparison.",
+    "Code availability and reproducibility were not verified. X analysis was disabled.",
+    "inspect:2610.04204: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2609.40127: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2609.35297: full-text inspection unavailable; only abstract evidence was available.",
+    "inspect:2610.04249: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.04507: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2609.34264: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.02067: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2609.37027: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.00615: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.02202: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2609.36692: only question-relevant HTML passages were inspected, not the whole paper."
+  ],
+  "stats": {
+    "fetched_count": 4344,
+    "candidate_count": 4344,
+    "llm_calls": 23,
+    "steps": 18,
+    "inspections": 12,
+    "expansions": 2,
+    "screened": 45,
+    "usage": {
+      "recorded_calls": 23,
+      "llm_latency_seconds": 403.07325291694724,
+      "input_tokens": 1021501,
+      "output_tokens": 14210,
+      "estimated_api_cost_usd": null,
+      "calls_without_usage": 0,
+      "cost_note": "API-equivalent estimate using standard GPT-5.6-Luna rates checked 2026-11-17: $0.20/M input, $1.20/M output; above 272K input, $0.40/M and $1.80/M. Assumes all input is uncached; excludes cache writes and external tools. Not actual Codex subscription billing. Unknown usage/model yields null cost.",
+      "price_source": "https://developers.openai.com/api/docs/models/gpt-5.6-luna"
+    },
+    "tool_calls": 15,
+    "tool_latency_seconds": 38.52764279200346
+  }
+}

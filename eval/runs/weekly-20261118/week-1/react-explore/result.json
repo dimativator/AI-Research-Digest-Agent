@@ -1,0 +1,241 @@
+{
+  "run_id": "34f961043b5744d4a495b258dd64fe1f",
+  "status": "completed",
+  "user_id": "dmitrii",
+  "profile_fingerprint": "a2480e0075ad9cdf236d40e30f74f9bfd87a08dd948530b42e6b57e4a123bfc0",
+  "pipeline_version": "react-v2",
+  "categories": [
+    "cs.LG",
+    "cs.CL",
+    "stat.ML",
+    "cs.AI",
+    "cs.IR"
+  ],
+  "date_from": "2026-09-28",
+  "date_to": "2026-10-04",
+  "papers": [
+    {
+      "paper_id": "2609.40127",
+      "summary": "Learnable Subspace Projections train the subspaces discarded from frozen language-model weights. Across OPT, Qwen3, and Llama-2 models, the authors report lower perplexity than evaluated compression baselines at matched compression ratios, with the advantage growing at high compression.",
+      "relevance": "Most direct test here of preserving model quality after low-rank compression, though it optimizes compression after pretraining rather than training weights to become compressible.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "One of the two LSP variants has the lowest perplexity in all 12 model–ratio settings, and the margin grows with the ratio."
+        },
+        {
+          "source": "inspection",
+          "quote": "All baselines run from their official code with the same calibration data and precision as LSP; SVD baselines are evaluated in factorized form"
+        }
+      ],
+      "title": "Learning Functional Subspaces for Neural Network Compression",
+      "url": "https://arxiv.org/abs/2609.40127v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.04249",
+      "summary": "Derives how GD, simplified Adam, ideal Muon, Shampoo, and a K-FAC model change the emergence and decay of singular modes. Controlled matrix-factorization experiments find markedly different transient effective-rank trajectories despite similar final spectra.",
+      "relevance": "Addresses how optimizer geometry shapes spectral bias, while leaving open whether those dynamics improve LLM weight compressibility.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "Under explicit balance and alignment assumptions, we derive birth, saturation, and decay laws"
+        },
+        {
+          "source": "inspection",
+          "quote": "The stable and effective rank curves therefore mainly differ during the transient phase, while their later agreement reflects the unique full observation target rather than identical optimization dynamics."
+        }
+      ],
+      "title": "Optimizer Geometry Sets the Pace: Spectral Learning Dynamics in Matrix Factorization",
+      "url": "https://arxiv.org/abs/2610.04249v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.04204",
+      "summary": "Clean approximates SOAP preconditioners with Nyström sketches, and Q-Clean further compresses optimizer states. In LLaMA-1.3B pretraining, the reported optimizer-state memory is 4.48 GB for Clean and 1.28 GB for Q-Clean, versus 5.11 GB for AdamW and 2.80 GB for Muon; Clean reaches AdamW’s final loss in 64 rather than 81 hours.",
+      "relevance": "Provides unusually concrete quality, optimizer-memory, peak-memory, and time comparisons for memory-efficient LLM pretraining.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "AdamW ( Kingma and Ba, 2014 ) 19.63 1.40G 47.93G 12.12 5.11G 54.13G SOAP ( Vyas et al., 2024 ) 15.12 7.64G 54.25G 11.52 13.62G 79.02G Muon ( Jordan et al., 2024 ) 16.97 0.83G 47.36G 11.78 2.80G 51.83G ALSO ( Romashov et al., 2026 ) 15.36 1.30G 47.88G 12.19 4.71G 53.82G Clean (Ours) 15.87 1.25G 47.68G 11.65 4.48G 53.44G Q-Clean (Ours) 16.44 0.38G 46.82G 12.10 1.28G 50.24G"
+        },
+        {
+          "source": "inspection",
+          "quote": "Clean reaches AdamW’s final validation loss in 64 64 of the 81 81 hours of AdamW requirements"
+        }
+      ],
+      "title": "Clean: Second-order LLM Training at Linear Memory Cost via Nystr{ö}m Sketching",
+      "url": "https://arxiv.org/abs/2610.04204v3",
+      "version": 3,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2609.34264",
+      "summary": "Rotated Manifold Optimization incorporates the gauge symmetry of LoRA factors. In matched rank-16 mathematical-reasoning fine-tuning, it reports the lowest validation loss across three model sizes; downstream SFT differences are small relative to seed variation, while its Qwen2.5-3B RL comparison reports higher accuracy than Adam at 1.08× per-step time.",
+      "relevance": "Directly informs both the geometry and practical optimization of low-rank LLM adapters.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "At all three model sizes, RoM achieves the lowest final validation loss consistently"
+        },
+        {
+          "source": "inspection",
+          "quote": "RoM obtains the highest mean accuracy on both downstream benchmarks for the Llama models, although the differences are small relative to variation across seeds."
+        },
+        {
+          "source": "inspection",
+          "quote": "RoM shows a clearer advantage over Adam in RL finetuning, while requiring only 1.08 × 1.08\\times the per-step training time"
+        }
+      ],
+      "title": "Rotated Manifold Optimization for Low-Rank Adaptation",
+      "url": "https://arxiv.org/abs/2609.34264v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.04507",
+      "summary": "A module-matched LoRA rank sweep studies generalization under label noise on four vision backbones and a 7B language model. The reported second-descent pattern is clearest in vision; in the measured settings, parameter-saving post-peak ranks do not reach module-matched dense fine-tuning risk.",
+      "relevance": "Connects adapter rank and factorized optimization to noisy-label memorization and generalization, with a dense control.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "We quantify this relation under label noise on four vision backbones and a 7 7 B language model with a module-matched rank sweep (MMRS), which extends past full rank and compares every rank with dense fine-tuning of the same modules, paired by seed."
+        },
+        {
+          "source": "inspection",
+          "quote": "Across four vision backbones and a 7 7 B language model, no measured post-peak rank that still saves parameters reaches dense"
+        }
+      ],
+      "title": "LoRA's Second Descent Extends Beyond Parameter Parity",
+      "url": "https://arxiv.org/abs/2610.04507v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2609.37590",
+      "summary": "FOCUS compresses an agent’s live interaction history by estimating which spans matter for future decisions. Its authors evaluate tool-use and other agent benchmarks and report up to 48% less peak context with up to 8.9 percentage points higher task success than uncompressed execution.",
+      "relevance": "Potentially useful for context management in a handwritten research-digest agent, but the supplied evidence does not test paper retrieval or relevance ranking.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "We recast context compression as a causal decision preservation problem over discrete interaction units and introduce FOCUS"
+        },
+        {
+          "source": "inspection",
+          "quote": "cutting peak context by up to 48% and dependency by 73% while improving task success by up to 8.9 percentage points over uncompressed execution."
+        }
+      ],
+      "title": "FOCUS: Training-Free Decision-Preserving Context Compression for LLM Agents",
+      "url": "https://arxiv.org/abs/2609.37590v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2609.35297",
+      "summary": "LionMuon alternates occasional Muon spectral steps with cheaper Lion sign steps, sharing a momentum buffer. The abstract reports lower loss than Muon, AdamW, Lion, and Signum at matched token counts on 124M and 355M models, and less wall-clock time to Muon’s final loss in a four-GPU setting.",
+      "relevance": "Adds a direct pretraining comparison of spectral optimization against compute, optimizer-state, and distributed communication costs.",
+      "evidence": [
+        {
+          "source": "abstract",
+          "quote": "Muon’s compute and communication are paid once per $P$ steps, and the optimizer state is half of AdamW’s."
+        },
+        {
+          "source": "abstract",
+          "quote": "On 124M and 355M models trained on FineWeb, LionMuon with $P=2$ and $P=5$ reaches a lower loss than Muon, AdamW, Lion and Signum at the same number of tokens."
+        }
+      ],
+      "title": "LionMuon: Alternating Spectral and Sign Descent for Efficient Training",
+      "url": "https://arxiv.org/abs/2609.35297v3",
+      "version": 3,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    }
+  ],
+  "x_feature": null,
+  "limitations": [
+    "LionMuon’s HTML article was unavailable, so its abstract-level claims could not be checked against experimental tables or controls.",
+    "The spectral-dynamics paper validates controlled matrix-factorization models, not LLM compressibility or held-out language-model quality.",
+    "The LoRA second-descent evidence is strongest in vision; the supplied passages do not establish the same full curve for the 7B language model.",
+    "Clean’s 1.3B comparison used a shortened hyperparameter sweep, and its 13B discussion does not supply matched training-quality results.",
+    "FOCUS was not evaluated for research-paper retrieval or relevance ranking; code availability and reproducibility were not independently checked.",
+    "inspect:2609.40127: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.04204: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2609.34264: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.04249: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.04507: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2609.37027: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2609.35297: full-text inspection unavailable; only abstract evidence was available.",
+    "inspect:2609.37590: only question-relevant HTML passages were inspected, not the whole paper."
+  ],
+  "stats": {
+    "fetched_count": 4344,
+    "candidate_count": 4344,
+    "llm_calls": 19,
+    "steps": 14,
+    "inspections": 9,
+    "expansions": 2,
+    "screened": 39,
+    "usage": {
+      "recorded_calls": 19,
+      "llm_latency_seconds": 295.6309454590373,
+      "input_tokens": 731088,
+      "output_tokens": 10227,
+      "estimated_api_cost_usd": null,
+      "calls_without_usage": 0,
+      "cost_note": "API-equivalent estimate using standard GPT-5.6-Luna rates checked 2026-11-17: $0.20/M input, $1.20/M output; above 272K input, $0.40/M and $1.80/M. Assumes all input is uncached; excludes cache writes and external tools. Not actual Codex subscription billing. Unknown usage/model yields null cost.",
+      "price_source": "https://developers.openai.com/api/docs/models/gpt-5.6-luna"
+    },
+    "tool_calls": 11,
+    "tool_latency_seconds": 44.10623183398275
+  }
+}

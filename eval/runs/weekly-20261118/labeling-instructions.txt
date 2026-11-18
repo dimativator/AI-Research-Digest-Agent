@@ -1,0 +1,23 @@
+Blind weekly evaluation
+
+Open http://127.0.0.1:8766 after the server starts.
+To restart: run start-labeling.command in this directory.
+
+Rate whether you personally want to read each paper:
+0 = not interesting; 0.5 = potentially interesting; 1 = interesting.
+Keyboard: 1/2/3 for those three ratings; left/right arrows to browse.
+Notes are optional. Each rating is saved immediately to labels.sqlite3.
+Use Export labels to download the current ratings. You may revise any rating.
+
+The site displays only bibliographic metadata, not system identities,
+ranks, explanations, or old labels. Do not open private-selection-map.json
+until you have finished labeling, because it contains the blinded assignments.
+
+The evaluation has one run per agent per week, not multiple independent model repetitions.
+Seven complete calendar weeks: 2026-09-28 through 2026-11-15 UTC.
+The most recent weeks overlap prior development runs, so this is not a pristine holdout.
+Source, profile, exact dates/configuration, tool fixtures, and traces are preserved.
+Hosted LLM outputs may change on rerun even with the same model identifier.
+
+COLLECTION STATUS: complete. 35 digests; 122 unique papers.
+Two papers appeared in the earlier labeled sample; no old ratings are prefilled.

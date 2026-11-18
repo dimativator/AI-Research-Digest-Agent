@@ -1,0 +1,241 @@
+{
+  "run_id": "9a549057a2764ca09e7aa79be4fe109c",
+  "status": "completed",
+  "user_id": "dmitrii",
+  "profile_fingerprint": "a2480e0075ad9cdf236d40e30f74f9bfd87a08dd948530b42e6b57e4a123bfc0",
+  "pipeline_version": "react-v2",
+  "categories": [
+    "cs.LG",
+    "cs.CL",
+    "stat.ML",
+    "cs.AI",
+    "cs.IR"
+  ],
+  "date_from": "2026-10-19",
+  "date_to": "2026-10-25",
+  "papers": [
+    {
+      "paper_id": "2610.31897",
+      "summary": "S-SALAAD learns low-rank and structured sparse components during pretraining to make a checkpoint compressible across deployment budgets. Its reported benefits concern inference memory, latency, and quality, not established training-memory savings.",
+      "relevance": "Direct match to the goal of improving low-rank compressibility through training.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "S-SALAAD jointly learns model weights and their low-rank and structured sparse components under the task loss, adapting the representation to structural constraints during pretraining."
+        },
+        {
+          "source": "inspection",
+          "quote": "Applying SliceGPT and SVD-LLM to L L -only checkpoints pretrained with S-SALAAD yields lower perplexity at the same inference cost than applying them to vanilla-pretrained checkpoints."
+        }
+      ],
+      "title": "Learning Structured Sparsity for Large Models: Bridging Model Compressibility and Efficient Inference",
+      "url": "https://arxiv.org/abs/2610.31897v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.32878",
+      "summary": "LEMS allocates SVD ranks using a layer-wise error model, while KFAC-SVD improves decomposition. Reported comparisons span Mistral, Llama 3, and Qwen3 at matched compression ratios; this is compression of pretrained models, not a pretraining method.",
+      "relevance": "A direct comparator for low-rank LLM compression and quality-preserving rank allocation.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "Table 2 details the results for all approaches under uniform compression rates (0.9, 0.7) and calibration sample count, with an additional line for our search-enhanced variant."
+        },
+        {
+          "source": "inspection",
+          "quote": "Averaged over ratios and models, it reduces perplexity by 17% for KFAC-SVD and 34% for SVD-LLM , while increasing zero-shot accuracy by +7.2 and +9.1 p.p. , respectively."
+        }
+      ],
+      "title": "Advancing SVD-based LLM Compression via Layer-Wise Error Model Search",
+      "url": "https://arxiv.org/abs/2610.32878v2",
+      "version": 2,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.32142",
+      "summary": "Proposes a smaller-variance LoRA initialization to suppress initialization-induced noise under asymmetric learning rates and widen the stable learning-rate region.",
+      "relevance": "Directly addresses optimization stability in low-rank LLM fine-tuning.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "Under matched rank and training time for both initializations, this reduces the initialization-noise energy by an additional factor of 1 / n 1/n , stabilizing asymmetric LoRA training while preserving zero initial adapter output."
+        },
+        {
+          "source": "inspection",
+          "quote": "we do not claim uniform gains over carefully tuned base initializers."
+        }
+      ],
+      "title": "Rethinking LoRA Initialization for Robust Asymmetric Learning Rates",
+      "url": "https://arxiv.org/abs/2610.32142v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.28072",
+      "summary": "MuPACE meta-learns Muon's step-size schedule for LoRA fine-tuning. It approaches per-task tuned schedules in 64 tasks, but tuned schedules retain a small test-loss advantage on the evaluated large Qwen models.",
+      "relevance": "Combines two explicit interests, Muon optimization and practical LoRA fine-tuning across model scales.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "Our learned scheduler wins on 44 % 44\\% , 45 % 45\\% , and 38 % 38\\% of draws against tuned cosine, WSD, and constant, with median relative differences of − 0.28 % -0.28\\% , − 0.24 % -0.24\\% , and − 0.90 % -0.90\\% ."
+        },
+        {
+          "source": "inspection",
+          "quote": "The tuned baselines reach slightly lower test loss, with median relative differences of 1.13 % 1.13\\% – 2.43 % 2.43\\% on Qwen3-32B and 2.59 % 2.59\\% – 3.02 % 3.02\\% on Qwen3.8-27B"
+        }
+      ],
+      "title": "MuPACE: Learning to Pace Muon for LoRA Fine-Tuning",
+      "url": "https://arxiv.org/abs/2610.28072v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.30280",
+      "summary": "Analyzes when Muon's orthogonalized direction helps on matrix quadratics and why finite Newton–Schulz iterations can outperform exact orthogonalization near tiny singular values. Transformer measurements support the relevance of that spectral regime, but do not establish a full LLM-training advantage.",
+      "relevance": "Directly addresses matrix optimization, singular values, and Newton–Schulz approximations.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "Momentum and stochasticity are left out on purpose, so that the effect of the update direction can be isolated."
+        },
+        {
+          "source": "inspection",
+          "quote": "Finite Newton--Schulz softens the update exactly there and can then converge faster than exact polar, so it is not merely an approximation of the polar factor."
+        }
+      ],
+      "title": "A Quadratic Lens on Muon's Polar Update: Benefits, Pitfalls, and the Role of Newton-Schulz",
+      "url": "https://arxiv.org/abs/2610.30280v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.33846",
+      "summary": "Studies when fitting random labels need not harm test performance. Larger, deeper CNNs attain their best observed performance after memorizing the random labels; a separate kernel-gradient-flow model gives a phase diagram, without explaining how networks learn the corresponding geometry.",
+      "relevance": "Direct match to generalization and memorization under label noise.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "Figure 1 shows that the larger and deeper networks attain their best observed test performance only after their memorization error reaches zero, while fixed-feature and shallower models exhibit late-time test-error deterioration."
+        },
+        {
+          "source": "inspection",
+          "quote": "Our analysis does not, however, establish that the networks learn this same geometry, nor does it explain how feature learning, architecture, and optimization produce the empirically observed behavior."
+        }
+      ],
+      "title": "When is early stopping beneficial under label noise? A phase diagram for kernel gradient flow",
+      "url": "https://arxiv.org/abs/2610.33846v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.29812",
+      "summary": "A controlled SciFact ablation compares fixed one-shot retrieval with a ReAct-style literature-search agent. Agent-written queries raise gold-paper recall from 6% to 19–20%, but the verdict-accuracy difference is not statistically significant at the studied sample size.",
+      "relevance": "Direct evidence for query formulation, retrieval evaluation, and citation checks in a handwritten research-digest harness.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "We hold the backbone model, prompt format, and output schema fixed and vary only the harness : closed-book, single-shot retrieval, a ReAct-style multi-query agent, and an oracle that receives the gold abstracts."
+        },
+        {
+          "source": "inspection",
+          "quote": "In paired comparisons, however, the improvement is not statistically significant at N = 100 N{=}100"
+        },
+        {
+          "source": "inspection",
+          "quote": "a cross-family LLM judge rates only 3 of 327 existing citations as relevant to the claim, versus 67% for citations produced by the search agent."
+        }
+      ],
+      "title": "Real PMIDs, Wrong Papers: Harness Design for Biomedical Claim-Verification Agents",
+      "url": "https://arxiv.org/abs/2610.29812v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    }
+  ],
+  "x_feature": null,
+  "limitations": [
+    "S-SALAAD's retrieved evidence does not quantify peak training memory or training throughput; its reported memory and latency gains are for deployment.",
+    "MuPACE's retrieved passages do not quantify meta-training or scheduler runtime overhead.",
+    "The Muon quadratic analysis omits momentum and stochasticity, so its trajectory results do not by themselves establish LLM-training gains.",
+    "The SciFact experiment is biomedical claim verification on 100 development claims; its relevance judgments and gains may not transfer unchanged to a research digest.",
+    "X analysis was disabled; no attention claim is made.",
+    "inspect:2610.31897: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.32142: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.30280: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.27674: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.29812: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.32878: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.33846: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.28072: only question-relevant HTML passages were inspected, not the whole paper."
+  ],
+  "stats": {
+    "fetched_count": 2674,
+    "candidate_count": 2674,
+    "llm_calls": 25,
+    "steps": 17,
+    "inspections": 9,
+    "expansions": 5,
+    "screened": 63,
+    "usage": {
+      "recorded_calls": 25,
+      "llm_latency_seconds": 416.9614639610518,
+      "input_tokens": 1081627,
+      "output_tokens": 15285,
+      "estimated_api_cost_usd": null,
+      "calls_without_usage": 0,
+      "cost_note": "API-equivalent estimate using standard GPT-5.6-Luna rates checked 2026-11-17: $0.20/M input, $1.20/M output; above 272K input, $0.40/M and $1.80/M. Assumes all input is uncached; excludes cache writes and external tools. Not actual Codex subscription billing. Unknown usage/model yields null cost.",
+      "price_source": "https://developers.openai.com/api/docs/models/gpt-5.6-luna"
+    },
+    "tool_calls": 14,
+    "tool_latency_seconds": 76.43399249698268
+  }
+}

@@ -1,0 +1,238 @@
+{
+  "run_id": "4973bdfc0bf141c6afee6eadfd8cbab4",
+  "status": "completed",
+  "user_id": "dmitrii",
+  "profile_fingerprint": "a2480e0075ad9cdf236d40e30f74f9bfd87a08dd948530b42e6b57e4a123bfc0",
+  "pipeline_version": "react-v2",
+  "categories": [
+    "cs.LG",
+    "cs.CL",
+    "stat.ML",
+    "cs.AI",
+    "cs.IR"
+  ],
+  "date_from": "2026-10-26",
+  "date_to": "2026-11-01",
+  "papers": [
+    {
+      "paper_id": "2610.35112",
+      "summary": "In modular-arithmetic models, weight-rank compression follows grokking rather than causing it. A nuclear-norm penalty lowers effective rank but delays grokking in the tested MLP.",
+      "relevance": "Directly tests whether training-induced compressibility tracks or improves generalization, using rank interventions and factorized controls.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "Compression is therefore a signature of grokking rather than its cause."
+        },
+        {
+          "source": "inspection",
+          "quote": "a nuclear-norm penalty λ ​ ‖ W 1 ‖ ∗ \\\\lambda\\\\|W_{1}\\\\|_{*} with λ = 10 − 7 \\\\lambda=10^{-7} from step 0 compresses W 1 W_{1} well before grokking"
+        }
+      ],
+      "title": "Subspace Crystallization in Grokking: Rank Compression Tracks the Phase Transition",
+      "url": "https://arxiv.org/abs/2610.35112v2",
+      "version": 2,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.00236",
+      "summary": "ProLand coordinates LoRA-factor updates in the represented weight-increment space and combines them with Muon-style spectral directions. It reports the highest mean score across seven decoder model–rank settings.",
+      "relevance": "Addresses the geometry and measured fine-tuning behavior of low-rank updates.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "ProLand forms a momentum input in the space of realizable first-order changes in B ​ A BA , computes its polar factor, and projects the result back into that space."
+        },
+        {
+          "source": "inspection",
+          "quote": "ProLand has the highest mean score in all seven reported model–rank settings (Tables 2 , 3 , and 4 ), with margins of 0.46 to 1.10 percentage points over the strongest baseline in each setting."
+        }
+      ],
+      "title": "ProLand: A New Infeasible Manifold Optimization Method for LoRA Fine-Tuning",
+      "url": "https://arxiv.org/abs/2611.00236v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.37934",
+      "summary": "Bi-Phase Training combines high-rank diagonal transformations with periodically merged low-rank adapters. At 1.5B parameters, it reports validation loss close to full training with 66% fewer trainable parameters and 5.8 GB lower peak GPU memory.",
+      "relevance": "A direct pretraining quality–memory tradeoff for low-rank parameterization across model sizes.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "We show that even with 66% less trainable parameters , BPT achieves validation loss close to full-parameter training."
+        },
+        {
+          "source": "inspection",
+          "quote": "Right: Peak GPU memory for Qwen-2.5-1.5B. BPT saves 5.8 GB to train a 1.5B model."
+        }
+      ],
+      "title": "Bi-Phase Training: Learning Efficiently From Scratch",
+      "url": "https://arxiv.org/abs/2610.37934v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.35130",
+      "summary": "TUON uses tensor-SVD-based cross-layer mixing and polarization. It reports lower validation loss than Muon and TEON at four tested pretraining scales, while its iteration time exceeds AdamW's by 3.5%–12.5%.",
+      "relevance": "Tests spectral matrix-optimization ideas against quality and training-speed baselines at LLM scale.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "TUON achieves the lowest loss on three of the four settings and consistently outperforms Muon and TEON."
+        },
+        {
+          "source": "inspection",
+          "quote": "Relative to vector-aware AdamW, TUON is slower by 6.1 % 6.1\\\\% , 8.3 % 8.3\\\\% , 3.5 % 3.5\\\\% , and 12.5 % 12.5\\\\% on the four models per iteration, respectively."
+        }
+      ],
+      "title": "TUON: A Tensor-Aware Optimizer Utilizing Tensor-SVD and Polarization for Large Language Model Pretraining",
+      "url": "https://arxiv.org/abs/2610.35130v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.39412",
+      "summary": "Dobb computes matrix-aware updates within parameter shards. On GPT-2 XL, it reports validation loss of 2.476 versus Dion's 2.511 at the compared configuration, and an amortized optimizer-call time of 9.2 versus 124.1 ms under FSDP on 32 H100 GPUs.",
+      "relevance": "Directly addresses optimizer communication, quality, and speed in sharded language-model training.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "Dobb reaches a validation loss of 2.476 against 2.511 for Dion (Table 4 ), and under FSDP on 32 H100 GPUs, its amortized optimizer call takes 9.2 ms against 124.1 ms"
+        },
+        {
+          "source": "inspection",
+          "quote": "The count excludes forward-backward communication and Dobb’s separately counted data-parallel synchronization of activation second moments (Section 5 )."
+        }
+      ],
+      "title": "Dobb: Shard-Local Preconditioning in Block-Diagonal Eigenbases",
+      "url": "https://arxiv.org/abs/2610.39412v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.01362",
+      "summary": "This scientific-paper retrieval study measures how shared names hinder identification and compares title BM25, title-plus-abstract E5, and listwise ranking under explicit candidate-set conditions.",
+      "relevance": "Directly informs paper discovery and relevance ranking in a research-digest agent.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "Shared-name targets remain 25.7 points behind matched unique-name targets under title-based BM25 and 6.9 points behind under title-plus-abstract E5."
+        },
+        {
+          "source": "inspection",
+          "quote": "Within complete same-name candidate sets, contextual ranking reaches 70.6% with BM25, 89.2% with a language model, and 93.6% with E5 over titles and abstracts."
+        }
+      ],
+      "title": "\"PRISM\" Is Not All You Need: Cross-Topic Name Collisions and Scientific Paper Retrieval",
+      "url": "https://arxiv.org/abs/2611.01362v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.34816",
+      "summary": "A structured decision model can rerank competitively after input-length controls, but the tuned dedicated reranker remains faster and uses less GPU memory. The paper evaluates reliability and fallbacks alongside ranking quality.",
+      "relevance": "Provides practical controls for deciding whether structured LLM decisions belong in the digest's retrieval harness.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "The default decision-model setup fails on many long candidate sets, so scoring only the requests it completes gives a misleading ranking."
+        },
+        {
+          "source": "inspection",
+          "quote": "Across workloads, which model ranks better changes, and a tuned reranker remains faster and uses far less GPU memory."
+        }
+      ],
+      "title": "Can System-1-Style Decision Models Replace Dedicated Rerankers in RAG? A Systems Evaluation",
+      "url": "https://arxiv.org/abs/2610.34816v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    }
+  ],
+  "x_feature": null,
+  "limitations": [
+    "The findings are author-reported; code availability and independent replication were not checked.",
+    "ProLand's main decoder language and code benchmarks use one training seed, so their reported ranking lacks a multi-seed estimate there.",
+    "BPT's retrieved passages do not establish its training-throughput or merge-cost tradeoff.",
+    "Dobb's reported cross-shard payload excludes forward-backward communication and separately counted synchronization.",
+    "X analysis was disabled; no X attention is inferred.",
+    "inspect:2610.35112: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2611.00236: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.37934: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.35130: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.39412: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2611.01362: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.37062: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.36386: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.34816: only question-relevant HTML passages were inspected, not the whole paper."
+  ],
+  "stats": {
+    "fetched_count": 2669,
+    "candidate_count": 2669,
+    "llm_calls": 27,
+    "steps": 18,
+    "inspections": 13,
+    "expansions": 4,
+    "screened": 76,
+    "usage": {
+      "recorded_calls": 27,
+      "llm_latency_seconds": 387.3727258339932,
+      "input_tokens": 1453833,
+      "output_tokens": 12682,
+      "estimated_api_cost_usd": null,
+      "calls_without_usage": 0,
+      "cost_note": "API-equivalent estimate using standard GPT-5.6-Luna rates checked 2026-11-17: $0.20/M input, $1.20/M output; above 272K input, $0.40/M and $1.80/M. Assumes all input is uncached; excludes cache writes and external tools. Not actual Codex subscription billing. Unknown usage/model yields null cost.",
+      "price_source": "https://developers.openai.com/api/docs/models/gpt-5.6-luna"
+    },
+    "tool_calls": 17,
+    "tool_latency_seconds": 161.2872010410356
+  }
+}

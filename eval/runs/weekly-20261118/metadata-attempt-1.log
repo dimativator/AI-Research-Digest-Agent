@@ -1,0 +1,50 @@
+FETCH {'task': 'week-1', 'date_from': '2026-09-28', 'date_to': '2026-10-04'}
+Token indices sequence length is longer than the specified maximum sequence length for this model (546 > 512). Running this sequence through the model will result in indexing errors
+READY week-1 4344 papers
+FETCH {'task': 'week-2', 'date_from': '2026-10-05', 'date_to': '2026-10-11'}
+Traceback (most recent call last):
+  File "/Users/dmitrii_andriianov/Documents/CUB/AI-Research-Digest-Agent/research_digest/retrieval/arxiv_source.py", line 200, in _get
+    with urlopen(request, timeout=self.timeout) as response:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Caskroom/miniconda/base/envs/ai-research-digest/lib/python3.12/urllib/request.py", line 215, in urlopen
+    return opener.open(url, data, timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Caskroom/miniconda/base/envs/ai-research-digest/lib/python3.12/urllib/request.py", line 521, in open
+    response = meth(req, response)
+               ^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Caskroom/miniconda/base/envs/ai-research-digest/lib/python3.12/urllib/request.py", line 630, in http_response
+    response = self.parent.error(
+               ^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Caskroom/miniconda/base/envs/ai-research-digest/lib/python3.12/urllib/request.py", line 559, in error
+    return self._call_chain(*args)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/homebrew/Caskroom/miniconda/base/envs/ai-research-digest/lib/python3.12/urllib/request.py", line 492, in _call_chain
+    result = func(*args)
+             ^^^^^^^^^^^
+  File "/opt/homebrew/Caskroom/miniconda/base/envs/ai-research-digest/lib/python3.12/urllib/request.py", line 639, in http_error_default
+    raise HTTPError(req.full_url, code, msg, hdrs, fp)
+urllib.error.HTTPError: HTTP Error 429: Unknown Error
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "/Users/dmitrii_andriianov/Documents/CUB/AI-Research-Digest-Agent/eval/run_weekly.py", line 351, in <module>
+    main()
+  File "/Users/dmitrii_andriianov/Documents/CUB/AI-Research-Digest-Agent/eval/run_weekly.py", line 336, in main
+    prepare(args.output, manifest, PaperStore(args.db), profile)
+  File "/Users/dmitrii_andriianov/Documents/CUB/AI-Research-Digest-Agent/eval/run_weekly.py", line 136, in prepare
+    papers = collect_metadata(
+             ^^^^^^^^^^^^^^^^^
+  File "/Users/dmitrii_andriianov/Documents/CUB/AI-Research-Digest-Agent/research_digest/retrieval/arxiv_source.py", line 415, in collect_metadata
+    collect_window(window_start, end)
+  File "/Users/dmitrii_andriianov/Documents/CUB/AI-Research-Digest-Agent/research_digest/retrieval/arxiv_source.py", line 332, in collect_window
+    page = client.page(query, offset, page_size)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dmitrii_andriianov/Documents/CUB/AI-Research-Digest-Agent/research_digest/retrieval/arxiv_source.py", line 248, in page
+    return parse_feed(self._get("https://export.arxiv.org/api/query?" + params))
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/dmitrii_andriianov/Documents/CUB/AI-Research-Digest-Agent/research_digest/retrieval/arxiv_source.py", line 214, in _get
+    raise RetrievalError(
+research_digest.retrieval.arxiv_source.RetrievalError: arXiv HTTP 429; retries exhausted

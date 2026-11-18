@@ -1,0 +1,230 @@
+{
+  "run_id": "b31ca055dd94477fbf2d26590b90addb",
+  "status": "completed",
+  "user_id": "dmitrii",
+  "profile_fingerprint": "a2480e0075ad9cdf236d40e30f74f9bfd87a08dd948530b42e6b57e4a123bfc0",
+  "pipeline_version": "react-v2",
+  "categories": [
+    "cs.LG",
+    "cs.CL",
+    "stat.ML",
+    "cs.AI",
+    "cs.IR"
+  ],
+  "date_from": "2026-10-12",
+  "date_to": "2026-10-18",
+  "papers": [
+    {
+      "paper_id": "2610.23571",
+      "summary": "BMuon changes Muon’s spectral geometry to encourage structured channel pruning. In a 1B-parameter LLaMA-style experiment, it retained its unpruned perplexity after 80% pruning, but its unpruned perplexity was worse than Muon’s.",
+      "relevance": "Directly tests whether training improves compressibility while preserving language-model quality, and exposes a significant quality tradeoff.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "On the unpruned models, Muon achieves lower perplexity ( 10.92 10.92 versus 12.84 12.84 for BMuon), but its performance degrades rapidly under pruning. In contrast, BMuon preserves its unpruned performance up to 80 % 80\\\\% pruning, reaching 12.86 12.86 with activation ranking and 12.85 12.85 with μ \\\\mu ranking."
+        }
+      ],
+      "title": "BMuon: Budgeting Muon's Spectral Geometry for Structured Compressibility",
+      "url": "https://arxiv.org/abs/2610.23571v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.17429",
+      "summary": "Monarch-Muon applies Muon to structured factors. At the 6.89B reference size, the reported peak memory fell from 68.87 to 52.94 GB versus dense Muon; fixed-structure quality comparisons also favored Monarch-Muon over Monarch-AdamW.",
+      "relevance": "Combines factorization, learned spectra, and measured quality–memory–speed tradeoffs across model sizes.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "Monarch–Muon achieves lower final validation loss than Monarch–AdamW in all four structured comparisons (Table 1 )."
+        },
+        {
+          "source": "inspection",
+          "quote": "At 6.89B, Monarch–Muon reduces the full-step time by 45% and peak memory by 23% relative to dense Muon."
+        }
+      ],
+      "title": "Monarch-Muon: Structure-Aware Muon for Fast and Memory-Efficient Pretraining",
+      "url": "https://arxiv.org/abs/2610.17429v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.19844",
+      "summary": "PMRC keeps optimizer states in a gradient subspace and adds a residual-gradient correction. Its LLM pretraining comparison reports the lowest training and validation losses among the tested memory-efficient methods.",
+      "relevance": "Directly addresses the quality and optimizer-state-memory tradeoff in low-rank LLM pretraining.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "PMRC consistently achieves the lowest training and validation losses among memory-efficient methods."
+        },
+        {
+          "source": "inspection",
+          "quote": "PMRC also requires less optimizer-state memory than AdamW while achieving lower losses at every scale."
+        }
+      ],
+      "title": "Memory-Efficient Subspace Optimization with Residual Correction: From Momentum SGD to Muon",
+      "url": "https://arxiv.org/abs/2610.19844v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.23343",
+      "summary": "The paper proves that trace-norm-regularized fine-tuning admits global minimizers with rank controlled by a frozen-feature bottleneck, without NTK linearization. Its stationary-point result for factorized LoRA requires a generic perturbation and does not rule out spurious local minima.",
+      "relevance": "Directly informs LoRA geometry, nuclear-norm regularization, and principled rank selection.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "we prove that the trace-norm-regularized problem has a global minimizer whose rank is controlled by d Φ d_{\\\\Phi}"
+        },
+        {
+          "source": "inspection",
+          "quote": "This is a first-order exclusion theorem, not a no-spurious-local-minima theorem; Proposition 4.9 gives an explicit limitation."
+        }
+      ],
+      "title": "How Finite-Rank Bottlenecks Shape the Low-Rank Adaptation Landscape",
+      "url": "https://arxiv.org/abs/2610.23343v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.19700",
+      "summary": "ReGRA diagnoses ineffective singular components in a rank-16 LoRA update, then uses residual task gradients to initialize a complementary second-stage adapter within a fixed total rank.",
+      "relevance": "Connects singular-value structure to practical LoRA rank allocation and downstream performance.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "Without retraining, we evaluate rank- k k approximations formed by retaining the top k k singular components. As shown in Figure 1 , we find that k = 3 k=3 yields the best downstream performance, whereas retaining additional components degrades it."
+        },
+        {
+          "source": "inspection",
+          "quote": "Under the same total-rank budget, ReGRA consistently achieves stronger overall performance across the evaluated benchmarks and even reaches the performance of the double-rank model."
+        }
+      ],
+      "title": "ReGRA: Residual-Gradient Adaptation for Complementary Low-Rank Fine-Tuning",
+      "url": "https://arxiv.org/abs/2610.19700v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.16161",
+      "summary": "Studies generalization versus memorization with controlled noise, reporting that projection onto top Fisher eigenvectors separates general task performance from noisy-sample memorization.",
+      "relevance": "Covers the user’s question about the geometry of memorization under corrupted supervision.",
+      "evidence": [
+        {
+          "source": "abstract",
+          "quote": "We show that projecting model weights onto the top Fisher eigenvectors decouples general task performance from noisy sample memorization"
+        }
+      ],
+      "title": "Fisher information and the geometry of memorization in neural networks",
+      "url": "https://arxiv.org/abs/2610.16161v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.20857",
+      "summary": "Idea2Prior combines identity-aware discovery, candidate assessment, bounded document evidence, and joint ranking. Its reported Hit@5 advantage comes from a small historical comparison whose authors identify sampling and contamination limitations.",
+      "relevance": "Provides concrete design ideas and evaluation cautions for a handwritten research-digest retrieval harness.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "The central design separates inexpensive assessment of a broad candidate pool from a bounded examination of document evidence."
+        },
+        {
+          "source": "inspection",
+          "quote": "The 30 query cases include overlapping targets and a manually assembled distribution; the first ten items in each tier are not a random sample of all scientific literature."
+        }
+      ],
+      "title": "Idea2Prior: Auditable Paper Retrieval and Ranking from Research Ideas",
+      "url": "https://arxiv.org/abs/2610.20857v2",
+      "version": 2,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    }
+  ],
+  "x_feature": null,
+  "limitations": [
+    "Code availability and reproducibility were not verified.",
+    "The supplied PMRC passages do not establish full-step throughput, and the supplied ReGRA passages do not quantify its extra calibration or training cost.",
+    "The Fisher study was selected from abstract evidence only; its experimental controls were not inspected.",
+    "The digest omits other strong candidates, notably Ori and DT-LoRA, because it is limited to seven papers.",
+    "inspect:2610.23571: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.17429: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.19844: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.22794: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.23343: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.17730: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.19700: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.19761: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.20857: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.24571: only question-relevant HTML passages were inspected, not the whole paper."
+  ],
+  "stats": {
+    "fetched_count": 3194,
+    "candidate_count": 3194,
+    "llm_calls": 22,
+    "steps": 16,
+    "inspections": 10,
+    "expansions": 3,
+    "screened": 53,
+    "usage": {
+      "recorded_calls": 22,
+      "llm_latency_seconds": 331.4196933329222,
+      "input_tokens": 909248,
+      "output_tokens": 11356,
+      "estimated_api_cost_usd": null,
+      "calls_without_usage": 0,
+      "cost_note": "API-equivalent estimate using standard GPT-5.6-Luna rates checked 2026-11-17: $0.20/M input, $1.20/M output; above 272K input, $0.40/M and $1.80/M. Assumes all input is uncached; excludes cache writes and external tools. Not actual Codex subscription billing. Unknown usage/model yields null cost.",
+      "price_source": "https://developers.openai.com/api/docs/models/gpt-5.6-luna"
+    },
+    "tool_calls": 13,
+    "tool_latency_seconds": 49.84292621104396
+  }
+}

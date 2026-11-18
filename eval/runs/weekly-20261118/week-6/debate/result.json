@@ -1,0 +1,237 @@
+{
+  "run_id": "9c6eeb819c6f44cd9d2524434fe0556f",
+  "status": "completed",
+  "user_id": "dmitrii",
+  "profile_fingerprint": "a2480e0075ad9cdf236d40e30f74f9bfd87a08dd948530b42e6b57e4a123bfc0",
+  "pipeline_version": "react-v2",
+  "categories": [
+    "cs.LG",
+    "cs.CL",
+    "stat.ML",
+    "cs.AI",
+    "cs.IR"
+  ],
+  "date_from": "2026-11-02",
+  "date_to": "2026-11-08",
+  "papers": [
+    {
+      "paper_id": "2611.06598",
+      "summary": "Defines a behavioral compression rate for LoRA adapters and shows that compressibility depends on the dataset–base-model pair. In a corrupted-data control, adapters trained at higher rank recovered more accuracy after compression to the same rank-1, one-bit endpoint.",
+      "relevance": "Directly informs whether training choices can improve low-rank compressibility while preserving behavior. The experiments concern adapters, not full-model pretraining.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "Each adapter is trained once and then compressed over a range of operating points, without retraining."
+        },
+        {
+          "source": "inspection",
+          "quote": "final GSM8K accuracy rises from approximately 60% when trained at rank 1 to approximately 78–81% when trained at ranks 2–16."
+        }
+      ],
+      "title": "The Behavioral Rate of Fine-Tuning: Compression as a Measure of Useful Information",
+      "url": "https://arxiv.org/abs/2611.06598v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.08414",
+      "summary": "Tracks LoRA singular spectra and subspaces during SFT and RL on mathematical reasoning tasks. Controlled SFT–RL interpolation identifies group-mean baseline subtraction as a source of the contrasting dynamics, motivating stage-specific spectral updates.",
+      "relevance": "A direct match to the researcher’s questions about optimization, effective rank, and singular-value spectra in LoRA.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "RL with verifiable reward via group relative policy optimization (GRPO) [ 33 ] concentrates the spectrum of Δ ​ W t \\\\Delta W_{t} at every learning rate; whereas SFT expands it at moderate learning rates"
+        },
+        {
+          "source": "inspection",
+          "quote": "both contrasts appear only once a group-mean baseline is subtracted from the reward"
+        }
+      ],
+      "title": "Spectral and Subspace Dynamics of LoRA in Supervised Fine-Tuning and Reinforcement Learning",
+      "url": "https://arxiv.org/abs/2611.08414v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.07349",
+      "summary": "Develops tangent–normal geometry for adaptive LoRA rank expansion. On LLaMA3-8B, it reports a higher average commonsense score with fewer trainable parameters, although its retrieved runtime and peak-memory comparison is on a vision task.",
+      "relevance": "Addresses principled rank selection and optimization outside the current LoRA subspace.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "On LLaMA3-8B, it raises the average commonsense score from 86.61 to 88.45 while reducing trainable parameters from 42.0M to 14.4M."
+        },
+        {
+          "source": "inspection",
+          "quote": "Table 4: Training time and peak CUDA memory on DTD with ViT-B/16. Method Training time (s) Peak CUDA memory (MiB) LoRA 789.83 3825.15 FlexLoRA 1006.75 6553.87 GEAR 1060.83 4458.21"
+        }
+      ],
+      "title": "From What Is Used to What Is Missing: Rethinking Dynamic Rank in LoRA",
+      "url": "https://arxiv.org/abs/2611.07349v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.08924",
+      "summary": "ResQAdam retains a signed residual outside a low-rank optimizer subspace for quantization-aware LLM training. Against AdamW on three LLMs, reported optimizer-state memory falls by about 71–73%, total peak memory by 15–20%, and throughput by less than 2%.",
+      "relevance": "Directly addresses the quality, memory, and throughput tradeoff of low-rank optimizer-state compression, including a failure mode of GaLore and LDAdam in QAT.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "Total Peak Memory (GB) 33.33 / 28.24 ( ↓ \\\\downarrow 15.3%) 43.93 / 37.19 ( ↓ \\\\downarrow 15.3%) 99.14 / 79.77 ( ↓ \\\\downarrow 19.5%)"
+        },
+        {
+          "source": "inspection",
+          "quote": "Training Paradigm Q-Cfg ResQAdam GaLore-AdamW GaLore-AdamW8bit LDAdam AdaFactor From-Scratch QAT W2A16G128 20.05 30.61 30.39 28.57 33.01"
+        }
+      ],
+      "title": "ResQAdam: Residual-Preserving Adaptive Optimization for Memory-Efficient Quantization Aware Training",
+      "url": "https://arxiv.org/abs/2611.08924v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.03633",
+      "summary": "Compares Muon and AdamW across OLMo-style pretraining scales and downstream fine-tuning. Muon achieves lower pretraining loss, but AdamW has a better learning–forgetting tradeoff after sufficiently large data budgets, with the crossover shifting as model size grows.",
+      "relevance": "Tests whether an optimizer’s pretraining advantage survives fine-tuning and how that tradeoff changes with scale.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "we pretrain OLMo-style 30M–600M models ( Groeneveld et al., 2024 ; Team OLMo et al., 2025 ) on 150 150 M to 154 154 B DCLM tokens"
+        },
+        {
+          "source": "inspection",
+          "quote": "On every dataset Muon is better than or level with AdamW below the crossover and AdamW is better beyond it."
+        }
+      ],
+      "title": "Pretraining Data Scale Reverses the Muon-AdamW Fine-Tuning Gap",
+      "url": "https://arxiv.org/abs/2611.03633v2",
+      "version": 2,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.05022",
+      "summary": "In a quadratic-network matrix-factorization model, proves that finite Newton–Schulz depth can change early rank selection and, under an additional condition, bypass the first stationary point reached by gradient flow.",
+      "relevance": "A focused theoretical contribution to the researcher’s Muon, Newton–Schulz, and effective-rank interests; applicability to LLM training remains open.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "We show that the number of Newton–Schulz steps can change the rank selected during the early stages of training"
+        },
+        {
+          "source": "inspection",
+          "quote": "An immediate open question is whether similar dynamical descriptions can be established for more general models and under weaker assumptions."
+        }
+      ],
+      "title": "Finite Spectral Depth Controls Gaussian Entrance Rank and Avoidance of the First Gradient-Flow Saddle",
+      "url": "https://arxiv.org/abs/2611.05022v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.07859",
+      "summary": "CORE combines passage retrieval, snippet selection, source expansion, and duplicate suppression in a training-free deep-research harness. In controlled closed-search comparisons, it reports higher answer accuracy and evidence recall than two harness baselines across three agent models and benchmarks.",
+      "relevance": "Directly applicable to the user’s handwritten research-digest harness and its evidence/context-management design.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "CORE’s context manager lets the agent expand the context around previously retrieved sources and deduplicates snippets across searches."
+        },
+        {
+          "source": "inspection",
+          "quote": "Across three agent models, CORE achieves the highest accuracy and evidence recall in every model–benchmark comparison"
+        }
+      ],
+      "title": "CORE: Coarse-to-Fine Search with Context Management for Deep Research",
+      "url": "https://arxiv.org/abs/2611.07859v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    }
+  ],
+  "x_feature": null,
+  "limitations": [
+    "Findings are reported by the papers and have not been independently replicated here.",
+    "Code availability and reproducibility were not verified for the selected papers.",
+    "No X-attention analysis was available or used.",
+    "The Newton–Schulz rank result is established in a quadratic model, not demonstrated for LLM training.",
+    "inspect:2611.08924: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2611.06598: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2611.07349: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2611.08414: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2611.03633: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2611.05022: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2611.07859: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2611.10792: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2611.04323: only question-relevant HTML passages were inspected, not the whole paper."
+  ],
+  "stats": {
+    "fetched_count": 2673,
+    "candidate_count": 2673,
+    "llm_calls": 21,
+    "steps": 15,
+    "inspections": 9,
+    "expansions": 3,
+    "screened": 51,
+    "usage": {
+      "recorded_calls": 21,
+      "llm_latency_seconds": 363.18298295803834,
+      "input_tokens": 843612,
+      "output_tokens": 13570,
+      "estimated_api_cost_usd": null,
+      "calls_without_usage": 0,
+      "cost_note": "API-equivalent estimate using standard GPT-5.6-Luna rates checked 2026-11-17: $0.20/M input, $1.20/M output; above 272K input, $0.40/M and $1.80/M. Assumes all input is uncached; excludes cache writes and external tools. Not actual Codex subscription billing. Unknown usage/model yields null cost.",
+      "price_source": "https://developers.openai.com/api/docs/models/gpt-5.6-luna"
+    },
+    "tool_calls": 12,
+    "tool_latency_seconds": 57.52855275099864
+  }
+}

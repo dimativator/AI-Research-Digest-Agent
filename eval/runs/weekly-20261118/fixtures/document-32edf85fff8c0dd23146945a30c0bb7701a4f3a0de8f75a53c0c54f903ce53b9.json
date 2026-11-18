@@ -1,0 +1,934 @@
+{
+  "status": "ok",
+  "source": "https://arxiv.org/html/2611.19419v1",
+  "extractor_version": "article-v1",
+  "chunks": [
+    {
+      "chunk_id": "chunk-0001",
+      "section": "Do Pretraining Optimizer Gains Transfer to KL Distillation?",
+      "text": "Lavinia Ghita * Dhruv Desai * Affiliation: NVIDIA * * footnotetext: Equal contribution. Emails: lghita@nvidia.com , dhruvd@nvidia.com . Abstract. Matrix-structured optimizers can improve language-model pretraining, but it is unclear whether these gains transfer to short-horizon KL distillation from an instruction-tuned initialization. We compare AdamW and diagonal AdaGrad with two tractable Shampoo reductions, SOAP, and All-2D Muon across four dense Qwen student–teacher pairs under a common forward-KL objective and fixed training budget. Across scales, none of the evaluated matrix-structured recipes consistently improves the quality–trainer-time trade-off over the elementwise references: AdamW generally attains the lowest validation KL, while AdaGrad can be slightly faster at larger scale. SOAP often tracks AdamW in KL but incurs substantial trainer-time overhead, and the two Shampoo reductions reverse ordering across model pairs, showing that conclusions depend on the feasible recipe. These results suggest that pretraining optimizer gains do not transfer automatically to KL distillation and should be re-established for the target objective and systems regime.",
+      "source": "https://arxiv.org/html/2611.19419v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0002",
+      "section": "1 Introduction",
+      "text": "Prior work on Shampoo, SOAP, Muon, and related matrix-structured optimizers reports data-efficiency or wall-clock gains over AdamW in language-model pretraining [ 1 , 6 , 9 , 10 , 11 ] . Those comparisons concern long-horizon next-token training from random initialization, with outcomes sensitive to model scale, batch size, parameterization, and hyperparameter transfer [ 3 , 10 , 11 ] . KL distillation instead starts from an instruction-tuned student and uses the teacher’s full next-token probability distribution, rather than a one-hot target, at every supervised token. It also runs for a comparatively short horizon, while online teacher inference reduces the optimizer’s share of trainer time. Consequently, an optimizer advantage in pretraining does not necessarily imply lower validation KL per training step or per unit of trainer time in short-horizon distillation. Within each student–teacher pair, all recipes share the tokenizer, data, forward-KL objective, batch size, and training budget; we compare minimum validation KL within budget, validation KL at matched steps, and trainer time. Canonical two-sided Shampoo [ 1 ] cannot be applied uniformly to the evaluated matrix geometries under the factor-dimension cap. We therefore derive a scalar-row-mean quarter-power reduction and compare it with a right-only half-power reduction based on Scalable Shampoo’s one-sided construction [ 3 ] , treating both as specific feasible recipes rather than family-wide representatives.",
+      "source": "https://arxiv.org/html/2611.19419v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0003",
+      "section": "1 Introduction",
+      "text": "The rest of the paper is structured as follows: Section 2 defines the distillation objective and optimizer recipes, including the Shampoo reductions. Section 3 describes the experimental design, and Section 4 reports fixed-budget quality, optimization trajectories, and trainer time. Section 5 discusses interpretation and limitations, and Section 6 concludes. Appendix A documents implementation fidelity, Appendix B grafting, and Appendix C hyperparameter selection.",
+      "source": "https://arxiv.org/html/2611.19419v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0004",
+      "section": "2.1 KL distillation",
+      "text": "Knowledge distillation matches a student distribution p θ p_{\\theta} to a frozen teacher distribution q q by minimizing forward KL at temperature one [ 13 ] . Let q n , t q_{n,t} and p θ , n , t p_{\\theta,n,t} denote their distributions over the shared vocabulary at token position t t in example n n , and let m n , t ∈ { 0 , 1 } m_{n,t}\\in\\{0,1\\} indicate a supervised assistant token. We report the validation token mean ℒ val ( θ ) = 1 ∑ n , t m n , t ∑ n , t m n , t D KL ( q n , t ∥ p θ , n , t ) . \\mathcal{L}_{\\mathrm{val}}(\\theta)=\\frac{1}{\\sum_{n,t}m_{n,t}}\\sum_{n,t}m_{n,t}\\,D_{\\mathrm{KL}}\\!\\left(q_{n,t}\\,\\|\\,p_{\\theta,n,t}\\right). (1) Validation weights tokens equally, so region contributions scale with token count and longer reasoning regions generally dominate. A smaller value indicates closer teacher matching. The blended training loss [ 14 ] avoids this between-region length dependence by weighting the answer and reasoning means separately within each example. For example n n , let A n A_{n} and C n C_{n} denote its nonempty sets of answer and reasoning tokens, and let ℓ n , t = D KL ( q n , t ∥ p θ , n , t ) \\ell_{n,t}=D_{\\mathrm{KL}}(q_{n,t}\\,\\|\\,p_{\\theta,n,t}) . Its loss is ℒ n = λ ​ 1 | A n | ​ ∑ t ∈ A n ℓ n , t + ( 1 − λ ) ​ 1 | C n | ​ ∑ t ∈ C n ℓ n , t , \\mathcal{L}_{n}=\\lambda\\frac{1}{|A_{n}|}\\sum_{t\\in A_{n}}\\ell_{n,t}+(1-\\lambda)\\frac{1}{|C_{n}|}\\sum_{t\\in C_{n}}\\ell_{n,t}, (2)",
+      "source": "https://arxiv.org/html/2611.19419v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0005",
+      "section": "2.1 KL distillation",
+      "text": "and training averages ℒ n \\mathcal{L}_{n} across examples. Thus, λ \\lambda weights the answer-region mean independently of region length. Prior evaluation identified λ = 0.5 \\lambda=0.5 as the most stable answer–reasoning weighting [ 14 ] ; we use it throughout. If either region is empty, the other receives unit weight. The objective contains no hard-label language-modeling term.",
+      "source": "https://arxiv.org/html/2611.19419v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0006",
+      "section": "2.2 Matrix-structured pretraining optimizers",
+      "text": "We use AdamW and diagonal AdaGrad as complementary elementwise references. AdamW reflects standard language-model practice, while AdaGrad connects directly to the structured preconditioners studied here; a different distillation formulation on Nemotron reasoning traces also found slightly higher MMLU-Pro with AdaGrad than with its best AdamW configuration [ 15 ] . AdaGrad accumulates a coordinatewise sum of squared gradients [ 2 ] , while AdamW decouples weight decay from Adam’s adaptive update [ 21 ] . The comparison includes three matrix-structured optimizer families used in language-model pretraining. Across Shampoo, SOAP, and Muon, structured updates act on two-dimensional parameters as matrices rather than treating their entries as independent scalar coordinates. Shampoo [ 1 ] constructs left- and right-side second-moment accumulators for a matrix gradient and applies inverse matrix roots on both sides, providing a tractable structured alternative to full-matrix AdaGrad [ 2 ] . Maintaining these accumulators and computing their inverse roots adds cost. SOAP [ 6 ] periodically derives eigenbases from Shampoo-style left and right accumulators and runs Adam in the resulting rotated coordinates; between basis refreshes, it continues updating coordinatewise second moments.",
+      "source": "https://arxiv.org/html/2611.19419v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0007",
+      "section": "2.2 Matrix-structured pretraining optimizers",
+      "text": "Muon [ 8 ] instead orthogonalizes a momentum matrix with a Newton–Schulz iteration. Its published recipe applies Muon to hidden-layer matrices and uses AdamW for embeddings and the output head [ 8 ] . Our All-2D Muon recipe instead applies the spectral update to every two-dimensional parameter, including embeddings and the output head, and uses Adam only for one-dimensional parameters. This assignment is part of the evaluated recipe rather than an implementation detail. We choose it to test the spectral update uniformly across matrix-valued student parameters, without routing the embedding and output matrices through a separate Adam-family optimizer. Published language-model studies report improved data efficiency or lower wall-clock cost for SOAP [ 6 ] and Muon [ 9 , 10 , 11 ] under their respective pretraining protocols. KL-Shampoo and KL-SOAP [ 7 ] use KL divergence to derive structured covariance estimators; that optimizer-internal construction is distinct from the teacher–student output KL studied here, and we do not evaluate those variants.",
+      "source": "https://arxiv.org/html/2611.19419v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0008",
+      "section": "2.3 Shampoo variants and matrix geometry",
+      "text": "Elementwise methods scale parameters independently. Full-matrix AdaGrad [ 2 ] captures correlations among all m ​ n mn entries of a weight matrix but requires a preconditioner with ( m ​ n ) 2 (mn)^{2} entries. Shampoo [ 1 ] instead maintains one factor per matrix axis. For the gradient G t ∈ ℝ m × n G_{t}\\in\\mathbb{R}^{m\\times n} of a weight with m m row coordinates and n n column coordinates, define L t = ϵ ​ I m + ∑ τ = 1 t G τ ​ G τ 𝖳 , R t = ϵ ​ I n + ∑ τ = 1 t G τ 𝖳 ​ G τ . L_{t}=\\epsilon I_{m}+\\sum_{\\tau=1}^{t}G_{\\tau}G_{\\tau}^{\\mathsf{T}},\\qquad R_{t}=\\epsilon I_{n}+\\sum_{\\tau=1}^{t}G_{\\tau}^{\\mathsf{T}}G_{\\tau}. (3) L t ∈ ℝ m × m L_{t}\\in\\mathbb{R}^{m\\times m} acts in row-coordinate space and R t ∈ ℝ n × n R_{t}\\in\\mathbb{R}^{n\\times n} acts in column-coordinate space. Storage falls from m 2 ​ n 2 m^{2}n^{2} entries to m 2 + n 2 m^{2}+n^{2} , while the full factors mix coordinates and can change the gradient direction rather than merely rescale entries independently. Here ϵ > 0 \\epsilon>0 denotes regularization; the equations suppress the additional numerical damping used by the inverse-root routine. Canonical matrix Shampoo applies both factors: G ~ t = L t − 1 / 4 G t R t − 1 / 4 . \\widetilde{G}_{t}=L_{t}^{-1/4}G_{t}R_{t}^{-1/4}. (4) For row-major vectorization g t = vec r ⁡ ( G t ) g_{t}=\\operatorname{vec}_{r}(G_{t}) , Equation 4 is equivalent to vec r ⁡ ( G ~ t ) = ( L t 1 / 4 ⊗ R t 1 / 4 ) − 1 ​ g t . \\operatorname{vec}_{r}(\\widetilde{G}_{t})=\\left(L_{t}^{1/4}\\otimes R_{t}^{1/4}\\right)^{-1}g_{t}. (5)",
+      "source": "https://arxiv.org/html/2611.19419v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0009",
+      "section": "2.3 Shampoo variants and matrix geometry",
+      "text": "If every G τ G_{\\tau} has rank at most r r , the Scalable Shampoo analysis [ 3 ] relates the full-matrix AdaGrad accumulator A t = ϵ ​ I m ​ n + ∑ τ = 1 t g τ ​ g τ 𝖳 A_{t}=\\epsilon I_{mn}+\\sum_{\\tau=1}^{t}g_{\\tau}g_{\\tau}^{\\mathsf{T}} to these factors through the positive-semidefinite bound A t ⪯ r ​ L t 1 / 2 ⊗ R t 1 / 2 . A_{t}\\preceq r\\,L_{t}^{1/2}\\otimes R_{t}^{1/2}. (6) Thus, the two quarter powers form a rank-dependent structured preconditioner motivated by a positive-semidefinite bound, not an exact factorization of the full accumulator. If both factors grow proportionally to t t , they give the usual heuristic decay t − 1 / 4 t − 1 / 4 = t − 1 / 2 t^{-1/4}t^{-1/4}=t^{-1/2} [ 1 ] . Equation 4 is the reference point below.",
+      "source": "https://arxiv.org/html/2611.19419v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0010",
+      "section": "2.3 Shampoo variants and matrix geometry",
+      "text": "Under our fixed factor-dimension cap of 8192 8192 , the students’ matrix geometries [ 19 , 20 ] permit right factors for more parameters than left factors. The embedding and output head have shape ( vocabulary , hidden ) (\\text{vocabulary},\\text{hidden}) , making their left factor at least 151,936 151{,}936 square and their right factor at most 5120 5120 square. The MLP gate and up projections have shape ( intermediate , hidden ) (\\text{intermediate},\\text{hidden}) , also placing the smaller hidden dimension on the right; the down projection reverses these dimensions, and every attention projection satisfies the cap. A right factor therefore captures correlations in the hidden-feature or input-column space for almost every two-dimensional weight without constructing vocabulary- or intermediate-width matrix roots. We select right-sided preconditioning for computational feasibility, not because column-space structure is assumed to be intrinsically more informative. Because transposition exchanges L t L_{t} and R t R_{t} , the left/right label is layout-dependent. Here right-only refers to the checkpoint’s PyTorch layout, in which linear weights are stored as ( output , input ) (\\text{output},\\text{input}) and embedding weights as ( vocabulary , hidden ) (\\text{vocabulary},\\text{hidden}) . The first variant replaces the left matrix factor by a scalar summary for every matrix-eligible two-dimensional weight, including weights whose full left factor would fit. Define that scalar row mean as s t = tr ⁡ ( L t ) m = ϵ + 1 m ​ ∑ τ = 1 t ∥ G τ ∥ F 2 . s_{t}=\\frac{\\operatorname{tr}(L_{t})}{m}=\\epsilon+\\frac{1}{m}\\sum_{\\tau=1}^{t}\\lVert G_{\\tau}\\rVert_{\\mathrm{F}}^{2}. (7) Replacing L t L_{t} by s t ​ I m s_{t}I_{m} in Equation 4 gives",
+      "source": "https://arxiv.org/html/2611.19419v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0011",
+      "section": "2.3 Shampoo variants and matrix geometry",
+      "text": "G ~ t = s t − 1 / 4 G t R t − 1 / 4 . \\widetilde{G}_{t}=s_{t}^{-1/4}G_{t}R_{t}^{-1/4}. (8) We call this scalar-row-mean quarter-power Shampoo . It preserves the mean eigenvalue of L t L_{t} and canonical Shampoo’s quarter-power structure [ 1 ] but removes every directional distinction in output-row space; it reproduces L t − 1 / 4 L_{t}^{-1/4} as an operator only when L t = s t ​ I m L_{t}=s_{t}I_{m} . It has a right matrix factor, but it is not a pure right-only method. The second variant follows the one-sided construction of Scalable Shampoo [ 3 ] . For p , q ∈ [ 1 , ∞ ] p,q\\in[1,\\infty] satisfying 1 / p + 1 / q = 1 1/p+1/q=1 , with 1 / ∞ = 0 1/\\infty=0 , that construction uses G ~ t = L t − 1 / ( 2 p ) G t R t − 1 / ( 2 q ) . \\widetilde{G}_{t}=L_{t}^{-1/(2p)}G_{t}R_{t}^{-1/(2q)}. (9) The symmetric choice p = q = 2 p=q=2 recovers Equation 4 . Taking p → ∞ p\\to\\infty , with q = p / ( p − 1 ) → 1 q=p/(p-1)\\to 1 , reaches the endpoint ( p , q ) = ( ∞ , 1 ) (p,q)=(\\infty,1) , removes the left factor, and gives G ~ t = G t R t − 1 / 2 . \\widetilde{G}_{t}=G_{t}R_{t}^{-1/2}. (10) The half power is therefore the endpoint of the same Kronecker-factored full-matrix-AdaGrad surrogate, rather than an independent exponent choice. Scalable Shampoo introduces these one-sided endpoints for large layers, applies them to embedding, softmax, and projection layers, and proves an online-convex regret bound under uniformly rank-bounded gradients [ 3 ] . Omitting L t L_{t} discards directional information in output-row coordinate space, so this right-only half-power Shampoo is not merely a lower-cost implementation of the canonical preconditioner.",
+      "source": "https://arxiv.org/html/2611.19419v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0012",
+      "section": "2.3 Shampoo variants and matrix geometry",
+      "text": "Thus, scalar-row-mean quarter-power Shampoo retains an isotropic left-side scale and a right quarter-power direction, whereas right-only half-power Shampoo removes the left factor and strengthens the right exponent. For ideal, unstabilized Frobenius-norm grafting to a donor direction D D [ 12 ] , write Q = G t R t − 1 / 4 ≠ 0 Q=G_{t}R_{t}^{-1/4}\\neq 0 and P = s t − 1 / 4 Q P=s_{t}^{-1/4}Q . Then P ​ ∥ D ∥ F ∥ P ∥ F = Q ​ ∥ D ∥ F ∥ Q ∥ F , P\\frac{\\lVert D\\rVert_{\\mathrm{F}}}{\\lVert P\\rVert_{\\mathrm{F}}}=Q\\frac{\\lVert D\\rVert_{\\mathrm{F}}}{\\lVert Q\\rVert_{\\mathrm{F}}}, (11) so, up to the implementation’s 10 − 16 10^{-16} denominator stabilizer, the scalar factor cancels and no scalar-row-mean information survives. We therefore exclude this grafted variant as equivalent to the corresponding normalized right-quarter direction. For right-only half-power Shampoo, normalization preserves the non-scalar R t − 1 / 2 R_{t}^{-1/2} direction while replacing its norm with the donor norm, so the grafted and ungrafted recipes remain distinct. The main comparison uses the ungrafted update; Appendix B discusses its grafted variant.",
+      "source": "https://arxiv.org/html/2611.19419v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0013",
+      "section": "2.3 Shampoo variants and matrix geometry",
+      "text": "With blocking disabled, either evaluated recipe forms a right matrix factor only when its dimension is at most 8192 8192 . At 0.6 ​ B 0.6\\mathrm{B} , every two-dimensional parameter satisfies this cap and receives the right factor. At 4 ​ B 4\\mathrm{B} , 14 ​ B 14\\mathrm{B} , and 32 ​ B 32\\mathrm{B} , the MLP down projection has shape ( hidden , intermediate ) (\\text{hidden},\\text{intermediate}) , so its right factor exceeds the cap and the parameter is instead updated with diagonal AdaGrad. Embeddings, the output head, attention, and the gate and up projections remain right-matrix-preconditioned at every scale; one-dimensional parameters always use the diagonal update. Both recipes use this right-factor/fallback rule; Scalable Shampoo instead combines two-sided factors, selected one-sided factors, and blocking according to layer geometry [ 3 ] . With no momentum, cumulative statistics are updated before preconditioning on every optimizer step. On the first preconditioner step , the resulting roots are used for that same update. Subsequent refreshes are measured relative to this step, and the roots are held fixed between refreshes. Before activation, matrix-preconditioned parameters use the raw gradient; fallback parameters use the diagonal update throughout. The learning rate and both schedule values are selected separately for each method and student–teacher pair. Appendix C gives the selected values, and Appendix A gives the numerical root procedure.",
+      "source": "https://arxiv.org/html/2611.19419v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0014",
+      "section": "3.1 Models and data",
+      "text": "The first three pairs use the instruction-tuned Qwen3-0.6B, Qwen3-1.7B, Qwen3-4B, Qwen3-8B, Qwen3-14B, and Qwen3-32B checkpoints [ 19 ] : 0.6 ​ B ← 1.7 ​ B 0.6\\mathrm{B}\\leftarrow 1.7\\mathrm{B} , 4 ​ B ← 8 ​ B 4\\mathrm{B}\\leftarrow 8\\mathrm{B} , 14 ​ B ← 32 ​ B 14\\mathrm{B}\\leftarrow 32\\mathrm{B} . The fourth pair uses Qwen2.5-32B-Instruct and Qwen2.5-72B-Instruct [ 20 ] . We use Qwen2.5 for the largest pair because its released dense 32B and 72B checkpoints have a student–teacher size ratio comparable to those of the Qwen3 pairs. The Qwen3 checkpoints share a tokenizer and vocabulary; the two Qwen2.5 checkpoints likewise have byte-identical tokenizer artifacts. Although the tokenizer and vocabulary differ between Qwen3 and Qwen2.5, the student and teacher within each pair receive identical token IDs. Each student is a dense decoder-only transformer. The hidden and MLP intermediate sizes are respectively ( 1024 , 3072 ) (1024,3072) , ( 2560 , 9728 ) (2560,9728) , ( 5120 , 17408 ) (5120,17408) , and ( 5120 , 27648 ) (5120,27648) for the 0.6 ​ B 0.6\\mathrm{B} , 4 ​ B 4\\mathrm{B} , 14 ​ B 14\\mathrm{B} , and Qwen2.5 32 ​ B 32\\mathrm{B} students. The Qwen3 and Qwen2.5 vocabularies contain 151,936 151{,}936 and 152,064 152{,}064 entries, respectively. The 0.6 ​ B 0.6\\mathrm{B} and 4 ​ B 4\\mathrm{B} checkpoints tie the token embedding and output head; the 14 ​ B 14\\mathrm{B} and Qwen2.5 32 ​ B 32\\mathrm{B} checkpoints use separate matrices of the same shape. These dimensions determine the factor coverage described in Section 2.3 .",
+      "source": "https://arxiv.org/html/2611.19419v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0015",
+      "section": "3.1 Models and data",
+      "text": "The examples are chain-of-thought traces selected from NVIDIA’s Nemotron-Post-Training-Dataset-v2 1 1 1 Nemotron dataset card [ 22 , 23 ] . We retain reasoning-on SFT traces with complete <think> and </think> markup and create training and validation splits stratified by the dataset’s category field. The retained <think> and </think> delimiters define the reasoning and answer regions in Equation 2 . We apply a maximum sequence length of 8192 8192 . Under both Qwen3 and Qwen2.5 tokenization, removal of overlength traces leaves 79,535 79{,}535 training examples and 1,006 1{,}006 unique validation examples.",
+      "source": "https://arxiv.org/html/2611.19419v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0016",
+      "section": "3.2 Comparison and evaluation protocol",
+      "text": "We compare six distillation recipes: AdamW [ 21 ] and diagonal AdaGrad [ 2 ] as references; scalar-row-mean quarter-power and right-only half-power Shampoo; SOAP [ 6 ] ; and All-2D Muon [ 8 ] . All-2D Muon applies its spectral update to every two-dimensional parameter and Adam to one-dimensional parameters. AdamW and AdaGrad use native PyTorch implementations; the remaining methods use PyTorch/FSDP2 adaptations. SOAP matches the authors’ implementation in fixed-gradient parity tests. Trainer times are specific to these adapters. Every full-budget final configuration is evaluated with three seeds. Qwen2.5 SOAP is limited to one matched 561-step run because of its measured trainer-time overhead and is excluded from full-budget summaries. Appendices A – C document implementation details, grafting controls, selection, and final settings. Within each student–teacher pair, every method uses the forward-KL training loss in Equation 2 , with λ = 0.5 \\lambda=0.5 , and global batch 144. Weight decay is zero, no learning-rate scheduler or warmup is used, and gradients are clipped to unit norm. Training uses bfloat16 FSDP2 with float32 gradient reduction. Because weight decay is zero, the PyTorch AdamW update is equivalent here to Adam; we retain the AdamW label. All methods use the same fixed budget of 1683 optimizer updates. One effective epoch is 552 updates, the number of complete batches of 144 in the 79,535 79{,}535 -example training split, so the budget runs slightly past three effective epochs. Pilot runs showed diminishing validation-KL improvements toward the end of this horizon.",
+      "source": "https://arxiv.org/html/2611.19419v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0017",
+      "section": "3.2 Comparison and evaluation protocol",
+      "text": "The three Qwen3 pairs use 72 NVIDIA GB200 accelerators across 18 four-accelerator nodes. The larger Qwen2.5 32 ​ B ← 72 ​ B 32\\mathrm{B}\\leftarrow 72\\mathrm{B} pair uses 144 accelerators across 36 such nodes to accommodate the dense teacher and student. We use trainer time for elapsed time spent in training, validation, and improvement-triggered checkpointing; it excludes model loading, queueing, and final model export. We evaluate quality using two criteria. The within-budget criterion is the three-seed mean of each run’s minimum validation KL observed during 1683 steps, corresponding to validation-based checkpoint selection. The matched-step criterion compares the three-seed mean trajectories at common evaluation steps. Absolute KL is compared only within a student–teacher pair. We report means with one standard deviation and interpret both quality views together with trainer time rather than combine them into a single score. Comparisons are descriptive and use neither hypothesis tests nor a fixed threshold for small KL differences. We describe an advantage as consistent only when the same qualitative ordering recurs across model pairs.",
+      "source": "https://arxiv.org/html/2611.19419v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0018",
+      "section": "4.1 Validation KL within a fixed budget",
+      "text": "Within the fixed budget, the evaluated matrix-structured methods show no validation-KL advantage over AdamW that persists across model pairs (Figure 1 ). Figure 1: Minimum validation KL within 1683 1683 steps: three-seed means of per-seed minima, with one-standard-deviation error bars. Lower is better. Qwen3 pairs use 72 GPUs and Qwen2.5 uses 144; Qwen2.5 SOAP was not extended beyond one matched 561-step run. AdamW, SOAP, and All-2D Muon are closely grouped at 0.6 ​ B 0.6\\mathrm{B} ; AdamW is lower than SOAP and All-2D Muon at 4 ​ B 4\\mathrm{B} and 14 ​ B 14\\mathrm{B} , and lower than AdaGrad on all four pairs. The Shampoo comparison is pair-dependent. Each Shampoo point is a pair-specific, validation-selected configuration (Appendix C ), not a family-wide optimum under an equal tuning budget. Right-only half-power Shampoo has lower validation KL at 0.6 ​ B 0.6\\mathrm{B} , whereas scalar-row-mean quarter-power is lower at 4 ​ B 4\\mathrm{B} ; their nearly identical trainer-time ratios indicate recipe dependence rather than a quality–trainer-time trade-off. Scalar-row-mean quarter-power remains above AdamW at 14 ​ B 14\\mathrm{B} and Qwen2.5 32 ​ B 32\\mathrm{B} . The selected k = 10 k=10 right-only half-power configuration is likewise above AdamW at 14 ​ B 14\\mathrm{B} , and the Qwen2.5 32 ​ B 32\\mathrm{B} configuration is above both AdamW and scalar-row-mean quarter-power. Given that the teacher, student architecture, matrix geometry, and factor coverage change together, these cross-pair differences do not establish a scale trend.",
+      "source": "https://arxiv.org/html/2611.19419v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0019",
+      "section": "4.2 Optimization trajectories across model pairs",
+      "text": "Matched-step trajectories show that optimizer ordering can depend on training horizon, but no evaluated matrix-structured method shows a stable early-step advantage across model pairs (Figure 2 ). Across methods, validation KL declines most steeply during the first effective epoch and more slowly during the next two. At 0.6 ​ B 0.6\\mathrm{B} , AdaGrad and right-only half-power Shampoo are below AdamW after roughly one effective epoch, but these advantages disappear by the end of the budget. Scalar-row-mean quarter-power Shampoo remains above AdamW at every recorded validation step; most of its initial gap closes during the first effective epoch, but a positive gap remains at the final update. At 4 ​ B 4\\mathrm{B} and 14 ​ B 14\\mathrm{B} , AdamW has lower validation KL than every other completed method at each effective-epoch boundary. SOAP approaches AdamW over training but does not overtake it at any recorded step on those pairs. AdamW likewise remains lowest at each boundary on the Qwen2.5 pair, where both Shampoo reductions remain above it. Thus, the trajectories do not identify an advantage for matrix-structured methods that is hidden by the fixed-budget summary. Figure 2: Validation KL over training (three-seed means). Dashed lines mark effective epochs of 552 updates; training ends at step 1683 1683 . Vertical scales differ. Qwen3 pairs use 72 GPUs and Qwen2.5 uses 144; Qwen2.5 SOAP was not extended beyond one matched 561-step run.",
+      "source": "https://arxiv.org/html/2611.19419v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0020",
+      "section": "4.3 Trainer-time overhead",
+      "text": "Trainer-time results sharpen the quality comparison: every matrix-structured method with completed results adds trainer time relative to AdamW, whereas AdaGrad becomes slightly faster than AdamW at the larger evaluated student sizes (Figure 3 ). This is consistent with AdaGrad’s lighter elementwise update: it maintains one accumulator rather than AdamW’s first- and second-moment states, reducing optimizer-state traffic and pointwise work. The Qwen2.5 experiments use 144 GPUs, however, and therefore do not provide a pure scale continuation of the fixed 72-GPU regime used for Qwen3. Figure 3: Trainer time normalized per pair and seed to AdamW ( 1.0 1.0 ); bars show three-seed means with one-standard-deviation error bars. Qwen3 pairs use 72 GPUs and Qwen2.5 uses 144; ratios are within-pair. The matched 561-step Qwen2.5 SOAP run took 4.31 × 4.31\\times AdamW trainer time and was not extended. Among the evaluated matrix-structured methods, the two Shampoo reductions have the smallest overhead and nearly identical trainer time on their shared completed pairs. Their reversal in validation KL therefore reflects the optimizer recipe rather than different compute budgets. All-2D Muon becomes more expensive on the larger pairs. SOAP is qualitatively different: it requires roughly two to three times AdamW’s trainer time on the Qwen3 pairs. Online teacher inference, validation, and checkpointing reduce the optimizer’s share of total time. These ratios therefore measure systems-level protocol overhead, not student-only optimizer-kernel overhead, and may understate the latter.",
+      "source": "https://arxiv.org/html/2611.19419v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0021",
+      "section": "4.3 Trainer-time overhead",
+      "text": "At Qwen2.5 32 ​ B ← 72 ​ B 32\\mathrm{B}\\leftarrow 72\\mathrm{B} , SOAP incurred substantially greater trainer time than AdamW without a clear improvement in validation KL at the matched 561-step horizon. Its unblocked FSDP2 adapter gathers full gradients and moments, replicates matrix factors, and refreshes bases frequently (Appendix A ). Model sharding does not distribute this optimizer work, so we did not extend SOAP.",
+      "source": "https://arxiv.org/html/2611.19419v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0022",
+      "section": "5 Discussion and limitations",
+      "text": "The transfer gap may reflect the shift from long-horizon pretraining to short-horizon distillation from an instruction-tuned initialization. Matrix-structured methods add estimation and refresh costs, leaving less opportunity for quality gains to offset trainer-time overhead; the study does not isolate these mechanisms causally. That reversal comes from approximations that retain different information and exponents, with factor coverage and selected hyperparameters that also vary across pairs. The SOAP and Muon conclusions are similarly tied to routing and implementation choices. All-2D Muon differs from the hidden-layer-only reference recipe, and unblocked SOAP differs algorithmically and operationally from blocked distributed alternatives. Moreover, Shampoo and SOAP use observed-gradient moments, which need not approximate the model’s Fisher information matrix [ 17 ] . The findings therefore do not rank optimizer families independently of factorization, routing, and implementation. Limitations. The empirical scope is four dense Qwen student–teacher pairs from two model generations and one chain-of-thought corpus. The study does not test longer schedules, other distillation objectives or data, or sparse model architectures. Validation KL measures teacher matching rather than downstream performance. The evaluated Shampoo recipes are unblocked and use at most one full right matrix factor. Trainer times are specific to the 72- and 144-accelerator GB200 allocations and depend on the evaluated adapters. Qwen2.5 SOAP is deliberately limited to one matched 561-step run and is excluded from full-budget summaries. The study also includes no matched controls initialized from checkpoints pretrained with each evaluated optimizer.",
+      "source": "https://arxiv.org/html/2611.19419v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0023",
+      "section": "6 Conclusion",
+      "text": "Simple elementwise optimizers remain strong baselines for short-horizon online KL distillation. Across four Qwen student–teacher pairs, AdamW generally delivered the lowest validation KL, while AdaGrad provided comparable efficiency and could be slightly faster for the larger LLMs evaluated. The evaluated matrix-structured methods did not produce a persistent quality–trainer-time advantage, and the changing order of the two Shampoo reductions showed that the exact feasible formulation matters. For short-horizon online KL distillation, AdamW and AdaGrad should therefore be the starting point, with matrix structure added only when it yields a clear quality or trainer-time benefit in the target setting.",
+      "source": "https://arxiv.org/html/2611.19419v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0024",
+      "section": "References",
+      "text": "[1] V. Gupta, T. Koren, and Y. Singer. Shampoo: Preconditioned stochastic tensor optimization. ICML, 2018. [2] J. Duchi, E. Hazan, and Y. Singer. Adaptive subgradient methods for online learning and stochastic optimization. Journal of Machine Learning Research, 2011. [3] R. Anil, V. Gupta, T. Koren, K. Regan, and Y. Singer. Scalable second order optimization for deep learning. arXiv:2002.09018, 2020. [4] J. Bradbury, R. Frostig, P. Hawkins, et al. JAX: Composable transformations of Python+NumPy programs. Software repository , 2018. [5] H.-J. M. Shi, T.-H. Lee, S. Iwasaki, J. Gallego-Posada, Z. Li, K. Rangadurai, D. Mudigere, and M. Rabbat. A distributed data-parallel PyTorch implementation of the Distributed Shampoo optimizer for training neural networks at-scale. arXiv:2309.06497, 2023. [6] N. Vyas, D. Morwani, R. Zhao, M. Kwun, I. Shapira, D. Brandfonbrener, L. Janson, and S. Kakade. SOAP: Improving and stabilizing Shampoo using Adam for language modeling. ICLR, 2025. [7] W. Lin, S. C. Lowe, F. Dangel, R. Eschenhagen, Z. Xu, and R. B. Grosse. Understanding and improving Shampoo and SOAP via Kullback–Leibler minimization. ICLR, 2026. [8] K. Jordan, Y. Jin, V. Boza, J. You, F. Cesista, L. Newhouse, and J. Bernstein. Muon: An optimizer for hidden layers in neural networks. Technical note , 2024. [9] J. Liu, J. Su, X. Yao, et al. Muon is scalable for LLM training. arXiv:2502.16982, 2025. [10] I. Shah, A. M. Polloreno, K. Stratos, et al. Practical efficiency of Muon for pretraining. arXiv:2505.02222, 2025. [11] S. Qiu, Z. Chen, H. Phan, Q. Lei, and A. G. Wilson. Hyperparameter transfer enables consistent gains of matrix-preconditioned optimizers across scales. NeurIPS, 2025.",
+      "source": "https://arxiv.org/html/2611.19419v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0025",
+      "section": "References",
+      "text": "[12] N. Agarwal, R. Anil, E. Hazan, T. Koren, and C. Zhang. Disentangling adaptive gradient methods from learning rates. arXiv:2002.11803, 2020. [13] G. Hinton, O. Vinyals, and J. Dean. Distilling the knowledge in a neural network. arXiv:1503.02531, 2015. [14] L. Ghita, D. Desai, and I. Boier. Scaling laws for task-specific LLM distillation. arXiv:2606.24747, 2026. [15] L. Ghita and D. Desai. Effective teacher support for reasoning distillation. arXiv:2611.14850, 2026. [16] J. Martens and R. Grosse. Optimizing neural networks with Kronecker-factored approximate curvature. ICML, 2015. [17] F. Kunstner, L. Balles, and P. Hennig. Limitations of the empirical Fisher approximation for natural gradient descent. NeurIPS, 2019. [18] H. Liu, Z. Li, D. Hall, P. Liang, and T. Ma. Sophia: A scalable stochastic second-order optimizer for language model pre-training. ICLR, 2024. [19] Qwen Team. Qwen3 technical report. arXiv:2505.09388, 2025. [20] Qwen Team. Qwen2.5 technical report. arXiv:2412.15115, 2024. [21] I. Loshchilov and F. Hutter. Decoupled weight decay regularization. ICLR, 2019. [22] D. Nathawani, S. Ding, V. Lavrukhin, I. Gitman, S. Majumdar, E. Bakhturina, B. Ginsburg, and J. Polak Scowcroft. Nemotron-Post-Training-Dataset-v2. Version 2.0, NVIDIA, 2025. [23] NVIDIA. NVIDIA Nemotron Nano 2: An accurate and efficient hybrid Mamba–Transformer reasoning model. arXiv:2508.14444, 2025.",
+      "source": "https://arxiv.org/html/2611.19419v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0026",
+      "section": "Appendix A Optimizer implementations used",
+      "text": "AdamW and AdaGrad use torch.optim ; the matrix-structured methods use the PyTorch/FSDP2 implementations below. Method labels denote these specific implementations, not entire optimizer families. Code for these experiments will be released. Our main model-distillation-recipes repository 2 2 2 NVIDIA model-distillation-recipes repository documents the surrounding distillation protocol, including data formatting and token masking. Alternatives prefixed by ‘‘Meta’’ use the public Meta Distributed Shampoo repository 3 3 3 Meta Distributed Shampoo, revision d24a149 [ 5 ] . The implementation controls cover the three Qwen3 model pairs: 0.6 ​ B ← 1.7 ​ B 0.6\\mathrm{B}\\leftarrow 1.7\\mathrm{B} , 4 ​ B ← 8 ​ B 4\\mathrm{B}\\leftarrow 8\\mathrm{B} , and 14 ​ B ← 32 ​ B 14\\mathrm{B}\\leftarrow 32\\mathrm{B} . These controls identify faithful, practical implementations rather than estimate scaling trends, so we do not repeat them on the Qwen2.5 pair.",
+      "source": "https://arxiv.org/html/2611.19419v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0027",
+      "section": "A.1 Shampoo",
+      "text": "The two Shampoo recipes in the main comparison use our PyTorch/FSDP2 Scalable Shampoo backend. It ports selected equations and state-machine behavior from the Google Research implementation 4 4 4 Google Research Scalable Shampoo, revision 1e55815 , written in JAX [ 4 ] and released with Scalable Shampoo [ 3 ] . The port retains epsilon-initialized Kronecker statistics, cumulative or exponential-moving-average updates, separate statistic and inverse-root schedules, delayed activation, SGD/AdaGrad norm grafting, separate donor and Shampoo momentum, and the coupled-Newton inverse-root equations. It is not a line-by-line translation: optimizer calls are indexed from one, only two-dimensional parameters use Kronecker factors, and the largest-eigenvalue estimate is deterministic across ranks.",
+      "source": "https://arxiv.org/html/2611.19419v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0028",
+      "section": "A.1 Shampoo",
+      "text": "The pinned Google implementation does not expose omission of an individual Kronecker factor. Following the one-sided construction in the paper, we add the right-only half-power update. The same backend also supports a right-only quarter-power ablation and an AdaGrad-grafted right-only half-power update, as well as scalar-sum and scalar-row-mean quarter-power variants. Each scalar variant maintains one full-parameter scalar left statistic even when the right factor is partitioned into blocks. For an m × n m\\times n gradient, the sum variant accumulates ∥ G t ∥ F 2 \\lVert G_{t}\\rVert_{\\mathrm{F}}^{2} and the row-mean variant accumulates ∥ G t ∥ F 2 / m \\lVert G_{t}\\rVert_{\\mathrm{F}}^{2}/m . Non-matrix parameters and matrices whose active factor exceeds the configured cap instead use diagonal AdaGrad and maintain no scalar left statistic. The port further adds FSDP2 execution, distributed checkpointing, and recipe fingerprints that reject incompatible optimizer state. The pinned revision contains only the JAX implementation. Its exponent override assigns one power to every Kronecker factor, so the one-sided updates above are part of the port, as are the scalar statistics and the distributed interfaces. A later public PyTorch port of the same implementation 5 5 5 Google Research PyTorch Shampoo, revision 5b09c22 retains the single-exponent interface and does not provide distributed execution. Meta Distributed Shampoo provides a right-only half-power update and distributed execution in PyTorch, with the recipe differences recorded below.",
+      "source": "https://arxiv.org/html/2611.19419v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0029",
+      "section": "A.1 Shampoo",
+      "text": "For the reported runs, each matrix statistic is initialized with 10 − 6 ​ I 10^{-6}I , and each inverse root is computed after adding 10 − 6 ​ λ ^ max ​ ( A ) ​ I 10^{-6}\\widehat{\\lambda}_{\\max}(A)I to the statistic A A . The largest-eigenvalue estimate uses a fixed seed and a relative convergence test. FP32 coupled Newton is used for the inverse root. A nonfinite candidate or a final coupled-iteration error of at least 0.1 0.1 is rejected, leaving the preceding valid root in place. The scalar statistic is initialized at 10 − 6 10^{-6} , and its inverse fourth root follows the matrix-root schedule. We use ϵ = 10 − 10 \\epsilon=10^{-10} for diagonal AdaGrad, both as the fallback update and as the grafting donor. Two execution paths use this backend. Replicated Scalable Shampoo reconstructs each full gradient and repeats the optimizer computation on every rank. Parameter-owner Scalable Shampoo assigns each full parameter to one deterministic, load-balanced owner rank, where its statistics, roots, grafting, and update are computed once. It reuses the pinned Meta repository’s FSDP2 communication contexts, including persistent buffers and coalesced all-to-all exchanges, but retains our Scalable Shampoo mathematics and checkpoint schema. Updated parameter shards are returned to their FSDP2 ranks; owner-only factors are replicated only while saving or loading a checkpoint. In a matched single-seed, 561-update control, parameter-owner Scalable Shampoo was approximately 2.24 × 2.24\\times faster in trainer time than replicated Scalable Shampoo, while validation KL changed by less than 2 × 10 − 4 2\\times 10^{-4} .",
+      "source": "https://arxiv.org/html/2611.19419v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0030",
+      "section": "A.1 Shampoo",
+      "text": "Meta Distributed Shampoo can also construct right-only half-power Shampoo and its AdaGrad-grafted variant by combining per-dimension exponent overrides with a graft donor; our Meta adapter configures these lower-level options. They are not equivalent off-the-shelf presets for the recipes used in the main comparison. In particular, the pinned Meta backend does not expose our full-parameter scalar-row-mean construction. Moreover, when blocking is enabled, Meta applies grafting per block; our Meta adapter couples first activation to the inverse-root refresh interval; and its default inverse-root implementation uses eigendecomposition rather than coupled Newton. We therefore use parameter-owner Scalable Shampoo for the main recipes and reserve Meta Distributed Shampoo as an implementation alternative. Figure 4 compares a grafted right-only configuration of replicated Scalable Shampoo, parameter-owner Scalable Shampoo, and Meta Distributed Shampoo. Parameter-owner Scalable Shampoo and Meta Distributed Shampoo substantially reduce trainer time relative to replicated Scalable Shampoo. Their validation behavior is recipe- and pair-dependent rather than uniformly worse for Meta Distributed Shampoo. Because root schedules and selected hyperparameters differ among these historical controls, the figure documents implementation selection rather than an isolated backend benchmark. Figure 4: Validation-KL trajectories for grafted right-only Shampoo. Replicated Scalable Shampoo and parameter-owner Scalable Shampoo are three-seed means; Meta Distributed Shampoo is a single-seed control with additional recipe differences.",
+      "source": "https://arxiv.org/html/2611.19419v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0031",
+      "section": "A.2 SOAP",
+      "text": "SOAP rotates gradients and moments into Shampoo-derived eigenbases before applying Adam along the resulting matrix directions [ 6 ] . The main SOAP implementation is an unblocked FSDP2 adaptation of the authors’ implementation 6 6 6 SOAP reference implementation and matches it in fixed-gradient parity tests. It constructs a factor for each matrix axis of dimension at most 8192 8192 , retains the identity basis along larger axes, and initializes the basis on its first optimization step without updating the parameters. Meta blockwise SOAP instead uses Meta’s DefaultSOAPConfig 7 7 7 Meta DefaultSOAPConfig, revision d24a149 , partitions matrix dimensions into blocks of size at most 1024 1024 , begins preconditioning at the first eigenbasis refresh on update 10, and distributes the blocked optimizer state across ranks. Its blocking and delayed use of the learned eigenbasis change the optimizer sequence, not only its systems implementation. We use the unblocked implementation because it more closely follows the authors’ implementation, retaining Meta blockwise SOAP as an alternative. Under FSDP2, its full-matrix gradients, moments, factors, and bases are replicated rather than partitioned. Across the three controls in Figure 5 , Meta blockwise SOAP achieved a 1.6 1.6 – 1.9 × 1.9\\times trainer-time speedup over the unblocked implementation but had best validation KL values 0.006 0.006 – 0.013 0.013 higher. Because blocking and delayed preconditioning alter the update sequence, this is a comparison of alternative recipes rather than an isolated backend benchmark.",
+      "source": "https://arxiv.org/html/2611.19419v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0032",
+      "section": "A.2 SOAP",
+      "text": "Figure 5: Validation-KL trajectories for unblocked SOAP (three-seed mean) and Meta blockwise SOAP (single-seed control). The comparison includes backend and algorithmic differences, including Meta’s matrix blocking and delayed basis use.",
+      "source": "https://arxiv.org/html/2611.19419v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0033",
+      "section": "A.3 Muon",
+      "text": "Muon approximately orthogonalizes matrix-valued momentum updates with Newton–Schulz iterations. A shared distributed adapter reconstructs each sharded two-dimensional gradient across ranks and redistributes the update. All-2D Muon applies Muon to embeddings, the output head, and transformer matrices; only one-dimensional parameters use Adam. Reference Muon instead follows the parameter assignment of the reference implementation 8 8 8 Muon reference implementation [ 8 ] : Muon is restricted to hidden transformer matrices, while embeddings, the output head, and one-dimensional parameters use Adam. Meta Muon implements the same hidden-only assignment with Meta’s SpectralDescentPreconditionerConfig 9 9 9 Meta SpectralDescentPreconditionerConfig, revision d24a149 and distributes optimizer state across ranks. The three implementations otherwise share the momentum coefficient, Nesterov ordering, Newton–Schulz coefficients, and aspect-ratio scaling. In matched single-seed controls, Meta Muon achieved a 1.2 1.2 – 1.7 × 1.7\\times trainer-time speedup over Reference Muon, while their best validation KL values differed by at most 0.00031 0.00031 (Figure 6 ). This supports agreement between the hidden-only implementations; it does not validate All-2D Muon, whose distinct routing means that comparisons involving its curves reflect both recipe and implementation differences. Figure 6: Validation-KL trajectories for All-2D Muon (three-seed mean) and the single-seed Reference and Meta controls. The controls apply Muon only to hidden-layer matrices; All-2D also includes embeddings and the output head.",
+      "source": "https://arxiv.org/html/2611.19419v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0034",
+      "section": "Appendix B AdaGrad-grafted right-only half-power Shampoo",
+      "text": "Norm grafting takes the update direction from one optimizer and rescales it to match the update norm of another [ 12 ] . Here, P t = G t R t − 1 / 2 P_{t}=G_{t}R_{t}^{-1/2} is the right-only half-power direction for an eligible matrix, and D t D_{t} is the diagonal AdaGrad-preconditioned direction before the outer learning-rate multiplier. After preconditioner activation, the grafted variant uses G ~ t graft = P t ​ ∥ D t ∥ F ∥ P t ∥ F + 10 − 16 . \\widetilde{G}_{t}^{\\mathrm{graft}}=P_{t}\\frac{\\lVert D_{t}\\rVert_{\\mathrm{F}}}{\\lVert P_{t}\\rVert_{\\mathrm{F}}+10^{-16}}. (12) Thus grafting retains the matrix-preconditioned direction while matching its Frobenius norm to the donor up to the stabilizer. Before activation, eligible matrices use the donor update; parameters outside the matrix recipe always use diagonal AdaGrad. Unlike scalar-row-mean quarter-power grafting, this operation does not cancel the matrix preconditioner. Grafting changes the recipe, not the backend: grafted and ungrafted variants share the parameter-owner Scalable Shampoo execution path, cumulative statistics, coupled-Newton roots, and parameter routing. Grafting changes update scale, so its learning rate and preconditioner schedule are selected independently; the comparison is therefore between tuned recipes, not an isolated fixed-hyperparameter grafting effect. The main comparison reports the ungrafted variant. Completed single-seed grafted runs are exploratory and cannot characterize seed variability or support scale-dependent conclusions.",
+      "source": "https://arxiv.org/html/2611.19419v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0035",
+      "section": "C.1 Selection protocol",
+      "text": "AdamW, AdaGrad, SOAP, and All-2D Muon were screened in short single-seed pilots before promising settings were promoted to longer runs. Learning rates were searched on logarithmically spaced grids spanning 3 × 10 − 6 3{\\times}10^{-6} – 3 × 10 − 4 3{\\times}10^{-4} for AdamW, 3 × 10 − 5 3{\\times}10^{-5} – 3 × 10 − 3 3{\\times}10^{-3} for AdaGrad, 3 × 10 − 6 3{\\times}10^{-6} – 3 × 10 − 4 3{\\times}10^{-4} for SOAP, and 3 × 10 − 5 3{\\times}10^{-5} – 3 × 10 − 3 3{\\times}10^{-3} for All-2D Muon, with boundary refinement when a pilot optimum approached a grid limit. AdamW additionally compared β 1 ∈ { 0.8 , 0.9 , 0.95 } \\beta_{1}\\in\\{0.8,0.9,0.95\\} and β 2 ∈ { 0.95 , 0.99 } \\beta_{2}\\in\\{0.95,0.99\\} , while SOAP compared β 1 ∈ { 0.8 , 0.9 , 0.95 } \\beta_{1}\\in\\{0.8,0.9,0.95\\} . Candidate configurations were ranked by the minimum validation KL observed within their common stage budget. The initial 0.6 ​ B ← 1.7 ​ B 0.6\\mathrm{B}\\leftarrow 1.7\\mathrm{B} screens used global batch 96; final runs use global batch 144. Subsequent pair-specific pilots searched within the same ranges. These searches select credible settings within each recipe rather than impose an equal tuning budget across methods. The Shampoo recipes use pair-specific staged searches over learning rate, first preconditioner step, and refresh interval. After the 561-update screens, the three best valid configurations are each run for 1683 updates with three seeds. For each recipe and pair, the configuration with the lowest three-seed mean validation KL is selected; results are not pooled across hyperparameters.",
+      "source": "https://arxiv.org/html/2611.19419v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0036",
+      "section": "C.1 Selection protocol",
+      "text": "Exploratory single-seed pilots also screened Sophia-G [ 18 ] , motivated by its reported pretraining efficiency, and K-FAC [ 16 ] , motivated by the relationship between KL and Fisher geometry. Sophia-G did not improve the observed validation-KL–trainer-time trade-off over the retained recipes, and K-FAC did not outperform AdamW in its control. Neither method was promoted to the main comparison.",
+      "source": "https://arxiv.org/html/2611.19419v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0037",
+      "section": "C.2 Final configurations",
+      "text": "Table 1 records the final pair-specific values. Table 1: Pair-specific learning rates and, for each Shampoo recipe, the first preconditioner step and refresh interval (in updates; reported as first/refresh). Method Qwen3 0.6 ​ B ← 1.7 ​ B 0.6\\mathrm{B}{\\leftarrow}1.7\\mathrm{B} Qwen3 4 ​ B ← 8 ​ B 4\\mathrm{B}{\\leftarrow}8\\mathrm{B} Qwen3 14 ​ B ← 32 ​ B 14\\mathrm{B}{\\leftarrow}32\\mathrm{B} Qwen2.5 32 ​ B ← 72 ​ B 32\\mathrm{B}{\\leftarrow}72\\mathrm{B} Learning rate AdamW 3 × 10 − 5 3{\\times}10^{-5} 3 × 10 − 5 3{\\times}10^{-5} 3 × 10 − 5 3{\\times}10^{-5} 3 × 10 − 5 3{\\times}10^{-5} AdaGrad 3 × 10 − 4 3{\\times}10^{-4} 3 × 10 − 4 3{\\times}10^{-4} 3 × 10 − 4 3{\\times}10^{-4} 1.5 × 10 − 4 1.5{\\times}10^{-4} Scalar-row-mean quarter-power Shampoo 7 × 10 − 3 7{\\times}10^{-3} 5 × 10 − 4 5{\\times}10^{-4} 5 × 10 − 4 5{\\times}10^{-4} 5 × 10 − 4 5{\\times}10^{-4} Right-only half-power Shampoo 10 − 2 10^{-2} 3 × 10 − 4 3{\\times}10^{-4} 3 × 10 − 4 3{\\times}10^{-4} 3 × 10 − 4 3{\\times}10^{-4} SOAP 3 × 10 − 5 3{\\times}10^{-5} 3 × 10 − 5 3{\\times}10^{-5} 10 − 4 10^{-4} 10 − 4 10^{-4} † \\dagger All-2D Muon 3 × 10 − 4 3{\\times}10^{-4} 3 × 10 − 4 3{\\times}10^{-4} 3 × 10 − 4 3{\\times}10^{-4} 5 × 10 − 4 5{\\times}10^{-4} Shampoo first step/refresh interval Scalar-row-mean quarter-power Shampoo 20 / 200 20/200 50 / 100 50/100 20 / 100 20/100 20 / 100 20/100 Right-only half-power Shampoo 10 / 10 10/10 100 / 100 100/100 10 / 10 10/10 50 / 50 50/50 † \\dagger Selected in the matched 561-step screen; not extended to the three-seed, 1683-step budget because of its measured trainer-time overhead. The remaining fixed optimizer-specific settings are: • AdamW: ( β 1 , β 2 ) = ( 0.8 , 0.99 ) (\\beta_{1},\\beta_{2})=(0.8,0.99) and ϵ = 10 − 8 \\epsilon=10^{-8} .",
+      "source": "https://arxiv.org/html/2611.19419v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0038",
+      "section": "C.2 Final configurations",
+      "text": "• AdaGrad: ϵ = 10 − 10 \\epsilon=10^{-10} and zero initial accumulator. Unlisted AdamW and AdaGrad arguments use PyTorch defaults. • Both Shampoo recipes: cumulative statistics updated every step, no momentum or grafting, maximum matrix-factor dimension 8192 8192 , matrix-statistic initialization 10 − 6 10^{-6} , and diagonal-fallback ϵ = 10 − 10 \\epsilon=10^{-10} . Scalar-row-mean quarter-power Shampoo also initializes its scalar statistic to 10 − 6 10^{-6} . • SOAP: ( β 1 , β 2 ) = ( 0.8 , 0.95 ) (\\beta_{1},\\beta_{2})=(0.8,0.95) , Adam-denominator ϵ = 10 − 6 \\epsilon=10^{-6} , factor EMA coefficient 0.95 0.95 , and eigenbasis refresh every 10 updates. • All-2D Muon: momentum 0.95 0.95 with Nesterov acceleration, five bfloat16 Newton–Schulz iterations, and one-dimensional Adam with ( β 1 , β 2 ) = ( 0.9 , 0.95 ) (\\beta_{1},\\beta_{2})=(0.9,0.95) and ϵ = 10 − 10 \\epsilon=10^{-10} .",
+      "source": "https://arxiv.org/html/2611.19419v1",
+      "offset": 0
+    }
+  ],
+  "links": [
+    {
+      "href": "#bib.bib1",
+      "text": "1",
+      "section": "1 Introduction",
+      "context": "Prior work on Shampoo, SOAP, Muon, and related matrix-structured optimizers reports data-efficiency or wall-clock gains over AdamW in language-model pretraining [ 1",
+      "url": "https://arxiv.org/html/2611.19419v1#bib.bib1"
+    },
+    {
+      "href": "#bib.bib6",
+      "text": "6",
+      "section": "1 Introduction",
+      "context": "Prior work on Shampoo, SOAP, Muon, and related matrix-structured optimizers reports data-efficiency or wall-clock gains over AdamW in language-model pretraining [ 1 , 6",
+      "url": "https://arxiv.org/html/2611.19419v1#bib.bib6"
+    },
+    {
+      "href": "#bib.bib9",
+      "text": "9",
+      "section": "1 Introduction",
+      "context": "Prior work on Shampoo, SOAP, Muon, and related matrix-structured optimizers reports data-efficiency or wall-clock gains over AdamW in language-model pretraining [ 1 , 6 , 9",
+      "url": "https://arxiv.org/html/2611.19419v1#bib.bib9"
+    },
+    {
+      "href": "#bib.bib10",
+      "text": "10",
+      "section": "1 Introduction",
+      "context": "Prior work on Shampoo, SOAP, Muon, and related matrix-structured optimizers reports data-efficiency or wall-clock gains over AdamW in language-model pretraining [ 1 , 6 , 9 , 10",
+      "url": "https://arxiv.org/html/2611.19419v1#bib.bib10"
+    },
+    {
+      "href": "#bib.bib11",
+      "text": "11",
+      "section": "1 Introduction",
+      "context": "Prior work on Shampoo, SOAP, Muon, and related matrix-structured optimizers reports data-efficiency or wall-clock gains over AdamW in language-model pretraining [ 1 , 6 , 9 , 10 , 11",
+      "url": "https://arxiv.org/html/2611.19419v1#bib.bib11"
+    },
+    {
+      "href": "#bib.bib3",
+      "text": "3",
+      "section": "1 Introduction",
+      "context": "Prior work on Shampoo, SOAP, Muon, and related matrix-structured optimizers reports data-efficiency or wall-clock gains over AdamW in language-model pretraining [ 1 , 6 , 9 , 10 , 11 ] . Those comparisons concern long-horizon next-token training from random initialization, with outcomes sensitive to model scale, batch size, parameterization, and hyperparameter transfer [ 3",
+      "url": "https://arxiv.org/html/2611.19419v1#bib.bib3"
+    },
+    {
+      "href": "#bib.bib10",
+      "text": "10",
+      "section": "1 Introduction",
+      "context": "Prior work on Shampoo, SOAP, Muon, and related matrix-structured optimizers reports data-efficiency or wall-clock gains over AdamW in language-model pretraining [ 1 , 6 , 9 , 10 , 11 ] . Those comparisons concern long-horizon next-token training from random initialization, with outcomes sensitive to model scale, batch size, parameterization, and hyperparameter transfer [ 3 , 10",
+      "url": "https://arxiv.org/html/2611.19419v1#bib.bib10"
+    },
+    {
+      "href": "#bib.bib11",
+      "text": "11",
+      "section": "1 Introduction",
+      "context": "Prior work on Shampoo, SOAP, Muon, and related matrix-structured optimizers reports data-efficiency or wall-clock gains over AdamW in language-model pretraining [ 1 , 6 , 9 , 10 , 11 ] . Those comparisons concern long-horizon next-token training from random initialization, with outcomes sensitive to model scale, batch size, parameterization, and hyperparameter transfer [ 3 , 10 , 11",
+      "url": "https://arxiv.org/html/2611.19419v1#bib.bib11"
+    },
+    {
+      "href": "#bib.bib1",
+      "text": "1",
+      "section": "1 Introduction",
+      "context": "Within each student–teacher pair, all recipes share the tokenizer, data, forward-KL objective, batch size, and training budget; we compare minimum validation KL within budget, validation KL at matched steps, and trainer time. Canonical two-sided Shampoo [ 1",
+      "url": "https://arxiv.org/html/2611.19419v1#bib.bib1"
+    },
+    {
+      "href": "#bib.bib3",
+      "text": "3",
+      "section": "1 Introduction",
+      "context": "Within each student–teacher pair, all recipes share the tokenizer, data, forward-KL objective, batch size, and training budget; we compare minimum validation KL within budget, validation KL at matched steps, and trainer time. Canonical two-sided Shampoo [ 1 ] cannot be applied uniformly to the evaluated matrix geometries under the factor-dimension cap. We therefore derive a scalar-row-mean quarter-power reduction and compare it with a right-only half-power reduction based on Scalable Shampoo’s one-sided construction [ 3",
+      "url": "https://arxiv.org/html/2611.19419v1#bib.bib3"
+    },
+    {
+      "href": "#S2",
+      "text": "2",
+      "section": "1 Introduction",
+      "context": "The rest of the paper is structured as follows: Section 2",
+      "url": "https://arxiv.org/html/2611.19419v1#S2"
+    },
+    {
+      "href": "#S3",
+      "text": "3",
+      "section": "1 Introduction",
+      "context": "The rest of the paper is structured as follows: Section 2 defines the distillation objective and optimizer recipes, including the Shampoo reductions. Section 3",
+      "url": "https://arxiv.org/html/2611.19419v1#S3"
+    },
+    {
+      "href": "#S4",
+      "text": "4",
+      "section": "1 Introduction",
+      "context": "The rest of the paper is structured as follows: Section 2 defines the distillation objective and optimizer recipes, including the Shampoo reductions. Section 3 describes the experimental design, and Section 4",
+      "url": "https://arxiv.org/html/2611.19419v1#S4"
+    },
+    {
+      "href": "#S5",
+      "text": "5",
+      "section": "1 Introduction",
+      "context": "The rest of the paper is structured as follows: Section 2 defines the distillation objective and optimizer recipes, including the Shampoo reductions. Section 3 describes the experimental design, and Section 4 reports fixed-budget quality, optimization trajectories, and trainer time. Section 5",
+      "url": "https://arxiv.org/html/2611.19419v1#S5"
+    },
+    {
+      "href": "#S6",
+      "text": "6",
+      "section": "1 Introduction",
+      "context": "The rest of the paper is structured as follows: Section 2 defines the distillation objective and optimizer recipes, including the Shampoo reductions. Section 3 describes the experimental design, and Section 4 reports fixed-budget quality, optimization trajectories, and trainer time. Section 5 discusses interpretation and limitations, and Section 6",
+      "url": "https://arxiv.org/html/2611.19419v1#S6"
+    },
+    {
+      "href": "#A1",
+      "text": "A",
+      "section": "1 Introduction",
+      "context": "The rest of the paper is structured as follows: Section 2 defines the distillation objective and optimizer recipes, including the Shampoo reductions. Section 3 describes the experimental design, and Section 4 reports fixed-budget quality, optimization trajectories, and trainer time. Section 5 discusses interpretation and limitations, and Section 6 concludes. Appendix A",
+      "url": "https://arxiv.org/html/2611.19419v1#A1"
+    },
+    {
+      "href": "#A2",
+      "text": "B",
+      "section": "1 Introduction",
+      "context": "The rest of the paper is structured as follows: Section 2 defines the distillation objective and optimizer recipes, including the Shampoo reductions. Section 3 describes the experimental design, and Section 4 reports fixed-budget quality, optimization trajectories, and trainer time. Section 5 discusses interpretation and limitations, and Section 6 concludes. Appendix A documents implementation fidelity, Appendix B",
+      "url": "https://arxiv.org/html/2611.19419v1#A2"
+    },
+    {
+      "href": "#A3",
+      "text": "C",
+      "section": "1 Introduction",
+      "context": "The rest of the paper is structured as follows: Section 2 defines the distillation objective and optimizer recipes, including the Shampoo reductions. Section 3 describes the experimental design, and Section 4 reports fixed-budget quality, optimization trajectories, and trainer time. Section 5 discusses interpretation and limitations, and Section 6 concludes. Appendix A documents implementation fidelity, Appendix B grafting, and Appendix C",
+      "url": "https://arxiv.org/html/2611.19419v1#A3"
+    },
+    {
+      "href": "#bib.bib13",
+      "text": "13",
+      "section": "2.1 KL distillation",
+      "context": "Knowledge distillation matches a student distribution p θ p_{\\theta} to a frozen teacher distribution q q by minimizing forward KL at temperature one [ 13",
+      "url": "https://arxiv.org/html/2611.19419v1#bib.bib13"
+    },
+    {
+      "href": "#bib.bib14",
+      "text": "14",
+      "section": "2.1 KL distillation",
+      "context": "Validation weights tokens equally, so region contributions scale with token count and longer reasoning regions generally dominate. A smaller value indicates closer teacher matching. The blended training loss [ 14",
+      "url": "https://arxiv.org/html/2611.19419v1#bib.bib14"
+    },
+    {
+      "href": "#bib.bib14",
+      "text": "14",
+      "section": "2.1 KL distillation",
+      "context": "and training averages ℒ n \\mathcal{L}_{n} across examples. Thus, λ \\lambda weights the answer-region mean independently of region length. Prior evaluation identified λ = 0.5 \\lambda=0.5 as the most stable answer–reasoning weighting [ 14",
+      "url": "https://arxiv.org/html/2611.19419v1#bib.bib14"
+    },
+    {
+      "href": "#bib.bib15",
+      "text": "15",
+      "section": "2.2 Matrix-structured pretraining optimizers",
+      "context": "We use AdamW and diagonal AdaGrad as complementary elementwise references. AdamW reflects standard language-model practice, while AdaGrad connects directly to the structured preconditioners studied here; a different distillation formulation on Nemotron reasoning traces also found slightly higher MMLU-Pro with AdaGrad than with its best AdamW configuration [ 15",
+      "url": "https://arxiv.org/html/2611.19419v1#bib.bib15"
+    },
+    {
+      "href": "#bib.bib2",
+      "text": "2",
+      "section": "2.2 Matrix-structured pretraining optimizers",
+      "context": "We use AdamW and diagonal AdaGrad as complementary elementwise references. AdamW reflects standard language-model practice, while AdaGrad connects directly to the structured preconditioners studied here; a different distillation formulation on Nemotron reasoning traces also found slightly higher MMLU-Pro with AdaGrad than with its best AdamW configuration [ 15 ] . AdaGrad accumulates a coordinatewise sum of squared gradients [ 2",
+      "url": "https://arxiv.org/html/2611.19419v1#bib.bib2"
+    },
+    {
+      "href": "#bib.bib21",
+      "text": "21",
+      "section": "2.2 Matrix-structured pretraining optimizers",
+      "context": "We use AdamW and diagonal AdaGrad as complementary elementwise references. AdamW reflects standard language-model practice, while AdaGrad connects directly to the structured preconditioners studied here; a different distillation formulation on Nemotron reasoning traces also found slightly higher MMLU-Pro with AdaGrad than with its best AdamW configuration [ 15 ] . AdaGrad accumulates a coordinatewise sum of squared gradients [ 2 ] , while AdamW decouples weight decay from Adam’s adaptive update [ 21",
+      "url": "https://arxiv.org/html/2611.19419v1#bib.bib21"
+    },
+    {
+      "href": "#bib.bib1",
+      "text": "1",
+      "section": "2.2 Matrix-structured pretraining optimizers",
+      "context": "Shampoo [ 1",
+      "url": "https://arxiv.org/html/2611.19419v1#bib.bib1"
+    },
+    {
+      "href": "#bib.bib2",
+      "text": "2",
+      "section": "2.2 Matrix-structured pretraining optimizers",
+      "context": "Shampoo [ 1 ] constructs left- and right-side second-moment accumulators for a matrix gradient and applies inverse matrix roots on both sides, providing a tractable structured alternative to full-matrix AdaGrad [ 2",
+      "url": "https://arxiv.org/html/2611.19419v1#bib.bib2"
+    },
+    {
+      "href": "#bib.bib6",
+      "text": "6",
+      "section": "2.2 Matrix-structured pretraining optimizers",
+      "context": "Shampoo [ 1 ] constructs left- and right-side second-moment accumulators for a matrix gradient and applies inverse matrix roots on both sides, providing a tractable structured alternative to full-matrix AdaGrad [ 2 ] . Maintaining these accumulators and computing their inverse roots adds cost. SOAP [ 6",
+      "url": "https://arxiv.org/html/2611.19419v1#bib.bib6"
+    },
+    {
+      "href": "#bib.bib8",
+      "text": "8",
+      "section": "2.2 Matrix-structured pretraining optimizers",
+      "context": "Muon [ 8",
+      "url": "https://arxiv.org/html/2611.19419v1#bib.bib8"
+    },
+    {
+      "href": "#bib.bib8",
+      "text": "8",
+      "section": "2.2 Matrix-structured pretraining optimizers",
+      "context": "Muon [ 8 ] instead orthogonalizes a momentum matrix with a Newton–Schulz iteration. Its published recipe applies Muon to hidden-layer matrices and uses AdamW for embeddings and the output head [ 8",
+      "url": "https://arxiv.org/html/2611.19419v1#bib.bib8"
+    },
+    {
+      "href": "#bib.bib6",
+      "text": "6",
+      "section": "2.2 Matrix-structured pretraining optimizers",
+      "context": " embeddings and the output head [ 8 ] . Our All-2D Muon recipe instead applies the spectral update to every two-dimensional parameter, including embeddings and the output head, and uses Adam only for one-dimensional parameters. This assignment is part of the evaluated recipe rather than an implementation detail. We choose it to test the spectral update uniformly across matrix-valued student parameters, without routing the embedding and output matrices through a separate Adam-family optimizer. Published language-model studies report improved data efficiency or lower wall-clock cost for SOAP [ 6",
+      "url": "https://arxiv.org/html/2611.19419v1#bib.bib6"
+    },
+    {
+      "href": "#bib.bib9",
+      "text": "9",
+      "section": "2.2 Matrix-structured pretraining optimizers",
+      "context": " the output head [ 8 ] . Our All-2D Muon recipe instead applies the spectral update to every two-dimensional parameter, including embeddings and the output head, and uses Adam only for one-dimensional parameters. This assignment is part of the evaluated recipe rather than an implementation detail. We choose it to test the spectral update uniformly across matrix-valued student parameters, without routing the embedding and output matrices through a separate Adam-family optimizer. Published language-model studies report improved data efficiency or lower wall-clock cost for SOAP [ 6 ] and Muon [ 9",
+      "url": "https://arxiv.org/html/2611.19419v1#bib.bib9"
+    },
+    {
+      "href": "#bib.bib10",
+      "text": "10",
+      "section": "2.2 Matrix-structured pretraining optimizers",
+      "context": "output head [ 8 ] . Our All-2D Muon recipe instead applies the spectral update to every two-dimensional parameter, including embeddings and the output head, and uses Adam only for one-dimensional parameters. This assignment is part of the evaluated recipe rather than an implementation detail. We choose it to test the spectral update uniformly across matrix-valued student parameters, without routing the embedding and output matrices through a separate Adam-family optimizer. Published language-model studies report improved data efficiency or lower wall-clock cost for SOAP [ 6 ] and Muon [ 9 , 10",
+      "url": "https://arxiv.org/html/2611.19419v1#bib.bib10"
+    },
+    {
+      "href": "#bib.bib11",
+      "text": "11",
+      "section": "2.2 Matrix-structured pretraining optimizers",
+      "context": "t head [ 8 ] . Our All-2D Muon recipe instead applies the spectral update to every two-dimensional parameter, including embeddings and the output head, and uses Adam only for one-dimensional parameters. This assignment is part of the evaluated recipe rather than an implementation detail. We choose it to test the spectral update uniformly across matrix-valued student parameters, without routing the embedding and output matrices through a separate Adam-family optimizer. Published language-model studies report improved data efficiency or lower wall-clock cost for SOAP [ 6 ] and Muon [ 9 , 10 , 11",
+      "url": "https://arxiv.org/html/2611.19419v1#bib.bib11"
+    },
+    {
+      "href": "#bib.bib7",
+      "text": "7",
+      "section": "2.2 Matrix-structured pretraining optimizers",
+      "context": "o every two-dimensional parameter, including embeddings and the output head, and uses Adam only for one-dimensional parameters. This assignment is part of the evaluated recipe rather than an implementation detail. We choose it to test the spectral update uniformly across matrix-valued student parameters, without routing the embedding and output matrices through a separate Adam-family optimizer. Published language-model studies report improved data efficiency or lower wall-clock cost for SOAP [ 6 ] and Muon [ 9 , 10 , 11 ] under their respective pretraining protocols. KL-Shampoo and KL-SOAP [ 7",
+      "url": "https://arxiv.org/html/2611.19419v1#bib.bib7"
+    },
+    {
+      "href": "#bib.bib2",
+      "text": "2",
+      "section": "2.3 Shampoo variants and matrix geometry",
+      "context": "Elementwise methods scale parameters independently. Full-matrix AdaGrad [ 2",
+      "url": "https://arxiv.org/html/2611.19419v1#bib.bib2"
+    },
+    {
+      "href": "#bib.bib1",
+      "text": "1",
+      "section": "2.3 Shampoo variants and matrix geometry",
+      "context": "Elementwise methods scale parameters independently. Full-matrix AdaGrad [ 2 ] captures correlations among all m ​ n mn entries of a weight matrix but requires a preconditioner with ( m ​ n ) 2 (mn)^{2} entries. Shampoo [ 1",
+      "url": "https://arxiv.org/html/2611.19419v1#bib.bib1"
+    },
+    {
+      "href": "#S2.E4",
+      "text": "4",
+      "section": "2.3 Shampoo variants and matrix geometry",
+      "context": "For row-major vectorization g t = vec r ⁡ ( G t ) g_{t}=\\operatorname{vec}_{r}(G_{t}) , Equation 4",
+      "url": "https://arxiv.org/html/2611.19419v1#S2.E4"
+    },
+    {
+      "href": "#bib.bib3",
+      "text": "3",
+      "section": "2.3 Shampoo variants and matrix geometry",
+      "context": "If every G τ G_{\\tau} has rank at most r r , the Scalable Shampoo analysis [ 3",
+      "url": "https://arxiv.org/html/2611.19419v1#bib.bib3"
+    },
+    {
+      "href": "#bib.bib1",
+      "text": "1",
+      "section": "2.3 Shampoo variants and matrix geometry",
+      "context": "Thus, the two quarter powers form a rank-dependent structured preconditioner motivated by a positive-semidefinite bound, not an exact factorization of the full accumulator. If both factors grow proportionally to t t , they give the usual heuristic decay t − 1 / 4 t − 1 / 4 = t − 1 / 2 t^{-1/4}t^{-1/4}=t^{-1/2} [ 1",
+      "url": "https://arxiv.org/html/2611.19419v1#bib.bib1"
+    },
+    {
+      "href": "#S2.E4",
+      "text": "4",
+      "section": "2.3 Shampoo variants and matrix geometry",
+      "context": "Thus, the two quarter powers form a rank-dependent structured preconditioner motivated by a positive-semidefinite bound, not an exact factorization of the full accumulator. If both factors grow proportionally to t t , they give the usual heuristic decay t − 1 / 4 t − 1 / 4 = t − 1 / 2 t^{-1/4}t^{-1/4}=t^{-1/2} [ 1 ] . Equation 4",
+      "url": "https://arxiv.org/html/2611.19419v1#S2.E4"
+    },
+    {
+      "href": "#bib.bib19",
+      "text": "19",
+      "section": "2.3 Shampoo variants and matrix geometry",
+      "context": "Under our fixed factor-dimension cap of 8192 8192 , the students’ matrix geometries [ 19",
+      "url": "https://arxiv.org/html/2611.19419v1#bib.bib19"
+    },
+    {
+      "href": "#bib.bib20",
+      "text": "20",
+      "section": "2.3 Shampoo variants and matrix geometry",
+      "context": "Under our fixed factor-dimension cap of 8192 8192 , the students’ matrix geometries [ 19 , 20",
+      "url": "https://arxiv.org/html/2611.19419v1#bib.bib20"
+    },
+    {
+      "href": "#S2.E4",
+      "text": "4",
+      "section": "2.3 Shampoo variants and matrix geometry",
+      "context": "Replacing L t L_{t} by s t ​ I m s_{t}I_{m} in Equation 4",
+      "url": "https://arxiv.org/html/2611.19419v1#S2.E4"
+    },
+    {
+      "href": "#bib.bib1",
+      "text": "1",
+      "section": "2.3 Shampoo variants and matrix geometry",
+      "context": "We call this scalar-row-mean quarter-power Shampoo . It preserves the mean eigenvalue of L t L_{t} and canonical Shampoo’s quarter-power structure [ 1",
+      "url": "https://arxiv.org/html/2611.19419v1#bib.bib1"
+    },
+    {
+      "href": "#bib.bib3",
+      "text": "3",
+      "section": "2.3 Shampoo variants and matrix geometry",
+      "context": "The second variant follows the one-sided construction of Scalable Shampoo [ 3",
+      "url": "https://arxiv.org/html/2611.19419v1#bib.bib3"
+    },
+    {
+      "href": "#S2.E4",
+      "text": "4",
+      "section": "2.3 Shampoo variants and matrix geometry",
+      "context": "The symmetric choice p = q = 2 p=q=2 recovers Equation 4",
+      "url": "https://arxiv.org/html/2611.19419v1#S2.E4"
+    },
+    {
+      "href": "#bib.bib3",
+      "text": "3",
+      "section": "2.3 Shampoo variants and matrix geometry",
+      "context": "The half power is therefore the endpoint of the same Kronecker-factored full-matrix-AdaGrad surrogate, rather than an independent exponent choice. Scalable Shampoo introduces these one-sided endpoints for large layers, applies them to embedding, softmax, and projection layers, and proves an online-convex regret bound under uniformly rank-bounded gradients [ 3",
+      "url": "https://arxiv.org/html/2611.19419v1#bib.bib3"
+    },
+    {
+      "href": "#bib.bib12",
+      "text": "12",
+      "section": "2.3 Shampoo variants and matrix geometry",
+      "context": "For ideal, unstabilized Frobenius-norm grafting to a donor direction D D [ 12",
+      "url": "https://arxiv.org/html/2611.19419v1#bib.bib12"
+    },
+    {
+      "href": "#A2",
+      "text": "B",
+      "section": "2.3 Shampoo variants and matrix geometry",
+      "context": "so, up to the implementation’s 10 − 16 10^{-16} denominator stabilizer, the scalar factor cancels and no scalar-row-mean information survives. We therefore exclude this grafted variant as equivalent to the corresponding normalized right-quarter direction. For right-only half-power Shampoo, normalization preserves the non-scalar R t − 1 / 2 R_{t}^{-1/2} direction while replacing its norm with the donor norm, so the grafted and ungrafted recipes remain distinct. The main comparison uses the ungrafted update; Appendix B",
+      "url": "https://arxiv.org/html/2611.19419v1#A2"
+    },
+    {
+      "href": "#bib.bib3",
+      "text": "3",
+      "section": "2.3 Shampoo variants and matrix geometry",
+      "context": " 14 ​ B 14\\mathrm{B} , and 32 ​ B 32\\mathrm{B} , the MLP down projection has shape ( hidden , intermediate ) (\\text{hidden},\\text{intermediate}) , so its right factor exceeds the cap and the parameter is instead updated with diagonal AdaGrad. Embeddings, the output head, attention, and the gate and up projections remain right-matrix-preconditioned at every scale; one-dimensional parameters always use the diagonal update. Both recipes use this right-factor/fallback rule; Scalable Shampoo instead combines two-sided factors, selected one-sided factors, and blocking according to layer geometry [ 3",
+      "url": "https://arxiv.org/html/2611.19419v1#bib.bib3"
+    },
+    {
+      "href": "#A3",
+      "text": "C",
+      "section": "2.3 Shampoo variants and matrix geometry",
+      "context": "With no momentum, cumulative statistics are updated before preconditioning on every optimizer step. On the first preconditioner step , the resulting roots are used for that same update. Subsequent refreshes are measured relative to this step, and the roots are held fixed between refreshes. Before activation, matrix-preconditioned parameters use the raw gradient; fallback parameters use the diagonal update throughout. The learning rate and both schedule values are selected separately for each method and student–teacher pair. Appendix C",
+      "url": "https://arxiv.org/html/2611.19419v1#A3"
+    },
+    {
+      "href": "#A1",
+      "text": "A",
+      "section": "2.3 Shampoo variants and matrix geometry",
+      "context": "With no momentum, cumulative statistics are updated before preconditioning on every optimizer step. On the first preconditioner step , the resulting roots are used for that same update. Subsequent refreshes are measured relative to this step, and the roots are held fixed between refreshes. Before activation, matrix-preconditioned parameters use the raw gradient; fallback parameters use the diagonal update throughout. The learning rate and both schedule values are selected separately for each method and student–teacher pair. Appendix C gives the selected values, and Appendix A",
+      "url": "https://arxiv.org/html/2611.19419v1#A1"
+    },
+    {
+      "href": "#bib.bib19",
+      "text": "19",
+      "section": "3.1 Models and data",
+      "context": "The first three pairs use the instruction-tuned Qwen3-0.6B, Qwen3-1.7B, Qwen3-4B, Qwen3-8B, Qwen3-14B, and Qwen3-32B checkpoints [ 19",
+      "url": "https://arxiv.org/html/2611.19419v1#bib.bib19"
+    },
+    {
+      "href": "#bib.bib20",
+      "text": "20",
+      "section": "3.1 Models and data",
+      "context": "The first three pairs use the instruction-tuned Qwen3-0.6B, Qwen3-1.7B, Qwen3-4B, Qwen3-8B, Qwen3-14B, and Qwen3-32B checkpoints [ 19 ] : 0.6 ​ B ← 1.7 ​ B 0.6\\mathrm{B}\\leftarrow 1.7\\mathrm{B} , 4 ​ B ← 8 ​ B 4\\mathrm{B}\\leftarrow 8\\mathrm{B} , 14 ​ B ← 32 ​ B 14\\mathrm{B}\\leftarrow 32\\mathrm{B} . The fourth pair uses Qwen2.5-32B-Instruct and Qwen2.5-72B-Instruct [ 20",
+      "url": "https://arxiv.org/html/2611.19419v1#bib.bib20"
+    },
+    {
+      "href": "#S2.SS3",
+      "text": "2.3",
+      "section": "3.1 Models and data",
+      "context": " ( 2560 , 9728 ) (2560,9728) , ( 5120 , 17408 ) (5120,17408) , and ( 5120 , 27648 ) (5120,27648) for the 0.6 ​ B 0.6\\mathrm{B} , 4 ​ B 4\\mathrm{B} , 14 ​ B 14\\mathrm{B} , and Qwen2.5 32 ​ B 32\\mathrm{B} students. The Qwen3 and Qwen2.5 vocabularies contain 151,936 151{,}936 and 152,064 152{,}064 entries, respectively. The 0.6 ​ B 0.6\\mathrm{B} and 4 ​ B 4\\mathrm{B} checkpoints tie the token embedding and output head; the 14 ​ B 14\\mathrm{B} and Qwen2.5 32 ​ B 32\\mathrm{B} checkpoints use separate matrices of the same shape. These dimensions determine the factor coverage described in Section 2.3",
+      "url": "https://arxiv.org/html/2611.19419v1#S2.SS3"
+    },
+    {
+      "href": "https://huggingface.co/datasets/nvidia/Nemotron-Post-Training-Dataset-v2",
+      "text": "Nemotron dataset card",
+      "section": "3.1 Models and data",
+      "context": "The examples are chain-of-thought traces selected from NVIDIA’s Nemotron-Post-Training-Dataset-v2 1 1 1 Nemotron dataset card",
+      "url": "https://huggingface.co/datasets/nvidia/Nemotron-Post-Training-Dataset-v2"
+    },
+    {
+      "href": "#bib.bib22",
+      "text": "22",
+      "section": "3.1 Models and data",
+      "context": "The examples are chain-of-thought traces selected from NVIDIA’s Nemotron-Post-Training-Dataset-v2 1 1 1 Nemotron dataset card [ 22",
+      "url": "https://arxiv.org/html/2611.19419v1#bib.bib22"
+    },
+    {
+      "href": "#bib.bib23",
+      "text": "23",
+      "section": "3.1 Models and data",
+      "context": "The examples are chain-of-thought traces selected from NVIDIA’s Nemotron-Post-Training-Dataset-v2 1 1 1 Nemotron dataset card [ 22 , 23",
+      "url": "https://arxiv.org/html/2611.19419v1#bib.bib23"
+    },
+    {
+      "href": "#S2.E2",
+      "text": "2",
+      "section": "3.1 Models and data",
+      "context": "The examples are chain-of-thought traces selected from NVIDIA’s Nemotron-Post-Training-Dataset-v2 1 1 1 Nemotron dataset card [ 22 , 23 ] . We retain reasoning-on SFT traces with complete <think> and </think> markup and create training and validation splits stratified by the dataset’s category field. The retained <think> and </think> delimiters define the reasoning and answer regions in Equation 2",
+      "url": "https://arxiv.org/html/2611.19419v1#S2.E2"
+    },
+    {
+      "href": "#bib.bib21",
+      "text": "21",
+      "section": "3.2 Comparison and evaluation protocol",
+      "context": "We compare six distillation recipes: AdamW [ 21",
+      "url": "https://arxiv.org/html/2611.19419v1#bib.bib21"
+    },
+    {
+      "href": "#bib.bib2",
+      "text": "2",
+      "section": "3.2 Comparison and evaluation protocol",
+      "context": "We compare six distillation recipes: AdamW [ 21 ] and diagonal AdaGrad [ 2",
+      "url": "https://arxiv.org/html/2611.19419v1#bib.bib2"
+    },
+    {
+      "href": "#bib.bib6",
+      "text": "6",
+      "section": "3.2 Comparison and evaluation protocol",
+      "context": "We compare six distillation recipes: AdamW [ 21 ] and diagonal AdaGrad [ 2 ] as references; scalar-row-mean quarter-power and right-only half-power Shampoo; SOAP [ 6",
+      "url": "https://arxiv.org/html/2611.19419v1#bib.bib6"
+    },
+    {
+      "href": "#bib.bib8",
+      "text": "8",
+      "section": "3.2 Comparison and evaluation protocol",
+      "context": "We compare six distillation recipes: AdamW [ 21 ] and diagonal AdaGrad [ 2 ] as references; scalar-row-mean quarter-power and right-only half-power Shampoo; SOAP [ 6 ] ; and All-2D Muon [ 8",
+      "url": "https://arxiv.org/html/2611.19419v1#bib.bib8"
+    },
+    {
+      "href": "#A1",
+      "text": "A",
+      "section": "3.2 Comparison and evaluation protocol",
+      "context": "Every full-budget final configuration is evaluated with three seeds. Qwen2.5 SOAP is limited to one matched 561-step run because of its measured trainer-time overhead and is excluded from full-budget summaries. Appendices A",
+      "url": "https://arxiv.org/html/2611.19419v1#A1"
+    },
+    {
+      "href": "#A3",
+      "text": "C",
+      "section": "3.2 Comparison and evaluation protocol",
+      "context": "Every full-budget final configuration is evaluated with three seeds. Qwen2.5 SOAP is limited to one matched 561-step run because of its measured trainer-time overhead and is excluded from full-budget summaries. Appendices A – C",
+      "url": "https://arxiv.org/html/2611.19419v1#A3"
+    },
+    {
+      "href": "#S2.E2",
+      "text": "2",
+      "section": "3.2 Comparison and evaluation protocol",
+      "context": "Within each student–teacher pair, every method uses the forward-KL training loss in Equation 2",
+      "url": "https://arxiv.org/html/2611.19419v1#S2.E2"
+    },
+    {
+      "href": "#S4.F1",
+      "text": "1",
+      "section": "4.1 Validation KL within a fixed budget",
+      "context": "Within the fixed budget, the evaluated matrix-structured methods show no validation-KL advantage over AdamW that persists across model pairs (Figure 1",
+      "url": "https://arxiv.org/html/2611.19419v1#S4.F1"
+    },
+    {
+      "href": "#A3",
+      "text": "C",
+      "section": "4.1 Validation KL within a fixed budget",
+      "context": "AdamW, SOAP, and All-2D Muon are closely grouped at 0.6 ​ B 0.6\\mathrm{B} ; AdamW is lower than SOAP and All-2D Muon at 4 ​ B 4\\mathrm{B} and 14 ​ B 14\\mathrm{B} , and lower than AdaGrad on all four pairs. The Shampoo comparison is pair-dependent. Each Shampoo point is a pair-specific, validation-selected configuration (Appendix C",
+      "url": "https://arxiv.org/html/2611.19419v1#A3"
+    },
+    {
+      "href": "#S4.F2",
+      "text": "2",
+      "section": "4.2 Optimization trajectories across model pairs",
+      "context": "Matched-step trajectories show that optimizer ordering can depend on training horizon, but no evaluated matrix-structured method shows a stable early-step advantage across model pairs (Figure 2",
+      "url": "https://arxiv.org/html/2611.19419v1#S4.F2"
+    },
+    {
+      "href": "#S4.F3",
+      "text": "3",
+      "section": "4.3 Trainer-time overhead",
+      "context": "Trainer-time results sharpen the quality comparison: every matrix-structured method with completed results adds trainer time relative to AdamW, whereas AdaGrad becomes slightly faster than AdamW at the larger evaluated student sizes (Figure 3",
+      "url": "https://arxiv.org/html/2611.19419v1#S4.F3"
+    },
+    {
+      "href": "#A1",
+      "text": "A",
+      "section": "4.3 Trainer-time overhead",
+      "context": "At Qwen2.5 32 ​ B ← 72 ​ B 32\\mathrm{B}\\leftarrow 72\\mathrm{B} , SOAP incurred substantially greater trainer time than AdamW without a clear improvement in validation KL at the matched 561-step horizon. Its unblocked FSDP2 adapter gathers full gradients and moments, replicates matrix factors, and refreshes bases frequently (Appendix A",
+      "url": "https://arxiv.org/html/2611.19419v1#A1"
+    },
+    {
+      "href": "#bib.bib17",
+      "text": "17",
+      "section": "5 Discussion and limitations",
+      "context": "The SOAP and Muon conclusions are similarly tied to routing and implementation choices. All-2D Muon differs from the hidden-layer-only reference recipe, and unblocked SOAP differs algorithmically and operationally from blocked distributed alternatives. Moreover, Shampoo and SOAP use observed-gradient moments, which need not approximate the model’s Fisher information matrix [ 17",
+      "url": "https://arxiv.org/html/2611.19419v1#bib.bib17"
+    },
+    {
+      "href": "https://github.com/jax-ml/jax",
+      "text": "Software repository",
+      "section": "References",
+      "context": "[4] J. Bradbury, R. Frostig, P. Hawkins, et al. JAX: Composable transformations of Python+NumPy programs. Software repository",
+      "url": "https://github.com/jax-ml/jax"
+    },
+    {
+      "href": "https://kellerjordan.github.io/posts/muon/",
+      "text": "Technical note",
+      "section": "References",
+      "context": "[8] K. Jordan, Y. Jin, V. Boza, J. You, F. Cesista, L. Newhouse, and J. Bernstein. Muon: An optimizer for hidden layers in neural networks. Technical note",
+      "url": "https://kellerjordan.github.io/posts/muon/"
+    },
+    {
+      "href": "https://github.com/NVIDIA/model-distillation-recipes",
+      "text": "NVIDIA model-distillation-recipes repository",
+      "section": "Appendix A Optimizer implementations used",
+      "context": "AdamW and AdaGrad use torch.optim ; the matrix-structured methods use the PyTorch/FSDP2 implementations below. Method labels denote these specific implementations, not entire optimizer families. Code for these experiments will be released. Our main model-distillation-recipes repository 2 2 2 NVIDIA model-distillation-recipes repository",
+      "url": "https://github.com/NVIDIA/model-distillation-recipes"
+    },
+    {
+      "href": "https://github.com/facebookresearch/optimizers/tree/d24a1491797e5bf2c2985d8789f3a28293d87a6f",
+      "text": "Meta Distributed Shampoo, revision  d24a149",
+      "section": "Appendix A Optimizer implementations used",
+      "context": "AdamW and AdaGrad use torch.optim ; the matrix-structured methods use the PyTorch/FSDP2 implementations below. Method labels denote these specific implementations, not entire optimizer families. Code for these experiments will be released. Our main model-distillation-recipes repository 2 2 2 NVIDIA model-distillation-recipes repository documents the surrounding distillation protocol, including data formatting and token masking. Alternatives prefixed by ‘‘Meta’’ use the public Meta Distributed Shampoo repository 3 3 3 Meta Distributed Shampoo, revision d24a149",
+      "url": "https://github.com/facebookresearch/optimizers/tree/d24a1491797e5bf2c2985d8789f3a28293d87a6f"
+    },
+    {
+      "href": "#bib.bib5",
+      "text": "5",
+      "section": "Appendix A Optimizer implementations used",
+      "context": "AdamW and AdaGrad use torch.optim ; the matrix-structured methods use the PyTorch/FSDP2 implementations below. Method labels denote these specific implementations, not entire optimizer families. Code for these experiments will be released. Our main model-distillation-recipes repository 2 2 2 NVIDIA model-distillation-recipes repository documents the surrounding distillation protocol, including data formatting and token masking. Alternatives prefixed by ‘‘Meta’’ use the public Meta Distributed Shampoo repository 3 3 3 Meta Distributed Shampoo, revision d24a149 [ 5",
+      "url": "https://arxiv.org/html/2611.19419v1#bib.bib5"
+    },
+    {
+      "href": "https://github.com/google-research/google-research/tree/1e55815f71e2cf4ee9c10c3d3fc2d8e2bf992ac4/scalable_shampoo",
+      "text": "Google Research Scalable Shampoo, revision  1e55815",
+      "section": "A.1 Shampoo",
+      "context": "The two Shampoo recipes in the main comparison use our PyTorch/FSDP2 Scalable Shampoo backend. It ports selected equations and state-machine behavior from the Google Research implementation 4 4 4 Google Research Scalable Shampoo, revision 1e55815",
+      "url": "https://github.com/google-research/google-research/tree/1e55815f71e2cf4ee9c10c3d3fc2d8e2bf992ac4/scalable_shampoo"
+    },
+    {
+      "href": "#bib.bib4",
+      "text": "4",
+      "section": "A.1 Shampoo",
+      "context": "The two Shampoo recipes in the main comparison use our PyTorch/FSDP2 Scalable Shampoo backend. It ports selected equations and state-machine behavior from the Google Research implementation 4 4 4 Google Research Scalable Shampoo, revision 1e55815 , written in JAX [ 4",
+      "url": "https://arxiv.org/html/2611.19419v1#bib.bib4"
+    },
+    {
+      "href": "#bib.bib3",
+      "text": "3",
+      "section": "A.1 Shampoo",
+      "context": "The two Shampoo recipes in the main comparison use our PyTorch/FSDP2 Scalable Shampoo backend. It ports selected equations and state-machine behavior from the Google Research implementation 4 4 4 Google Research Scalable Shampoo, revision 1e55815 , written in JAX [ 4 ] and released with Scalable Shampoo [ 3",
+      "url": "https://arxiv.org/html/2611.19419v1#bib.bib3"
+    },
+    {
+      "href": "https://github.com/google-research/google-research/tree/5b09c22d73a9d35eb6c5d2a99b95677a45053466/scalable_shampoo/pytorch",
+      "text": "Google Research PyTorch Shampoo, revision  5b09c22",
+      "section": "A.1 Shampoo",
+      "context": "ces whose active factor exceeds the configured cap instead use diagonal AdaGrad and maintain no scalar left statistic. The port further adds FSDP2 execution, distributed checkpointing, and recipe fingerprints that reject incompatible optimizer state. The pinned revision contains only the JAX implementation. Its exponent override assigns one power to every Kronecker factor, so the one-sided updates above are part of the port, as are the scalar statistics and the distributed interfaces. A later public PyTorch port of the same implementation 5 5 5 Google Research PyTorch Shampoo, revision 5b09c22",
+      "url": "https://github.com/google-research/google-research/tree/5b09c22d73a9d35eb6c5d2a99b95677a45053466/scalable_shampoo/pytorch"
+    },
+    {
+      "href": "#A1.F4",
+      "text": "4",
+      "section": "A.1 Shampoo",
+      "context": "Figure 4",
+      "url": "https://arxiv.org/html/2611.19419v1#A1.F4"
+    },
+    {
+      "href": "#bib.bib6",
+      "text": "6",
+      "section": "A.2 SOAP",
+      "context": "SOAP rotates gradients and moments into Shampoo-derived eigenbases before applying Adam along the resulting matrix directions [ 6",
+      "url": "https://arxiv.org/html/2611.19419v1#bib.bib6"
+    },
+    {
+      "href": "https://github.com/nikhilvyas/SOAP",
+      "text": "SOAP reference implementation",
+      "section": "A.2 SOAP",
+      "context": "SOAP rotates gradients and moments into Shampoo-derived eigenbases before applying Adam along the resulting matrix directions [ 6 ] . The main SOAP implementation is an unblocked FSDP2 adaptation of the authors’ implementation 6 6 6 SOAP reference implementation",
+      "url": "https://github.com/nikhilvyas/SOAP"
+    },
+    {
+      "href": "https://github.com/facebookresearch/optimizers/tree/d24a1491797e5bf2c2985d8789f3a28293d87a6f/distributed_shampoo",
+      "text": "Meta DefaultSOAPConfig, revision  d24a149",
+      "section": "A.2 SOAP",
+      "context": "moments into Shampoo-derived eigenbases before applying Adam along the resulting matrix directions [ 6 ] . The main SOAP implementation is an unblocked FSDP2 adaptation of the authors’ implementation 6 6 6 SOAP reference implementation and matches it in fixed-gradient parity tests. It constructs a factor for each matrix axis of dimension at most 8192 8192 , retains the identity basis along larger axes, and initializes the basis on its first optimization step without updating the parameters. Meta blockwise SOAP instead uses Meta’s DefaultSOAPConfig 7 7 7 Meta DefaultSOAPConfig, revision d24a149",
+      "url": "https://github.com/facebookresearch/optimizers/tree/d24a1491797e5bf2c2985d8789f3a28293d87a6f/distributed_shampoo"
+    },
+    {
+      "href": "#A1.F5",
+      "text": "5",
+      "section": "A.2 SOAP",
+      "context": "We use the unblocked implementation because it more closely follows the authors’ implementation, retaining Meta blockwise SOAP as an alternative. Under FSDP2, its full-matrix gradients, moments, factors, and bases are replicated rather than partitioned. Across the three controls in Figure 5",
+      "url": "https://arxiv.org/html/2611.19419v1#A1.F5"
+    },
+    {
+      "href": "https://github.com/KellerJordan/Muon",
+      "text": "Muon reference implementation",
+      "section": "A.3 Muon",
+      "context": "Muon approximately orthogonalizes matrix-valued momentum updates with Newton–Schulz iterations. A shared distributed adapter reconstructs each sharded two-dimensional gradient across ranks and redistributes the update. All-2D Muon applies Muon to embeddings, the output head, and transformer matrices; only one-dimensional parameters use Adam. Reference Muon instead follows the parameter assignment of the reference implementation 8 8 8 Muon reference implementation",
+      "url": "https://github.com/KellerJordan/Muon"
+    },
+    {
+      "href": "#bib.bib8",
+      "text": "8",
+      "section": "A.3 Muon",
+      "context": "Muon approximately orthogonalizes matrix-valued momentum updates with Newton–Schulz iterations. A shared distributed adapter reconstructs each sharded two-dimensional gradient across ranks and redistributes the update. All-2D Muon applies Muon to embeddings, the output head, and transformer matrices; only one-dimensional parameters use Adam. Reference Muon instead follows the parameter assignment of the reference implementation 8 8 8 Muon reference implementation [ 8",
+      "url": "https://arxiv.org/html/2611.19419v1#bib.bib8"
+    },
+    {
+      "href": "https://github.com/facebookresearch/optimizers/tree/d24a1491797e5bf2c2985d8789f3a28293d87a6f/distributed_shampoo",
+      "text": "Meta SpectralDescentPreconditionerConfig, revision  d24a149",
+      "section": "A.3 Muon",
+      "context": "radient across ranks and redistributes the update. All-2D Muon applies Muon to embeddings, the output head, and transformer matrices; only one-dimensional parameters use Adam. Reference Muon instead follows the parameter assignment of the reference implementation 8 8 8 Muon reference implementation [ 8 ] : Muon is restricted to hidden transformer matrices, while embeddings, the output head, and one-dimensional parameters use Adam. Meta Muon implements the same hidden-only assignment with Meta’s SpectralDescentPreconditionerConfig 9 9 9 Meta SpectralDescentPreconditionerConfig, revision d24a149",
+      "url": "https://github.com/facebookresearch/optimizers/tree/d24a1491797e5bf2c2985d8789f3a28293d87a6f/distributed_shampoo"
+    },
+    {
+      "href": "#A1.F6",
+      "text": "6",
+      "section": "A.3 Muon",
+      "context": "In matched single-seed controls, Meta Muon achieved a 1.2 1.2 – 1.7 × 1.7\\times trainer-time speedup over Reference Muon, while their best validation KL values differed by at most 0.00031 0.00031 (Figure 6",
+      "url": "https://arxiv.org/html/2611.19419v1#A1.F6"
+    },
+    {
+      "href": "#bib.bib12",
+      "text": "12",
+      "section": "Appendix B AdaGrad-grafted right-only half-power Shampoo",
+      "context": "Norm grafting takes the update direction from one optimizer and rescales it to match the update norm of another [ 12",
+      "url": "https://arxiv.org/html/2611.19419v1#bib.bib12"
+    },
+    {
+      "href": "#bib.bib18",
+      "text": "18",
+      "section": "C.1 Selection protocol",
+      "context": "Exploratory single-seed pilots also screened Sophia-G [ 18",
+      "url": "https://arxiv.org/html/2611.19419v1#bib.bib18"
+    },
+    {
+      "href": "#bib.bib16",
+      "text": "16",
+      "section": "C.1 Selection protocol",
+      "context": "Exploratory single-seed pilots also screened Sophia-G [ 18 ] , motivated by its reported pretraining efficiency, and K-FAC [ 16",
+      "url": "https://arxiv.org/html/2611.19419v1#bib.bib16"
+    },
+    {
+      "href": "#A3.T1",
+      "text": "1",
+      "section": "C.2 Final configurations",
+      "context": "Table 1",
+      "url": "https://arxiv.org/html/2611.19419v1#A3.T1"
+    }
+  ],
+  "note": "Extracted HTML text; equations and table formatting may be imperfect. No PDF extraction was attempted."
+}

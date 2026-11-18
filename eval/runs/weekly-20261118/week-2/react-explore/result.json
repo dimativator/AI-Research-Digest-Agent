@@ -1,0 +1,241 @@
+{
+  "run_id": "5a02073625734c33b7354abe048598d3",
+  "status": "completed",
+  "user_id": "dmitrii",
+  "profile_fingerprint": "a2480e0075ad9cdf236d40e30f74f9bfd87a08dd948530b42e6b57e4a123bfc0",
+  "pipeline_version": "react-v2",
+  "categories": [
+    "cs.LG",
+    "cs.CL",
+    "stat.ML",
+    "cs.AI",
+    "cs.IR"
+  ],
+  "date_from": "2026-10-05",
+  "date_to": "2026-10-11",
+  "papers": [
+    {
+      "paper_id": "2610.11730",
+      "summary": "Spectral weight decay applies additive singular-value shrinkage. In 124M–500M LLaMA experiments, it lowers effective rank and improves SVD-LLM compression at matched validation loss. At 500M and 4% distortion, reported compression is 1.89× versus 1.14× with standard weight decay.",
+      "relevance": "Directly addresses training for low-rank compressibility and spectral regularization; it also evaluates robustness to label noise.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "Across LLaMA models with 124 124 M to 500 500 M parameters, spectral weight decay lowers effective rank and improves SVD-LLM compression at matched validation loss."
+        },
+        {
+          "source": "inspection",
+          "quote": "For the 500 500 M model and a 4 % 4\\% distortion budget, it supports 1.89 × 1.89\\times compression, compared with 1.14 × 1.14\\times after standard weight decay."
+        }
+      ],
+      "title": "Spectral Weight Decay: Inducing Low-Rank Structure in Neural Network Weights",
+      "url": "https://arxiv.org/abs/2610.11730v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.10965",
+      "summary": "Spectrally Targeted Muon isolates the effects of orthogonalizing different singular directions using Newton–Schulz projections. Its NanoGPT analysis reports that targeting small momentum singular directions nearly matches full Muon, while targeting only the largest falls short.",
+      "relevance": "Directly informs the researcher's Muon, Newton–Schulz, effective-rank, and weight-spectrum questions.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "Orthogonalizing everything except the few largest singular values of each matrix nearly matches Muon while touching only a small fraction of the momentum, whereas orthogonalizing only the top falls well short even though it holds almost all of it."
+        },
+        {
+          "source": "inspection",
+          "quote": "Note that structure and performance don’t move together: AdamW collapses rank and still performs well, the bottom targeted variants keep Muon’s rank without matching its loss, and full-spectrum updates keep the spectrum flat for free."
+        }
+      ],
+      "title": "Spectrally Targeted Muon",
+      "url": "https://arxiv.org/abs/2610.10965v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.06116",
+      "summary": "ORCA applies soft orthogonality regularization early in training and then removes it. Reported 100B-token LLaMA runs lower final validation loss relative to Muon by 0.0194 at 350M and 0.0244 at 1.3B.",
+      "relevance": "Tests whether temporary spectral shaping can improve LLM optimization without permanently constraining weight spectra.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "During an initial phase, ORCA applies a soft orthogonality penalty"
+        },
+        {
+          "source": "inspection",
+          "quote": "Compared with Muon, ORCA reduces the final loss by 0.0194 0.0194 at 350M and 0.0244 0.0244 at 1.3B, with consistent gains at both scales."
+        }
+      ],
+      "title": "ORCA: The Annealed Spectral Conditioning Optimizer for Faster, Better LLM Training",
+      "url": "https://arxiv.org/abs/2610.06116v2",
+      "version": 2,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.06621",
+      "summary": "A controlled LoRA study separates frozen-factor choice from top-versus-bottom spectral-band choice. At rank 2, freezing the input factor A outperforms freezing the output factor B by more than changing spectral band in all four complete task–model comparisons; the contrast weakens at higher rank.",
+      "relevance": "Provides practical evidence on low-rank parameterization, spectral placement, and fine-tuning behavior under learning-rate and training-budget controls.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "We use a two-by-two design: freeze A A or B B , each on the top or bottom band, while retaining the same pretrained model, data, adapted modules and training budget. Learning rates are selected separately for every configuration."
+        },
+        {
+          "source": "inspection",
+          "quote": "At rank 2, the factor contrast exceeds the band contrast on all four complete comparisons."
+        }
+      ],
+      "title": "Frozen Factor or Spectral Band? Disentangling Two Choices in Low-Rank LoRA",
+      "url": "https://arxiv.org/abs/2610.06621v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.08049",
+      "summary": "Proposes a LoRA-specific Riemannian metric that induces preconditioning for low-rank factors. In LLaMA2-7B commonsense reasoning experiments, the reported average test accuracy is 82.34 with the proposed AdamW preconditioning versus 81.68 with AdamW alone.",
+      "relevance": "Directly addresses LoRA optimization geometry and measured language-model fine-tuning behavior.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "In this paper, we proposed a Riemannian metric that is specifically tailored to LoRA to close the gap to full fine-tuning at the weight level."
+        },
+        {
+          "source": "inspection",
+          "quote": "Method BoolQ PIQA SIQA HellaS WinoG ARC-e ARC-c OBQA Ave. AdamW 73.33 83.41 79.38 92.36 83.74 85.77 72.87 82.60 81.68 w/ 4 74.31 84.17 77.99 93.12 83.43 86.28 74.23 82.20 81.97 w/ 5 (Ours) 73.55 83.62 79.02 92.95 85.48 86.41 74.32 83.40 82.34"
+        }
+      ],
+      "title": "A Riemannian Geometry for Low-rank Adaptation",
+      "url": "https://arxiv.org/abs/2610.08049v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.06647",
+      "summary": "LoGRA uses low-rank gradient sketches for LLM RL post-training. At 7B, reported average per-GPU memory falls from 31.82 to 17.29 GiB versus dense Adam, while update rates are similar: 25.73 versus 25.28 per hour.",
+      "relevance": "Offers measured low-rank training-memory and throughput tradeoffs, though its setting is RL post-training rather than pretraining.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "Over the complete runs, average memory decreases from 9.18 to 7.18 GiB at 1.5B and from 31.82 to 17.29 GiB at 7B, reductions of 21.8% and 45.7%, respectively."
+        },
+        {
+          "source": "inspection",
+          "quote": "End-to-end update rates are similar where both methods complete training: 55.44 versus 54.28 updates/h at 1.5B and 25.73 versus 25.28 updates/h at 7B for LoGRA and Dense, respectively."
+        }
+      ],
+      "title": "LoGRA: Scaling LLM Reinforcement Learning with Low-Rank Gradient Sketches",
+      "url": "https://arxiv.org/abs/2610.06647v3",
+      "version": 3,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.10590",
+      "summary": "Studies reversible archival of tool results in a Python agent harness. In one noisy debugging trajectory, it halves cumulative input tokens while both arms pass the primary behavioral cases, but takes 17% longer; a contrasting task shows no savings.",
+      "relevance": "Directly informs explicit context management for the research-digest agent and clarifies when archival may not help.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "A Python harness exposes batch archival and explicit recovery without task-specific model training, while protecting user instructions and assistant messages from these operations."
+        },
+        {
+          "source": "inspection",
+          "quote": "Cumulative input decreases by 50%, and input plus completion tokens decrease by 50%."
+        },
+        {
+          "source": "inspection",
+          "quote": "The method generates more than twice as many completion tokens and takes 17% longer. These are resource savings without a speed advantage in this case."
+        }
+      ],
+      "title": "Agent-Controlled Forgetting for Tool-Using Agents: Reversible Context Curation in Practice",
+      "url": "https://arxiv.org/abs/2610.10590v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    }
+  ],
+  "x_feature": null,
+  "limitations": [
+    "No screened paper from the focused searches directly established memory savings for LLM pretraining; LoGRA's results concern RL post-training.",
+    "Repository availability and reproducibility were not verified.",
+    "Some inspected HTML passages have extraction artifacts; numerical claims should be checked against the paper tables before operational use.",
+    "The context-curation result is workload-dependent and does not establish improved task quality.",
+    "inspect:2610.11730: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.10965: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.06116: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.08049: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.06647: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.10590: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.06542: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.06621: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.14393: only question-relevant HTML passages were inspected, not the whole paper."
+  ],
+  "stats": {
+    "fetched_count": 3311,
+    "candidate_count": 3311,
+    "llm_calls": 23,
+    "steps": 17,
+    "inspections": 10,
+    "expansions": 4,
+    "screened": 46,
+    "usage": {
+      "recorded_calls": 23,
+      "llm_latency_seconds": 342.6014666239207,
+      "input_tokens": 982331,
+      "output_tokens": 12057,
+      "estimated_api_cost_usd": null,
+      "calls_without_usage": 0,
+      "cost_note": "API-equivalent estimate using standard GPT-5.6-Luna rates checked 2026-11-17: $0.20/M input, $1.20/M output; above 272K input, $0.40/M and $1.80/M. Assumes all input is uncached; excludes cache writes and external tools. Not actual Codex subscription billing. Unknown usage/model yields null cost.",
+      "price_source": "https://developers.openai.com/api/docs/models/gpt-5.6-luna"
+    },
+    "tool_calls": 14,
+    "tool_latency_seconds": 60.958919124968816
+  }
+}

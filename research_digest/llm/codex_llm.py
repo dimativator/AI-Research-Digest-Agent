@@ -152,10 +152,13 @@ class CodexOpenAI:
         prompt = (
             "The conversation below is encoded as JSON. Respond to its final user "
             "message in the requested format. Respect system and "
-            "developer messages over user messages. Use only the supplied context. "
-            "Do not call tools, read files, browse, or execute commands. Return only "
-            "the requested final answer. Application actions must be described in "
-            "the response for the caller to validate and execute.\n\n"
+            "developer messages over user messages. Do not invoke Codex native tools, "
+            "read local files, browse, or execute commands yourself. "
+            "Application-level actions requested by the conversation ARE allowed: "
+            "emit the requested structured action JSON so the caller can execute it "
+            "and provide its result on the next call. This is not a requirement to "
+            "finish the application task now. Decide from supplied evidence whether "
+            "to request an application tool, ask a reviewer, or finish.\n\n"
             + json.dumps(history, ensure_ascii=False)
         )
 
@@ -184,7 +187,9 @@ class CodexOpenAI:
         instructions = root / "instructions.txt"
         instructions.write_text(
             "You are a text reasoning component. Answer from the provided "
-            "conversation only. Never invoke tools. Return a final answer.",
+            "conversation. Never invoke Codex native tools. Application action JSON "
+            "is allowed and will be executed by the caller; outputting a tool action "
+            "does not invoke a native tool. Follow the requested response schema.",
             encoding="utf-8",
         )
 

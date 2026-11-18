@@ -1,0 +1,237 @@
+{
+  "run_id": "4097e57ecc944433b989717163b6128c",
+  "status": "completed",
+  "user_id": "dmitrii",
+  "profile_fingerprint": "a2480e0075ad9cdf236d40e30f74f9bfd87a08dd948530b42e6b57e4a123bfc0",
+  "pipeline_version": "react-v2",
+  "categories": [
+    "cs.LG",
+    "cs.CL",
+    "stat.ML",
+    "cs.AI",
+    "cs.IR"
+  ],
+  "date_from": "2026-11-09",
+  "date_to": "2026-11-15",
+  "papers": [
+    {
+      "paper_id": "2611.17191",
+      "summary": "Adds an SVD-free Rényi-2 effective-rank penalty to LoRA training. In mixed-domain sweeps on three models, λ=0.01 lowers mean Wiki perplexity at tested ranks of at least 16 versus unpenalized LoRA, though learning–retention outcomes depend on configuration.",
+      "relevance": "Directly tests whether training can alter adapter effective rank without substantially worsening task fit. It does not establish improved compressibility of pretrained weights.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "In mixed-domain rank sweeps on three models, λ = 0.01 \\\\lambda=0.01 lowers mean Wiki perplexity at every tested rank of at least 16 16 relative to unpenalized LoRA, with mean Train PPL improving or increasing by at most 0.02 0.02 in all but one comparison."
+        },
+        {
+          "source": "inspection",
+          "quote": "the penalty can improve retention without a large training-fit cost, but does not eliminate the learning–forgetting trade-off."
+        }
+      ],
+      "title": "Maximizing Capacity Utilization of LoRA Adapters for Mitigating the Learning-Forgetting Trade-off",
+      "url": "https://arxiv.org/abs/2611.17191v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.11752",
+      "summary": "Distinguishes stable rank from the rank needed to retain update energy. Three selected OLMo-2-7B PPO attention updates have stable ranks of 9.6–18.3 but need 532–1,222 components for 80% energy.",
+      "relevance": "A direct caution against using low stable rank alone as evidence that LLM training updates are readily compressible.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "Three attention updates from proximal policy optimization (PPO) have stable ranks 9.6 9.6 – 18.3 18.3 but require 532 532 – 1,222 1{,}222 components for 80 % 80\\\\% of their energy."
+        }
+      ],
+      "title": "Spectral Rank and Step-Direction Dynamics in Language-Model Post-Training",
+      "url": "https://arxiv.org/abs/2611.11752v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.17876",
+      "summary": "Studies temporary weight decay in Muon pretraining from 162M to 3.4B parameters. An early decay window improves final validation loss against no decay and the best sampled constant-decay baseline at the tested scales, despite potentially looking worse when removed.",
+      "relevance": "Shows why optimizer and regularization schedules should be evaluated at the intended final budget, with weight-norm dynamics considered when interpreting results.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "A 10% decay window starting at initialization beats both no decay and the best sampled constant at every scale (Table 1 )."
+        },
+        {
+          "source": "inspection",
+          "quote": "These comparisons show that the benefit of an early window persists across the tested scales, but not that its magnitude follows a scaling law"
+        }
+      ],
+      "title": "Delayed Effects of Temporary Weight Decay in Muon Pretraining",
+      "url": "https://arxiv.org/abs/2611.17876v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.17784",
+      "summary": "SCALAR trains scalar coefficients over fixed, task-calibrated directions. On commonsense reasoning it approaches rank-8 LoRA accuracy with about 4% of its trainable parameters; Qwen2.5-7B measurements report 20% lower peak training memory and 6% higher throughput than LoRA.",
+      "relevance": "Provides a concrete adaptation-quality, memory, and throughput comparison for parameter-efficient LLM fine-tuning.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "On Qwen2.5-7B and LLaMA3-8B, SCALAR approaches rank-8 LoRA accuracy on commonsense reasoning using about 4% of its trainable parameters."
+        },
+        {
+          "source": "inspection",
+          "quote": "We report peak GPU memory with a device batch size of 16 and token throughput on 2 NVIDIA H20 GPUs."
+        },
+        {
+          "source": "inspection",
+          "quote": "SCALAR achieves the lowest peak memory among the evaluated PEFT methods, using 20% less memory than LoRA, 15% less than NOLA, and 33% less than RandLoRA. Training throughput increases by 6% over LoRA"
+        }
+      ],
+      "title": "Direction or Magnitude? Learning Scalars over Task-Calibrated Directions",
+      "url": "https://arxiv.org/abs/2611.17784v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.13306",
+      "summary": "HiLo sends compressed LoRA-factor gradients and replays optimizer updates on rollout workers, separating training rank from communication rank. In a bandwidth-limited Qwen3-1.7B setup, it sends 2.3 MB instead of a 139.5 MB adapter and reaches up to 2.22× faster updates under one-step-off pipelining.",
+      "relevance": "Addresses the quality–communication–throughput trade-off in distributed LoRA post-training. The benefit is conditional on constrained links and replicated optimizer state adds an unquantified worker-memory cost in the retrieved evidence.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "Full synchronization ships the 139.5 MB adapter while HiLo ships 2.3 MB of rank-1 gradient factors."
+        },
+        {
+          "source": "inspection",
+          "quote": "62.5 62.5 33.1 ± \\\\pm 0.1 16.1 ± \\\\pm 0.2 2.06 × \\\\times 17.9 ± \\\\pm 0.0 8.1 ± \\\\pm 0.1 2.22 × \\\\times"
+        },
+        {
+          "source": "inspection",
+          "quote": "Unpaced, HiLo is 0.6 s slower, the cost of encoding and replay."
+        }
+      ],
+      "title": "Train High, Ship Low: Efficient LoRA Synchronization for Distributed On-Policy Post-Training",
+      "url": "https://arxiv.org/abs/2611.13306v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.14397",
+      "summary": "Analyzes LoRA in multiclass linear classification under near-orthogonal tasks and ℓ2 regularization, characterizing the optimal adapter across regularization regimes and relating an intermediate regime to a max-margin solution.",
+      "relevance": "Offers a theoretical perspective on LoRA geometry, regularization, and forgetting, with a setting narrower than practical language-model fine-tuning.",
+      "evidence": [
+        {
+          "source": "abstract",
+          "quote": "We analyze LoRA in multiclass linear classification under a near-orthogonal task regime with $\\\\ell_2$-regularization, and characterize the optimal LoRA adapter across regularization regimes."
+        },
+        {
+          "source": "abstract",
+          "quote": "in an intermediate regime of regularization parameters, the optimal adapter aligns with the \\\\emph{max-margin solution} on the fine-tuning data."
+        }
+      ],
+      "title": "A Margin Perspective on LoRA: Robustness to Catastrophic Forgetting and Adapter Merging (MaLoRA)",
+      "url": "https://arxiv.org/abs/2611.14397v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.15600",
+      "summary": "MemCredit selects agent memories by estimated contribution to the next decision rather than semantic similarity alone. It uses relevance for high-recall candidate generation, then predicted utility to allocate a fixed token budget.",
+      "relevance": "A concrete design idea for the handwritten digest agent’s context selection, though its reported evaluation is on web-agent tasks rather than research-paper curation.",
+      "evidence": [
+        {
+          "source": "abstract",
+          "quote": "At inference time, semantic relevance is used only for high-recall candidate generation, while predicted utility arbitrates which memories are retained under a fixed token budget"
+        },
+        {
+          "source": "abstract",
+          "quote": "We evaluate MemCredit on ALFWorld and WebShop against representative memory baselines."
+        }
+      ],
+      "title": "MemCredit: From Relevance to Utility for Decision-Time Memory in Long-Horizon Web Agents",
+      "url": "https://arxiv.org/abs/2611.15600v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    }
+  ],
+  "x_feature": null,
+  "limitations": [
+    "No selected paper directly evaluates low-rank or optimizer-state compression for LLM pretraining, or memorization under label noise.",
+    "The MaLoRA and MemCredit selections rely on abstract evidence; their experimental details were not inspected.",
+    "Repository availability and independent reproducibility were not checked.",
+    "inspect:2611.17191: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2611.17784: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2611.11752: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2611.17876: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2611.13306: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2611.19419: only question-relevant HTML passages were inspected, not the whole paper."
+  ],
+  "stats": {
+    "fetched_count": 2141,
+    "candidate_count": 2141,
+    "llm_calls": 22,
+    "steps": 16,
+    "inspections": 7,
+    "expansions": 3,
+    "screened": 43,
+    "usage": {
+      "recorded_calls": 22,
+      "llm_latency_seconds": 309.50997733304393,
+      "input_tokens": 786998,
+      "output_tokens": 10562,
+      "estimated_api_cost_usd": null,
+      "calls_without_usage": 0,
+      "cost_note": "API-equivalent estimate using standard GPT-5.6-Luna rates checked 2026-11-17: $0.20/M input, $1.20/M output; above 272K input, $0.40/M and $1.80/M. Assumes all input is uncached; excludes cache writes and external tools. Not actual Codex subscription billing. Unknown usage/model yields null cost.",
+      "price_source": "https://developers.openai.com/api/docs/models/gpt-5.6-luna"
+    },
+    "tool_calls": 13,
+    "tool_latency_seconds": 45.42140833302983
+  }
+}

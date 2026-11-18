@@ -14,6 +14,7 @@ ROOT = Path(__file__).resolve().parent
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--port", type=int, default=8765)
+    parser.add_argument("--page", type=Path, default=ROOT / "static/index.html")
     parser.add_argument("--sample", type=Path, default=ROOT / "sample.json")
     parser.add_argument("--db", type=Path, default=ROOT / "labels.sqlite3")
     args = parser.parse_args()
@@ -80,7 +81,7 @@ def main():
                 self.send(snapshot(), download=self.path == "/api/export")
             elif self.path == "/":
                 self.send(
-                    (ROOT / "static/index.html").read_bytes(),
+                    args.page.read_bytes(),
                     kind="text/html; charset=utf-8",
                 )
             else:

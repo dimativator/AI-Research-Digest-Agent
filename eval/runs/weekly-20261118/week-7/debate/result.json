@@ -1,0 +1,239 @@
+{
+  "run_id": "736c324e605d4b4b9ab8ecb240f02fb3",
+  "status": "completed",
+  "user_id": "dmitrii",
+  "profile_fingerprint": "a2480e0075ad9cdf236d40e30f74f9bfd87a08dd948530b42e6b57e4a123bfc0",
+  "pipeline_version": "react-v2",
+  "categories": [
+    "cs.LG",
+    "cs.CL",
+    "stat.ML",
+    "cs.AI",
+    "cs.IR"
+  ],
+  "date_from": "2026-11-09",
+  "date_to": "2026-11-15",
+  "papers": [
+    {
+      "paper_id": "2611.17191",
+      "summary": "Adds an SVD-free Rényi-2 effective-rank penalty to LoRA. In mixed-domain rank sweeps, it improves mean Wiki perplexity over unpenalized LoRA at tested ranks of at least 16, though retention gains depend on configuration.",
+      "relevance": "Directly tests whether spectral regularization changes adapter capacity and fine-tuning quality.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "a penalty weight of λ = 0.01 \\\\lambda=0.01 lowers mean Wiki perplexity at every tested rank of at least 16 16 relative to unpenalized LoRA."
+        },
+        {
+          "source": "inspection",
+          "quote": "the penalty can improve retention without a large training-fit cost, but does not eliminate the learning–forgetting trade-off."
+        }
+      ],
+      "title": "Maximizing Capacity Utilization of LoRA Adapters for Mitigating the Learning-Forgetting Trade-off",
+      "url": "https://arxiv.org/abs/2611.17191v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.11752",
+      "summary": "Shows that low stable rank need not imply that a language-model weight update is easy to approximate at low rank. Selected PPO attention updates have stable ranks of 9.6–18.3 but need 532–1,222 components to retain 80% of their energy.",
+      "relevance": "Provides a caution for interpreting singular-value diagnostics in work on weight-update compressibility.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "Three attention updates from proximal policy optimization (PPO) have stable ranks 9.6 9.6 – 18.3 18.3 but require 532 532 – 1,222 1{,}222 components for 80 % 80\\\\% of their energy."
+        },
+        {
+          "source": "inspection",
+          "quote": "Thus, low stable rank alone does not generally imply that a small number of singular components captures most of the update energy."
+        }
+      ],
+      "title": "Spectral Rank and Step-Direction Dynamics in Language-Model Post-Training",
+      "url": "https://arxiv.org/abs/2611.11752v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.16905",
+      "summary": "FOAM simplifies SOAP’s preconditioning and second-moment state. Across 124M–760M-parameter LLM pretraining experiments, it approaches SOAP’s validation loss with half its optimizer state, while SOAP retains the lowest loss.",
+      "relevance": "Directly informs quality, memory, and wall-clock tradeoffs for matrix-structured pretraining optimizers.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "SOAP attains the lowest validation loss at every scale, with FOAM behind by 0.004 0.004 , 0.008 0.008 , and 0.005 0.005 nats at small, medium, and large, each within about one seed std."
+        },
+        {
+          "source": "inspection",
+          "quote": "FOAM uses half of SOAP’s matrix-parameter state at every size, and its measured peak memory at small size is + 7.4 % +7.4\\\\% over AdamW against + 12.9 % +12.9\\\\% for SOAP."
+        }
+      ],
+      "title": "Factored One-sided Adam-Moment for Practical and Scalable SOAP",
+      "url": "https://arxiv.org/abs/2611.16905v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.17784",
+      "summary": "SCALAR learns scalar coefficients over fixed, task-calibrated directions. On Qwen2.5-7B commonsense fine-tuning, it reports LoRA-comparable accuracy with fewer trainable parameters, 20% lower peak memory, and 6% higher throughput.",
+      "relevance": "A practical PEFT comparison spanning adaptation quality, training memory, and throughput.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "On commonsense reasoning, SCALAR achieves accuracy comparable to LoRA with about 4% of its trainable parameters."
+        },
+        {
+          "source": "inspection",
+          "quote": "SCALAR achieves the lowest peak memory among the evaluated PEFT methods, using 20% less memory than LoRA, 15% less than NOLA, and 33% less than RandLoRA. Training throughput increases by 6% over LoRA"
+        }
+      ],
+      "title": "Direction or Magnitude? Learning Scalars over Task-Calibrated Directions",
+      "url": "https://arxiv.org/abs/2611.17784v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.13306",
+      "summary": "HiLo synchronizes distributed LoRA rollout workers through compressed gradients and optimizer replay rather than transmitting adapters. Spar combines spectral truncation and adaptive rank allocation; reported gains apply to bandwidth-constrained post-training.",
+      "relevance": "Addresses the user’s explicit interest in separating LoRA training rank from communication cost without sacrificing much learning quality.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "HiLo replaces parameter transmission with compressed gradient dissemination and local optimizer replay, reducing synchronization traffic without lowering the training rank."
+        },
+        {
+          "source": "inspection",
+          "quote": "HiLo with Spar maintains learning quality close to full synchronization while transmitting as little as 1.6% of the adapter bytes, and accelerates end-to-end updates by up to 2.2 × 2.2\\\\times under bandwidth constraints."
+        }
+      ],
+      "title": "Train High, Ship Low: Efficient LoRA Synchronization for Distributed On-Policy Post-Training",
+      "url": "https://arxiv.org/abs/2611.13306v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.19419",
+      "summary": "Compares AdamW, AdaGrad, SOAP, two feasible Shampoo reductions, and All-2D Muon in fixed-budget Qwen KL distillation. Matrix-structured recipes do not consistently improve validation-KL versus trainer-time tradeoffs over elementwise baselines.",
+      "relevance": "Useful counterpoint when deciding whether optimizer gains observed in pretraining transfer to another LLM training objective and systems regime.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "Across scales, none of the evaluated matrix-structured recipes consistently improves the quality–trainer-time trade-off over the elementwise references: AdamW generally attains the lowest validation KL, while AdaGrad can be slightly faster at larger scale."
+        },
+        {
+          "source": "inspection",
+          "quote": "The findings therefore do not rank optimizer families independently of factorization, routing, and implementation."
+        }
+      ],
+      "title": "Do Pretraining Optimizer Gains Transfer to KL Distillation?",
+      "url": "https://arxiv.org/abs/2611.19419v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.14149",
+      "summary": "Surveys how LLM post-training shapes information-seeking decisions, including retrieval routing, query refinement, tool exploration, and evidence use.",
+      "relevance": "Directly informs search-control and evidence-handling decisions in the user’s research-digest agent.",
+      "evidence": [
+        {
+          "source": "abstract",
+          "quote": "This paper organizes research around six interrelated information-seeking capabilities and examines the learning signals, optimization methods, update loci, and credit-assignment mechanisms used to develop them."
+        },
+        {
+          "source": "abstract",
+          "quote": "Existing studies report gains in retrieval routing, query refinement, multi-tool exploration, evidence-grounded reasoning, and resource-aware search, although the scope of behavioral evidence varies across capabilities."
+        }
+      ],
+      "title": "From Search to Decision: How Post-Training Shapes Information-Seeking Capabilities in Large Language Models",
+      "url": "https://arxiv.org/abs/2611.14149v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    }
+  ],
+  "x_feature": null,
+  "limitations": [
+    "These are reported paper findings, not independently replicated results; code availability was not checked.",
+    "FOAM’s main comparison reaches 760M parameters, and its authors identify larger-scale pretraining as an open question.",
+    "HiLo’s speedup is conditional on bandwidth constraints and requires replicated optimizer state at rollout workers.",
+    "The KL-distillation study measures teacher-matching KL, not downstream performance or pretraining, and its conclusions depend on the evaluated implementations.",
+    "The information-seeking paper is a survey, not a direct evaluation of a research-digest agent.",
+    "inspect:2611.17191: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2611.16905: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2611.17784: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2611.13331: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2611.11752: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2611.13306: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2611.14397: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2611.19477: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2611.13276: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2611.19419: only question-relevant HTML passages were inspected, not the whole paper."
+  ],
+  "stats": {
+    "fetched_count": 2141,
+    "candidate_count": 2141,
+    "llm_calls": 27,
+    "steps": 20,
+    "inspections": 11,
+    "expansions": 4,
+    "screened": 56,
+    "usage": {
+      "recorded_calls": 27,
+      "llm_latency_seconds": 447.5163755870599,
+      "input_tokens": 1305203,
+      "output_tokens": 15196,
+      "estimated_api_cost_usd": null,
+      "calls_without_usage": 0,
+      "cost_note": "API-equivalent estimate using standard GPT-5.6-Luna rates checked 2026-11-17: $0.20/M input, $1.20/M output; above 272K input, $0.40/M and $1.80/M. Assumes all input is uncached; excludes cache writes and external tools. Not actual Codex subscription billing. Unknown usage/model yields null cost.",
+      "price_source": "https://developers.openai.com/api/docs/models/gpt-5.6-luna"
+    },
+    "tool_calls": 17,
+    "tool_latency_seconds": 67.69492854198324
+  }
+}

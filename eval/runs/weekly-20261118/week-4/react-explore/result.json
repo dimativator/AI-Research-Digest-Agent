@@ -1,0 +1,239 @@
+{
+  "run_id": "c2185c5230d64fe091376f1c75327295",
+  "status": "completed",
+  "user_id": "dmitrii",
+  "profile_fingerprint": "a2480e0075ad9cdf236d40e30f74f9bfd87a08dd948530b42e6b57e4a123bfc0",
+  "pipeline_version": "react-v2",
+  "categories": [
+    "cs.LG",
+    "cs.CL",
+    "stat.ML",
+    "cs.AI",
+    "cs.IR"
+  ],
+  "date_from": "2026-10-19",
+  "date_to": "2026-10-25",
+  "papers": [
+    {
+      "paper_id": "2610.31897",
+      "summary": "S-SALAAD jointly trains dense, low-rank, and structured-sparse weight components for compression to multiple deployment budgets. Its low-rank-only variant gives a better reported perplexity–compressibility trade-off than direct nuclear-norm regularization.",
+      "relevance": "The closest match to training weights for later low-rank compression, with a direct comparison to spectral regularization. Reported memory and throughput gains concern inference, not training.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "L L -only S-SALAAD maintains low perplexity over the same budget range, providing a better trade-off between model quality and elastic compressibility than these direct regularization baselines."
+        },
+        {
+          "source": "inspection",
+          "quote": "These measurements characterize prefill computation and do not include autoregressive decoding or complete request latency."
+        }
+      ],
+      "title": "Learning Structured Sparsity for Large Models: Bridging Model Compressibility and Efficient Inference",
+      "url": "https://arxiv.org/abs/2610.31897v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.32142",
+      "summary": "The paper attributes instability at large asymmetric LoRA learning-rate ratios to initialization-induced noise and proposes a smaller-variance initialization. It reports a wider stable learning-rate region across ranks and update multipliers.",
+      "relevance": "Directly informs LoRA optimization and hyperparameter selection in practical language-model fine-tuning.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "Empirically, Init[ A 2 \\text{A}^{2} ] substantially widens the stable LR region across initialization scales, adapter ranks, and LoRA update multipliers."
+        },
+        {
+          "source": "inspection",
+          "quote": "The LLM experiments cover both encoder-only models (RoBERTa-base on GLUE) and decoder-only models (Llama arithmetic and commonsense benchmarks, with additional backbones in the appendix)."
+        }
+      ],
+      "title": "Rethinking LoRA Initialization for Robust Asymmetric Learning Rates",
+      "url": "https://arxiv.org/abs/2610.32142v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.30280",
+      "summary": "On matrix quadratics, the paper analyzes when Muon's polar update helps or slows optimization. It argues that a finite number of Newton–Schulz steps can handle tiny singular modes better than exact orthogonalization, then measures such modes in a Muon-trained transformer.",
+      "relevance": "A close match for matrix optimization, Muon, Newton–Schulz approximations, and singular-value dynamics. Its transformer run is diagnostic, not a reported head-to-head LLM training benchmark.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "Finally, the few Newton--Schulz iterations used in Muon treat these tiny singular values as gradient descent does, so fewer iterations can converge faster than exact orthogonalization; in a transformer trained with Muon , about a quarter of the singular values of the attention matrices fall in this regime."
+        },
+        {
+          "source": "inspection",
+          "quote": "We trained a decoder-only transformer with Muon and saved, at 25%, 50%, 75%, and 100% of training, the weights, the momentum matrices M M , and the raw minibatch gradients G G of all 50 matrices trained by Muon ."
+        }
+      ],
+      "title": "A Quadratic Lens on Muon's Polar Update: Benefits, Pitfalls, and the Role of Newton-Schulz",
+      "url": "https://arxiv.org/abs/2610.30280v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.32878",
+      "summary": "LEMS allocates ranks across layers and KFAC-SVD changes the decomposition objective. Reported comparisons cover Mistral, Llama 3, and Qwen3; LEMS improves perplexity and zero-shot accuracy across the evaluated Qwen3 sizes and compression ratios.",
+      "relevance": "Provides model-quality versus low-rank compression evidence across scales, though it studies post-training compression rather than training for compressibility.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "Table 2 details the results for all approaches under uniform compression rates (0.9, 0.7) and calibration sample count, with an additional line for our search-enhanced variant."
+        },
+        {
+          "source": "inspection",
+          "quote": "Averaged over ratios and models, it reduces perplexity by 17% for KFAC-SVD and 34% for SVD-LLM , while increasing zero-shot accuracy by +7.2 and +9.1 p.p. , respectively."
+        }
+      ],
+      "title": "Advancing SVD-based LLM Compression via Layer-Wise Error Model Search",
+      "url": "https://arxiv.org/abs/2610.32878v2",
+      "version": 2,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.33846",
+      "summary": "In a noisy CIFAR-10 task, larger, deeper networks attain their best observed test performance after fitting the randomly labeled examples, unlike fixed-feature and shallower models. A separate kernel-gradient-flow analysis gives a phase diagram for when early stopping helps.",
+      "relevance": "Directly addresses memorization and generalization under label noise, while distinguishing the neural-network observation from the narrower kernel theory.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "Figure 1 shows that the larger and deeper networks attain their best observed test performance only after their memorization error reaches zero, while fixed-feature and shallower models exhibit late-time test-error deterioration."
+        },
+        {
+          "source": "inspection",
+          "quote": "Our analysis does not, however, establish that the networks learn this same geometry, nor does it explain how feature learning, architecture, and optimization produce the empirically observed behavior."
+        }
+      ],
+      "title": "When is early stopping beneficial under label noise? A phase diagram for kernel gradient flow",
+      "url": "https://arxiv.org/abs/2610.33846v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.26836",
+      "summary": "A controlled agent study compares receiving a scientific tool's report inline with retrieving it through an index. Some models lose accuracy under retrieval because they answer from self-created output rather than the canonical report.",
+      "relevance": "Offers a concrete failure mode for a handwritten research-digest harness that retrieves passages and requires source-grounded answers.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "The simulation, the tools, and the step budget are the same in all of them."
+        },
+        {
+          "source": "inspection",
+          "quote": "Under TOC, GPT-5.2 and GPT-5.1 skip the report in more than half of their trajectories: no part of it reaches them."
+        }
+      ],
+      "title": "Same Simulation, Different Evidence: Where Retrieved Tool Output Costs LLM Agents Accuracy",
+      "url": "https://arxiv.org/abs/2610.26836v2",
+      "version": 2,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.30676",
+      "summary": "The paper applies post-hoc singular-value smoothing and spiking to transformer feed-forward projections in five Llama and Qwen instruction models. It reports non-uniform changes across evaluated tasks, with sensitivity varying by model and layerwise spectrum.",
+      "relevance": "Direct evidence that altering LLM weight spectra can change task behavior, relevant to assessing quality costs of spectral regularization and compression. It does not test a training regularizer.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "We study post-hoc spectral smoothing and spiking interventions on the up_proj and down_proj matrices."
+        },
+        {
+          "source": "inspection",
+          "quote": "The induced changes suggest structured rather than purely random sensitivity: large positive perturbations more reliably suppress language and deductive responses, moderate negative perturbations can sometimes improve factual or task-local performance on the evaluated grids, and sensitivity varies strongly by model family, benchmark module, and underlying layerwise spectral inequality."
+        }
+      ],
+      "title": "Spectral Smoothing and Spiking Perturbations Reconfigure Capability Profiles and Selective Task Performance in Large Language Models",
+      "url": "https://arxiv.org/abs/2610.30676v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    }
+  ],
+  "x_feature": null,
+  "limitations": [
+    "No selected paper establishes a quality–peak-training-memory–throughput–communication trade-off for memory-efficient LLM pretraining; focused searches did not surface a direct match among screened candidates.",
+    "S-SALAAD's quoted peak-memory and throughput measurements describe inference prefill, not training.",
+    "The Muon paper's main controlled results are on matrix quadratics; the inspected transformer run does not establish a comparative LLM training-speed gain.",
+    "The agent evidence-retrieval experiment uses a deterministic simulator, so transfer to paper-digest workflows remains untested.",
+    "X analysis was disabled; code availability and reproducibility were not checked.",
+    "inspect:2610.31897: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.30280: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.32142: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.32878: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.26836: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.33846: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.32854: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.31728: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.30676: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.29864: full-text inspection unavailable; only abstract evidence was available."
+  ],
+  "stats": {
+    "fetched_count": 2674,
+    "candidate_count": 2674,
+    "llm_calls": 30,
+    "steps": 21,
+    "inspections": 11,
+    "expansions": 6,
+    "screened": 67,
+    "usage": {
+      "recorded_calls": 30,
+      "llm_latency_seconds": 466.62799920805264,
+      "input_tokens": 1402205,
+      "output_tokens": 14742,
+      "estimated_api_cost_usd": null,
+      "calls_without_usage": 0,
+      "cost_note": "API-equivalent estimate using standard GPT-5.6-Luna rates checked 2026-11-17: $0.20/M input, $1.20/M output; above 272K input, $0.40/M and $1.80/M. Assumes all input is uncached; excludes cache writes and external tools. Not actual Codex subscription billing. Unknown usage/model yields null cost.",
+      "price_source": "https://developers.openai.com/api/docs/models/gpt-5.6-luna"
+    },
+    "tool_calls": 18,
+    "tool_latency_seconds": 106.04023745999439
+  }
+}

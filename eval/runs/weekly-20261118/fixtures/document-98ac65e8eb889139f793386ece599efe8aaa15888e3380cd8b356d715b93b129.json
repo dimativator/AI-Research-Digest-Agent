@@ -1,0 +1,1130 @@
+{
+  "status": "ok",
+  "source": "https://arxiv.org/html/2611.04323v1",
+  "extractor_version": "article-v1",
+  "chunks": [
+    {
+      "chunk_id": "chunk-0001",
+      "section": "FP4Quant: Efficient 4-Bit Communication Compression for Model-Parallel LLM Training",
+      "text": "Man Liu Affiliation: University of Chinese Academy of Sciences, Beijing, China Xingchen Liu Affiliation: Institute of Computing Technology, Chinese Academy of Sciences, Beijing, China E-mail liuman24@mails.ucas.ac.cn, liuxingchen232@mails.ucas.ac.cn, zhaohairui@ict.ac.cn, tgm@ict.ac.cn, taodingwen@ict.ac.cn Hairui Zhao Affiliation: Institute of Computing Technology, Chinese Academy of Sciences, Beijing, China E-mail liuman24@mails.ucas.ac.cn, liuxingchen232@mails.ucas.ac.cn, zhaohairui@ict.ac.cn, tgm@ict.ac.cn, taodingwen@ict.ac.cn Guangming Tan Affiliation: Institute of Computing Technology, Chinese Academy of Sciences, Beijing, China E-mail liuman24@mails.ucas.ac.cn, liuxingchen232@mails.ucas.ac.cn, zhaohairui@ict.ac.cn, tgm@ict.ac.cn, taodingwen@ict.ac.cn Dingwen Tao Affiliation: Institute of Computing Technology, Chinese Academy of Sciences, Beijing, China E-mail liuman24@mails.ucas.ac.cn, liuxingchen232@mails.ucas.ac.cn, zhaohairui@ict.ac.cn, tgm@ict.ac.cn, taodingwen@ict.ac.cn",
+      "source": "https://arxiv.org/html/2611.04323v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0002",
+      "section": "Abstract",
+      "text": "The rapid scaling of large language models (LLMs) has made communication overhead a critical bottleneck in distributed model-parallel training. Although existing low-precision compression methods can effectively reduce communication costs, further reducing the communication footprint to ultra-low-bit formats such as FP4 introduces new challenges, including limited numerical range, sub-byte storage overhead, and increased computational cost from fine-grained quantization. In this paper, we present FP4Quant , a micro-grouped FP4 compression framework for efficient model-parallel LLM training. FP4Quant integrates a micro-grouped dual-scale FP4 quantization mechanism to preserve local tensor distribution characteristics, a warp-cooperative FP4 packing scheme to enable efficient sub-byte data representation, and a hybrid two-level FWHT pipeline to mitigate quantization errors with GPU-aware execution optimization. Experiments on NVIDIA H100 GPUs with Qwen-7B demonstrate up to 1.56 × \\times end-to-end throughput improvement over BF16, revealing a trade-off between throughput and model quality.",
+      "source": "https://arxiv.org/html/2611.04323v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0003",
+      "section": "Keywords:",
+      "text": "FP4 Quantization Communication Compression Distributed Training Large Language Models.",
+      "source": "https://arxiv.org/html/2611.04323v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0004",
+      "section": "1 Introduction",
+      "text": "In recent years, large language models (LLMs) have advanced rapidly, with parameter scales growing exponentially to reach the trillion-parameter regime [ 5 , 8 , 12 ] . Training such models requires hundreds to thousands of GPUs, making model parallelism(MP) essential for efficiently distributing computational workloads across devices, typically through tensor parallelism (TP) and pipeline parallelism (PP) [ 20 , 17 ] . As model sizes continue to increase, communication overhead, particularly AllReduce operations in TP, has increasingly become a critical performance bottleneck in distributed LLM training [ 22 , 20 , 23 , 13 ] . To mitigate communication bottlenecks, a variety of optimization approaches have been proposed and actively explored in recent years. For DP, gradient compression techniques, including quantization [ 15 , 3 , 4 , 27 ] , sparsification [ 2 , 26 ] , and local accumulation [ 24 ] , have been extensively studied to reduce communication costs. For TP, frameworks such as TACO [ 19 ] demonstrate that adaptive FP8-based compression can significantly reduce communication overhead while maintaining near-lossless training accuracy. More broadly, FP8-based methods (e.g., FP8-LM [ 21 ] and COAT [ 29 ] ) improve training efficiency by extending low-precision representations to gradients, optimizer states, and activations.",
+      "source": "https://arxiv.org/html/2611.04323v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0005",
+      "section": "1 Introduction",
+      "text": "However, the limited compression ratio of FP8 is often insufficient to fully alleviate communication bottlenecks at scale, motivating more aggressive low-bit approaches in distributed settings. While 4-bit quantization offers the potential for substantially higher compression, it introduces fundamental challenges beyond simple precision scaling [ 9 , 10 ] . Recent efforts have explored FP4 techniques for model computation [ 6 , 7 , 1 ] and low-bit communication in distributed training [ 15 , 11 ] . Yet, these methods primarily target computation, DP or PP, leaving TP communication under extreme low-bit constraints largely unexplored. Despite its potential to reduce communication overhead, directly applying coarse-grained 4-bit quantization to model-parallel communication faces three key challenges. First, FP4’s narrow dynamic range causes long-tail values to overflow and near-zero values to round to zero, distorting gradient directions and destabilizing early-stage training [ 28 , 19 ] . Second, sub-byte storage requires packing two 4-bit values per byte, while naive packing incurs additional data movement and bit-manipulation overhead, limiting communication efficiency [ 16 ] . Third, reducing 4-bit quantization error requires fine-grained quantization, but finer granularity increases scaling-factor computation, potentially making quantization itself a system bottleneck [ 30 ] . To address these challenges, we propose FP4Quant , a micro-grouped FP4 compression framework that jointly optimizes representation fidelity and GPU execution efficiency for scalable LLM distributed training. The key contributions are summarized as follows:",
+      "source": "https://arxiv.org/html/2611.04323v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0006",
+      "section": "1 Introduction",
+      "text": "(1) We propose a micro-grouped dual-scale FP4 quantization mechanism to preserve local tensor distributions under ultra-low-bit compression. Micro-grouping captures local variations, while dual-scale adaptive scaling and max-absolute scaling better match the FP4 dynamic range and reduce overflow. (2) We introduce a hybrid two-level FWHT pipeline to support fine-grained FP4 compression with limited computational overhead. Intra-warp butterfly operations are efficiently implemented using register-level shuffles, while cross-warp transformations are executed using shared memory, reducing transformation overhead and enabling efficient execution on modern GPUs. (3) We further develop a warp-cooperative FP4 packing scheme for efficient sub-byte FP4 storage. The kernel exploits warp-level primitives to exchange quantized values and performs nibble-level packing directly in registers, reducing intermediate memory operations and enabling aligned byte-wise storage. (4) Experiments on NVIDIA H100 clusters show that FP4Quant improves end-to-end training throughput by up to 1.56× compared to BF16, while maintaining comparable convergence performance on Qwen models. FP4Quant provides an efficient and scalable solution for ultra-low-bit communication in model-parallel LLM training under practical TP and PP configurations. Figure 1: Example distributed training configuration with model parallelism, with 4 tensor-parallel groups, and 2 pipeline stages.",
+      "source": "https://arxiv.org/html/2611.04323v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0007",
+      "section": "2.1 Model-Parallel LLM Training",
+      "text": "Model parallelism, including TP and PP, is widely adopted in large-scale LLM training to distribute computation and model parameters across GPUs. As shown in Fig. 1 , TP partitions individual layers across devices and relies on frequent collective communication operations (e.g., AllReduce) to exchange intermediate tensors [ 23 ] , leading to substantial overhead as model size and the degree of parallelism increase [ 18 ] . In contrast, PP divides the model into stages and transfers activations and gradients between them, where communication efficiency directly affects pipeline utilization and overall throughput [ 14 ] . To alleviate these costs, recent studies have explored low-precision compression techniques to reduce communication volume while preserving training accuracy [ 21 , 19 ] . However, extending these techniques to ultra-low-bit formats (e.g., FP4) remains challenging, as it is difficult to balance high compression ratios with stable training convergence.",
+      "source": "https://arxiv.org/html/2611.04323v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0008",
+      "section": "2.2 Low-Precision Compression for LLM Training",
+      "text": "Recent studies have explored 4-bit floating-point quantization to improve the efficiency of large-scale LLM training. METIS [ 6 ] reduces quantization error via spectral-domain FP4 design for accurate W4A4G4 training, while Quartet [ 7 ] enables native FP4 training through hardware-aware optimization. NVIDIA’s NVFP4 pre-training work [ 1 ] demonstrates scalable FP4 training with optimized scaling and mixed-precision scheduling. Subsequent efforts further enhance stability by addressing FP4’s limited dynamic range, including differentiable quantization and outlier-aware scaling [ 25 ] , as well as adaptive mixed-precision strategies across model components and training stages [ 31 ] . Beyond computation-oriented FP4 training, several studies have explored low-bit communication compression techniques for distributed LLM training. SDP4Bit [ 15 ] investigates 4-bit gradient communication in sharded data-parallel training and shows that substantial communication reduction can be achieved with limited accuracy degradation. Tahquant [ 11 ] explores low-bit activation compression for pipeline-parallel training to reduce inter-stage communication overhead. However, existing low-precision techniques primarily focus on computation acceleration, DP or PP communication, whereas the application of ultra-low-bit quantization to TP communication remains relatively underexplored.",
+      "source": "https://arxiv.org/html/2611.04323v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0009",
+      "section": "2.3 NVFP4 Representation and Scaling",
+      "text": "NVFP4 is a 4-bit floating-point format designed for efficient AI workloads, retaining sign, exponent, and mantissa components. To compensate for its limited dynamic range, NVFP4 employs block-level scaling, in which multiple FP4 elements share a higher-precision scaling factoGiven an input tensor X X , NVFP4 represents it as X ≈ s ⋅ X F ​ P ​ 4 X\\approx s\\cdot X_{FP4} , where X F ​ P ​ 4 X_{FP4} denotes the quantized FP4 values and s s is the corresponding scaling factor. NVFP4 defines two formats, E2M1 and E3M0 [ 1 ] , both following the representation x = ( − 1 ) s ​ 2 e − B ​ ( 1 + f ) x=(-1)^{s}2^{e-B}(1+f) . E2M1 uses one sign bit, two exponent bits, and one mantissa bit, whereas E3M0 allocates one sign bit and three exponent bits without a mantissa. Despite this design, the extremely limited representation results in rapidly increasing quantization step sizes, leading to larger errors compared with higher-precision formats. Although block-level scaling improves accuracy over naive FP4 quantization, fixed-size blocks remain insufficient for capturing fine-grained variations in LLM tensors. Large blocks are more sensitive to outliers, whereas smaller blocks incur higher scaling overhead. This trade-off motivates the development of adaptive scaling strategies and efficient GPU implementations to enable accurate and practical NVFP4-based communication. Figure 2: Overview of FP4Quant.",
+      "source": "https://arxiv.org/html/2611.04323v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0010",
+      "section": "3 FP4Quant: Ultra-Low-Precision Communication Framework",
+      "text": "Motivated by the challenges of ultra-low-bit communication, we propose FP4Quant, a micro-grouped FP4 compression framework integrated into the collective communication path. As illustrated in Fig. 2 , the compression workflow consists of three main components. Section 3.1 describes the micro-grouped dual-scale FP4 quantization mechanism (①); Section 3.2 presents the hybrid two-level FWHT pipeline (②); and Section 3.3 introduces warp-cooperative FP4 packing (③). At the receiver, the compressed payload is reconstructed through unpacking, dequantization, and the inverse FWHT. Together, these components address the numerical and execution challenges of FP4-based communication compression for model-parallel LLM training. Figure 3: Overview of the hybrid two-level FWHT pipeline.",
+      "source": "https://arxiv.org/html/2611.04323v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0011",
+      "section": "3.1 Micro-Grouped Dual-Scale FP4 Quantization",
+      "text": "FP4Quant adopts a micro-grouped dual-scale scheme to address the limited dynamic range of NVFP4, combining fine-grained grouping with two-stage scaling for accurate distribution adaptation and efficient FP4 encoding.",
+      "source": "https://arxiv.org/html/2611.04323v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0012",
+      "section": "Micro-grouping.",
+      "text": "Each communication tensor is partitioned into contiguous micro-groups of G G elements, where G ∈ 32 , 64 , 128 , 256 , 512 G\\in{32,64,128,256,512} . Each group is processed independently to capture localized statistics, enabling fine-grained and adaptive scaling while preserving high-efficiency GPU execution.",
+      "source": "https://arxiv.org/html/2611.04323v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0013",
+      "section": "Dual-scale quantization.",
+      "text": "For each group k k , FP4Quant first computes the second moment σ k 2 = 1 G ​ ∑ i x k , i 2 \\sigma_{k}^{2}=\\frac{1}{G}\\sum_{i}x_{k,i}^{2} and derives an adaptive scale α k = clip ⁡ ( R σ k 2 + λ , 10 − 3 , 10 3 ) , x ~ k , i = α k ​ x k , i , \\alpha_{k}=\\mathrm{clip}\\left(\\frac{R}{\\sqrt{\\sigma_{k}^{2}+\\lambda}},10^{-3},10^{3}\\right),\\qquad\\tilde{x}_{k,i}=\\alpha_{k}x_{k,i}, (1) where λ = 10 − 6 \\lambda=10^{-6} avoids numerical instability. By normalizing the RMS magnitude of each group, α k \\alpha_{k} maps diverse local distributions into the effective FP4 range. After the FWHT transformation in Section 3.2 , the transformed values h k , i h_{k,i} are quantized using a group-wise max-absolute scale: s k = clip ⁡ ( max i ⁡ | h k , i | R , 10 − 12 , 10 6 ) , q k , i = CvtToFP4 ⁡ ( clip ⁡ ( h k , i s k , − R , R ) ) . s_{k}=\\mathrm{clip}\\left(\\frac{\\max_{i}|h_{k,i}|}{R},10^{-12},10^{6}\\right),\\qquad q_{k,i}=\\mathrm{CvtToFP4}\\left(\\mathrm{clip}(\\frac{h_{k,i}}{s_{k}},-R,R)\\right). (2) Here, α k \\alpha_{k} performs pre-rotation normalization, while s k s_{k} determines the final quantization range. Both scales are stored per group and used for reconstruction.",
+      "source": "https://arxiv.org/html/2611.04323v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0014",
+      "section": "Motivation.",
+      "text": "FP4 quantization is sensitive to outliers, where a few extreme values can dominate the max-absolute scale and reduce effective precision. FP4Quant applies an orthonormal Walsh–Hadamard transform (FWHT) to redistribute energy across dimensions, producing a more balanced representation (see Fig. 3 ). The transform is self-inverse, allowing the same operations for decompression.",
+      "source": "https://arxiv.org/html/2611.04323v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0015",
+      "section": "Two-level execution.",
+      "text": "A length- G G FWHT consists of log 2 ⁡ G \\log_{2}G butterfly stages. According to the GPU execution hierarchy, FP4Quant divides these operations into two levels. For intra-warp stages with butterfly distances d < 32 d<32 , paired elements are exchanged through register shuffle operations without shared-memory level: Figure 4: Illustration of the butterfly operation in FWHT. n ← __shfl_xor_sync ​ ( 0xffffffff , v , d ) , v ← { n − v ( tid & d ) ≠ 0 , v + n otherwise . n\\leftarrow\\texttt{\\_\\_shfl\\_xor\\_sync}(\\texttt{0xffffffff},v,d),\\qquad v\\leftarrow\\begin{cases}n-v&(\\mathrm{tid}\\ \\&\\ d)\\neq 0,\\\\ v+n&\\mathrm{otherwise}.\\end{cases} (3) which corresponds to the butterfly operation shown in Fig. 4 . These stages are fully unrolled and executed in registers. For cross-warp stages with d ≥ 32 d\\geq 32 , intermediate results are exchanged through shared memory with synchronization barriers. Only log 2 ⁡ ( G / 32 ) \\log_{2}(G/32) such stages are required, while groups with G ≤ 32 G\\leq 32 complete the entire transform using register-level operations. The final output is normalized by 1 / G 1/\\sqrt{G} to obtain the orthonormal transform.. This design aligns FWHT stages with GPU communication primitives, minimizing synchronization overhead while effectively smoothing outliers for FP4 quantization.",
+      "source": "https://arxiv.org/html/2611.04323v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0016",
+      "section": "3.3 Warp-Cooperative FP4 Packing",
+      "text": "FP4 codes occupy four bits, requiring two adjacent codes to be stored in one byte. A straightforward implementation may introduce intermediate memory accesses for byte assembly, where additional loads, shifts, and masks increase memory traffic and reduce the benefit of FP4 compression. FP4Quant therefore performs nibble packing directly in registers using warp-level shuffle operations. After quantization, thread i i holds one 4-bit code q k , i q_{k,i} in its low nibble. Adjacent threads exchange their codes through a stride-1 butterfly shuffle: hi i = __shfl_xor_sync ​ ( 0xffffffff , q k , i , 1 ) & 0x0F . \\texttt{hi}_{i}=\\texttt{\\_\\_shfl\\_xor\\_sync}(\\texttt{0xffffffff},q_{k,i},1)\\,\\&\\,\\texttt{0x0F}. (4) For even lanes ( i mod 2 = 0 i\\bmod 2=0 ), the shuffled value provides the high nibble from the adjacent thread, while the local code remains as the low nibble. Each even lane then assembles one byte as b = ( hi i ≪ 4 ) | q k , i b=(\\texttt{hi}_{i}\\ll 4)\\,|\\,q_{k,i} and performs a single coalesced store, whereas odd lanes remain inactive. This design avoids shared-memory usage and additional memory round trips, producing naturally aligned byte-level writes across the warp. During decompression, the process is reversed: each thread loads the corresponding packed byte and extracts either the low or high nibble according to the parity of its index before dequantization. This warp-cooperative design eliminates intermediate memory traffic and shared-memory usage, achieving near-zero packing overhead with efficient, aligned writes. Figure 5: Validation loss of Qwen-7B with different micro-group sizes under TP and PP communication compression.",
+      "source": "https://arxiv.org/html/2611.04323v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0017",
+      "section": "Platform.",
+      "text": "All experiments are conducted on a single node equipped with eight NVIDIA H100 GPUs (80,GB HBM3 each; driver 595.71.05; CUDA 13.2), interconnected via NVLink. FP4Quant is implemented as an NCCL compressor plugin and evaluated within a production-grade model-parallel training stack.",
+      "source": "https://arxiv.org/html/2611.04323v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0018",
+      "section": "Model, data, and task.",
+      "text": "We train Qwen-7B on the OpenWebMath corpus. Model quality is evaluated using validation loss and the corresponding perplexity (PPL) ( PPL = e loss \\mathrm{PPL}=e^{\\text{loss}} ). System efficiency is measured by end-to-end training throughput (TFLOP/s per GPU) under different parallel settings. Downstream model capability is further evaluated using accuracy on CMMLU and C-Eval .",
+      "source": "https://arxiv.org/html/2611.04323v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0019",
+      "section": "Parallel configurations.",
+      "text": "We evaluate FP4Quant under three parallel regimes: TP, PP, and their combined MP configuration in large-scale distributed training. For each regime, we investigate micro-group sizes G ∈ 64,128,256,512 G\\in{64,128,256,512} and compare against two baselines: the uncompressed BF16 (Ring) and Tahquant , a representative method for activation communication compression in PP settings. Table 1: Downstream accuracy on CMMLU and C-Eval (valid) with G = 64 G=64 under different model-parallel configurations. Configuration Method CMMLU C-Eval (valid) BF16 (Ring) 0.5365 ± 0.0045 0.5365\\pm 0.0045 0.5215 ± 0.0133 0.5215\\pm 0.0133 TP FP4Quant 0.5287 ± 0.0045 0.5287\\pm 0.0045 0.4829 ± 0.0133 0.4829\\pm 0.0133 Tahquant 0.2530 ± 0.0040 0.2530\\pm 0.0040 0.2771 ± 0.0122 0.2771\\pm 0.0122 PP FP4Quant 0.5288 ± 0.0045 0.5288\\pm 0.0045 0.5342 ± 0.0133 0.5342\\pm 0.0133 Tahquant 0.5179 ± 0.0045 0.5179\\pm 0.0045 0.5186 ± 0.0133 0.5186\\pm 0.0133 MP FP4Quant 0.5301 ± 0.0045 0.5301\\pm 0.0045 0.5253 ± 0.0133 0.5253\\pm 0.0133 Tahquant 0.2534 ± 0.0040 0.2534\\pm 0.0040 0.2422 ± 0.0117 0.2422\\pm 0.0117",
+      "source": "https://arxiv.org/html/2611.04323v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0020",
+      "section": "4.2 Convergence and Model Quality",
+      "text": "To evaluate the convergence behavior and model quality of FP4Quant under ultra-low-bit communication compression, we measure the validation loss and perplexity across different micro-group sizes ( G ∈ { 64,128,256,512 } G\\in\\{64,128,256,512\\} ). Table 2 summarizes the final validation metrics, while Figure 5 presents the convergence curves over 10,000 10,000 iterations under TP and PP configurations. The results demonstrate that FP4Quant consistently outperforms Tahquant in preserving model quality under FP4 communication compression. Under TP, Tahquant suffers from severe accuracy degradation (loss 3.4848 3.4848 , PPL = 32.6163 \\mathrm{PPL}=32.6163 ), whereas FP4Quant with G = 64 G=64 achieves substantially lower loss ( 2.2306 2.2306 , PPL = 9.3050 \\mathrm{PPL}=9.3050 ) and maintains a stable convergence trajectory close to the full-precision baseline, as illustrated in Fig. 5 . Under PP, FP4Quant further demonstrates near-lossless performance (loss 2.1525 2.1525 , PPL = 8.6105 \\mathrm{PPL}=8.6105 ), matching BF16 accuracy and outperforming Tahquant. In addition, FP4Quant exhibits clear sensitivity to group size, where increasing G G leads to gradual degradation in TP and a sharp breakdown at large G G (e.g., G = 512 G=512 ) in both TP and PP. This trend suggests that overly coarse grouping introduces scale mismatch and amplifies quantization error. Nevertheless, with appropriately chosen group sizes (e.g., G ≤ 256 G\\leq 256 ), FP4Quant achieves an excellent balance between accuracy and communication efficiency and consistently delivers superior performance compared to Tahquant.",
+      "source": "https://arxiv.org/html/2611.04323v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0021",
+      "section": "4.3 Downstream Task Accuracy",
+      "text": "Training loss and downstream accuracy reflect different aspects of model performance: loss measures optimization convergence, whereas downstream tasks evaluate practical model capability. Although the two metrics are not strictly correlated, poor convergence or substantially higher loss than the baseline typically leads to degraded downstream performance. Table 1 reports evaluation results on CMMLU and C-Eval (valid) with G = 64 G=64 . FP4Quant consistently preserves downstream performance across model-parallel settings, achieving scores of 0.5287 / 0.4829 0.5287/0.4829 (TP), 0.5288 / 0.5342 0.5288/0.5342 (PP), and 0.5301 / 0.5253 0.5301/0.5253 (MP), compared with the BF16 baseline ( 0.5365 / 0.5215 0.5365/0.5215 ). Notably, under PP and MP configurations, FP4Quant matches or slightly exceeds BF16 on C-Eval, demonstrating strong capability preservation under ultra-low-bit compression. In contrast, TahQuant exhibits severe degradation under communication-intensive settings. Under TP and MP, its performance drops to near random-chance levels ( 0.2530 / 0.2771 0.2530/0.2771 and 0.2534 / 0.2422 0.2534/0.2422 ), while remaining stable only under PP. This suggests that coarse-grained 4-bit quantization is insufficient to maintain optimization quality, ultimately degrading downstream performance. Overall, FP4Quant achieves both consistently stable convergence and superior downstream fidelity compared with existing 4-bit communication methods. Table 2: Comparison of training accuracy and throughput between FP4Quant and baselines (BF16 and Tahquant) under TP4 and PP on Qwen-7B.",
+      "source": "https://arxiv.org/html/2611.04323v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0022",
+      "section": "4.3 Downstream Task Accuracy",
+      "text": "Method TP PP Loss ↓ \\downarrow PPL ↓ \\downarrow TFLOP/s ↑ \\uparrow Speedup ↑ \\uparrow Loss ↓ \\downarrow PPL ↓ \\downarrow TFLOP/s ↑ \\uparrow Speedup ↑ \\uparrow BF16 (Ring) 2.1505 8.5893 111.0 1.00 × \\times 2.1505 8.5893 189.1 1.00 × \\times Tahquant 3.4848 32.6163 197.4 1.78 × \\times 2.1653 8.7174 189.6 1.00 × \\times FP4Quant( G = 64 G=64 ) 2.2306 9.3050 155.3 1.40 × \\times 2.1525 8.6105 190.1 1.01 × \\times FP4Quant( G = 128 G=128 ) 2.4223 11.2713 171.2 1.54 × \\times 2.1552 8.6298 191.1 1.01 × \\times FP4Quant( G = 256 G=256 ) 3.0616 21.3613 173.3 1.56 × \\times 2.1626 8.6940 190.7 1.01 × \\times FP4Quant( G = 512 G=512 ) 3.3512 28.5368 172.6 1.55 × \\times 3.4270 30.7830 190.3 1.01 × \\times",
+      "source": "https://arxiv.org/html/2611.04323v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0023",
+      "section": "4.4 System Efficiency",
+      "text": "Table 2 shows that FP4Quant achieves a superior balance between training accuracy and throughput compared to BF16. Under TP, Tahquant attains the highest throughput (197.4 TFLOP/s/GPU, 1.78 × 1.78\\times ), but suffers from severe accuracy degradation, indicating that its aggressive quantization compromises training fidelity. In contrast, FP4Quant substantially improves model quality while still providing significant speedup. At G = 64 G=64 , FP4Quant reduces the loss to 2.2306 while achieving a 1.40 × 1.40\\times speedup over BF16, and continues to offer a favorable trade-off at larger group sizes. For example, at G = 256 G=256 , FP4Quant reaches 173.3 TFLOP/s/GPU while achieving significantly better accuracy than Tahquant. Although FP4Quant achieves lower throughput than Tahquant, it avoids severe accuracy degradation while delivering a better accuracy–efficiency trade-off. Under PP, where computation dominates execution and communication overhead is less significant, all methods achieve comparable throughput (189–191 TFLOP/s/GPU). FP4Quant reaches 190.1–191.1 TFLOP/s/GPU, closely matching the BF16 baseline (189.1 TFLOP/s/GPU) with up to 1.01 × 1.01\\times speedup, indicating that its quantization and scaling overhead is effectively hidden by computation. Unlike communication-bound TP training, PP offers limited acceleration potential because performance is primarily determined by computation throughput. Overall, FP4Quant enables efficient low-bit communication with substantial acceleration under TP while incurring negligible runtime overhead under PP, demonstrating its effectiveness across diverse parallel configurations.",
+      "source": "https://arxiv.org/html/2611.04323v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0024",
+      "section": "5 Conclusion and Future Work",
+      "text": "In this paper, we present FP4Quant, an efficient FP4-based communication compression framework for model-parallel LLM training. It integrates micro-grouped dual-scale quantization, warp-cooperative packing, and a hybrid FWHT-based pipeline to improve quantization fidelity and system efficiency. Experiments show that FP4Quant achieves up to 1.56× end-to-end throughput improvement while preserving convergence. Our evaluation focuses on Qwen-7B on a single-node eight-GPU H100 system. Future work will investigate scalability across model sizes and multi-node environments, adaptive precision strategies, and applications to heterogeneous systems, multimodal models, and reinforcement learning.",
+      "source": "https://arxiv.org/html/2611.04323v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0025",
+      "section": "Acknowledgements",
+      "text": "This work was supported by the National Natural Science Foundation of China through the Excellent Young Scientists Fund Program (Overseas) (Project No. E401470), the National Key Research and Development Program of China (Grant Nos. 2020YFA0907000 and 2025YFB30037002), the National Natural Science Foundation of China (Grant Nos. 62032023 and T2125013), and Ant Group. The AI-driven experiments, simulations, and model training were performed on the robotic AI-Scientist platform of the Chinese Academy of Sciences.",
+      "source": "https://arxiv.org/html/2611.04323v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0026",
+      "section": "References",
+      "text": "[1] F. Abecassis, A. Agrusa, D. Ahn, J. Alben, S. Alborghetti, M. Andersch, S. Arayandi, A. Bjorlin, A. Blakeman, E. Briones, et al. (2025) Pretraining large language models with nvfp4 . arXiv preprint arXiv:2509.25149 . Cited by: §1 , §2.2 , §2.3 . [2] A. F. Aji and K. Heafield (2017) Sparse communication for distributed gradient descent . In Proceedings of the 2017 Conference on Empirical Methods in Natural Language Processing , pp. 440–445 . External Links: Link , Document Cited by: §1 . [3] D. Alistarh, D. Grubic, J. Z. Li, R. Tomioka, and M. Vojnovic (2017) QSGD: communication-efficient sgd via gradient quantization and encoding . In Proceedings of the 31st International Conference on Neural Information Processing Systems , NIPS’17 , Red Hook, NY, USA , pp. 1707–1718 . External Links: ISBN 9781510860964 Cited by: §1 . [4] J. Bernstein, Y. Wang, K. Azizzadenesheli, and A. Anandkumar (2018) SignSGD: compressed optimisation for non-convex problems . External Links: 1802.04434 , Link Cited by: §1 . [5] T. Brown, B. Mann, N. Ryder, M. Subbiah, J. Kaplan, P. Dhariwal, A. Neelakantan, P. Shyam, G. Sastry, A. Askell, et al. (2020) Language models are few-shot learners (gpt-3) . arXiv preprint arXiv:2005.14165 75 . Cited by: §1 . [6] H. Cao, M. Chen, Y. Yang, R. Huang, F. Dong, J. Zhou, A. Chen, M. Dong, Y. Wang, J. Hou, Y. Cheng, F. Wu, F. Yang, T. Lu, N. Gu, and L. Shang (2025) Metis: training llms with fp4 quantization . External Links: 2509.00404 , Link Cited by: §1 , §2.2 . [7] R. Castro, A. Panferov, R. Tabesh, O. Sieberling, J. Chen, M. Nikdan, S. Ashkboos, and D. Alistarh (2026) Quartet: native fp4 training can be optimal for large language models . Advances in Neural Information Processing Systems 38 , pp. 43552–43572 . Cited by: §1 , §2.2 .",
+      "source": "https://arxiv.org/html/2611.04323v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0027",
+      "section": "References",
+      "text": "[8] A. Chowdhery, S. Narang, J. Devlin, M. Bosma, G. Mishra, A. Roberts, P. Barham, H. W. Chung, C. Sutton, S. Gehrmann, et al. (2022) Palm: scaling language modeling with pathways . arXiv preprint arXiv:2204.02311 . Cited by: §1 . [9] T. Dettmers, M. Lewis, Y. Belkada, and L. Zettlemoyer (2022) LLM.int8(): 8-bit matrix multiplication for transformers at scale . In Proceedings of the 36th International Conference on Neural Information Processing Systems , NIPS ’22 , Red Hook, NY, USA . External Links: ISBN 9781713871088 Cited by: §1 . [10] E. Frantar, S. Ashkboos, T. Hoefler, and D. Alistarh (2022) Gptq: accurate post-training quantization for generative pre-trained transformers . arXiv preprint arXiv:2210.17323 . Cited by: §1 . [11] G. He, Y. Cao, Y. He, T. Bai, K. Chen, K. Yuan, and B. Yuan (2026) TAH-quant: effective activation quantization in pipeline parallelism over slow network . External Links: 2506.01352 , Link Cited by: §1 , §2.2 . [12] J. Hoffmann, S. Borgeaud, A. Mensch, E. Buchatskaya, T. Cai, E. Rutherford, D. de Las Casas, L. A. Hendricks, J. Welbl, A. Clark, T. Hennigan, E. Noland, K. Millican, G. van den Driessche, B. Damoc, A. Guy, S. Osindero, K. Simonyan, E. Elsen, O. Vinyals, J. W. Rae, and L. Sifre (2022) Training compute-optimal large language models . In Proceedings of the 36th International Conference on Neural Information Processing Systems , NIPS ’22 , Red Hook, NY, USA . External Links: ISBN 9781713871088 Cited by: §1 .",
+      "source": "https://arxiv.org/html/2611.04323v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0028",
+      "section": "References",
+      "text": "[13] R. Hosoki, K. Sato, T. Endo, J. Bigot, and E. Audit (2026) Optimizing intra-layer parallel communication for llm training on systems with fully-connected mesh gpu topology . In Proceedings of the Supercomputing Asia and International Conference on High Performance Computing in Asia Pacific Region , SCA/HPCAsia ’26 , New York, NY, USA , pp. 328–339 . External Links: ISBN 9798400720673 , Link , Document Cited by: §1 . [14] Y. Huang, Y. Cheng, A. Bapna, O. Firat, M. X. Chen, D. Chen, H. Lee, J. Ngiam, Q. V. Le, Y. Wu, and Z. Chen (2019) GPipe: efficient training of giant neural networks using pipeline parallelism . External Links: 1811.06965 , Link Cited by: §2.1 . [15] J. Jia, C. Xie, H. Lu, D. Wang, H. Feng, C. Zhang, B. Sun, H. Lin, Z. Zhang, X. Liu, and D. Tao (2024) SDP4Bit: toward 4-bit communication quantization in sharded data parallelism for llm training . In Proceedings of the 38th International Conference on Neural Information Processing Systems , NIPS ’24 , Red Hook, NY, USA . External Links: ISBN 9798331314385 Cited by: §1 , §1 , §2.2 . [16] A. K. Kamath, A. Krishnamurthy, M. Canini, and S. Peter (2026) Reducing the gpu memory bottleneck with lossless compression for ml . In Proceedings of the 21st European Conference on Computer Systems , EUROSYS ’26 , New York, NY, USA , pp. 899–918 . External Links: ISBN 9798400722127 , Link , Document Cited by: §1 . [17] V. Korthikanti, J. Casper, S. Lym, L. McAfee, M. Andersch, M. Shoeybi, and B. Catanzaro (2022) Reducing activation recomputation in large transformer models . External Links: 2205.05198 , Link Cited by: §1 .",
+      "source": "https://arxiv.org/html/2611.04323v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0029",
+      "section": "References",
+      "text": "[18] V. Korthikanti, J. Casper, S. Lym, L. McAfee, M. Andersch, M. Shoeybi, and B. Catanzaro (2022) Reducing activation recomputation in large transformer models . External Links: 2205.05198 , Link Cited by: §2.1 . [19] M. Liu, X. Liu, X. Tian, B. Lu, S. Lyu, S. Yin, W. Huang, Z. Wei, H. Zhao, G. Tan, and D. Tao (2026) TACO: efficient communication compression of intermediate tensors for scalable tensor-parallel llm training . In Proceedings of the 35th International Symposium on High-Performance Parallel and Distributed Computing , HPDC ’26 , New York, NY, USA , pp. 235–248 . External Links: ISBN 9798400726408 , Link , Document Cited by: §1 , §1 , §2.1 . [20] D. Narayanan, M. Shoeybi, J. Casper, P. LeGresley, M. Patwary, V. Korthikanti, D. Vainbrand, P. Kashinkunti, J. Bernauer, B. Catanzaro, A. Phanishayee, and M. Zaharia (2021) Efficient large-scale language model training on gpu clusters using megatron-lm . In Proceedings of the International Conference for High Performance Computing, Networking, Storage and Analysis , SC ’21 , New York, NY, USA . External Links: ISBN 9781450384421 , Link , Document Cited by: §1 . [21] H. Peng, K. Wu, Y. Wei, G. Zhao, Y. Yang, Z. Liu, Y. Xiong, Z. Yang, B. Ni, J. Hu, R. Li, M. Zhang, C. Li, J. Ning, R. Wang, Z. Zhang, S. Liu, J. Chau, H. Hu, and P. Cheng (2023) FP8-lm: training fp8 large language models . External Links: 2310.18313 , Link Cited by: §1 , §2.1 . [22] S. Rajbhandari, J. Rasley, O. Ruwase, and Y. He (2020) ZeRO: memory optimizations toward training trillion parameter models . In Proceedings of the International Conference for High Performance Computing, Networking, Storage and Analysis , SC ’20 . External Links: ISBN 9781728199986 Cited by: §1 .",
+      "source": "https://arxiv.org/html/2611.04323v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0030",
+      "section": "References",
+      "text": "[23] M. Shoeybi, M. Patwary, R. Puri, P. LeGresley, J. Casper, and B. Catanzaro (2020) Megatron-lm: training multi-billion parameter language models using model parallelism . External Links: 1909.08053 , Link Cited by: §1 , §2.1 . [24] S. U. Stich (2019) Local sgd converges fast and communicates little . External Links: 1805.09767 , Link Cited by: §1 . [25] R. Wang, Y. Gong, X. Liu, G. Zhao, Z. Yang, B. Guo, Z. Zha, and P. Cheng (2025) Optimizing large language model training using fp4 quantization . External Links: 2501.17116 , Link Cited by: §2.2 . [26] J. Wangni, J. Wang, J. Liu, and T. Zhang (2018) Gradient sparsification for communication-efficient distributed optimization . In Proceedings of the 32nd International Conference on Neural Information Processing Systems , NIPS’18 , Red Hook, NY, USA , pp. 1306–1316 . Cited by: §1 . [27] W. Wen, C. Xu, F. Yan, C. Wu, Y. Wang, Y. Chen, and H. Li (2017) TernGrad: ternary gradients to reduce communication in distributed deep learning . In Proceedings of the 31st International Conference on Neural Information Processing Systems , NIPS’17 , Red Hook, NY, USA , pp. 1508–1518 . External Links: ISBN 9781510860964 Cited by: §1 . [28] X. Wu, C. Li, R. Y. Aminabadi, Z. Yao, and Y. He (2023) Understanding int4 quantization for language models: latency speedup, composability, and failure cases . In Proceedings of the 40th International Conference on Machine Learning , ICML’23 . Cited by: §1 . [29] H. Xi, H. Cai, L. Zhu, Y. Lu, K. Keutzer, J. Chen, and S. Han (2025) COAT: compressing optimizer states and activations for memory-efficient fp8 training . In International Conference on Learning Representations , Vol. 2025 , pp. 42989–43011 . Cited by: §1 .",
+      "source": "https://arxiv.org/html/2611.04323v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0031",
+      "section": "References",
+      "text": "[30] L. Zhang, W. Fei, W. Wu, Y. He, Z. Lou, and H. Zhou (2023) Dual grained quantization: efficient fine-grained quantization for llm . External Links: 2310.04836 , Link Cited by: §1 . [31] J. Zhou, D. Tang, R. Fu, B. Hu, H. Xu, Y. Wang, Z. Pei, Z. Su, L. Liu, X. Zhang, and W. Zhang (2025) Towards efficient pre-training: exploring fp4 precision in large language models . External Links: 2502.11458 , Link Cited by: §2.2 .",
+      "source": "https://arxiv.org/html/2611.04323v1",
+      "offset": 0
+    }
+  ],
+  "links": [
+    {
+      "href": "https://orcid.org/0009-0006-7390-0220",
+      "text": "",
+      "section": "FP4Quant: Efficient 4-Bit Communication Compression for Model-Parallel LLM Training",
+      "context": "Man Liu",
+      "url": "https://orcid.org/0009-0006-7390-0220"
+    },
+    {
+      "href": "https://orcid.org/0009-0006-9410-5365",
+      "text": "",
+      "section": "FP4Quant: Efficient 4-Bit Communication Compression for Model-Parallel LLM Training",
+      "context": "Man Liu Affiliation: University of Chinese Academy of Sciences, Beijing, China Xingchen Liu",
+      "url": "https://orcid.org/0009-0006-9410-5365"
+    },
+    {
+      "href": "mailto:liuman24@mails.ucas.ac.cn,%20liuxingchen232@mails.ucas.ac.cn,%20zhaohairui@ict.ac.cn,%20tgm@ict.ac.cn,%20taodingwen@ict.ac.cn",
+      "text": "liuman24@mails.ucas.ac.cn, liuxingchen232@mails.ucas.ac.cn, zhaohairui@ict.ac.cn, tgm@ict.ac.cn, taodingwen@ict.ac.cn",
+      "section": "FP4Quant: Efficient 4-Bit Communication Compression for Model-Parallel LLM Training",
+      "context": "Man Liu Affiliation: University of Chinese Academy of Sciences, Beijing, China Xingchen Liu Affiliation: Institute of Computing Technology, Chinese Academy of Sciences, Beijing, China E-mail liuman24@mails.ucas.ac.cn, liuxingchen232@mails.ucas.ac.cn, zhaohairui@ict.ac.cn, tgm@ict.ac.cn, taodingwen@ict.ac.cn",
+      "url": "mailto:liuman24@mails.ucas.ac.cn,%20liuxingchen232@mails.ucas.ac.cn,%20zhaohairui@ict.ac.cn,%20tgm@ict.ac.cn,%20taodingwen@ict.ac.cn"
+    },
+    {
+      "href": "https://orcid.org/0009-0008-7081-5172",
+      "text": "",
+      "section": "FP4Quant: Efficient 4-Bit Communication Compression for Model-Parallel LLM Training",
+      "context": "Man Liu Affiliation: University of Chinese Academy of Sciences, Beijing, China Xingchen Liu Affiliation: Institute of Computing Technology, Chinese Academy of Sciences, Beijing, China E-mail liuman24@mails.ucas.ac.cn, liuxingchen232@mails.ucas.ac.cn, zhaohairui@ict.ac.cn, tgm@ict.ac.cn, taodingwen@ict.ac.cn Hairui Zhao",
+      "url": "https://orcid.org/0009-0008-7081-5172"
+    },
+    {
+      "href": "mailto:liuman24@mails.ucas.ac.cn,%20liuxingchen232@mails.ucas.ac.cn,%20zhaohairui@ict.ac.cn,%20tgm@ict.ac.cn,%20taodingwen@ict.ac.cn",
+      "text": "liuman24@mails.ucas.ac.cn, liuxingchen232@mails.ucas.ac.cn, zhaohairui@ict.ac.cn, tgm@ict.ac.cn, taodingwen@ict.ac.cn",
+      "section": "FP4Quant: Efficient 4-Bit Communication Compression for Model-Parallel LLM Training",
+      "context": "Man Liu Affiliation: University of Chinese Academy of Sciences, Beijing, China Xingchen Liu Affiliation: Institute of Computing Technology, Chinese Academy of Sciences, Beijing, China E-mail liuman24@mails.ucas.ac.cn, liuxingchen232@mails.ucas.ac.cn, zhaohairui@ict.ac.cn, tgm@ict.ac.cn, taodingwen@ict.ac.cn Hairui Zhao Affiliation: Institute of Computing Technology, Chinese Academy of Sciences, Beijing, China E-mail liuman24@mails.ucas.ac.cn, liuxingchen232@mails.ucas.ac.cn, zhaohairui@ict.ac.cn, tgm@ict.ac.cn, taodingwen@ict.ac.cn",
+      "url": "mailto:liuman24@mails.ucas.ac.cn,%20liuxingchen232@mails.ucas.ac.cn,%20zhaohairui@ict.ac.cn,%20tgm@ict.ac.cn,%20taodingwen@ict.ac.cn"
+    },
+    {
+      "href": "https://orcid.org/0000-0002-6361-5948",
+      "text": "",
+      "section": "FP4Quant: Efficient 4-Bit Communication Compression for Model-Parallel LLM Training",
+      "context": "Man Liu Affiliation: University of Chinese Academy of Sciences, Beijing, China Xingchen Liu Affiliation: Institute of Computing Technology, Chinese Academy of Sciences, Beijing, China E-mail liuman24@mails.ucas.ac.cn, liuxingchen232@mails.ucas.ac.cn, zhaohairui@ict.ac.cn, tgm@ict.ac.cn, taodingwen@ict.ac.cn Hairui Zhao Affiliation: Institute of Computing Technology, Chinese Academy of Sciences, Beijing, China E-mail liuman24@mails.ucas.ac.cn, liuxingchen232@mails.ucas.ac.cn, zhaohairui@ict.ac.cn, tgm@ict.ac.cn, taodingwen@ict.ac.cn Guangming Tan",
+      "url": "https://orcid.org/0000-0002-6361-5948"
+    },
+    {
+      "href": "mailto:liuman24@mails.ucas.ac.cn,%20liuxingchen232@mails.ucas.ac.cn,%20zhaohairui@ict.ac.cn,%20tgm@ict.ac.cn,%20taodingwen@ict.ac.cn",
+      "text": "liuman24@mails.ucas.ac.cn, liuxingchen232@mails.ucas.ac.cn, zhaohairui@ict.ac.cn, tgm@ict.ac.cn, taodingwen@ict.ac.cn",
+      "section": "FP4Quant: Efficient 4-Bit Communication Compression for Model-Parallel LLM Training",
+      "context": " Beijing, China E-mail liuman24@mails.ucas.ac.cn, liuxingchen232@mails.ucas.ac.cn, zhaohairui@ict.ac.cn, tgm@ict.ac.cn, taodingwen@ict.ac.cn Hairui Zhao Affiliation: Institute of Computing Technology, Chinese Academy of Sciences, Beijing, China E-mail liuman24@mails.ucas.ac.cn, liuxingchen232@mails.ucas.ac.cn, zhaohairui@ict.ac.cn, tgm@ict.ac.cn, taodingwen@ict.ac.cn Guangming Tan Affiliation: Institute of Computing Technology, Chinese Academy of Sciences, Beijing, China E-mail liuman24@mails.ucas.ac.cn, liuxingchen232@mails.ucas.ac.cn, zhaohairui@ict.ac.cn, tgm@ict.ac.cn, taodingwen@ict.ac.cn",
+      "url": "mailto:liuman24@mails.ucas.ac.cn,%20liuxingchen232@mails.ucas.ac.cn,%20zhaohairui@ict.ac.cn,%20tgm@ict.ac.cn,%20taodingwen@ict.ac.cn"
+    },
+    {
+      "href": "https://orcid.org/0000-0001-5422-4497",
+      "text": "",
+      "section": "FP4Quant: Efficient 4-Bit Communication Compression for Model-Parallel LLM Training",
+      "context": "ina E-mail liuman24@mails.ucas.ac.cn, liuxingchen232@mails.ucas.ac.cn, zhaohairui@ict.ac.cn, tgm@ict.ac.cn, taodingwen@ict.ac.cn Hairui Zhao Affiliation: Institute of Computing Technology, Chinese Academy of Sciences, Beijing, China E-mail liuman24@mails.ucas.ac.cn, liuxingchen232@mails.ucas.ac.cn, zhaohairui@ict.ac.cn, tgm@ict.ac.cn, taodingwen@ict.ac.cn Guangming Tan Affiliation: Institute of Computing Technology, Chinese Academy of Sciences, Beijing, China E-mail liuman24@mails.ucas.ac.cn, liuxingchen232@mails.ucas.ac.cn, zhaohairui@ict.ac.cn, tgm@ict.ac.cn, taodingwen@ict.ac.cn Dingwen Tao",
+      "url": "https://orcid.org/0000-0001-5422-4497"
+    },
+    {
+      "href": "mailto:liuman24@mails.ucas.ac.cn,%20liuxingchen232@mails.ucas.ac.cn,%20zhaohairui@ict.ac.cn,%20tgm@ict.ac.cn,%20taodingwen@ict.ac.cn",
+      "text": "liuman24@mails.ucas.ac.cn, liuxingchen232@mails.ucas.ac.cn, zhaohairui@ict.ac.cn, tgm@ict.ac.cn, taodingwen@ict.ac.cn",
+      "section": "FP4Quant: Efficient 4-Bit Communication Compression for Model-Parallel LLM Training",
+      "context": " Beijing, China E-mail liuman24@mails.ucas.ac.cn, liuxingchen232@mails.ucas.ac.cn, zhaohairui@ict.ac.cn, tgm@ict.ac.cn, taodingwen@ict.ac.cn Guangming Tan Affiliation: Institute of Computing Technology, Chinese Academy of Sciences, Beijing, China E-mail liuman24@mails.ucas.ac.cn, liuxingchen232@mails.ucas.ac.cn, zhaohairui@ict.ac.cn, tgm@ict.ac.cn, taodingwen@ict.ac.cn Dingwen Tao Affiliation: Institute of Computing Technology, Chinese Academy of Sciences, Beijing, China E-mail liuman24@mails.ucas.ac.cn, liuxingchen232@mails.ucas.ac.cn, zhaohairui@ict.ac.cn, tgm@ict.ac.cn, taodingwen@ict.ac.cn",
+      "url": "mailto:liuman24@mails.ucas.ac.cn,%20liuxingchen232@mails.ucas.ac.cn,%20zhaohairui@ict.ac.cn,%20tgm@ict.ac.cn,%20taodingwen@ict.ac.cn"
+    },
+    {
+      "href": "#bib.bib1",
+      "text": "5",
+      "section": "1 Introduction",
+      "context": "In recent years, large language models (LLMs) have advanced rapidly, with parameter scales growing exponentially to reach the trillion-parameter regime [ 5",
+      "url": "https://arxiv.org/html/2611.04323v1#bib.bib1"
+    },
+    {
+      "href": "#bib.bib2",
+      "text": "8",
+      "section": "1 Introduction",
+      "context": "In recent years, large language models (LLMs) have advanced rapidly, with parameter scales growing exponentially to reach the trillion-parameter regime [ 5 , 8",
+      "url": "https://arxiv.org/html/2611.04323v1#bib.bib2"
+    },
+    {
+      "href": "#bib.bib3",
+      "text": "12",
+      "section": "1 Introduction",
+      "context": "In recent years, large language models (LLMs) have advanced rapidly, with parameter scales growing exponentially to reach the trillion-parameter regime [ 5 , 8 , 12",
+      "url": "https://arxiv.org/html/2611.04323v1#bib.bib3"
+    },
+    {
+      "href": "#bib.bib4",
+      "text": "20",
+      "section": "1 Introduction",
+      "context": "In recent years, large language models (LLMs) have advanced rapidly, with parameter scales growing exponentially to reach the trillion-parameter regime [ 5 , 8 , 12 ] . Training such models requires hundreds to thousands of GPUs, making model parallelism(MP) essential for efficiently distributing computational workloads across devices, typically through tensor parallelism (TP) and pipeline parallelism (PP) [ 20",
+      "url": "https://arxiv.org/html/2611.04323v1#bib.bib4"
+    },
+    {
+      "href": "#bib.bib5",
+      "text": "17",
+      "section": "1 Introduction",
+      "context": "In recent years, large language models (LLMs) have advanced rapidly, with parameter scales growing exponentially to reach the trillion-parameter regime [ 5 , 8 , 12 ] . Training such models requires hundreds to thousands of GPUs, making model parallelism(MP) essential for efficiently distributing computational workloads across devices, typically through tensor parallelism (TP) and pipeline parallelism (PP) [ 20 , 17",
+      "url": "https://arxiv.org/html/2611.04323v1#bib.bib5"
+    },
+    {
+      "href": "#bib.bib6",
+      "text": "22",
+      "section": "1 Introduction",
+      "context": " large language models (LLMs) have advanced rapidly, with parameter scales growing exponentially to reach the trillion-parameter regime [ 5 , 8 , 12 ] . Training such models requires hundreds to thousands of GPUs, making model parallelism(MP) essential for efficiently distributing computational workloads across devices, typically through tensor parallelism (TP) and pipeline parallelism (PP) [ 20 , 17 ] . As model sizes continue to increase, communication overhead, particularly AllReduce operations in TP, has increasingly become a critical performance bottleneck in distributed LLM training [ 22",
+      "url": "https://arxiv.org/html/2611.04323v1#bib.bib6"
+    },
+    {
+      "href": "#bib.bib4",
+      "text": "20",
+      "section": "1 Introduction",
+      "context": "e language models (LLMs) have advanced rapidly, with parameter scales growing exponentially to reach the trillion-parameter regime [ 5 , 8 , 12 ] . Training such models requires hundreds to thousands of GPUs, making model parallelism(MP) essential for efficiently distributing computational workloads across devices, typically through tensor parallelism (TP) and pipeline parallelism (PP) [ 20 , 17 ] . As model sizes continue to increase, communication overhead, particularly AllReduce operations in TP, has increasingly become a critical performance bottleneck in distributed LLM training [ 22 , 20",
+      "url": "https://arxiv.org/html/2611.04323v1#bib.bib4"
+    },
+    {
+      "href": "#bib.bib7",
+      "text": "23",
+      "section": "1 Introduction",
+      "context": "guage models (LLMs) have advanced rapidly, with parameter scales growing exponentially to reach the trillion-parameter regime [ 5 , 8 , 12 ] . Training such models requires hundreds to thousands of GPUs, making model parallelism(MP) essential for efficiently distributing computational workloads across devices, typically through tensor parallelism (TP) and pipeline parallelism (PP) [ 20 , 17 ] . As model sizes continue to increase, communication overhead, particularly AllReduce operations in TP, has increasingly become a critical performance bottleneck in distributed LLM training [ 22 , 20 , 23",
+      "url": "https://arxiv.org/html/2611.04323v1#bib.bib7"
+    },
+    {
+      "href": "#bib.bib8",
+      "text": "13",
+      "section": "1 Introduction",
+      "context": " models (LLMs) have advanced rapidly, with parameter scales growing exponentially to reach the trillion-parameter regime [ 5 , 8 , 12 ] . Training such models requires hundreds to thousands of GPUs, making model parallelism(MP) essential for efficiently distributing computational workloads across devices, typically through tensor parallelism (TP) and pipeline parallelism (PP) [ 20 , 17 ] . As model sizes continue to increase, communication overhead, particularly AllReduce operations in TP, has increasingly become a critical performance bottleneck in distributed LLM training [ 22 , 20 , 23 , 13",
+      "url": "https://arxiv.org/html/2611.04323v1#bib.bib8"
+    },
+    {
+      "href": "#bib.bib9",
+      "text": "15",
+      "section": "1 Introduction",
+      "context": "To mitigate communication bottlenecks, a variety of optimization approaches have been proposed and actively explored in recent years. For DP, gradient compression techniques, including quantization [ 15",
+      "url": "https://arxiv.org/html/2611.04323v1#bib.bib9"
+    },
+    {
+      "href": "#bib.bib10",
+      "text": "3",
+      "section": "1 Introduction",
+      "context": "To mitigate communication bottlenecks, a variety of optimization approaches have been proposed and actively explored in recent years. For DP, gradient compression techniques, including quantization [ 15 , 3",
+      "url": "https://arxiv.org/html/2611.04323v1#bib.bib10"
+    },
+    {
+      "href": "#bib.bib11",
+      "text": "4",
+      "section": "1 Introduction",
+      "context": "To mitigate communication bottlenecks, a variety of optimization approaches have been proposed and actively explored in recent years. For DP, gradient compression techniques, including quantization [ 15 , 3 , 4",
+      "url": "https://arxiv.org/html/2611.04323v1#bib.bib11"
+    },
+    {
+      "href": "#bib.bib12",
+      "text": "27",
+      "section": "1 Introduction",
+      "context": "To mitigate communication bottlenecks, a variety of optimization approaches have been proposed and actively explored in recent years. For DP, gradient compression techniques, including quantization [ 15 , 3 , 4 , 27",
+      "url": "https://arxiv.org/html/2611.04323v1#bib.bib12"
+    },
+    {
+      "href": "#bib.bib14",
+      "text": "2",
+      "section": "1 Introduction",
+      "context": "To mitigate communication bottlenecks, a variety of optimization approaches have been proposed and actively explored in recent years. For DP, gradient compression techniques, including quantization [ 15 , 3 , 4 , 27 ] , sparsification [ 2",
+      "url": "https://arxiv.org/html/2611.04323v1#bib.bib14"
+    },
+    {
+      "href": "#bib.bib13",
+      "text": "26",
+      "section": "1 Introduction",
+      "context": "To mitigate communication bottlenecks, a variety of optimization approaches have been proposed and actively explored in recent years. For DP, gradient compression techniques, including quantization [ 15 , 3 , 4 , 27 ] , sparsification [ 2 , 26",
+      "url": "https://arxiv.org/html/2611.04323v1#bib.bib13"
+    },
+    {
+      "href": "#bib.bib15",
+      "text": "24",
+      "section": "1 Introduction",
+      "context": "To mitigate communication bottlenecks, a variety of optimization approaches have been proposed and actively explored in recent years. For DP, gradient compression techniques, including quantization [ 15 , 3 , 4 , 27 ] , sparsification [ 2 , 26 ] , and local accumulation [ 24",
+      "url": "https://arxiv.org/html/2611.04323v1#bib.bib15"
+    },
+    {
+      "href": "#bib.bib16",
+      "text": "19",
+      "section": "1 Introduction",
+      "context": "To mitigate communication bottlenecks, a variety of optimization approaches have been proposed and actively explored in recent years. For DP, gradient compression techniques, including quantization [ 15 , 3 , 4 , 27 ] , sparsification [ 2 , 26 ] , and local accumulation [ 24 ] , have been extensively studied to reduce communication costs. For TP, frameworks such as TACO [ 19",
+      "url": "https://arxiv.org/html/2611.04323v1#bib.bib16"
+    },
+    {
+      "href": "#bib.bib18",
+      "text": "21",
+      "section": "1 Introduction",
+      "context": "To mitigate communication bottlenecks, a variety of optimization approaches have been proposed and actively explored in recent years. For DP, gradient compression techniques, including quantization [ 15 , 3 , 4 , 27 ] , sparsification [ 2 , 26 ] , and local accumulation [ 24 ] , have been extensively studied to reduce communication costs. For TP, frameworks such as TACO [ 19 ] demonstrate that adaptive FP8-based compression can significantly reduce communication overhead while maintaining near-lossless training accuracy. More broadly, FP8-based methods (e.g., FP8-LM [ 21",
+      "url": "https://arxiv.org/html/2611.04323v1#bib.bib18"
+    },
+    {
+      "href": "#bib.bib19",
+      "text": "29",
+      "section": "1 Introduction",
+      "context": "To mitigate communication bottlenecks, a variety of optimization approaches have been proposed and actively explored in recent years. For DP, gradient compression techniques, including quantization [ 15 , 3 , 4 , 27 ] , sparsification [ 2 , 26 ] , and local accumulation [ 24 ] , have been extensively studied to reduce communication costs. For TP, frameworks such as TACO [ 19 ] demonstrate that adaptive FP8-based compression can significantly reduce communication overhead while maintaining near-lossless training accuracy. More broadly, FP8-based methods (e.g., FP8-LM [ 21 ] and COAT [ 29",
+      "url": "https://arxiv.org/html/2611.04323v1#bib.bib19"
+    },
+    {
+      "href": "#bib.bib20",
+      "text": "9",
+      "section": "1 Introduction",
+      "context": "However, the limited compression ratio of FP8 is often insufficient to fully alleviate communication bottlenecks at scale, motivating more aggressive low-bit approaches in distributed settings. While 4-bit quantization offers the potential for substantially higher compression, it introduces fundamental challenges beyond simple precision scaling [ 9",
+      "url": "https://arxiv.org/html/2611.04323v1#bib.bib20"
+    },
+    {
+      "href": "#bib.bib21",
+      "text": "10",
+      "section": "1 Introduction",
+      "context": "However, the limited compression ratio of FP8 is often insufficient to fully alleviate communication bottlenecks at scale, motivating more aggressive low-bit approaches in distributed settings. While 4-bit quantization offers the potential for substantially higher compression, it introduces fundamental challenges beyond simple precision scaling [ 9 , 10",
+      "url": "https://arxiv.org/html/2611.04323v1#bib.bib21"
+    },
+    {
+      "href": "#bib.bib22",
+      "text": "6",
+      "section": "1 Introduction",
+      "context": "However, the limited compression ratio of FP8 is often insufficient to fully alleviate communication bottlenecks at scale, motivating more aggressive low-bit approaches in distributed settings. While 4-bit quantization offers the potential for substantially higher compression, it introduces fundamental challenges beyond simple precision scaling [ 9 , 10 ] . Recent efforts have explored FP4 techniques for model computation [ 6",
+      "url": "https://arxiv.org/html/2611.04323v1#bib.bib22"
+    },
+    {
+      "href": "#bib.bib23",
+      "text": "7",
+      "section": "1 Introduction",
+      "context": "However, the limited compression ratio of FP8 is often insufficient to fully alleviate communication bottlenecks at scale, motivating more aggressive low-bit approaches in distributed settings. While 4-bit quantization offers the potential for substantially higher compression, it introduces fundamental challenges beyond simple precision scaling [ 9 , 10 ] . Recent efforts have explored FP4 techniques for model computation [ 6 , 7",
+      "url": "https://arxiv.org/html/2611.04323v1#bib.bib23"
+    },
+    {
+      "href": "#bib.bib24",
+      "text": "1",
+      "section": "1 Introduction",
+      "context": "However, the limited compression ratio of FP8 is often insufficient to fully alleviate communication bottlenecks at scale, motivating more aggressive low-bit approaches in distributed settings. While 4-bit quantization offers the potential for substantially higher compression, it introduces fundamental challenges beyond simple precision scaling [ 9 , 10 ] . Recent efforts have explored FP4 techniques for model computation [ 6 , 7 , 1",
+      "url": "https://arxiv.org/html/2611.04323v1#bib.bib24"
+    },
+    {
+      "href": "#bib.bib9",
+      "text": "15",
+      "section": "1 Introduction",
+      "context": "However, the limited compression ratio of FP8 is often insufficient to fully alleviate communication bottlenecks at scale, motivating more aggressive low-bit approaches in distributed settings. While 4-bit quantization offers the potential for substantially higher compression, it introduces fundamental challenges beyond simple precision scaling [ 9 , 10 ] . Recent efforts have explored FP4 techniques for model computation [ 6 , 7 , 1 ] and low-bit communication in distributed training [ 15",
+      "url": "https://arxiv.org/html/2611.04323v1#bib.bib9"
+    },
+    {
+      "href": "#bib.bib17",
+      "text": "11",
+      "section": "1 Introduction",
+      "context": "However, the limited compression ratio of FP8 is often insufficient to fully alleviate communication bottlenecks at scale, motivating more aggressive low-bit approaches in distributed settings. While 4-bit quantization offers the potential for substantially higher compression, it introduces fundamental challenges beyond simple precision scaling [ 9 , 10 ] . Recent efforts have explored FP4 techniques for model computation [ 6 , 7 , 1 ] and low-bit communication in distributed training [ 15 , 11",
+      "url": "https://arxiv.org/html/2611.04323v1#bib.bib17"
+    },
+    {
+      "href": "#bib.bib25",
+      "text": "28",
+      "section": "1 Introduction",
+      "context": "Despite its potential to reduce communication overhead, directly applying coarse-grained 4-bit quantization to model-parallel communication faces three key challenges. First, FP4’s narrow dynamic range causes long-tail values to overflow and near-zero values to round to zero, distorting gradient directions and destabilizing early-stage training [ 28",
+      "url": "https://arxiv.org/html/2611.04323v1#bib.bib25"
+    },
+    {
+      "href": "#bib.bib16",
+      "text": "19",
+      "section": "1 Introduction",
+      "context": "Despite its potential to reduce communication overhead, directly applying coarse-grained 4-bit quantization to model-parallel communication faces three key challenges. First, FP4’s narrow dynamic range causes long-tail values to overflow and near-zero values to round to zero, distorting gradient directions and destabilizing early-stage training [ 28 , 19",
+      "url": "https://arxiv.org/html/2611.04323v1#bib.bib16"
+    },
+    {
+      "href": "#bib.bib26",
+      "text": "16",
+      "section": "1 Introduction",
+      "context": "Despite its potential to reduce communication overhead, directly applying coarse-grained 4-bit quantization to model-parallel communication faces three key challenges. First, FP4’s narrow dynamic range causes long-tail values to overflow and near-zero values to round to zero, distorting gradient directions and destabilizing early-stage training [ 28 , 19 ] . Second, sub-byte storage requires packing two 4-bit values per byte, while naive packing incurs additional data movement and bit-manipulation overhead, limiting communication efficiency [ 16",
+      "url": "https://arxiv.org/html/2611.04323v1#bib.bib26"
+    },
+    {
+      "href": "#bib.bib27",
+      "text": "30",
+      "section": "1 Introduction",
+      "context": "challenges. First, FP4’s narrow dynamic range causes long-tail values to overflow and near-zero values to round to zero, distorting gradient directions and destabilizing early-stage training [ 28 , 19 ] . Second, sub-byte storage requires packing two 4-bit values per byte, while naive packing incurs additional data movement and bit-manipulation overhead, limiting communication efficiency [ 16 ] . Third, reducing 4-bit quantization error requires fine-grained quantization, but finer granularity increases scaling-factor computation, potentially making quantization itself a system bottleneck [ 30",
+      "url": "https://arxiv.org/html/2611.04323v1#bib.bib27"
+    },
+    {
+      "href": "#S1.F1",
+      "text": "1",
+      "section": "2.1 Model-Parallel LLM Training",
+      "context": "Model parallelism, including TP and PP, is widely adopted in large-scale LLM training to distribute computation and model parameters across GPUs. As shown in Fig. 1",
+      "url": "https://arxiv.org/html/2611.04323v1#S1.F1"
+    },
+    {
+      "href": "#bib.bib7",
+      "text": "23",
+      "section": "2.1 Model-Parallel LLM Training",
+      "context": "Model parallelism, including TP and PP, is widely adopted in large-scale LLM training to distribute computation and model parameters across GPUs. As shown in Fig. 1 , TP partitions individual layers across devices and relies on frequent collective communication operations (e.g., AllReduce) to exchange intermediate tensors [ 23",
+      "url": "https://arxiv.org/html/2611.04323v1#bib.bib7"
+    },
+    {
+      "href": "#bib.bib28",
+      "text": "18",
+      "section": "2.1 Model-Parallel LLM Training",
+      "context": "Model parallelism, including TP and PP, is widely adopted in large-scale LLM training to distribute computation and model parameters across GPUs. As shown in Fig. 1 , TP partitions individual layers across devices and relies on frequent collective communication operations (e.g., AllReduce) to exchange intermediate tensors [ 23 ] , leading to substantial overhead as model size and the degree of parallelism increase [ 18",
+      "url": "https://arxiv.org/html/2611.04323v1#bib.bib28"
+    },
+    {
+      "href": "#bib.bib29",
+      "text": "14",
+      "section": "2.1 Model-Parallel LLM Training",
+      "context": "uding TP and PP, is widely adopted in large-scale LLM training to distribute computation and model parameters across GPUs. As shown in Fig. 1 , TP partitions individual layers across devices and relies on frequent collective communication operations (e.g., AllReduce) to exchange intermediate tensors [ 23 ] , leading to substantial overhead as model size and the degree of parallelism increase [ 18 ] . In contrast, PP divides the model into stages and transfers activations and gradients between them, where communication efficiency directly affects pipeline utilization and overall throughput [ 14",
+      "url": "https://arxiv.org/html/2611.04323v1#bib.bib29"
+    },
+    {
+      "href": "#bib.bib18",
+      "text": "21",
+      "section": "2.1 Model-Parallel LLM Training",
+      "context": "l layers across devices and relies on frequent collective communication operations (e.g., AllReduce) to exchange intermediate tensors [ 23 ] , leading to substantial overhead as model size and the degree of parallelism increase [ 18 ] . In contrast, PP divides the model into stages and transfers activations and gradients between them, where communication efficiency directly affects pipeline utilization and overall throughput [ 14 ] . To alleviate these costs, recent studies have explored low-precision compression techniques to reduce communication volume while preserving training accuracy [ 21",
+      "url": "https://arxiv.org/html/2611.04323v1#bib.bib18"
+    },
+    {
+      "href": "#bib.bib16",
+      "text": "19",
+      "section": "2.1 Model-Parallel LLM Training",
+      "context": "ers across devices and relies on frequent collective communication operations (e.g., AllReduce) to exchange intermediate tensors [ 23 ] , leading to substantial overhead as model size and the degree of parallelism increase [ 18 ] . In contrast, PP divides the model into stages and transfers activations and gradients between them, where communication efficiency directly affects pipeline utilization and overall throughput [ 14 ] . To alleviate these costs, recent studies have explored low-precision compression techniques to reduce communication volume while preserving training accuracy [ 21 , 19",
+      "url": "https://arxiv.org/html/2611.04323v1#bib.bib16"
+    },
+    {
+      "href": "#bib.bib22",
+      "text": "6",
+      "section": "2.2 Low-Precision Compression for LLM Training",
+      "context": "Recent studies have explored 4-bit floating-point quantization to improve the efficiency of large-scale LLM training. METIS [ 6",
+      "url": "https://arxiv.org/html/2611.04323v1#bib.bib22"
+    },
+    {
+      "href": "#bib.bib23",
+      "text": "7",
+      "section": "2.2 Low-Precision Compression for LLM Training",
+      "context": "Recent studies have explored 4-bit floating-point quantization to improve the efficiency of large-scale LLM training. METIS [ 6 ] reduces quantization error via spectral-domain FP4 design for accurate W4A4G4 training, while Quartet [ 7",
+      "url": "https://arxiv.org/html/2611.04323v1#bib.bib23"
+    },
+    {
+      "href": "#bib.bib24",
+      "text": "1",
+      "section": "2.2 Low-Precision Compression for LLM Training",
+      "context": "Recent studies have explored 4-bit floating-point quantization to improve the efficiency of large-scale LLM training. METIS [ 6 ] reduces quantization error via spectral-domain FP4 design for accurate W4A4G4 training, while Quartet [ 7 ] enables native FP4 training through hardware-aware optimization. NVIDIA’s NVFP4 pre-training work [ 1",
+      "url": "https://arxiv.org/html/2611.04323v1#bib.bib24"
+    },
+    {
+      "href": "#bib.bib30",
+      "text": "25",
+      "section": "2.2 Low-Precision Compression for LLM Training",
+      "context": "Recent studies have explored 4-bit floating-point quantization to improve the efficiency of large-scale LLM training. METIS [ 6 ] reduces quantization error via spectral-domain FP4 design for accurate W4A4G4 training, while Quartet [ 7 ] enables native FP4 training through hardware-aware optimization. NVIDIA’s NVFP4 pre-training work [ 1 ] demonstrates scalable FP4 training with optimized scaling and mixed-precision scheduling. Subsequent efforts further enhance stability by addressing FP4’s limited dynamic range, including differentiable quantization and outlier-aware scaling [ 25",
+      "url": "https://arxiv.org/html/2611.04323v1#bib.bib30"
+    },
+    {
+      "href": "#bib.bib31",
+      "text": "31",
+      "section": "2.2 Low-Precision Compression for LLM Training",
+      "context": " of large-scale LLM training. METIS [ 6 ] reduces quantization error via spectral-domain FP4 design for accurate W4A4G4 training, while Quartet [ 7 ] enables native FP4 training through hardware-aware optimization. NVIDIA’s NVFP4 pre-training work [ 1 ] demonstrates scalable FP4 training with optimized scaling and mixed-precision scheduling. Subsequent efforts further enhance stability by addressing FP4’s limited dynamic range, including differentiable quantization and outlier-aware scaling [ 25 ] , as well as adaptive mixed-precision strategies across model components and training stages [ 31",
+      "url": "https://arxiv.org/html/2611.04323v1#bib.bib31"
+    },
+    {
+      "href": "#bib.bib9",
+      "text": "15",
+      "section": "2.2 Low-Precision Compression for LLM Training",
+      "context": "Beyond computation-oriented FP4 training, several studies have explored low-bit communication compression techniques for distributed LLM training. SDP4Bit [ 15",
+      "url": "https://arxiv.org/html/2611.04323v1#bib.bib9"
+    },
+    {
+      "href": "#bib.bib17",
+      "text": "11",
+      "section": "2.2 Low-Precision Compression for LLM Training",
+      "context": "Beyond computation-oriented FP4 training, several studies have explored low-bit communication compression techniques for distributed LLM training. SDP4Bit [ 15 ] investigates 4-bit gradient communication in sharded data-parallel training and shows that substantial communication reduction can be achieved with limited accuracy degradation. Tahquant [ 11",
+      "url": "https://arxiv.org/html/2611.04323v1#bib.bib17"
+    },
+    {
+      "href": "#bib.bib24",
+      "text": "1",
+      "section": "2.3 NVFP4 Representation and Scaling",
+      "context": "NVFP4 is a 4-bit floating-point format designed for efficient AI workloads, retaining sign, exponent, and mantissa components. To compensate for its limited dynamic range, NVFP4 employs block-level scaling, in which multiple FP4 elements share a higher-precision scaling factoGiven an input tensor X X , NVFP4 represents it as X ≈ s ⋅ X F ​ P ​ 4 X\\approx s\\cdot X_{FP4} , where X F ​ P ​ 4 X_{FP4} denotes the quantized FP4 values and s s is the corresponding scaling factor. NVFP4 defines two formats, E2M1 and E3M0 [ 1",
+      "url": "https://arxiv.org/html/2611.04323v1#bib.bib24"
+    },
+    {
+      "href": "#S2.F2",
+      "text": "2",
+      "section": "3 FP4Quant: Ultra-Low-Precision Communication Framework",
+      "context": "Motivated by the challenges of ultra-low-bit communication, we propose FP4Quant, a micro-grouped FP4 compression framework integrated into the collective communication path. As illustrated in Fig. 2",
+      "url": "https://arxiv.org/html/2611.04323v1#S2.F2"
+    },
+    {
+      "href": "#S3.SS1",
+      "text": "3.1",
+      "section": "3 FP4Quant: Ultra-Low-Precision Communication Framework",
+      "context": "Motivated by the challenges of ultra-low-bit communication, we propose FP4Quant, a micro-grouped FP4 compression framework integrated into the collective communication path. As illustrated in Fig. 2 , the compression workflow consists of three main components. Section 3.1",
+      "url": "https://arxiv.org/html/2611.04323v1#S3.SS1"
+    },
+    {
+      "href": "#S3.SS2",
+      "text": "3.2",
+      "section": "3 FP4Quant: Ultra-Low-Precision Communication Framework",
+      "context": "Motivated by the challenges of ultra-low-bit communication, we propose FP4Quant, a micro-grouped FP4 compression framework integrated into the collective communication path. As illustrated in Fig. 2 , the compression workflow consists of three main components. Section 3.1 describes the micro-grouped dual-scale FP4 quantization mechanism (①); Section 3.2",
+      "url": "https://arxiv.org/html/2611.04323v1#S3.SS2"
+    },
+    {
+      "href": "#S3.SS3",
+      "text": "3.3",
+      "section": "3 FP4Quant: Ultra-Low-Precision Communication Framework",
+      "context": "Motivated by the challenges of ultra-low-bit communication, we propose FP4Quant, a micro-grouped FP4 compression framework integrated into the collective communication path. As illustrated in Fig. 2 , the compression workflow consists of three main components. Section 3.1 describes the micro-grouped dual-scale FP4 quantization mechanism (①); Section 3.2 presents the hybrid two-level FWHT pipeline (②); and Section 3.3",
+      "url": "https://arxiv.org/html/2611.04323v1#S3.SS3"
+    },
+    {
+      "href": "#S3.SS2",
+      "text": "3.2",
+      "section": "Dual-scale quantization.",
+      "context": "where λ = 10 − 6 \\lambda=10^{-6} avoids numerical instability. By normalizing the RMS magnitude of each group, α k \\alpha_{k} maps diverse local distributions into the effective FP4 range. After the FWHT transformation in Section 3.2",
+      "url": "https://arxiv.org/html/2611.04323v1#S3.SS2"
+    },
+    {
+      "href": "#S3.F3",
+      "text": "3",
+      "section": "Motivation.",
+      "context": "FP4 quantization is sensitive to outliers, where a few extreme values can dominate the max-absolute scale and reduce effective precision. FP4Quant applies an orthonormal Walsh–Hadamard transform (FWHT) to redistribute energy across dimensions, producing a more balanced representation (see Fig. 3",
+      "url": "https://arxiv.org/html/2611.04323v1#S3.F3"
+    },
+    {
+      "href": "#S3.F4",
+      "text": "4",
+      "section": "Two-level execution.",
+      "context": "which corresponds to the butterfly operation shown in Fig. 4",
+      "url": "https://arxiv.org/html/2611.04323v1#S3.F4"
+    },
+    {
+      "href": "#S4.T2",
+      "text": "2",
+      "section": "4.2 Convergence and Model Quality",
+      "context": "To evaluate the convergence behavior and model quality of FP4Quant under ultra-low-bit communication compression, we measure the validation loss and perplexity across different micro-group sizes ( G ∈ { 64,128,256,512 } G\\in\\{64,128,256,512\\} ). Table 2",
+      "url": "https://arxiv.org/html/2611.04323v1#S4.T2"
+    },
+    {
+      "href": "#S3.F5",
+      "text": "5",
+      "section": "4.2 Convergence and Model Quality",
+      "context": "To evaluate the convergence behavior and model quality of FP4Quant under ultra-low-bit communication compression, we measure the validation loss and perplexity across different micro-group sizes ( G ∈ { 64,128,256,512 } G\\in\\{64,128,256,512\\} ). Table 2 summarizes the final validation metrics, while Figure 5",
+      "url": "https://arxiv.org/html/2611.04323v1#S3.F5"
+    },
+    {
+      "href": "#S3.F5",
+      "text": "5",
+      "section": "4.2 Convergence and Model Quality",
+      "context": "The results demonstrate that FP4Quant consistently outperforms Tahquant in preserving model quality under FP4 communication compression. Under TP, Tahquant suffers from severe accuracy degradation (loss 3.4848 3.4848 , PPL = 32.6163 \\mathrm{PPL}=32.6163 ), whereas FP4Quant with G = 64 G=64 achieves substantially lower loss ( 2.2306 2.2306 , PPL = 9.3050 \\mathrm{PPL}=9.3050 ) and maintains a stable convergence trajectory close to the full-precision baseline, as illustrated in Fig. 5",
+      "url": "https://arxiv.org/html/2611.04323v1#S3.F5"
+    },
+    {
+      "href": "#S4.T1",
+      "text": "1",
+      "section": "4.3 Downstream Task Accuracy",
+      "context": "Training loss and downstream accuracy reflect different aspects of model performance: loss measures optimization convergence, whereas downstream tasks evaluate practical model capability. Although the two metrics are not strictly correlated, poor convergence or substantially higher loss than the baseline typically leads to degraded downstream performance. Table 1",
+      "url": "https://arxiv.org/html/2611.04323v1#S4.T1"
+    },
+    {
+      "href": "#S4.T2",
+      "text": "2",
+      "section": "4.4 System Efficiency",
+      "context": "Table 2",
+      "url": "https://arxiv.org/html/2611.04323v1#S4.T2"
+    },
+    {
+      "href": "#S1.p3.1",
+      "text": "§1",
+      "section": "References",
+      "context": "[1] F. Abecassis, A. Agrusa, D. Ahn, J. Alben, S. Alborghetti, M. Andersch, S. Arayandi, A. Bjorlin, A. Blakeman, E. Briones, et al. (2025) Pretraining large language models with nvfp4 . arXiv preprint arXiv:2509.25149 . Cited by: §1",
+      "url": "https://arxiv.org/html/2611.04323v1#S1.p3.1"
+    },
+    {
+      "href": "#S2.SS2.p1.1",
+      "text": "§2.2",
+      "section": "References",
+      "context": "[1] F. Abecassis, A. Agrusa, D. Ahn, J. Alben, S. Alborghetti, M. Andersch, S. Arayandi, A. Bjorlin, A. Blakeman, E. Briones, et al. (2025) Pretraining large language models with nvfp4 . arXiv preprint arXiv:2509.25149 . Cited by: §1 , §2.2",
+      "url": "https://arxiv.org/html/2611.04323v1#S2.SS2.p1.1"
+    },
+    {
+      "href": "#S2.SS3.p1.1",
+      "text": "§2.3",
+      "section": "References",
+      "context": "[1] F. Abecassis, A. Agrusa, D. Ahn, J. Alben, S. Alborghetti, M. Andersch, S. Arayandi, A. Bjorlin, A. Blakeman, E. Briones, et al. (2025) Pretraining large language models with nvfp4 . arXiv preprint arXiv:2509.25149 . Cited by: §1 , §2.2 , §2.3",
+      "url": "https://arxiv.org/html/2611.04323v1#S2.SS3.p1.1"
+    },
+    {
+      "href": "http://dx.doi.org/10.18653/v1/D17-1045",
+      "text": "Link",
+      "section": "References",
+      "context": "[2] A. F. Aji and K. Heafield (2017) Sparse communication for distributed gradient descent . In Proceedings of the 2017 Conference on Empirical Methods in Natural Language Processing , pp. 440–445 . External Links: Link",
+      "url": "http://dx.doi.org/10.18653/v1/D17-1045"
+    },
+    {
+      "href": "https://dx.doi.org/10.18653/v1/d17-1045",
+      "text": "Document",
+      "section": "References",
+      "context": "[2] A. F. Aji and K. Heafield (2017) Sparse communication for distributed gradient descent . In Proceedings of the 2017 Conference on Empirical Methods in Natural Language Processing , pp. 440–445 . External Links: Link , Document",
+      "url": "https://dx.doi.org/10.18653/v1/d17-1045"
+    },
+    {
+      "href": "#S1.p2.1",
+      "text": "§1",
+      "section": "References",
+      "context": "[2] A. F. Aji and K. Heafield (2017) Sparse communication for distributed gradient descent . In Proceedings of the 2017 Conference on Empirical Methods in Natural Language Processing , pp. 440–445 . External Links: Link , Document Cited by: §1",
+      "url": "https://arxiv.org/html/2611.04323v1#S1.p2.1"
+    },
+    {
+      "href": "#S1.p2.1",
+      "text": "§1",
+      "section": "References",
+      "context": "[3] D. Alistarh, D. Grubic, J. Z. Li, R. Tomioka, and M. Vojnovic (2017) QSGD: communication-efficient sgd via gradient quantization and encoding . In Proceedings of the 31st International Conference on Neural Information Processing Systems , NIPS’17 , Red Hook, NY, USA , pp. 1707–1718 . External Links: ISBN 9781510860964 Cited by: §1",
+      "url": "https://arxiv.org/html/2611.04323v1#S1.p2.1"
+    },
+    {
+      "href": "https://arxiv.org/abs/1802.04434",
+      "text": "Link",
+      "section": "References",
+      "context": "[4] J. Bernstein, Y. Wang, K. Azizzadenesheli, and A. Anandkumar (2018) SignSGD: compressed optimisation for non-convex problems . External Links: 1802.04434 , Link",
+      "url": "https://arxiv.org/abs/1802.04434"
+    },
+    {
+      "href": "#S1.p2.1",
+      "text": "§1",
+      "section": "References",
+      "context": "[4] J. Bernstein, Y. Wang, K. Azizzadenesheli, and A. Anandkumar (2018) SignSGD: compressed optimisation for non-convex problems . External Links: 1802.04434 , Link Cited by: §1",
+      "url": "https://arxiv.org/html/2611.04323v1#S1.p2.1"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "[5] T. Brown, B. Mann, N. Ryder, M. Subbiah, J. Kaplan, P. Dhariwal, A. Neelakantan, P. Shyam, G. Sastry, A. Askell, et al. (2020) Language models are few-shot learners (gpt-3) . arXiv preprint arXiv:2005.14165 75 . Cited by: §1",
+      "url": "https://arxiv.org/html/2611.04323v1#S1.p1.1"
+    },
+    {
+      "href": "https://arxiv.org/abs/2509.00404",
+      "text": "Link",
+      "section": "References",
+      "context": "[6] H. Cao, M. Chen, Y. Yang, R. Huang, F. Dong, J. Zhou, A. Chen, M. Dong, Y. Wang, J. Hou, Y. Cheng, F. Wu, F. Yang, T. Lu, N. Gu, and L. Shang (2025) Metis: training llms with fp4 quantization . External Links: 2509.00404 , Link",
+      "url": "https://arxiv.org/abs/2509.00404"
+    },
+    {
+      "href": "#S1.p3.1",
+      "text": "§1",
+      "section": "References",
+      "context": "[6] H. Cao, M. Chen, Y. Yang, R. Huang, F. Dong, J. Zhou, A. Chen, M. Dong, Y. Wang, J. Hou, Y. Cheng, F. Wu, F. Yang, T. Lu, N. Gu, and L. Shang (2025) Metis: training llms with fp4 quantization . External Links: 2509.00404 , Link Cited by: §1",
+      "url": "https://arxiv.org/html/2611.04323v1#S1.p3.1"
+    },
+    {
+      "href": "#S2.SS2.p1.1",
+      "text": "§2.2",
+      "section": "References",
+      "context": "[6] H. Cao, M. Chen, Y. Yang, R. Huang, F. Dong, J. Zhou, A. Chen, M. Dong, Y. Wang, J. Hou, Y. Cheng, F. Wu, F. Yang, T. Lu, N. Gu, and L. Shang (2025) Metis: training llms with fp4 quantization . External Links: 2509.00404 , Link Cited by: §1 , §2.2",
+      "url": "https://arxiv.org/html/2611.04323v1#S2.SS2.p1.1"
+    },
+    {
+      "href": "#S1.p3.1",
+      "text": "§1",
+      "section": "References",
+      "context": "[7] R. Castro, A. Panferov, R. Tabesh, O. Sieberling, J. Chen, M. Nikdan, S. Ashkboos, and D. Alistarh (2026) Quartet: native fp4 training can be optimal for large language models . Advances in Neural Information Processing Systems 38 , pp. 43552–43572 . Cited by: §1",
+      "url": "https://arxiv.org/html/2611.04323v1#S1.p3.1"
+    },
+    {
+      "href": "#S2.SS2.p1.1",
+      "text": "§2.2",
+      "section": "References",
+      "context": "[7] R. Castro, A. Panferov, R. Tabesh, O. Sieberling, J. Chen, M. Nikdan, S. Ashkboos, and D. Alistarh (2026) Quartet: native fp4 training can be optimal for large language models . Advances in Neural Information Processing Systems 38 , pp. 43552–43572 . Cited by: §1 , §2.2",
+      "url": "https://arxiv.org/html/2611.04323v1#S2.SS2.p1.1"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "[8] A. Chowdhery, S. Narang, J. Devlin, M. Bosma, G. Mishra, A. Roberts, P. Barham, H. W. Chung, C. Sutton, S. Gehrmann, et al. (2022) Palm: scaling language modeling with pathways . arXiv preprint arXiv:2204.02311 . Cited by: §1",
+      "url": "https://arxiv.org/html/2611.04323v1#S1.p1.1"
+    },
+    {
+      "href": "#S1.p3.1",
+      "text": "§1",
+      "section": "References",
+      "context": "[9] T. Dettmers, M. Lewis, Y. Belkada, and L. Zettlemoyer (2022) LLM.int8(): 8-bit matrix multiplication for transformers at scale . In Proceedings of the 36th International Conference on Neural Information Processing Systems , NIPS ’22 , Red Hook, NY, USA . External Links: ISBN 9781713871088 Cited by: §1",
+      "url": "https://arxiv.org/html/2611.04323v1#S1.p3.1"
+    },
+    {
+      "href": "#S1.p3.1",
+      "text": "§1",
+      "section": "References",
+      "context": "[10] E. Frantar, S. Ashkboos, T. Hoefler, and D. Alistarh (2022) Gptq: accurate post-training quantization for generative pre-trained transformers . arXiv preprint arXiv:2210.17323 . Cited by: §1",
+      "url": "https://arxiv.org/html/2611.04323v1#S1.p3.1"
+    },
+    {
+      "href": "https://arxiv.org/abs/2506.01352",
+      "text": "Link",
+      "section": "References",
+      "context": "[11] G. He, Y. Cao, Y. He, T. Bai, K. Chen, K. Yuan, and B. Yuan (2026) TAH-quant: effective activation quantization in pipeline parallelism over slow network . External Links: 2506.01352 , Link",
+      "url": "https://arxiv.org/abs/2506.01352"
+    },
+    {
+      "href": "#S1.p3.1",
+      "text": "§1",
+      "section": "References",
+      "context": "[11] G. He, Y. Cao, Y. He, T. Bai, K. Chen, K. Yuan, and B. Yuan (2026) TAH-quant: effective activation quantization in pipeline parallelism over slow network . External Links: 2506.01352 , Link Cited by: §1",
+      "url": "https://arxiv.org/html/2611.04323v1#S1.p3.1"
+    },
+    {
+      "href": "#S2.SS2.p2.1",
+      "text": "§2.2",
+      "section": "References",
+      "context": "[11] G. He, Y. Cao, Y. He, T. Bai, K. Chen, K. Yuan, and B. Yuan (2026) TAH-quant: effective activation quantization in pipeline parallelism over slow network . External Links: 2506.01352 , Link Cited by: §1 , §2.2",
+      "url": "https://arxiv.org/html/2611.04323v1#S2.SS2.p2.1"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "[12] J. Hoffmann, S. Borgeaud, A. Mensch, E. Buchatskaya, T. Cai, E. Rutherford, D. de Las Casas, L. A. Hendricks, J. Welbl, A. Clark, T. Hennigan, E. Noland, K. Millican, G. van den Driessche, B. Damoc, A. Guy, S. Osindero, K. Simonyan, E. Elsen, O. Vinyals, J. W. Rae, and L. Sifre (2022) Training compute-optimal large language models . In Proceedings of the 36th International Conference on Neural Information Processing Systems , NIPS ’22 , Red Hook, NY, USA . External Links: ISBN 9781713871088 Cited by: §1",
+      "url": "https://arxiv.org/html/2611.04323v1#S1.p1.1"
+    },
+    {
+      "href": "https://doi.org/10.1145/3773656.3773675",
+      "text": "Link",
+      "section": "References",
+      "context": "[13] R. Hosoki, K. Sato, T. Endo, J. Bigot, and E. Audit (2026) Optimizing intra-layer parallel communication for llm training on systems with fully-connected mesh gpu topology . In Proceedings of the Supercomputing Asia and International Conference on High Performance Computing in Asia Pacific Region , SCA/HPCAsia ’26 , New York, NY, USA , pp. 328–339 . External Links: ISBN 9798400720673 , Link",
+      "url": "https://doi.org/10.1145/3773656.3773675"
+    },
+    {
+      "href": "https://dx.doi.org/10.1145/3773656.3773675",
+      "text": "Document",
+      "section": "References",
+      "context": "[13] R. Hosoki, K. Sato, T. Endo, J. Bigot, and E. Audit (2026) Optimizing intra-layer parallel communication for llm training on systems with fully-connected mesh gpu topology . In Proceedings of the Supercomputing Asia and International Conference on High Performance Computing in Asia Pacific Region , SCA/HPCAsia ’26 , New York, NY, USA , pp. 328–339 . External Links: ISBN 9798400720673 , Link , Document",
+      "url": "https://dx.doi.org/10.1145/3773656.3773675"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "[13] R. Hosoki, K. Sato, T. Endo, J. Bigot, and E. Audit (2026) Optimizing intra-layer parallel communication for llm training on systems with fully-connected mesh gpu topology . In Proceedings of the Supercomputing Asia and International Conference on High Performance Computing in Asia Pacific Region , SCA/HPCAsia ’26 , New York, NY, USA , pp. 328–339 . External Links: ISBN 9798400720673 , Link , Document Cited by: §1",
+      "url": "https://arxiv.org/html/2611.04323v1#S1.p1.1"
+    },
+    {
+      "href": "https://arxiv.org/abs/1811.06965",
+      "text": "Link",
+      "section": "References",
+      "context": "[14] Y. Huang, Y. Cheng, A. Bapna, O. Firat, M. X. Chen, D. Chen, H. Lee, J. Ngiam, Q. V. Le, Y. Wu, and Z. Chen (2019) GPipe: efficient training of giant neural networks using pipeline parallelism . External Links: 1811.06965 , Link",
+      "url": "https://arxiv.org/abs/1811.06965"
+    },
+    {
+      "href": "#S2.SS1.p1.1",
+      "text": "§2.1",
+      "section": "References",
+      "context": "[14] Y. Huang, Y. Cheng, A. Bapna, O. Firat, M. X. Chen, D. Chen, H. Lee, J. Ngiam, Q. V. Le, Y. Wu, and Z. Chen (2019) GPipe: efficient training of giant neural networks using pipeline parallelism . External Links: 1811.06965 , Link Cited by: §2.1",
+      "url": "https://arxiv.org/html/2611.04323v1#S2.SS1.p1.1"
+    },
+    {
+      "href": "#S1.p2.1",
+      "text": "§1",
+      "section": "References",
+      "context": "[15] J. Jia, C. Xie, H. Lu, D. Wang, H. Feng, C. Zhang, B. Sun, H. Lin, Z. Zhang, X. Liu, and D. Tao (2024) SDP4Bit: toward 4-bit communication quantization in sharded data parallelism for llm training . In Proceedings of the 38th International Conference on Neural Information Processing Systems , NIPS ’24 , Red Hook, NY, USA . External Links: ISBN 9798331314385 Cited by: §1",
+      "url": "https://arxiv.org/html/2611.04323v1#S1.p2.1"
+    },
+    {
+      "href": "#S1.p3.1",
+      "text": "§1",
+      "section": "References",
+      "context": "[15] J. Jia, C. Xie, H. Lu, D. Wang, H. Feng, C. Zhang, B. Sun, H. Lin, Z. Zhang, X. Liu, and D. Tao (2024) SDP4Bit: toward 4-bit communication quantization in sharded data parallelism for llm training . In Proceedings of the 38th International Conference on Neural Information Processing Systems , NIPS ’24 , Red Hook, NY, USA . External Links: ISBN 9798331314385 Cited by: §1 , §1",
+      "url": "https://arxiv.org/html/2611.04323v1#S1.p3.1"
+    },
+    {
+      "href": "#S2.SS2.p2.1",
+      "text": "§2.2",
+      "section": "References",
+      "context": "[15] J. Jia, C. Xie, H. Lu, D. Wang, H. Feng, C. Zhang, B. Sun, H. Lin, Z. Zhang, X. Liu, and D. Tao (2024) SDP4Bit: toward 4-bit communication quantization in sharded data parallelism for llm training . In Proceedings of the 38th International Conference on Neural Information Processing Systems , NIPS ’24 , Red Hook, NY, USA . External Links: ISBN 9798331314385 Cited by: §1 , §1 , §2.2",
+      "url": "https://arxiv.org/html/2611.04323v1#S2.SS2.p2.1"
+    },
+    {
+      "href": "https://doi.org/10.1145/3767295.3803595",
+      "text": "Link",
+      "section": "References",
+      "context": "[16] A. K. Kamath, A. Krishnamurthy, M. Canini, and S. Peter (2026) Reducing the gpu memory bottleneck with lossless compression for ml . In Proceedings of the 21st European Conference on Computer Systems , EUROSYS ’26 , New York, NY, USA , pp. 899–918 . External Links: ISBN 9798400722127 , Link",
+      "url": "https://doi.org/10.1145/3767295.3803595"
+    },
+    {
+      "href": "https://dx.doi.org/10.1145/3767295.3803595",
+      "text": "Document",
+      "section": "References",
+      "context": "[16] A. K. Kamath, A. Krishnamurthy, M. Canini, and S. Peter (2026) Reducing the gpu memory bottleneck with lossless compression for ml . In Proceedings of the 21st European Conference on Computer Systems , EUROSYS ’26 , New York, NY, USA , pp. 899–918 . External Links: ISBN 9798400722127 , Link , Document",
+      "url": "https://dx.doi.org/10.1145/3767295.3803595"
+    },
+    {
+      "href": "#S1.p4.1",
+      "text": "§1",
+      "section": "References",
+      "context": "[16] A. K. Kamath, A. Krishnamurthy, M. Canini, and S. Peter (2026) Reducing the gpu memory bottleneck with lossless compression for ml . In Proceedings of the 21st European Conference on Computer Systems , EUROSYS ’26 , New York, NY, USA , pp. 899–918 . External Links: ISBN 9798400722127 , Link , Document Cited by: §1",
+      "url": "https://arxiv.org/html/2611.04323v1#S1.p4.1"
+    },
+    {
+      "href": "https://arxiv.org/abs/2205.05198",
+      "text": "Link",
+      "section": "References",
+      "context": "[17] V. Korthikanti, J. Casper, S. Lym, L. McAfee, M. Andersch, M. Shoeybi, and B. Catanzaro (2022) Reducing activation recomputation in large transformer models . External Links: 2205.05198 , Link",
+      "url": "https://arxiv.org/abs/2205.05198"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "[17] V. Korthikanti, J. Casper, S. Lym, L. McAfee, M. Andersch, M. Shoeybi, and B. Catanzaro (2022) Reducing activation recomputation in large transformer models . External Links: 2205.05198 , Link Cited by: §1",
+      "url": "https://arxiv.org/html/2611.04323v1#S1.p1.1"
+    },
+    {
+      "href": "https://arxiv.org/abs/2205.05198",
+      "text": "Link",
+      "section": "References",
+      "context": "[18] V. Korthikanti, J. Casper, S. Lym, L. McAfee, M. Andersch, M. Shoeybi, and B. Catanzaro (2022) Reducing activation recomputation in large transformer models . External Links: 2205.05198 , Link",
+      "url": "https://arxiv.org/abs/2205.05198"
+    },
+    {
+      "href": "#S2.SS1.p1.1",
+      "text": "§2.1",
+      "section": "References",
+      "context": "[18] V. Korthikanti, J. Casper, S. Lym, L. McAfee, M. Andersch, M. Shoeybi, and B. Catanzaro (2022) Reducing activation recomputation in large transformer models . External Links: 2205.05198 , Link Cited by: §2.1",
+      "url": "https://arxiv.org/html/2611.04323v1#S2.SS1.p1.1"
+    },
+    {
+      "href": "https://doi.org/10.1145/3806645.3807584",
+      "text": "Link",
+      "section": "References",
+      "context": "[19] M. Liu, X. Liu, X. Tian, B. Lu, S. Lyu, S. Yin, W. Huang, Z. Wei, H. Zhao, G. Tan, and D. Tao (2026) TACO: efficient communication compression of intermediate tensors for scalable tensor-parallel llm training . In Proceedings of the 35th International Symposium on High-Performance Parallel and Distributed Computing , HPDC ’26 , New York, NY, USA , pp. 235–248 . External Links: ISBN 9798400726408 , Link",
+      "url": "https://doi.org/10.1145/3806645.3807584"
+    },
+    {
+      "href": "https://dx.doi.org/10.1145/3806645.3807584",
+      "text": "Document",
+      "section": "References",
+      "context": "[19] M. Liu, X. Liu, X. Tian, B. Lu, S. Lyu, S. Yin, W. Huang, Z. Wei, H. Zhao, G. Tan, and D. Tao (2026) TACO: efficient communication compression of intermediate tensors for scalable tensor-parallel llm training . In Proceedings of the 35th International Symposium on High-Performance Parallel and Distributed Computing , HPDC ’26 , New York, NY, USA , pp. 235–248 . External Links: ISBN 9798400726408 , Link , Document",
+      "url": "https://dx.doi.org/10.1145/3806645.3807584"
+    },
+    {
+      "href": "#S1.p2.1",
+      "text": "§1",
+      "section": "References",
+      "context": "[19] M. Liu, X. Liu, X. Tian, B. Lu, S. Lyu, S. Yin, W. Huang, Z. Wei, H. Zhao, G. Tan, and D. Tao (2026) TACO: efficient communication compression of intermediate tensors for scalable tensor-parallel llm training . In Proceedings of the 35th International Symposium on High-Performance Parallel and Distributed Computing , HPDC ’26 , New York, NY, USA , pp. 235–248 . External Links: ISBN 9798400726408 , Link , Document Cited by: §1",
+      "url": "https://arxiv.org/html/2611.04323v1#S1.p2.1"
+    },
+    {
+      "href": "#S1.p4.1",
+      "text": "§1",
+      "section": "References",
+      "context": "[19] M. Liu, X. Liu, X. Tian, B. Lu, S. Lyu, S. Yin, W. Huang, Z. Wei, H. Zhao, G. Tan, and D. Tao (2026) TACO: efficient communication compression of intermediate tensors for scalable tensor-parallel llm training . In Proceedings of the 35th International Symposium on High-Performance Parallel and Distributed Computing , HPDC ’26 , New York, NY, USA , pp. 235–248 . External Links: ISBN 9798400726408 , Link , Document Cited by: §1 , §1",
+      "url": "https://arxiv.org/html/2611.04323v1#S1.p4.1"
+    },
+    {
+      "href": "#S2.SS1.p1.1",
+      "text": "§2.1",
+      "section": "References",
+      "context": "[19] M. Liu, X. Liu, X. Tian, B. Lu, S. Lyu, S. Yin, W. Huang, Z. Wei, H. Zhao, G. Tan, and D. Tao (2026) TACO: efficient communication compression of intermediate tensors for scalable tensor-parallel llm training . In Proceedings of the 35th International Symposium on High-Performance Parallel and Distributed Computing , HPDC ’26 , New York, NY, USA , pp. 235–248 . External Links: ISBN 9798400726408 , Link , Document Cited by: §1 , §1 , §2.1",
+      "url": "https://arxiv.org/html/2611.04323v1#S2.SS1.p1.1"
+    },
+    {
+      "href": "https://doi.org/10.1145/3458817.3476209",
+      "text": "Link",
+      "section": "References",
+      "context": "[20] D. Narayanan, M. Shoeybi, J. Casper, P. LeGresley, M. Patwary, V. Korthikanti, D. Vainbrand, P. Kashinkunti, J. Bernauer, B. Catanzaro, A. Phanishayee, and M. Zaharia (2021) Efficient large-scale language model training on gpu clusters using megatron-lm . In Proceedings of the International Conference for High Performance Computing, Networking, Storage and Analysis , SC ’21 , New York, NY, USA . External Links: ISBN 9781450384421 , Link",
+      "url": "https://doi.org/10.1145/3458817.3476209"
+    },
+    {
+      "href": "https://dx.doi.org/10.1145/3458817.3476209",
+      "text": "Document",
+      "section": "References",
+      "context": "[20] D. Narayanan, M. Shoeybi, J. Casper, P. LeGresley, M. Patwary, V. Korthikanti, D. Vainbrand, P. Kashinkunti, J. Bernauer, B. Catanzaro, A. Phanishayee, and M. Zaharia (2021) Efficient large-scale language model training on gpu clusters using megatron-lm . In Proceedings of the International Conference for High Performance Computing, Networking, Storage and Analysis , SC ’21 , New York, NY, USA . External Links: ISBN 9781450384421 , Link , Document",
+      "url": "https://dx.doi.org/10.1145/3458817.3476209"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "[20] D. Narayanan, M. Shoeybi, J. Casper, P. LeGresley, M. Patwary, V. Korthikanti, D. Vainbrand, P. Kashinkunti, J. Bernauer, B. Catanzaro, A. Phanishayee, and M. Zaharia (2021) Efficient large-scale language model training on gpu clusters using megatron-lm . In Proceedings of the International Conference for High Performance Computing, Networking, Storage and Analysis , SC ’21 , New York, NY, USA . External Links: ISBN 9781450384421 , Link , Document Cited by: §1",
+      "url": "https://arxiv.org/html/2611.04323v1#S1.p1.1"
+    },
+    {
+      "href": "https://arxiv.org/abs/2310.18313",
+      "text": "Link",
+      "section": "References",
+      "context": "[21] H. Peng, K. Wu, Y. Wei, G. Zhao, Y. Yang, Z. Liu, Y. Xiong, Z. Yang, B. Ni, J. Hu, R. Li, M. Zhang, C. Li, J. Ning, R. Wang, Z. Zhang, S. Liu, J. Chau, H. Hu, and P. Cheng (2023) FP8-lm: training fp8 large language models . External Links: 2310.18313 , Link",
+      "url": "https://arxiv.org/abs/2310.18313"
+    },
+    {
+      "href": "#S1.p2.1",
+      "text": "§1",
+      "section": "References",
+      "context": "[21] H. Peng, K. Wu, Y. Wei, G. Zhao, Y. Yang, Z. Liu, Y. Xiong, Z. Yang, B. Ni, J. Hu, R. Li, M. Zhang, C. Li, J. Ning, R. Wang, Z. Zhang, S. Liu, J. Chau, H. Hu, and P. Cheng (2023) FP8-lm: training fp8 large language models . External Links: 2310.18313 , Link Cited by: §1",
+      "url": "https://arxiv.org/html/2611.04323v1#S1.p2.1"
+    },
+    {
+      "href": "#S2.SS1.p1.1",
+      "text": "§2.1",
+      "section": "References",
+      "context": "[21] H. Peng, K. Wu, Y. Wei, G. Zhao, Y. Yang, Z. Liu, Y. Xiong, Z. Yang, B. Ni, J. Hu, R. Li, M. Zhang, C. Li, J. Ning, R. Wang, Z. Zhang, S. Liu, J. Chau, H. Hu, and P. Cheng (2023) FP8-lm: training fp8 large language models . External Links: 2310.18313 , Link Cited by: §1 , §2.1",
+      "url": "https://arxiv.org/html/2611.04323v1#S2.SS1.p1.1"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "[22] S. Rajbhandari, J. Rasley, O. Ruwase, and Y. He (2020) ZeRO: memory optimizations toward training trillion parameter models . In Proceedings of the International Conference for High Performance Computing, Networking, Storage and Analysis , SC ’20 . External Links: ISBN 9781728199986 Cited by: §1",
+      "url": "https://arxiv.org/html/2611.04323v1#S1.p1.1"
+    },
+    {
+      "href": "https://arxiv.org/abs/1909.08053",
+      "text": "Link",
+      "section": "References",
+      "context": "[23] M. Shoeybi, M. Patwary, R. Puri, P. LeGresley, J. Casper, and B. Catanzaro (2020) Megatron-lm: training multi-billion parameter language models using model parallelism . External Links: 1909.08053 , Link",
+      "url": "https://arxiv.org/abs/1909.08053"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "[23] M. Shoeybi, M. Patwary, R. Puri, P. LeGresley, J. Casper, and B. Catanzaro (2020) Megatron-lm: training multi-billion parameter language models using model parallelism . External Links: 1909.08053 , Link Cited by: §1",
+      "url": "https://arxiv.org/html/2611.04323v1#S1.p1.1"
+    },
+    {
+      "href": "#S2.SS1.p1.1",
+      "text": "§2.1",
+      "section": "References",
+      "context": "[23] M. Shoeybi, M. Patwary, R. Puri, P. LeGresley, J. Casper, and B. Catanzaro (2020) Megatron-lm: training multi-billion parameter language models using model parallelism . External Links: 1909.08053 , Link Cited by: §1 , §2.1",
+      "url": "https://arxiv.org/html/2611.04323v1#S2.SS1.p1.1"
+    },
+    {
+      "href": "https://arxiv.org/abs/1805.09767",
+      "text": "Link",
+      "section": "References",
+      "context": "[24] S. U. Stich (2019) Local sgd converges fast and communicates little . External Links: 1805.09767 , Link",
+      "url": "https://arxiv.org/abs/1805.09767"
+    },
+    {
+      "href": "#S1.p2.1",
+      "text": "§1",
+      "section": "References",
+      "context": "[24] S. U. Stich (2019) Local sgd converges fast and communicates little . External Links: 1805.09767 , Link Cited by: §1",
+      "url": "https://arxiv.org/html/2611.04323v1#S1.p2.1"
+    },
+    {
+      "href": "https://arxiv.org/abs/2501.17116",
+      "text": "Link",
+      "section": "References",
+      "context": "[25] R. Wang, Y. Gong, X. Liu, G. Zhao, Z. Yang, B. Guo, Z. Zha, and P. Cheng (2025) Optimizing large language model training using fp4 quantization . External Links: 2501.17116 , Link",
+      "url": "https://arxiv.org/abs/2501.17116"
+    },
+    {
+      "href": "#S2.SS2.p1.1",
+      "text": "§2.2",
+      "section": "References",
+      "context": "[25] R. Wang, Y. Gong, X. Liu, G. Zhao, Z. Yang, B. Guo, Z. Zha, and P. Cheng (2025) Optimizing large language model training using fp4 quantization . External Links: 2501.17116 , Link Cited by: §2.2",
+      "url": "https://arxiv.org/html/2611.04323v1#S2.SS2.p1.1"
+    },
+    {
+      "href": "#S1.p2.1",
+      "text": "§1",
+      "section": "References",
+      "context": "[26] J. Wangni, J. Wang, J. Liu, and T. Zhang (2018) Gradient sparsification for communication-efficient distributed optimization . In Proceedings of the 32nd International Conference on Neural Information Processing Systems , NIPS’18 , Red Hook, NY, USA , pp. 1306–1316 . Cited by: §1",
+      "url": "https://arxiv.org/html/2611.04323v1#S1.p2.1"
+    },
+    {
+      "href": "#S1.p2.1",
+      "text": "§1",
+      "section": "References",
+      "context": "[27] W. Wen, C. Xu, F. Yan, C. Wu, Y. Wang, Y. Chen, and H. Li (2017) TernGrad: ternary gradients to reduce communication in distributed deep learning . In Proceedings of the 31st International Conference on Neural Information Processing Systems , NIPS’17 , Red Hook, NY, USA , pp. 1508–1518 . External Links: ISBN 9781510860964 Cited by: §1",
+      "url": "https://arxiv.org/html/2611.04323v1#S1.p2.1"
+    },
+    {
+      "href": "#S1.p4.1",
+      "text": "§1",
+      "section": "References",
+      "context": "[28] X. Wu, C. Li, R. Y. Aminabadi, Z. Yao, and Y. He (2023) Understanding int4 quantization for language models: latency speedup, composability, and failure cases . In Proceedings of the 40th International Conference on Machine Learning , ICML’23 . Cited by: §1",
+      "url": "https://arxiv.org/html/2611.04323v1#S1.p4.1"
+    },
+    {
+      "href": "#S1.p2.1",
+      "text": "§1",
+      "section": "References",
+      "context": "[29] H. Xi, H. Cai, L. Zhu, Y. Lu, K. Keutzer, J. Chen, and S. Han (2025) COAT: compressing optimizer states and activations for memory-efficient fp8 training . In International Conference on Learning Representations , Vol. 2025 , pp. 42989–43011 . Cited by: §1",
+      "url": "https://arxiv.org/html/2611.04323v1#S1.p2.1"
+    },
+    {
+      "href": "https://arxiv.org/abs/2310.04836",
+      "text": "Link",
+      "section": "References",
+      "context": "[30] L. Zhang, W. Fei, W. Wu, Y. He, Z. Lou, and H. Zhou (2023) Dual grained quantization: efficient fine-grained quantization for llm . External Links: 2310.04836 , Link",
+      "url": "https://arxiv.org/abs/2310.04836"
+    },
+    {
+      "href": "#S1.p4.1",
+      "text": "§1",
+      "section": "References",
+      "context": "[30] L. Zhang, W. Fei, W. Wu, Y. He, Z. Lou, and H. Zhou (2023) Dual grained quantization: efficient fine-grained quantization for llm . External Links: 2310.04836 , Link Cited by: §1",
+      "url": "https://arxiv.org/html/2611.04323v1#S1.p4.1"
+    },
+    {
+      "href": "https://arxiv.org/abs/2502.11458",
+      "text": "Link",
+      "section": "References",
+      "context": "[31] J. Zhou, D. Tang, R. Fu, B. Hu, H. Xu, Y. Wang, Z. Pei, Z. Su, L. Liu, X. Zhang, and W. Zhang (2025) Towards efficient pre-training: exploring fp4 precision in large language models . External Links: 2502.11458 , Link",
+      "url": "https://arxiv.org/abs/2502.11458"
+    },
+    {
+      "href": "#S2.SS2.p1.1",
+      "text": "§2.2",
+      "section": "References",
+      "context": "[31] J. Zhou, D. Tang, R. Fu, B. Hu, H. Xu, Y. Wang, Z. Pei, Z. Su, L. Liu, X. Zhang, and W. Zhang (2025) Towards efficient pre-training: exploring fp4 precision in large language models . External Links: 2502.11458 , Link Cited by: §2.2",
+      "url": "https://arxiv.org/html/2611.04323v1#S2.SS2.p1.1"
+    }
+  ],
+  "note": "Extracted HTML text; equations and table formatting may be imperfect. No PDF extraction was attempted."
+}

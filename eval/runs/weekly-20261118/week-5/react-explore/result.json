@@ -1,0 +1,236 @@
+{
+  "run_id": "0b25d43dcee54530bf9c261699cf7c11",
+  "status": "completed",
+  "user_id": "dmitrii",
+  "profile_fingerprint": "a2480e0075ad9cdf236d40e30f74f9bfd87a08dd948530b42e6b57e4a123bfc0",
+  "pipeline_version": "react-v2",
+  "categories": [
+    "cs.LG",
+    "cs.CL",
+    "stat.ML",
+    "cs.AI",
+    "cs.IR"
+  ],
+  "date_from": "2026-10-26",
+  "date_to": "2026-11-01",
+  "papers": [
+    {
+      "paper_id": "2610.35112",
+      "summary": "In modular-arithmetic models, effective-rank compression follows the onset of grokking. Rank caps and a nuclear-norm penalty do not accelerate it against factorization-matched controls.",
+      "relevance": "Directly tests whether low rank causes generalization, while showing why factorization-matched controls matter. It does not establish quality-preserving compression in LLMs.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "Compressing the MLP’s first layer with a nuclear-norm penalty before the onset also delays grokking, and comparing with the unfactorized network instead of the factorized control would wrongly suggest that low rank speeds grokking up, because the factorization changes the onset by itself."
+        }
+      ],
+      "title": "Subspace Crystallization in Grokking: Rank Compression Tracks the Phase Transition",
+      "url": "https://arxiv.org/abs/2610.35112v2",
+      "version": 2,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.00236",
+      "summary": "ProLand combines coordinated LoRA-factor updates with Muon-style spectral directions. Across tested encoder and decoder configurations, it reports the highest average score among compared methods.",
+      "relevance": "Direct match for LoRA optimization geometry and practical language-model fine-tuning.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "Across both encoder and decoder evaluations, we compare ProLand with AdamW, LoRA-Muon, fixed-step Manifold-LoRA, per-factor Muon, Riemannion, and sMuon."
+        },
+        {
+          "source": "inspection",
+          "quote": "Across these 11 tasks, ProLand achieves the highest average score among the compared methods in every tested encoder and decoder model–rank configuration."
+        }
+      ],
+      "title": "ProLand: A New Infeasible Manifold Optimization Method for LoRA Fine-Tuning",
+      "url": "https://arxiv.org/abs/2611.00236v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.00593",
+      "summary": "A matched pretraining study finds that row orthogonality does not reliably improve on sphere optimization across the tested LLM scales and block sizes.",
+      "relevance": "Helps separate geometric-constraint effects from per-row norm control when evaluating spectral or manifold methods.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "We tested the incremental value of row orthogonality while holding per-row norm treatment and gain granularity fixed."
+        },
+        {
+          "source": "inspection",
+          "quote": "Beyond this small-model exception, no d > 1 d>1 realization provides a consistent advantage."
+        }
+      ],
+      "title": "Do Orthogonality Constraints Help Language-Model Training Beyond Sphere Optimization?",
+      "url": "https://arxiv.org/abs/2611.00593v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.37647",
+      "summary": "MuonGS removes the radial component of Muon updates without fixing weight norm. On longer 160M- and 400M-parameter pretraining runs, it reports lower validation perplexity than MuonH and an estimated token-equivalent speedup.",
+      "relevance": "Connects matrix-optimizer design, weight-norm control, and LLM pretraining quality. The reported speedup is estimated from a loss-versus-token fit, not measured wall-clock throughput.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "At longer training horizons, MuonGS achieves lower validation perplexity than MuonH."
+        },
+        {
+          "source": "inspection",
+          "quote": "From Figure 6 we observe that MuonGS achieves a token-equivalent speedup over MuonH up to about 7-15% for longer training horizons."
+        }
+      ],
+      "title": "MuonGS: Pretraining LLMs with Relaxed Weight-Norm Control",
+      "url": "https://arxiv.org/abs/2610.37647v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.36386",
+      "summary": "Functional Rank Allocation measures the effects of LoRA module truncation on end-to-end behavior and allocates a shared rank budget across adapters. On three public fleets, it reports better worst-case and tail utility than uniform spectral compression under constrained budgets.",
+      "relevance": "Directly addresses why singular-value redundancy alone may not predict quality-preserving low-rank compression.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "Although trained LoRAs contain substantial spectral redundancy, spectral reconstruction alone does not determine how much compression an adapter can functionally tolerate."
+        },
+        {
+          "source": "inspection",
+          "quote": "Across 78 adapters from three public fleets, FRA improves worst-case and tail utility over uniform spectral compression in constrained-budget regimes."
+        }
+      ],
+      "title": "LoRA on a Budget: Function-Aware Post-Hoc Compression for Adapter Fleets",
+      "url": "https://arxiv.org/abs/2610.36386v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.02052",
+      "summary": "Function-preserving reparameterizations can change gradient-based rankings and adapter-compression masks despite unchanged predictions. The paper proposes symmetry-aware controls and an invariant score for low-rank factors.",
+      "relevance": "A methodological warning for gradient-based LoRA rank allocation and factorized-optimizer diagnostics, not a demonstrated improvement in downstream fine-tuning quality.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "Exact classifier-factor gauges and six trained LoRA adapters exhibit the same coordinate dependence: Factor-coordinate rankings, clipping decisions, and adapter-compression masks can change while logits are preserved."
+        },
+        {
+          "source": "inspection",
+          "quote": "GRR does not propose a better clipping rule, optimizer, or rank allocator."
+        }
+      ],
+      "title": "Same Function, Different Gradients: Evaluating Gradient Reliability under Reparameterization",
+      "url": "https://arxiv.org/abs/2611.02052v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.39610",
+      "summary": "GistRank compresses passages into learned tokens for listwise reranking. It reports average nDCG@10 of 59.17 across seven retrieval datasets, 0.89 points below its strongest evaluated baseline.",
+      "relevance": "Relevant to the digest agent’s paper-ranking pipeline, although transfer from passage benchmarks to research-paper selection remains untested.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "We rerank the top-100 passages retrieved by BM25 and report nDCG@10 on seven datasets"
+        },
+        {
+          "source": "inspection",
+          "quote": "GistRank achieves an average nDCG@10 of 59.17, ranking second among all evaluated methods and trailing the strongest baseline, FullRank 100 , by 0.89 points."
+        }
+      ],
+      "title": "GistRank: Gist-Compressed Listwise Ranking with Large Language Models",
+      "url": "https://arxiv.org/abs/2610.39610v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    }
+  ],
+  "x_feature": null,
+  "limitations": [
+    "No selected paper directly evaluates optimizer-state compression or peak-memory savings for LLM pretraining.",
+    "The selected grokking experiments use modular arithmetic, not LLM-scale pretraining or noisy-label benchmarks.",
+    "GistRank was evaluated on passage retrieval benchmarks, not research-digest relevance judgments.",
+    "The effective-learning-rate paper could not be assessed beyond its supplied abstract because its HTML inspection returned 404.",
+    "Repository availability and reproducibility were not checked.",
+    "inspect:2611.00236: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.35112: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.37647: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2611.00593: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.37062: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.36386: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.37206: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.40362: full-text inspection unavailable; only abstract evidence was available.",
+    "inspect:2610.39610: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2611.02052: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.35130: only question-relevant HTML passages were inspected, not the whole paper."
+  ],
+  "stats": {
+    "fetched_count": 2669,
+    "candidate_count": 2669,
+    "llm_calls": 32,
+    "steps": 23,
+    "inspections": 11,
+    "expansions": 6,
+    "screened": 59,
+    "usage": {
+      "recorded_calls": 32,
+      "llm_latency_seconds": 457.05013333194074,
+      "input_tokens": 1569043,
+      "output_tokens": 14698,
+      "estimated_api_cost_usd": null,
+      "calls_without_usage": 0,
+      "cost_note": "API-equivalent estimate using standard GPT-5.6-Luna rates checked 2026-11-17: $0.20/M input, $1.20/M output; above 272K input, $0.40/M and $1.80/M. Assumes all input is uncached; excludes cache writes and external tools. Not actual Codex subscription billing. Unknown usage/model yields null cost.",
+      "price_source": "https://developers.openai.com/api/docs/models/gpt-5.6-luna"
+    },
+    "tool_calls": 20,
+    "tool_latency_seconds": 86.45929004007485
+  }
+}

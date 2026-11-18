@@ -1,0 +1,236 @@
+{
+  "run_id": "15201c1ba867413eba1494eda6fc070f",
+  "status": "completed",
+  "user_id": "dmitrii",
+  "profile_fingerprint": "a2480e0075ad9cdf236d40e30f74f9bfd87a08dd948530b42e6b57e4a123bfc0",
+  "pipeline_version": "react-v2",
+  "categories": [
+    "cs.LG",
+    "cs.CL",
+    "stat.ML",
+    "cs.AI",
+    "cs.IR"
+  ],
+  "date_from": "2026-10-05",
+  "date_to": "2026-10-11",
+  "papers": [
+    {
+      "paper_id": "2610.11730",
+      "summary": "Spectral weight decay applies additive singular-value shrinkage. The paper reports lower effective rank and better SVD-LLM compression at matched validation loss, plus cleaner test accuracy under label noise.",
+      "relevance": "Direct match for spectral regularization, low-rank compressibility, proximal methods, and memorization under label noise.",
+      "evidence": [
+        {
+          "source": "abstract",
+          "quote": "spectral weight decay lowers effective rank and improves SVD-LLM compression at matched validation loss."
+        },
+        {
+          "source": "inspection",
+          "quote": "Regularization coefficients are calibrated in separate tuning runs using final clean-validation accuracy"
+        }
+      ],
+      "title": "Spectral Weight Decay: Inducing Low-Rank Structure in Neural Network Weights",
+      "url": "https://arxiv.org/abs/2610.11730v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.06116",
+      "summary": "ORCA applies soft orthogonality regularization early in LLM training, then removes it. In the inspected LLaMA comparisons, it reduced final validation loss relative to Muon at matched token budgets.",
+      "relevance": "Directly tests how spectral shaping affects effective rank and LLM optimization.",
+      "evidence": [
+        {
+          "source": "abstract",
+          "quote": "applies strong but temporary soft orthogonality regularization early in training, then removes it."
+        },
+        {
+          "source": "inspection",
+          "quote": "Compared with Muon, ORCA reduces the final loss by 0.0194 at 350M and 0.0244 at 1.3B"
+        }
+      ],
+      "title": "ORCA: The Annealed Spectral Conditioning Optimizer for Faster, Better LLM Training",
+      "url": "https://arxiv.org/abs/2610.06116v2",
+      "version": 2,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.10965",
+      "summary": "Spectrally Targeted Muon isolates singular subspaces using Newton–Schulz projections. Its NanoGPT analysis finds that effective rank and validation loss need not move together.",
+      "relevance": "Direct match for Muon, Newton–Schulz methods, and the relationship between spectra and optimization.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "It isolates the relevant singular subspaces with projections computed by Newton-Schulz iteration on a shifted Gram matrix, so no SVD is needed."
+        },
+        {
+          "source": "inspection",
+          "quote": "the bottom targeted variants keep Muon’s rank without matching its loss"
+        }
+      ],
+      "title": "Spectrally Targeted Muon",
+      "url": "https://arxiv.org/abs/2610.10965v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.06621",
+      "summary": "Controlled LoRA experiments separate frozen-factor choice from spectral-band choice. At rank 2, the factor contrast exceeds the band contrast in four complete task–model comparisons, but weakens at higher rank.",
+      "relevance": "Direct evidence on low-rank factor optimization and spectral placement in language-model fine-tuning.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "We use a two-by-two design: freeze A or B, each on the top or bottom band, while retaining the same pretrained model, data, adapted modules and training budget."
+        },
+        {
+          "source": "inspection",
+          "quote": "The factor contrast decreases along the complete OpenBookQA rank sweep, becoming comparable to the band contrast at rank 16."
+        }
+      ],
+      "title": "Frozen Factor or Spectral Band? Disentangling Two Choices in Low-Rank LoRA",
+      "url": "https://arxiv.org/abs/2610.06621v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.09122",
+      "summary": "Compares six PEFT methods through task performance, forgetting, and pretrained-weight geometry. Restoring pretrained singular values largely retains task performance in the tested settings.",
+      "relevance": "Connects singular-value behavior to practical language-model adaptation and retention.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "We study six representative methods, including LoRA, DoRA, PiSSA, MiLoRA, OFT, and HRA, across language-model adaptation and diffusion personalization."
+        },
+        {
+          "source": "inspection",
+          "quote": "Restoring pretrained singular values largely preserves task performance, while restoring dominant components consistently yields the largest mean reduction in forgetting"
+        }
+      ],
+      "title": "Are Parameter-Efficient Fine-tuning Methods Really Different?",
+      "url": "https://arxiv.org/abs/2610.09122v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.06647",
+      "summary": "LoGRA uses low-rank gradient sketches for LLM RL post-training. Inspected results report average per-GPU memory falling from 31.82 to 17.29 GiB at 7B, with similar update rates to dense Adam.",
+      "relevance": "Directly informs low-rank training-memory and throughput tradeoffs, although not in pretraining.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "average memory decreases from 9.18 to 7.18 GiB at 1.5B and from 31.82 to 17.29 GiB at 7B"
+        },
+        {
+          "source": "inspection",
+          "quote": "End-to-end update rates are similar where both methods complete training: 55.44 versus 54.28 updates/h at 1.5B and 25.73 versus 25.28 updates/h at 7B for LoGRA and Dense, respectively."
+        }
+      ],
+      "title": "LoGRA: Scaling LLM Reinforcement Learning with Low-Rank Gradient Sketches",
+      "url": "https://arxiv.org/abs/2610.06647v3",
+      "version": 3,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.10590",
+      "summary": "Describes reversible archiving of tool observations in a Python agent harness. An exploratory case reduced cumulative input tokens, but another case showed no saving and an earlier continuation had lower assessed quality.",
+      "relevance": "Directly applicable to explicit context management in a handwritten research-digest agent.",
+      "evidence": [
+        {
+          "source": "abstract",
+          "quote": "A Python harness exposes batch archival and explicit recovery without task-specific model training"
+        },
+        {
+          "source": "abstract",
+          "quote": "A contrasting application-development pair produced no context or cost saving, and an earlier continuation exhibited lower manually assessed quality despite reduced context."
+        }
+      ],
+      "title": "Agent-Controlled Forgetting for Tool-Using Agents: Reversible Context Curation in Practice",
+      "url": "https://arxiv.org/abs/2610.10590v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    }
+  ],
+  "x_feature": null,
+  "limitations": [
+    "The quoted results are authors’ reported findings, not independently verified reproductions.",
+    "LoGRA evaluates RL post-training, so its memory–quality tradeoff should not be assumed to transfer to LLM pretraining.",
+    "The agent-context study is exploratory and reports mixed outcomes.",
+    "X analysis was disabled; no attention claims are made.",
+    "inspect:2610.06116: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.11730: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.10965: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.08049: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.06647: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.06621: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.06542: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.09122: only question-relevant HTML passages were inspected, not the whole paper."
+  ],
+  "stats": {
+    "fetched_count": 3311,
+    "candidate_count": 3311,
+    "llm_calls": 22,
+    "steps": 16,
+    "inspections": 10,
+    "expansions": 3,
+    "screened": 49,
+    "usage": {
+      "recorded_calls": 22,
+      "llm_latency_seconds": 363.9179729540192,
+      "input_tokens": 973474,
+      "output_tokens": 13476,
+      "estimated_api_cost_usd": null,
+      "calls_without_usage": 0,
+      "cost_note": "API-equivalent estimate using standard GPT-5.6-Luna rates checked 2026-11-17: $0.20/M input, $1.20/M output; above 272K input, $0.40/M and $1.80/M. Assumes all input is uncached; excludes cache writes and external tools. Not actual Codex subscription billing. Unknown usage/model yields null cost.",
+      "price_source": "https://developers.openai.com/api/docs/models/gpt-5.6-luna"
+    },
+    "tool_calls": 13,
+    "tool_latency_seconds": 49.95724495998002
+  }
+}

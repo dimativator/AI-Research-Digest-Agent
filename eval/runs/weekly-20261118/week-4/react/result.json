@@ -1,0 +1,245 @@
+{
+  "run_id": "74a3d2b27f7d4ab18032dda3a6b4525f",
+  "status": "completed",
+  "user_id": "dmitrii",
+  "profile_fingerprint": "a2480e0075ad9cdf236d40e30f74f9bfd87a08dd948530b42e6b57e4a123bfc0",
+  "pipeline_version": "react-v2",
+  "categories": [
+    "cs.LG",
+    "cs.CL",
+    "stat.ML",
+    "cs.AI",
+    "cs.IR"
+  ],
+  "date_from": "2026-10-19",
+  "date_to": "2026-10-25",
+  "papers": [
+    {
+      "paper_id": "2610.31897",
+      "summary": "S-SALAAD learns low-rank and structured-sparse weight components during training to support compression of one checkpoint to several budgets. Its low-rank-only ablation compares ADMM-based structure learning with direct nuclear-norm regularization.",
+      "relevance": "Closest match to training for low-rank compressibility while preserving quality. Reported efficiency gains concern inference, not training memory.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "jointly learns the model weights and their low-rank and structured sparse components during training"
+        },
+        {
+          "source": "inspection",
+          "quote": "L L -only S-SALAAD maintains low perplexity over the same budget range, providing a better trade-off between model quality and elastic compressibility than these direct regularization baselines."
+        }
+      ],
+      "title": "Learning Structured Sparsity for Large Models: Bridging Model Compressibility and Efficient Inference",
+      "url": "https://arxiv.org/abs/2610.31897v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.32878",
+      "summary": "LEMS allocates SVD ranks using layer-wise error modeling; KFAC-SVD addresses decomposition quality. The paper reports compression results across several LLM families and sizes.",
+      "relevance": "Directly informs low-rank LLM compression, rank allocation, and quality-versus-budget decisions.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "Table 2 details the results for all approaches under uniform compression rates (0.9, 0.7) and calibration sample count"
+        },
+        {
+          "source": "inspection",
+          "quote": "Averaged over ratios and models, it reduces perplexity by 17% for KFAC-SVD and 34% for SVD-LLM , while increasing zero-shot accuracy by +7.2 and +9.1 p.p."
+        }
+      ],
+      "title": "Advancing SVD-based LLM Compression via Layer-Wise Error Model Search",
+      "url": "https://arxiv.org/abs/2610.32878v2",
+      "version": 2,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.30280",
+      "summary": "A controlled quadratic analysis identifies when Muon’s polar update helps or hurts. Finite Newton–Schulz iterations can outperform exact orthogonalization by softening updates along tiny singular directions.",
+      "relevance": "Connects matrix spectra and Newton–Schulz approximation to optimizer behavior, but its trajectory results rely on quadratics.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "compare update directions under line search to remove the effect of learning-rate tuning."
+        },
+        {
+          "source": "inspection",
+          "quote": "Finite Newton--Schulz softens the update exactly there and can then converge faster than exact polar, so it is not merely an approximation of the polar factor."
+        }
+      ],
+      "title": "A Quadratic Lens on Muon's Polar Update: Benefits, Pitfalls, and the Role of Newton-Schulz",
+      "url": "https://arxiv.org/abs/2610.30280v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.32142",
+      "summary": "Analyzes initialization-induced noise in LoRA with asymmetric learning rates and proposes a smaller-variance initialization to widen the stable learning-rate region.",
+      "relevance": "Addresses practical LoRA optimization and stability in LLM fine-tuning.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "Under matched rank and training time for both initializations, this reduces the initialization-noise energy by an additional factor of 1 / n"
+        },
+        {
+          "source": "inspection",
+          "quote": "reduces best-ratio drift, prevents the high-ratio collapse observed with standard Init[A]"
+        }
+      ],
+      "title": "Rethinking LoRA Initialization for Robust Asymmetric Learning Rates",
+      "url": "https://arxiv.org/abs/2610.32142v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.34566",
+      "summary": "An error-diffusion optimizer replaces full-precision latent weights with quantized residual buffers for binary-weight language-model training. Reported state savings exclude several full-precision components.",
+      "relevance": "A concrete memory–quality tradeoff for training, though tested models are far smaller than current LLMs.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "cuts the training state per weight from 97 bits to 3–9, up to 19 ×"
+        },
+        {
+          "source": "inspection",
+          "quote": "The tasks are a synthetic MLP benchmark and language models with at most 19M parameters (70M with the wikitext-103 embeddings) and six layers on one GPU"
+        },
+        {
+          "source": "inspection",
+          "quote": "Per-layer weight scales, per-batch activation scales, and the FP embeddings, LayerNorms, and head of the transformers are excluded from the per-weight count"
+        }
+      ],
+      "title": "Error Diffusion Replaces Latent Weights: Training Binary-Weight Language Models on a Few Bits of Dithered State",
+      "url": "https://arxiv.org/abs/2610.34566v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.33846",
+      "summary": "Experiments compare test error and memorization under random labels across model sizes; a separate kernel-gradient-flow analysis gives regimes in which early stopping helps or interpolation is preferable.",
+      "relevance": "Direct match to generalization and memorization under label noise, with a clear limit on what the theory explains about deep networks.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "For the larger, deeper convolutional and residual networks, this deterioration is essentially absent: their best observed test performance is attained with zero memorization error"
+        },
+        {
+          "source": "inspection",
+          "quote": "Our analysis does not, however, establish that the networks learn this same geometry"
+        }
+      ],
+      "title": "When is early stopping beneficial under label noise? A phase diagram for kernel gradient flow",
+      "url": "https://arxiv.org/abs/2610.33846v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.29812",
+      "summary": "A controlled SciFact ablation compares closed-book, one-shot retrieval, ReAct-style query writing, and oracle abstracts. Query writing improves gold-paper recall, but accuracy differences among realistic harnesses are not significant in this pilot.",
+      "relevance": "Directly informs a handwritten literature-search harness, particularly query formulation and citation validation.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "We hold the backbone model, prompt format, and output schema fixed and vary only the harness"
+        },
+        {
+          "source": "inspection",
+          "quote": "The agentic harness raises gold recall to 19–20% and attains the highest accuracy (62.0 for both backbones)"
+        },
+        {
+          "source": "inspection",
+          "quote": "none of the accuracy differences between realistic harnesses is significant."
+        }
+      ],
+      "title": "Real PMIDs, Wrong Papers: Harness Design for Biomedical Claim-Verification Agents",
+      "url": "https://arxiv.org/abs/2610.29812v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    }
+  ],
+  "x_feature": null,
+  "limitations": [
+    "S-SALAAD’s exact matched-budget numerical comparisons were not established by the retrieved passages; its reported latency results are for inference.",
+    "The binary-weight training study does not establish LLM-scale or wall-clock efficiency; its per-weight state count is not total training memory.",
+    "The SciFact harness study uses 100 claims per condition and two small backbones from one provider.",
+    "X analysis was disabled; no attention or popularity claim is made.",
+    "inspect:2610.31897: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.26742: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.32142: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.32878: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.29812: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.30280: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.28072: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.34566: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.33846: only question-relevant HTML passages were inspected, not the whole paper."
+  ],
+  "stats": {
+    "fetched_count": 2674,
+    "candidate_count": 2674,
+    "llm_calls": 31,
+    "steps": 18,
+    "inspections": 10,
+    "expansions": 7,
+    "screened": 117,
+    "usage": {
+      "recorded_calls": 31,
+      "llm_latency_seconds": 450.03699137599324,
+      "input_tokens": 1674590,
+      "output_tokens": 15263,
+      "estimated_api_cost_usd": null,
+      "calls_without_usage": 0,
+      "cost_note": "API-equivalent estimate using standard GPT-5.6-Luna rates checked 2026-11-17: $0.20/M input, $1.20/M output; above 272K input, $0.40/M and $1.80/M. Assumes all input is uncached; excludes cache writes and external tools. Not actual Codex subscription billing. Unknown usage/model yields null cost.",
+      "price_source": "https://developers.openai.com/api/docs/models/gpt-5.6-luna"
+    },
+    "tool_calls": 17,
+    "tool_latency_seconds": 203.6430982129532
+  }
+}
