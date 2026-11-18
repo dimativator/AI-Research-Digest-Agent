@@ -1,0 +1,1459 @@
+{
+  "status": "ok",
+  "source": "https://arxiv.org/html/2610.37934v1",
+  "extractor_version": "article-v1",
+  "chunks": [
+    {
+      "chunk_id": "chunk-0001",
+      "section": "Bi-Phase Training: Learning Efficiently From Scratch",
+      "text": "Abel Gurung Affiliation: Purdue University Email: gurung1@purdue.edu Joseph Campbell Affiliation: Purdue University Email: joecamp@purdue.edu",
+      "source": "https://arxiv.org/html/2610.37934v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0002",
+      "section": "Abstract",
+      "text": "Pre-training foundational models is computationally expensive as models scale. In this work, we introduce Bi-Phase Training (BPT), a parameter-efficient pre-training method that preserves the high-rank learning dynamics observed in full-parameter optimization with substantially reduced trainable parameters. BPT parameterizes each weight update as a composition of constrained high-rank left/right transformations via trainable diagonal matrices and low-rank adapters whose updates are periodically merged into the frozen base weights, resulting in a compounding expansion of accessible directions during training. Across language-model pre-training from scratch (Qwen2.5 models from 100M to 1.5B parameters and OLMo-2-1B) on FineWeb-Edu (10B and 100B tokens), BPT achieves validation perplexity close to full-parameter baselines while using far fewer trainable parameters—e.g., at the 1.5B scale, BPT uses 66% fewer trainable parameters with only a small validation-perplexity gap. Additionally, a comprehensive evaluation across diverse downstream tasks shows that BPT preserves much of the full-parameterized model’s downstream performance. † † footnotetext: Accepted to Findings of AACL-IJCNLP 2026.",
+      "source": "https://arxiv.org/html/2610.37934v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0003",
+      "section": "1 Introduction",
+      "text": "Foundational models have demonstrated impressive general-purpose performance DeepSeek-AI et al. (2025) ; Grattafiori et al. (2024) . These models usually consist of billions of parameters, are trained on massive datasets, and have become the standard in modern deep learning. Empirical studies such as scaling laws have demonstrated that increasing model size generally leads to lower training loss Kaplan et al. (2020) ; Hoffmann et al. (2022) . However, training larger models requires significantly more compute, highlighting the need for more compute-efficient pre-training methods. Figure 1: Evaluation log-perplexity vs. log trainable parameters (non-embedding) across model sizes. BPT approaches the fully-parameterized baseline while using far fewer trainable parameters; on the 1.5B model it achieves comparable eval loss with 66% fewer trainable parameters",
+      "source": "https://arxiv.org/html/2610.37934v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0004",
+      "section": "1 Introduction",
+      "text": "During training, a given trainable parameter incurs a fixed memory overhead: the parameter itself ( n n ), its gradient ( n n ), and two optimizer states ( 2 ​ n 2n ) when using Adam family of optimizers Kingma and Ba (2017) ; Loshchilov and Hutter (2019) . While total training memory depends on several factors such as batch size and activation footprint Chen et al. (2016) , this 4 ​ n 4n overhead remains fixed per trainable parameter. Distinguishing between non-trainable and trainable parameters for pre-training is important, and the total number of parameters can be interpreted as the model’s representational capacity. Our central claim is that effective pre-training does not require optimizing every parameter. Instead, models can retain much of the learning behavior of full training while updating only a small subset of parameters, provided that the resulting updates preserve the essential training dynamics. We first analyze the general learning dynamics of full-parameter training in terms of the rank of the update for SGD and Adam optimizers, showing that in full-parameter training, updates are high-rank, and verify this behavior on a simple model. Then, to preserve the learning dynamics of high-rank while being parameter-efficient, we introduce Bi-Phase Training (BPT), a novel parameter-efficient method for pre-training foundation models that updates a weight matrix W \\mathrm{W} by simultaneously applying constrained high-rank and low-rank updates. This work directly builds on prior works such as LoRA Hu et al. (2021) , ReLoRA Lialin et al. (2023) , and HyperAdapt Gurung and Campbell (2025) and combines them in pre-training setting to achieve high-rank updates at every optimization step.",
+      "source": "https://arxiv.org/html/2610.37934v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0005",
+      "section": "1 Introduction",
+      "text": "The claim that a high-rank update is necessary is consistent with prior evidence. ReLoRA Lialin et al. (2023) shows that allowing a brief period of full-parameter training before switching to low-rank adaptation improves optimization, suggesting early learning benefits from richer (higher-rank) update directions Lialin et al. (2023) . Complementarily, systematic ablations that increase LoRA rank r r toward full-rank updates report that doing this matches full training performance when the model is trained from scratch, reinforcing the link between update rank and training performance Huh et al. (2024) . Empirically, we demonstrate the effectiveness of our method by pre-training three language models of varying sizes, showing consistent performance across scales. We also perform a comprehensive downstream evaluation of the trained models to show that there is minimal performance loss when using fewer trainable parameters than when using all trainable parameters. Our main contributions are as follows: • We introduce Bi-Phase Training (BPT) to significantly reduce the number of trainable parameters required during pre-training. • We provide a theoretical upper-bound to the rank of the update induced by BPT. • We comprehensively test the method on downstream evaluation tasks and show that there is minimal performance difference between the fully parameterized training and BPT.",
+      "source": "https://arxiv.org/html/2610.37934v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0006",
+      "section": "Full Parameterized Training",
+      "text": "Figure 2: Update-rank trend across batch sizes and methods. Left: rank change after the first update step versus batch size, showing scaling effects for SGD and consistently high-rank updates for Adam-full and BPT. Middle: rank at the end of training ( t = T t=T ) versus batch size, where full-parameter methods and BPT reach near-full rank even from small batches, while ReLoRA remains rank-limited. Right: rank evolution over normalized training steps for batch size 16, comparing Adam-full, SGD-full, BPT, and ReLoRA. During neural network training, we aim to find weight matrices W ∈ ℝ n × m \\mathrm{W}\\in\\mathbb{R}^{n\\times m} that minimizes a loss function, L L . The matrix is updated iteratively using gradient signals from backpropagation. The rank of the update Δ ​ W \\Delta\\mathrm{W} indicates the number of independent update directions applied per step to the weight matrix during optimization. Formally, we want to optimize the weight matrix W \\mathrm{W} using Δ ​ W \\Delta\\mathrm{W} : W ′ = W + Δ ​ W \\mathrm{W^{\\prime}}=\\mathrm{W}+\\Delta\\mathrm{W} where W ′ \\mathrm{W^{\\prime}} is the optimized weight matrix. For a single training example with an input vector x ∈ ℝ m x\\in\\mathbb{R}^{m} and a corresponding layer output y ∈ ℝ n y\\in\\mathbb{R}^{n} , the gradient of the loss with respect to the weight matrix G G is the outer product of the upstream gradient and the input vector’s transpose: G = ∂ L ∂ W = ( ∂ L ∂ y ) ​ x T G=\\frac{\\partial L}{\\partial\\mathrm{W}}=\\left(\\frac{\\partial L}{\\partial y}\\right)x^{T}",
+      "source": "https://arxiv.org/html/2610.37934v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0007",
+      "section": "Full Parameterized Training",
+      "text": "Since this is an outer product of two vectors, its rank is at most one, meaning that one training data point gives rank-one information. In stochastic gradient descent (SGD), where only the gradient of the matrix is used for the update, Δ ​ W \\Delta\\mathrm{W} , the rank of Δ ​ W \\Delta\\mathrm{W} for a single example is at most one. For a mini-batch of B B training examples, we can stack the inputs into a matrix X ∈ ℝ m × B \\mathrm{X}\\in\\mathbb{R}^{m\\times B} and the corresponding upstream gradients into a matrix Λ ∈ ℝ n × B \\Lambda\\in\\mathbb{R}^{n\\times B} . The gradient for the entire mini-batch is then given by the matrix product: G = 1 B ​ Λ ​ X T = 1 B ​ ∑ i = 1 B λ i ​ x i T G=\\frac{1}{B}\\Lambda\\mathrm{X}^{T}=\\frac{1}{B}\\sum_{i=1}^{B}\\lambda_{i}x_{i}^{T} The rank of a matrix product is less than or equal to the minimum rank of its factors. Since the rank of Λ \\Lambda is at most min ⁡ ( n , B ) \\min(n,B) and the rank of X T \\mathrm{X}^{T} is at most min ⁡ ( B , m ) \\min(B,m) , the rank of the resulting gradient matrix is bounded by: rank ⁡ ( G ) ≤ min ⁡ ( rank ⁡ ( Λ ) , rank ⁡ ( X T ) ) \\operatorname{rank}(G)\\leq\\min(\\operatorname{rank}(\\Lambda),\\operatorname{rank}(\\mathrm{X}^{T})) Without loss of generality, let B ≤ min ⁡ ( n , m ) B\\leq\\min(n,m) . For the update Δ ​ W \\Delta\\mathrm{W} in SGD, the rank ⁡ ( Δ ​ W ) \\operatorname{rank}(\\Delta\\mathrm{W}) is at most B B . This means that the update rank’s upper-bound grows linearly with the batch size for SGD. Additionally, adding momentum or using Adam has a different upper-bound for the update rank even at smaller batch size, refer to Appendix A for more on momentum and Adam’s rank.",
+      "source": "https://arxiv.org/html/2610.37934v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0008",
+      "section": "Parameter Efficient Training",
+      "text": "Full parameterized training can induce high-rank updates. However, this requires a large number of trainable parameters which is computationally expensive. In this section, we introduce parameter-efficient methods to train models while reducing the number of trainable parameters. To reduce the number of trainable parameters in W \\mathrm{W} , we want to express Δ ​ W \\Delta\\mathrm{W} with minimal number of trainable parameters while having high-rank such that the trainable parameter reduction does not alter its learning dynamics. In LoRA Hu et al. (2021) , Δ ​ W \\Delta\\mathrm{W} is defined as the product of two low-rank matrices B ∈ ℝ n × r \\mathrm{B}\\in\\mathbb{R}^{n\\times r} and A ∈ ℝ r × m \\mathrm{A}\\in\\mathbb{R}^{r\\times m} such that Δ ​ W = α ​ BA \\Delta\\mathrm{W}=\\alpha\\mathrm{BA} , where α \\alpha is a scaling factor. LoRA trains the low-rank matrices, B \\mathrm{B} and A \\mathrm{A} , which contain significantly fewer trainable parameters than W \\mathrm{W} . LoRA yields strong results for fine-tuning a pre-trained weight matrix, however, the objective landscape for pre-training from scratch is too complex to be modeled by a single r r -rank subspace alone Lialin et al. (2023) . Previous works Huh et al. (2024) have empirically shown that for training models from scratch with LoRA with rank r = min ⁡ ( n , m ) r=\\min(n,m) equaling the maximum rank possible of the matrix can match the performance of full training from scratch. Since the Δ ​ W \\Delta\\mathrm{W} rank in LoRA is always bounded by r r , it can never utilize the full rank potential of W \\mathrm{W} . To address this limitation, ReLoRA Lialin et al. (2023) extends LoRA by accumulating low-rank updates over multiple steps:",
+      "source": "https://arxiv.org/html/2610.37934v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0009",
+      "section": "Parameter Efficient Training",
+      "text": "Δ ​ W = α ​ ∑ n = 1 N B n ​ A n \\displaystyle\\mathrm{\\Delta W}=\\alpha\\sum_{n=1}^{N}\\mathrm{B}_{n}\\mathrm{A}_{n} where B \\mathrm{B} and A \\mathrm{A} are low-rank matrices. During training, B \\mathrm{B} and A \\mathrm{A} are optimized, and their low-rank matrices are periodically merged back into the original weight matrix W \\mathrm{W} . Following each merge, B \\mathrm{B} and A \\mathrm{A} are reinitialized, allowing the accumulated update Δ ​ W \\Delta\\mathrm{W} to surpass the rank constraint r r after multiple merge cycles. Despite this improvement, the rank of updates at any single step remains confined to a low-rank subspace. Also, for the duration of Δ ​ t \\Delta t between two merge cycles, the update is restricted to only a rank- r r update. This limits its ability to learn as efficiently as a fully parameterized model, as the update rank for a full parameterized model for any given timestep can be high-rank and results in weaker performance compared to full parameter pre-training Lialin et al. (2023) . Additionally, merging less frequently gives better performance empirically, since the Adam EMAs are better estimates as training progresses Lialin et al. (2023) ; Huh et al. (2024) . Figure 3: Overview of parameter-efficient training techniques. Blue represents non-trainable parameters, and green represents trainable parameters. UV \\mathrm{UV} is the product of two low-rank matrices of rank- r r , and A \\mathrm{A} and B \\mathrm{B} are diagonal matrices.",
+      "source": "https://arxiv.org/html/2610.37934v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0010",
+      "section": "Parameter Efficient Training",
+      "text": "In a related work, HyperAdapt Gurung and Campbell (2025) proposed a parameter-efficient high-rank adaptation method by defining the update as: Δ ​ W = AWB − W \\Delta\\mathrm{W}=\\mathrm{A}\\mathrm{W}\\mathrm{B}-\\mathrm{W} where A ∈ ℝ n × n \\mathrm{A}\\in\\mathbb{R}^{n\\times n} and B ∈ ℝ m × m \\mathrm{B}\\in\\mathbb{R}^{m\\times m} are trainable diagonal matrices, and W \\mathrm{W} is non-trainable parameter. Since both trainable matrices are diagonal, only n + m {n}+{m} number of parameters are needed to train them. Here the rank of Δ ​ W \\Delta\\mathrm{W} is upper-bounded by the 2 ⋅ rank ⁡ ( W ) 2\\cdot\\mathrm{rank(W)} . However, this method assumes that pre-trained weight matrices already contain relevant orthogonal directions which can be scaled relevant to the downstream fine-tuning task, strictly limiting its application to fine-tuning pre-trained models. Empirical rank. We train a three-layer ReLU MLP on CIFAR-10 Torralba et al. (2008) and track the second-layer update rank, rank ⁡ ( W t − W 0 ) \\mathrm{rank}(W_{t}-W_{0}) , across batch sizes and training steps; results are shown in Figure 2 . After one update, Adam-full and BPT produce consistently high-rank updates across batch sizes, while SGD-full follows its batch-size-dependent rank bound and ReLoRA remains rank-limited by construction. This suggests that BPT’s diagonal matrices can efficiently modulate the rank-one directions of the base weight matrix. By the end of training, all methods except ReLoRA reach near-full-rank updates regardless of batch size, with BPT closely matching full-parameterized training. For batch size 16, SGD-full begins with low-rank updates but reaches full rank within a few steps, indicating that high-rank updates emerge quickly during full training.",
+      "source": "https://arxiv.org/html/2610.37934v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0011",
+      "section": "3 Our Method",
+      "text": "Since a fully parameterized model can express high-rank updates at any step t t , as shown in Figure 2 , we seek an update Δ ​ W \\Delta\\mathrm{W} whose rank is comparably high while minimizing total number of trainable parameter to express Δ ​ W \\Delta\\mathrm{W} . To do this, we introduce Bi-Phase Training (BPT), a parameter-efficient method designed to induce high-rank updates within individual weight matrices using diagonal matrices and build low-rank subspace using low-rank matrices.",
+      "source": "https://arxiv.org/html/2610.37934v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0012",
+      "section": "Bi-Phase Training",
+      "text": "Our method conceptualizes the optimization of a weight matrix W ∈ ℝ n × m \\mathrm{W}\\in\\mathbb{R}^{n\\times m} not as a direct update to all n × m n\\times m parameters, but as an update structure Δ ​ W \\Delta\\mathrm{W} that combines transformations applied through efficient high-rank diagonal matrices with exploration guided by low-rank matrices. This allows us to approximate the expressiveness of full parameter updates while drastically reducing the trainable parameter count. Formally, for a weight matrix W 0 \\mathrm{W}_{0} , the update Δ ​ W \\Delta\\mathrm{W} is defined as: Δ ​ W = A ⁡ ( W 0 + ∑ t = 1 T UV ) ​ B − W 0 \\Delta\\mathrm{W}=\\mathrm{A}\\left(\\mathrm{W_{0}}+\\sum_{t=1}^{T}\\mathrm{U}\\mathrm{V}\\right)\\mathrm{B}-\\mathrm{W_{0}} (1) where A ∈ ℝ n × n \\mathrm{A}\\in\\mathbb{R}^{n\\times n} and B ∈ ℝ m × m \\mathrm{B}\\in\\mathbb{R}^{m\\times m} are diagonal trainable matrices, while U ∈ ℝ n × r \\mathrm{U}\\in\\mathbb{R}^{n\\times r} and V ∈ ℝ r × m \\mathrm{V}\\in\\mathbb{R}^{r\\times m} are low-rank trainable matrices. Importantly, W 0 \\mathrm{W_{0}} is a non-trainable parameter during training. At a given time t t , we only keep a pair of U \\mathrm{U} and V \\mathrm{V} trainable and periodically merge U \\mathrm{U} and V \\mathrm{V} to W \\mathrm{W} . So that means for a given step t t , we have: Δ ​ W = A ⁡ ( W 0 + UV ) ​ B − W 0 \\Delta\\mathrm{W}=\\mathrm{A}\\left(\\mathrm{W_{0}}+\\mathrm{U}\\mathrm{V}\\right)\\mathrm{B}-\\mathrm{W_{0}} (2)",
+      "source": "https://arxiv.org/html/2610.37934v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0013",
+      "section": "Bi-Phase Training",
+      "text": "At any given time t t , the update in Equation 2 is not restricted to rank r r in the same way as a pure low-rank adapter. The lemma below provides an expressivity upper bound, rank ⁡ ( Δ ​ W ) ≤ min ⁡ ( n , m , 2 ​ R + r ) \\operatorname{rank}(\\Delta\\mathrm{W})\\leq\\min(n,m,2R+r) , showing that BPT’s update rank is not inherently limited by the rank of UV \\mathrm{U}\\mathrm{V} . Intuitively, the low-rank matrices U \\mathrm{U} and V \\mathrm{V} find and accumulate relevant orthogonal directions within a lower-dimensional subspace, while the diagonal matrices A \\mathrm{A} and B \\mathrm{B} scale relevant orthogonal directions, thus effectively guiding the high-rank updates.",
+      "source": "https://arxiv.org/html/2610.37934v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0014",
+      "section": "Lemma 3.1 .",
+      "text": "The upper bound for the rank of the update Δ ​ W = A ⁡ ( W + UV ) ​ B − W \\Delta\\mathrm{W}=\\mathrm{A}(\\mathrm{W}+\\mathrm{U}\\mathrm{V})\\mathrm{B}-\\mathrm{W} is 2 ​ R + r 2R+r , where R = rank ⁡ ( W ) R=\\operatorname{rank}(\\mathrm{W}) and r = rank ⁡ ( UV ) r=\\operatorname{rank}(\\mathrm{U}\\mathrm{V}) . The proof is in the appendix Appendix B .",
+      "source": "https://arxiv.org/html/2610.37934v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0015",
+      "section": "3.1 Mechanism of Learning",
+      "text": "BPT combines two complementary mechanisms: low-rank exploration and diagonal reweighting. Let the frozen base matrix be decomposed into rank-one directions, W 0 = ∑ i = 1 R 𝐚 i ​ 𝐛 i ⊤ . \\mathrm{W}_{0}=\\sum_{i=1}^{R}\\mathbf{a}_{i}\\mathbf{b}_{i}^{\\top}. The diagonal matrices A {\\color[rgb]{0,0,0}\\mathrm{A}} and B {\\color[rgb]{0,0,0}\\mathrm{B}} rescale these existing directions: AW 0 ​ B = ∑ i = 1 R A ​ 𝐚 i ​ 𝐛 i ⊤ ​ B . {\\color[rgb]{0,0,0}\\mathrm{A}}\\mathrm{W}_{0}{\\color[rgb]{0,0,0}\\mathrm{B}}=\\sum_{i=1}^{R}{\\color[rgb]{0,0,0}\\mathrm{A}}\\mathbf{a}_{i}\\mathbf{b}_{i}^{\\top}{\\color[rgb]{0,0,0}\\mathrm{B}}. However, diagonal scaling alone cannot create new directions. The low-rank term UV {\\color[rgb]{0,0,0}\\mathrm{U}}{\\color[rgb]{0,0,0}\\mathrm{V}} provides this exploration: A ⁡ ( W 0 + UV ) ​ B = ∑ i = 1 R A ​ 𝐚 i ​ 𝐛 i ⊤ ​ B + ∑ j = 1 r A ​ 𝐮 j ​ 𝐯 j ⊤ ​ B . {\\color[rgb]{0,0,0}\\mathrm{A}}(\\mathrm{W}_{0}+{\\color[rgb]{0,0,0}\\mathrm{U}}{\\color[rgb]{0,0,0}\\mathrm{V}}){\\color[rgb]{0,0,0}\\mathrm{B}}=\\sum_{i=1}^{R}{\\color[rgb]{0,0,0}\\mathrm{A}}\\mathbf{a}_{i}\\mathbf{b}_{i}^{\\top}{\\color[rgb]{0,0,0}\\mathrm{B}}+\\sum_{j=1}^{r}{\\color[rgb]{0,0,0}\\mathrm{A}}\\mathbf{u}_{j}\\mathbf{v}_{j}^{\\top}{\\color[rgb]{0,0,0}\\mathrm{B}}. Thus, U {\\color[rgb]{0,0,0}\\mathrm{U}} and V {\\color[rgb]{0,0,0}\\mathrm{V}} discover new low-rank directions, while A {\\color[rgb]{0,0,0}\\mathrm{A}} and B {\\color[rgb]{0,0,0}\\mathrm{B}} immediately modulate both the original and newly discovered directions. Periodically, BPT merges the learned low-rank update into the base matrix, W t + 1 := W t + U t ​ V t , \\mathrm{W}_{t+1}:=\\mathrm{W}_{t}+{\\color[rgb]{0,0,0}\\mathrm{U}}_{t}{\\color[rgb]{0,0,0}\\mathrm{V}}_{t}, (3)",
+      "source": "https://arxiv.org/html/2610.37934v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0016",
+      "section": "3.1 Mechanism of Learning",
+      "text": "and reinitializes U {\\color[rgb]{0,0,0}\\mathrm{U}} and V {\\color[rgb]{0,0,0}\\mathrm{V}} to explore new subspaces. Since the diagonal matrices are not merged or reinitialized, they continue to rescale all accumulated directions. After multiple merge cycles, BPT therefore compounds learning: low-rank factors add new directions to W \\mathrm{W} , while the diagonals continuously scale both old and new directions. This differs from ReLoRA-style training, where each update remains confined to a rank- r r subspace between merge steps. In BPT, the current low-rank factors explore new directions while the persistent diagonal matrices simultaneously reshape the accumulated base, allowing high-rank behavior at each step.",
+      "source": "https://arxiv.org/html/2610.37934v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0017",
+      "section": "Initialization",
+      "text": "We initialize the fixed base weight W \\mathrm{W} with Kaiming initialization He et al. (2015) . The diagonal matrices A \\mathrm{A} and B \\mathrm{B} are initialized to one, so they initially act as identities. For the low-rank factors, U \\mathrm{U} is initialized semi-orthogonally and V \\mathrm{V} is initialized to zero. Thus UV = 0 \\mathrm{UV}=0 , and the initial forward pass matches the Kaiming-initialized base model.",
+      "source": "https://arxiv.org/html/2610.37934v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0018",
+      "section": "Merging",
+      "text": "During training, BPT periodically adds the learned low-rank update into the frozen base weight using Equation 3 . This preserves the directions already discovered while freeing the low-rank factors to explore a new subspace. After each merge, we reset U \\mathrm{U} and V \\mathrm{V} as U := init.orthogonal , V := init.zero \\mathrm{U}:=\\text{init.orthogonal}\\quad,\\quad\\mathrm{V}:=\\text{init.zero} Because UV = 0 \\mathrm{UV}=0 immediately after reset, the effective matrix is unchanged at the merge point. The fresh semi-orthogonal U \\mathrm{U} provides rank- r r directions for the next exploration phase. We do not merge the diagonal matrices, since doing so would not create new subspace directions. Reinitializing the low-rank factors makes their optimizer exponential moving averages (EMAs) stale, whereas the diagonal EMAs remain valid because the diagonals are not reset. This helps stabilize training and avoids sudden loss spikes after merging. Figure 4: Eval loss over training steps. Left: OLMo-2-1B. Right: Qwen-2.5-1.5B. BPT tracks the Full baseline closely and outperforms ReLoRA over time, despite using substantially fewer trainable parameters.",
+      "source": "https://arxiv.org/html/2610.37934v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0019",
+      "section": "3.3 Parameter and Compute Efficiency",
+      "text": "The primary advantage of BPT lies in its significant reduction in the number of trainable parameters compared to training the full weight matrix W \\mathrm{W} . For a single layer with weight matrix W ∈ ℝ n × m \\mathrm{W}\\in\\mathbb{R}^{n\\times m} , the trainable parameters in BPT are located only in the diagonal matrices A \\mathrm{A} and B \\mathrm{B} , and the low-rank matrices U \\mathrm{U} and V \\mathrm{V} . The total number of trainable parameters for one such layer in BPT is n + m n+m (from diagonal A \\mathrm{A} and B \\mathrm{B} ) plus n × r + r × m n\\times r+r\\times m (from low-rank U \\mathrm{U} and V \\mathrm{V} ). In contrast, training the full weight matrix requires n × m n\\times m parameters. Since r ≪ min ⁡ ( n , m ) r\\ll\\min(n,m) , the total trainable parameters in BPT are substantially less than n ​ m nm . n + m ⏟ Diagonal Matrices + n ​ r + r ​ m ⏟ Low-Rank Matrices ≪ n ​ m ⏟ Full Matrix \\underbrace{n+m}_{\\text{Diagonal Matrices}}+\\underbrace{nr+rm}_{\\text{Low-Rank Matrices}}\\ll\\underbrace{nm}_{\\text{Full Matrix}} This parameter reduction directly translates into lower memory overhead during training with efficient kernel implementation. This trainable parameter count reduces the fixed memory cost associated with training neural networks as stated in section 1 . Additionally, BPT requires approximately two-thirds of the linear-layer FLOPs of full training; we provide the full FLOP analysis in Appendix C .",
+      "source": "https://arxiv.org/html/2610.37934v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0020",
+      "section": "4 Related Work",
+      "text": "While the past few years have witnessed remarkable progress in reducing the memory footprint for fine-tuning large language models, memory-efficient pre-training remains considerably less explored. GaLore Zhao et al. (2024) addresses this gap by proposing a novel approach to parameter-efficient training that projects gradients into a low-rank subspace, diverging from traditional methods that directly parameterize low-rank weight matrices. However, GaLore’s reliance on Singular Value Decomposition (SVD) to identify the optimal low-rank approximation presents a significant computational bottleneck. The computational cost of SVD scales poorly with the matrix’s dimensions, since SVD has O ⁡ ( n 3 ) O(n^{3}) time complexity, making GaLore difficult to scale. LoRA-the-explorer (LTE) Huh et al. (2024) extends LoRA to pre-training by exploring the low-rank solution space in parallel across different computing nodes. While LTE’s parallel search strategy presents a seemingly promising avenue to mitigate the computational bottlenecks associated with full-rank pre-training, it unfortunately inherits the same fundamental drawback: at each step, optimization is limited to a low-rank subspace similar to other low-rank methods section 2 .",
+      "source": "https://arxiv.org/html/2610.37934v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0021",
+      "section": "4 Related Work",
+      "text": "Other LoRA variants further improve parameter-efficient adaptation but remain primarily designed for fine-tuning pretrained models. DoRA Liu et al. (2024) decomposes each pretrained weight into magnitude and direction components, using low-rank weights for directional updates while learning the magnitude separately. VeRA Kopiczko et al. (2024) instead freezes shared random low-rank matrices and trains only lightweight scaling vectors, greatly reducing adapter parameters. However, both approaches still rely on constrained low-rank directions or fixed random projections, and therefore do not directly address the need for repeatedly expanding high-rank update directions during from-scratch pre-training. Model Method Trainable Wiki LAMB LAMB Hella WinoG PIQA BoolQ SciQ OBQA ARC-E ARC-C Avg SWDE Params ppl ↓ \\downarrow ppl ↓ \\downarrow acc ↑ \\uparrow acc ↑ \\uparrow acc ↑ \\uparrow acc ↑ \\uparrow acc ↑ \\uparrow acc ↑ \\uparrow acc ↑ \\uparrow acc ↑ \\uparrow acc ↑ \\uparrow acc ↑ \\uparrow 10 Billion Tokens Full 1.5B 2.0 47.9 30.9 33.1 51.3 66.9 59.9 81.1 23.6 59.2 23.0 47.7 17.7 Qwen-2.5-1.5B ReLoRA 0.5B 5.0 42.8 32.2 33.1 50.2 66.5 60.6 82.6 23.2 58.8 24.5 48.0 15.0 BPT 0.5B 4.8 34.6 34.6 34.7 52.1 66.8 57.2 81.2 23.0 61.9 27.3 48.8 15.3 Full 1.5B 1.9 48.2 30.6 32.8 51.1 66.6 57.9 82.8 23.2 58.9 23.5 47.5 14.4 OLMo-2-1B ReLoRA 0.6B 2.0 47.9 30.9 32.8 52.2 66.5 57.9 83.7 23.4 58.8 25.4 48.0 16.5 BPT 0.6B 2.0 40.7 33.0 33.1 52.6 67.7 60.7 82.2 23.6 59.9 25.7 48.7 19.5 100 Billion Tokens Full 1.5B 3.4 18.1 42.8 41.4 53.5 71.6 59.7 87.5 28.8 69.2 34.0 54.3 23.9 Qwen-2.5-1.5B ReLoRA 0.5B 3.9 23.5 38.7 37.6 53.3 68.4 58.6 84.4 25.4 65.2 30.6 51.3 21.4 BPT 0.5B 3.7 21.4 39.2 39.2 53.9 70.6 62.0 87.5 26.2 66.1 30.6 52.8 19.7",
+      "source": "https://arxiv.org/html/2610.37934v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0022",
+      "section": "4 Related Work",
+      "text": "Table 1: Performance across Language Modeling, Commonsense, QA, and Extraction Tasks: lower is better for perplexity; higher is better for accuracy.",
+      "source": "https://arxiv.org/html/2610.37934v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0023",
+      "section": "5 Empirical Experiments",
+      "text": "To evaluate the effectiveness of our proposed method, we conducted a series of pre-training experiments on language models of varying scales and assessed their performance on a diverse suite of downstream tasks. Our primary goal was to demonstrate that BPT can come close to the performance of standard full-parameter pre-training while requiring significantly fewer trainable parameters, thereby lowering the computational barrier to developing large foundation models. All models were pre-trained from scratch using the standard next-token prediction objective. We used a 10 and 100 billion token subset of the FineWeb-Edu dataset Penedo et al. (2024) . Our baselines for comparison are standard full-parameter pre-training (referred to as “Full”), where all model parameters are trainable, and ReLoRA. Importantly, all methods use the same underlying model architecture and the same total number of parameters; the difference lies solely in the number of trainable parameters during training. We train three scales of models based on the Qwen2.5 architecture: 100M, 0.5B, and 1.5B parameters. Additionally, we also pre-train OLMo-2-1B OLMo et al. (2024) on the 10B tokens of the same dataset. The detailed specifications of the model architectures are provided in Appendix D . We also summarize the parameter reduction achieved through BPT in Table 4 . For more details regarding hyperparameters and layers targeted, refer to Appendix E . As the model scales, BPT uses a smaller fraction of trainable parameters while remaining close to full-parameter performance, since layers like the embedding layer do not have an outsized effect on larger models Figure 5: Qwen-2.5-1.5B: Validation Loss vs. Training Steps (Full vs. BPT) for 100B tokens",
+      "source": "https://arxiv.org/html/2610.37934v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0024",
+      "section": "5.1 Pre-training Performance",
+      "text": "Our pre-training experiments at 10 billion tokens demonstrate BPT achieves validation perplexity close to full-parameter training across different model scales while achieving substantial reductions in trainable parameters. Figure 1 summarizes our experimental results across different model sizes. The x-axis represents the trainable parameters, not including embedding parameters. We show that, for a given model size, BPT achieves log-perplexity performance on a validation set similar to that of the full parameterized model, with significantly fewer trainable parameters. Figure 4 compares the evaluation log perplexity on the validation set for the Qwen-2.5-1.5B and OLMo-2 between the Full, ReLoRA, and BPT. We show that even with 66% less trainable parameters , BPT achieves validation loss close to full-parameter training. The log-perplexity of validation data shows that the model does not simply overfit the training data and has a similar evaluation loss profile as the baseline. Both BPT and ReLoRA have almost an identical number of trainable parameters. ReLoRA’s eval loss slowly diverges from BPT’s, even though both methods use a similar high learning rate. Figure 6: BPT ablations and memory summary. Left/Middle: rank and merge-frequency ablations on the 100M model trained on 10B tokens. Higher rank for the low-rank matrices leads to lower validation loss. Less frequent merges also lead to lower validation loss. Right: Peak GPU memory for Qwen-2.5-1.5B. BPT saves 5.8 GB to train a 1.5B model.",
+      "source": "https://arxiv.org/html/2610.37934v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0025",
+      "section": "Longer Training (100 Billion Tokens)",
+      "text": "To further assess the effectiveness of BPT, we pre-train Qwen-2.5-1.5B model on 100 billion tokens from FineWeb-Edu using the same setup as our main experiments. The final evaluation difference between BPT and Full is 0.0271 log perplexity with 66% fewer trainable parameters, compared with a 0.0656 gap between ReLoRA and Full.",
+      "source": "https://arxiv.org/html/2610.37934v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0026",
+      "section": "5.2 Downstream Evaluation",
+      "text": "The training loss and evaluation loss indicate strong performance for our proposed methods. To further evaluate whether the parameter efficiency of BPT impacts the model’s ability to generalize to unseen tasks, we perform downstream evaluations on our Qwen-2.5-1.5B and OLMo-2-1B models. For all our evaluations, we do not further finetune any additional dataset and report zero-shot performance. Evaluations were performed using the LM evaluation harness Gao et al. (2024) . Following prior work at a similar model and data scale Allen-Zhu (2025) ; Yang et al. (2025) , we evaluate commonsense and reasoning benchmarks including HellaSwag Zellers et al. (2019) , WinoGrande Sakaguchi et al. (2019) , PIQA Bisk et al. (2019) , BoolQ Clark et al. (2019) , SciQ Welbl et al. (2017) , OpenBookQA Mihaylov et al. (2018) , and ARC-Easy/Challenge Clark et al. (2018) . We also report perplexity on held-out text using WikiText Merity et al. (2016) and LAMBADA Paperno et al. (2016) , and evaluate generation using SWDE Lockard et al. (2019) . For Wikitext, we report byte perplexity. Table 1 summarizes our results. At 10B tokens, BPT is competitive with Full on average in our benchmark suite, while at 100B tokens Full performs better on average. This suggests that BPT preserves much, but not all, downstream performance under reduced trainable-parameter training.",
+      "source": "https://arxiv.org/html/2610.37934v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0027",
+      "section": "5.3 Comparison of PEFT Methods",
+      "text": "Table 2: Comparison of PEFT Methods: Trainable Parameter and Eval Loss. Models are pre-trained from scratch on 10 billion tokens. Method Trainable Eval Param Loss ↓ \\downarrow HyperAdapt 137M 5.486 VeRA 137M 4.640 LoRA 206M 3.051 DoRA 206M 3.102 ReLoRA 206M 3.038 BPT 206M 3.014 Full 494M 3.022 Since BPT builds on prior works such as LoRA, ReLoRA, and HyperAdapt, we can evaluate the performance of each of these components by directly pre-training using these methods and comparing against BPT. For this ablation study, we pre-train the Qwen-2.5-0.5B model in the same setup as our main experiments with 10 billion tokens and report their evaluation loss along with the trainable parameters. This study also allows us to see the effects of only training low-rank matrices UV \\mathrm{U}\\mathrm{V} without merging (LoRA), the effect of training low-rank matrices UV \\mathrm{U}\\mathrm{V} with merging (ReLoRA), and the effect of training only the diagonal matrices A \\mathrm{A} and B \\mathrm{B} (HyperAdapt).",
+      "source": "https://arxiv.org/html/2610.37934v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0028",
+      "section": "5.3 Comparison of PEFT Methods",
+      "text": "The result is summarized in Table 2 . HyperAdapt, which only uses diagonal matrices to update W \\mathrm{W} , performs poorly since the base weight matrix W \\mathrm{W} does not contain any relevant subspace that can be adjusted, since W \\mathrm{W} at initialization is just a random matrix. LoRA without periodic rank accumulation performs better than HyperAdapt, and the difference between LoRA’s evaluation loss and ReLoRA’s evaluation loss is only 0.01. BPT and Full both have evaluation losses that are similar compared to other methods. Additionally, to exactly match the number of trainable parameters in ReLoRA and BPT, we conducted an additional experiment using ReLoRA with rank (r+1=129). Under the same training setup, rank-128 ReLoRA achieved a final evaluation loss of 3.038, while rank-129 ReLoRA achieved 3.033. In comparison, rank-128 BPT achieved a lower evaluation loss of 3.014. Thus, increasing the ReLoRA rank to obtain an exact parameter-matched comparison yields only a small improvement and does not account for the performance advantage of BPT.",
+      "source": "https://arxiv.org/html/2610.37934v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0029",
+      "section": "5.4 Rank and Merge Frequency",
+      "text": "To better understand the role of rank and merge frequency in BPT, we ablate both under the same setting as our main results, using the 100M model trained on 10B tokens. As shown in Figure 6 , increasing rank improves evaluation loss with diminishing returns, while less frequent merges generally perform better by allowing Adam to estimate its moments more stably between resets. Detailed GPU memory measurements are provided in Appendix F .",
+      "source": "https://arxiv.org/html/2610.37934v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0030",
+      "section": "6 Conclusion",
+      "text": "In this paper, we introduced Bi-Phase Training (BPT), a parameter-efficient pre-training method that combines diagonal high-rank transformations with periodically merged low-rank adapters. Across language-model pre-training from 100M to 1.5B parameters, BPT approaches full-training validation loss and preserves much of its downstream performance, while optimizing substantially fewer trainable parameters. This suggests that BPT can be a practical route to more efficient foundation-model pre-training.",
+      "source": "https://arxiv.org/html/2610.37934v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0031",
+      "section": "Limitations",
+      "text": "Our experiments are limited to autoregressive language-model pre-training models up to 1.5B parameters. Future work should test BPT on larger models, longer training runs, other architectures and also different modalities such as diffusion.",
+      "source": "https://arxiv.org/html/2610.37934v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0032",
+      "section": "Acknowledgments",
+      "text": "This work used the DeltaAI system at the National Center for Supercomputing Applications through allocation CIS250267 from the Advanced Cyberinfrastructure Coordination Ecosystem: Services and Support (ACCESS) program, which is supported by National Science Foundation grants 2138259, 2138286, 2138307, 2137603, and 2138296.",
+      "source": "https://arxiv.org/html/2610.37934v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0033",
+      "section": "References",
+      "text": "Allen-Zhu (2025) Z. Allen-Zhu Physics of language models: part 4.1, architecture design and the magic of canon layers . External Links: 2512.17351 , Link Cited by: §5.2 . Bisk et al. (2019) Y. Bisk, R. Zellers, R. L. Bras, J. Gao, and Y. Choi PIQA: reasoning about physical commonsense in natural language . External Links: 1911.11641 , Link Cited by: §5.2 . Chen et al. (2016) T. Chen, B. Xu, C. Zhang, and C. Guestrin Training deep nets with sublinear memory cost . External Links: 1604.06174 , Link Cited by: §1 . Clark et al. (2019) C. Clark, K. Lee, M. Chang, T. Kwiatkowski, M. Collins, and K. Toutanova BoolQ: exploring the surprising difficulty of natural yes/no questions . External Links: 1905.10044 , Link Cited by: §5.2 . Clark et al. (2018) P. Clark, I. Cowhey, O. Etzioni, T. Khot, A. Sabharwal, C. Schoenick, and O. Tafjord Think you have solved question answering? try arc, the ai2 reasoning challenge . External Links: 1803.05457 , Link Cited by: §5.2 .",
+      "source": "https://arxiv.org/html/2610.37934v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0034",
+      "section": "References",
+      "text": "DeepSeek-AI et al. (2025) DeepSeek-AI, A. Liu, B. Feng, B. Xue, B. Wang, B. Wu, C. Lu, C. Zhao, C. Deng, C. Zhang, C. Ruan, D. Dai, D. Guo, D. Yang, D. Chen, D. Ji, E. Li, F. Lin, F. Dai, F. Luo, G. Hao, G. Chen, G. Li, H. Zhang, H. Bao, H. Xu, H. Wang, H. Zhang, H. Ding, H. Xin, H. Gao, H. Li, H. Qu, J. L. Cai, J. Liang, J. Guo, J. Ni, J. Li, J. Wang, J. Chen, J. Chen, J. Yuan, J. Qiu, J. Li, J. Song, K. Dong, K. Hu, K. Gao, K. Guan, K. Huang, K. Yu, L. Wang, L. Zhang, L. Xu, L. Xia, L. Zhao, L. Wang, L. Zhang, M. Li, M. Wang, M. Zhang, M. Zhang, M. Tang, M. Li, N. Tian, P. Huang, P. Wang, P. Zhang, Q. Wang, Q. Zhu, Q. Chen, Q. Du, R. J. Chen, R. L. Jin, R. Ge, R. Zhang, R. Pan, R. Wang, R. Xu, R. Zhang, R. Chen, S. S. Li, S. Lu, S. Zhou, S. Chen, S. Wu, S. Ye, S. Ye, S. Ma, S. Wang, S. Zhou, S. Yu, S. Zhou, S. Pan, T. Wang, T. Yun, T. Pei, T. Sun, W. L. Xiao, W. Zeng, W. Zhao, W. An, W. Liu, W. Liang, W. Gao, W. Yu, W. Zhang, X. Q. Li, X. Jin, X. Wang, X. Bi, X. Liu, X. Wang, X. Shen, X. Chen, X. Zhang, X. Chen, X. Nie, X. Sun, X. Wang, X. Cheng, X. Liu, X. Xie, X. Liu, X. Yu, X. Song, X. Shan, X. Zhou, X. Yang, X. Li, X. Su, X. Lin, Y. K. Li, Y. Q. Wang, Y. X. Wei, Y. X. Zhu, Y. Zhang, Y. Xu, Y. Xu, Y. Huang, Y. Li, Y. Zhao, Y. Sun, Y. Li, Y. Wang, Y. Yu, Y. Zheng, Y. Zhang, Y. Shi, Y. Xiong, Y. He, Y. Tang, Y. Piao, Y. Wang, Y. Tan, Y. Ma, Y. Liu, Y. Guo, Y. Wu, Y. Ou, Y. Zhu, Y. Wang, Y. Gong, Y. Zou, Y. He, Y. Zha, Y. Xiong, Y. Ma, Y. Yan, Y. Luo, Y. You, Y. Liu, Y. Zhou, Z. F. Wu, Z. Z. Ren, Z. Ren, Z. Sha, Z. Fu, Z. Xu, Z. Huang, Z. Zhang, Z. Xie, Z. Zhang, Z. Hao, Z. Gou, Z. Ma, Z. Yan, Z. Shao, Z. Xu, Z. Wu, Z. Zhang, Z. Li, Z. Gu, Z. Zhu, Z. Liu, Z. Li, Z. Xie, Z. Song, Z. Gao, and Z. Pan DeepSeek-v3 technical report . External Links: 2412.19437 , Link Cited",
+      "source": "https://arxiv.org/html/2610.37934v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0035",
+      "section": "References",
+      "text": " Z. Gou, Z. Ma, Z. Yan, Z. Shao, Z. Xu, Z. Wu, Z. Zhang, Z. Li, Z. Gu, Z. Zhu, Z. Liu, Z. Li, Z. Xie, Z. Song, Z. Gao, and Z. Pan DeepSeek-v3 technical report . External Links: 2412.19437 , Link Cited by: §1 .",
+      "source": "https://arxiv.org/html/2610.37934v1",
+      "offset": 1599
+    },
+    {
+      "chunk_id": "chunk-0036",
+      "section": "References",
+      "text": "Gao et al. (2024) L. Gao, J. Tow, B. Abbasi, S. Biderman, S. Black, A. DiPofi, C. Foster, L. Golding, J. Hsu, A. Le Noac’h, H. Li, K. McDonell, N. Muennighoff, C. Ociepa, J. Phang, L. Reynolds, H. Schoelkopf, A. Skowron, L. Sutawika, E. Tang, A. Thite, B. Wang, K. Wang, and A. Zou The language model evaluation harness . Zenodo . External Links: Document , Link Cited by: §5.2 .",
+      "source": "https://arxiv.org/html/2610.37934v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0037",
+      "section": "References",
+      "text": "Grattafiori et al. (2024) A. Grattafiori, A. Dubey, A. Jauhri, A. Pandey, A. Kadian, A. Al-Dahle, A. Letman, A. Mathur, A. Schelten, A. Vaughan, A. Yang, A. Fan, A. Goyal, A. Hartshorn, A. Yang, A. Mitra, A. Sravankumar, A. Korenev, A. Hinsvark, A. Rao, A. Zhang, A. Rodriguez, A. Gregerson, A. Spataru, B. Roziere, B. Biron, B. Tang, B. Chern, C. Caucheteux, C. Nayak, C. Bi, C. Marra, C. McConnell, C. Keller, C. Touret, C. Wu, C. Wong, C. C. Ferrer, C. Nikolaidis, D. Allonsius, D. Song, D. Pintz, D. Livshits, D. Wyatt, D. Esiobu, D. Choudhary, D. Mahajan, D. Garcia-Olano, D. Perino, D. Hupkes, E. Lakomkin, E. AlBadawy, E. Lobanova, E. Dinan, E. M. Smith, F. Radenovic, F. Guzmán, F. Zhang, G. Synnaeve, G. Lee, G. L. Anderson, G. Thattai, G. Nail, G. Mialon, G. Pang, G. Cucurell, H. Nguyen, H. Korevaar, H. Xu, H. Touvron, I. Zarov, I. A. Ibarra, I. Kloumann, I. Misra, I. Evtimov, J. Zhang, J. Copet, J. Lee, J. Geffert, J. Vranes, J. Park, J. Mahadeokar, J. Shah, J. van der Linde, J. Billock, J. Hong, J. Lee, J. Fu, J. Chi, J. Huang, J. Liu, J. Wang, J. Yu, J. Bitton, J. Spisak, J. Park, J. Rocca, J. Johnstun, J. Saxe, J. Jia, K. V. Alwala, K. Prasad, K. Upasani, K. Plawiak, K. Li, K. Heafield, K. Stone, K. El-Arini, K. Iyer, K. Malik, K. Chiu, K. Bhalla, K. Lakhotia, L. Rantala-Yeary, L. van der Maaten, L. Chen, L. Tan, L. Jenkins, L. Martin, L. Madaan, L. Malo, L. Blecher, L. Landzaat, L. de Oliveira, M. Muzzi, M. Pasupuleti, M. Singh, M. Paluri, M. Kardas, M. Tsimpoukelli, M. Oldham, M. Rita, M. Pavlova, M. Kambadur, M. Lewis, M. Si, M. K. Singh, M. Hassan, N. Goyal, N. Torabi, N. Bashlykov, N. Bogoychev, N. Chatterji, N. Zhang, O. Duchenne, O. Çelebi, P. Alrassy, P. Zhang, P. Li, P. Vasic, P. Weng, P. Bhargava, P. Dubal, P. Krishnan, P. S. Koura, P. Xu, Q. He, Q. Dong,",
+      "source": "https://arxiv.org/html/2610.37934v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0038",
+      "section": "References",
+      "text": "abi, N. Bashlykov, N. Bogoychev, N. Chatterji, N. Zhang, O. Duchenne, O. Çelebi, P. Alrassy, P. Zhang, P. Li, P. Vasic, P. Weng, P. Bhargava, P. Dubal, P. Krishnan, P. S. Koura, P. Xu, Q. He, Q. Dong, R. Srinivasan, R. Ganapathy, R. Calderer, R. S. Cabral, R. Stojnic, R. Raileanu, R. Maheswari, R. Girdhar, R. Patel, R. Sauvestre, R. Polidoro, R. Sumbaly, R. Taylor, R. Silva, R. Hou, R. Wang, S. Hosseini, S. Chennabasappa, S. Singh, S. Bell, S. S. Kim, S. Edunov, S. Nie, S. Narang, S. Raparthy, S. Shen, S. Wan, S. Bhosale, S. Zhang, S. Vandenhende, S. Batra, S. Whitman, S. Sootla, S. Collot, S. Gururangan, S. Borodinsky, T. Herman, T. Fowler, T. Sheasha, T. Georgiou, T. Scialom, T. Speckbacher, T. Mihaylov, T. Xiao, U. Karn, V. Goswami, V. Gupta, V. Ramanathan, V. Kerkez, V. Gonguet, V. Do, V. Vogeti, V. Albiero, V. Petrovic, W. Chu, W. Xiong, W. Fu, W. Meers, X. Martinet, X. Wang, X. Wang, X. E. Tan, X. Xia, X. Xie, X. Jia, X. Wang, Y. Goldschlag, Y. Gaur, Y. Babaei, Y. Wen, Y. Song, Y. Zhang, Y. Li, Y. Mao, Z. D. Coudert, Z. Yan, Z. Chen, Z. Papakipos, A. Singh, A. Srivastava, A. Jain, A. Kelsey, A. Shajnfeld, A. Gangidi, A. Victoria, A. Goldstand, A. Menon, A. Sharma, A. Boesenberg, A. Baevski, A. Feinstein, A. Kallet, A. Sangani, A. Teo, A. Yunus, A. Lupu, A. Alvarado, A. Caples, A. Gu, A. Ho, A. Poulton, A. Ryan, A. Ramchandani, A. Dong, A. Franco, A. Goyal, A. Saraf, A. Chowdhury, A. Gabriel, A. Bharambe, A. Eisenman, A. Yazdan, B. James, B. Maurer, B. Leonhardi, B. Huang, B. Loyd, B. D. Paola, B. Paranjape, B. Liu, B. Wu, B. Ni, B. Hancock, B. Wasti, B. Spence, B. Stojkovic, B. Gamido, B. Montalvo, C. Parker, C. Burton, C. Mejia, C. Liu, C. Wang, C. Kim, C. Zhou, C. Hu, C. Chu, C. Cai, C. Tindal, C. Feichtenhofer, C. Gao, D. Civin, D. Beaty, D. Kreymer, D. Li, D.",
+      "source": "https://arxiv.org/html/2610.37934v1",
+      "offset": 1599
+    },
+    {
+      "chunk_id": "chunk-0039",
+      "section": "References",
+      "text": "ojkovic, B. Gamido, B. Montalvo, C. Parker, C. Burton, C. Mejia, C. Liu, C. Wang, C. Kim, C. Zhou, C. Hu, C. Chu, C. Cai, C. Tindal, C. Feichtenhofer, C. Gao, D. Civin, D. Beaty, D. Kreymer, D. Li, D. Adkins, D. Xu, D. Testuggine, D. David, D. Parikh, D. Liskovich, D. Foss, D. Wang, D. Le, D. Holland, E. Dowling, E. Jamil, E. Montgomery, E. Presani, E. Hahn, E. Wood, E. Le, E. Brinkman, E. Arcaute, E. Dunbar, E. Smothers, F. Sun, F. Kreuk, F. Tian, F. Kokkinos, F. Ozgenel, F. Caggioni, F. Kanayet, F. Seide, G. M. Florez, G. Schwarz, G. Badeer, G. Swee, G. Halpern, G. Herman, G. Sizov, Guangyi, Zhang, G. Lakshminarayanan, H. Inan, H. Shojanazeri, H. Zou, H. Wang, H. Zha, H. Habeeb, H. Rudolph, H. Suk, H. Aspegren, H. Goldman, H. Zhan, I. Damlaj, I. Molybog, I. Tufanov, I. Leontiadis, I. Veliche, I. Gat, J. Weissman, J. Geboski, J. Kohli, J. Lam, J. Asher, J. Gaya, J. Marcus, J. Tang, J. Chan, J. Zhen, J. Reizenstein, J. Teboul, J. Zhong, J. Jin, J. Yang, J. Cummings, J. Carvill, J. Shepard, J. McPhie, J. Torres, J. Ginsburg, J. Wang, K. Wu, K. H. U, K. Saxena, K. Khandelwal, K. Zand, K. Matosich, K. Veeraraghavan, K. Michelena, K. Li, K. Jagadeesh, K. Huang, K. Chawla, K. Huang, L. Chen, L. Garg, L. A, L. Silva, L. Bell, L. Zhang, L. Guo, L. Yu, L. Moshkovich, L. Wehrstedt, M. Khabsa, M. Avalani, M. Bhatt, M. Mankus, M. Hasson, M. Lennie, M. Reso, M. Groshev, M. Naumov, M. Lathi, M. Keneally, M. Liu, M. L. Seltzer, M. Valko, M. Restrepo, M. Patel, M. Vyatskov, M. Samvelyan, M. Clark, M. Macey, M. Wang, M. J. Hermoso, M. Metanat, M. Rastegari, M. Bansal, N. Santhanam, N. Parks, N. White, N. Bawa, N. Singhal, N. Egebo, N. Usunier, N. Mehta, N. P. Laptev, N. Dong, N. Cheng, O. Chernoguz, O. Hart, O. Salpekar, O. Kalinli, P. Kent, P. Parekh, P. Saab, P. Balaji, P. Rittner,",
+      "source": "https://arxiv.org/html/2610.37934v1",
+      "offset": 3198
+    },
+    {
+      "chunk_id": "chunk-0040",
+      "section": "References",
+      "text": "rks, N. White, N. Bawa, N. Singhal, N. Egebo, N. Usunier, N. Mehta, N. P. Laptev, N. Dong, N. Cheng, O. Chernoguz, O. Hart, O. Salpekar, O. Kalinli, P. Kent, P. Parekh, P. Saab, P. Balaji, P. Rittner, P. Bontrager, P. Roux, P. Dollar, P. Zvyagina, P. Ratanchandani, P. Yuvraj, Q. Liang, R. Alao, R. Rodriguez, R. Ayub, R. Murthy, R. Nayani, R. Mitra, R. Parthasarathy, R. Li, R. Hogan, R. Battey, R. Wang, R. Howes, R. Rinott, S. Mehta, S. Siby, S. J. Bondu, S. Datta, S. Chugh, S. Hunt, S. Dhillon, S. Sidorov, S. Pan, S. Mahajan, S. Verma, S. Yamamoto, S. Ramaswamy, S. Lindsay, S. Lindsay, S. Feng, S. Lin, S. C. Zha, S. Patil, S. Shankar, S. Zhang, S. Zhang, S. Wang, S. Agarwal, S. Sajuyigbe, S. Chintala, S. Max, S. Chen, S. Kehoe, S. Satterfield, S. Govindaprasad, S. Gupta, S. Deng, S. Cho, S. Virk, S. Subramanian, S. Choudhury, S. Goldman, T. Remez, T. Glaser, T. Best, T. Koehler, T. Robinson, T. Li, T. Zhang, T. Matthews, T. Chou, T. Shaked, V. Vontimitta, V. Ajayi, V. Montanez, V. Mohan, V. S. Kumar, V. Mangla, V. Ionescu, V. Poenaru, V. T. Mihailescu, V. Ivanov, W. Li, W. Wang, W. Jiang, W. Bouaziz, W. Constable, X. Tang, X. Wu, X. Wang, X. Wu, X. Gao, Y. Kleinman, Y. Chen, Y. Hu, Y. Jia, Y. Qi, Y. Li, Y. Zhang, Y. Zhang, Y. Adi, Y. Nam, Yu, Wang, Y. Zhao, Y. Hao, Y. Qian, Y. Li, Y. He, Z. Rait, Z. DeVito, Z. Rosnbrick, Z. Wen, Z. Yang, Z. Zhao, and Z. Ma The llama 3 herd of models . External Links: 2407.21783 , Link Cited by: §1 .",
+      "source": "https://arxiv.org/html/2610.37934v1",
+      "offset": 4796
+    },
+    {
+      "chunk_id": "chunk-0041",
+      "section": "References",
+      "text": "Gurung and Campbell (2025) A. Gurung and J. Campbell HyperAdapt: simple high-rank adaptation . External Links: 2509.18629 , Link Cited by: §1 , §2 . He et al. (2015) K. He, X. Zhang, S. Ren, and J. Sun Delving deep into rectifiers: surpassing human-level performance on imagenet classification . External Links: 1502.01852 , Link Cited by: §3.2 . Hoffmann et al. (2022) J. Hoffmann, S. Borgeaud, A. Mensch, E. Buchatskaya, T. Cai, E. Rutherford, D. de Las Casas, L. A. Hendricks, J. Welbl, A. Clark, T. Hennigan, E. Noland, K. Millican, G. van den Driessche, B. Damoc, A. Guy, S. Osindero, K. Simonyan, E. Elsen, J. W. Rae, O. Vinyals, and L. Sifre Training compute-optimal large language models . External Links: 2203.15556 , Link Cited by: §1 . Hu et al. (2021) E. J. Hu, Y. Shen, P. Wallis, Z. Allen-Zhu, Y. Li, S. Wang, L. Wang, and W. Chen LoRA: low-rank adaptation of large language models . External Links: 2106.09685 , Link Cited by: §1 , §2 . Huh et al. (2024) M. Huh, B. Cheung, J. Bernstein, P. Isola, and P. Agrawal Training neural networks from scratch with parallel low-rank adapters . External Links: 2402.16828 , Link Cited by: §1 , §2 , §2 , §4 . Kaplan et al. (2020) J. Kaplan, S. McCandlish, T. Henighan, T. B. Brown, B. Chess, R. Child, S. Gray, A. Radford, J. Wu, and D. Amodei Scaling laws for neural language models . External Links: 2001.08361 , Link Cited by: §1 . Kingma and Ba (2017) D. P. Kingma and J. Ba Adam: a method for stochastic optimization . External Links: 1412.6980 , Link Cited by: Appendix A , §1 . Kopiczko et al. (2024) D. J. Kopiczko, T. Blankevoort, and Y. M. Asano VeRA: vector-based random matrix adaptation . External Links: 2310.11454 , Link Cited by: §4 .",
+      "source": "https://arxiv.org/html/2610.37934v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0042",
+      "section": "References",
+      "text": "Lialin et al. (2023) V. Lialin, N. Shivagunde, S. Muckatira, and A. Rumshisky ReLoRA: high-rank training through low-rank updates . External Links: 2307.05695 , Link Cited by: §1 , §1 , §2 , §2 . Liu et al. (2024) S. Liu, C. Wang, H. Yin, P. Molchanov, Y. F. Wang, K. Cheng, and M. Chen DoRA: weight-decomposed low-rank adaptation . External Links: 2402.09353 , Link Cited by: §4 . Lockard et al. (2019) C. Lockard, P. Shiralkar, and X. L. Dong OpenCeres: When open information extraction meets the semi-structured web . In Proceedings of the 2019 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies, Volume 1 (Long and Short Papers) , J. Burstein, C. Doran, and T. Solorio (Eds.) , Minneapolis, Minnesota , pp. 3047–3056 . External Links: Link , Document Cited by: §5.2 . Loshchilov and Hutter (2019) I. Loshchilov and F. Hutter Decoupled weight decay regularization . External Links: 1711.05101 , Link Cited by: Appendix E , §1 . Merity et al. (2016) S. Merity, C. Xiong, J. Bradbury, and R. Socher Pointer sentinel mixture models . External Links: 1609.07843 , Link Cited by: §5.2 . Mihaylov et al. (2018) T. Mihaylov, P. Clark, T. Khot, and A. Sabharwal Can a suit of armor conduct electricity? a new dataset for open book question answering . External Links: 1809.02789 , Link Cited by: §5.2 .",
+      "source": "https://arxiv.org/html/2610.37934v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0043",
+      "section": "References",
+      "text": "OLMo et al. (2024) T. OLMo, P. Walsh, L. Soldaini, D. Groeneveld, K. Lo, S. Arora, A. Bhagia, Y. Gu, S. Huang, M. Jordan, N. Lambert, D. Schwenk, O. Tafjord, T. Anderson, D. Atkinson, F. Brahman, C. Clark, P. Dasigi, N. Dziri, M. Guerquin, H. Ivison, P. W. Koh, J. Liu, S. Malik, W. Merrill, L. J. V. Miranda, J. Morrison, T. Murray, C. Nam, V. Pyatkin, A. Rangapur, M. Schmitz, S. Skjonsberg, D. Wadden, C. Wilhelm, M. Wilson, L. Zettlemoyer, A. Farhadi, N. A. Smith, and H. Hajishirzi 2 OLMo 2 Furious . External Links: 2501.00656 , Link Cited by: Appendix D , §5 . Paperno et al. (2016) D. Paperno, G. Kruszewski, A. Lazaridou, Q. N. Pham, R. Bernardi, S. Pezzelle, M. Baroni, G. Boleda, and R. Fernández The lambada dataset: word prediction requiring a broad discourse context . External Links: 1606.06031 , Link Cited by: §5.2 . Penedo et al. (2024) G. Penedo, H. Kydlíček, L. B. allal, A. Lozhkov, M. Mitchell, C. Raffel, L. V. Werra, and T. Wolf The fineweb datasets: decanting the web for the finest text data at scale . External Links: 2406.17557 , Link Cited by: §5 . Qwen et al. (2025) Qwen, :, A. Yang, B. Yang, B. Zhang, B. Hui, B. Zheng, B. Yu, C. Li, D. Liu, F. Huang, H. Wei, H. Lin, J. Yang, J. Tu, J. Zhang, J. Yang, J. Yang, J. Zhou, J. Lin, K. Dang, K. Lu, K. Bao, K. Yang, L. Yu, M. Li, M. Xue, P. Zhang, Q. Zhu, R. Men, R. Lin, T. Li, T. Tang, T. Xia, X. Ren, X. Ren, Y. Fan, Y. Su, Y. Zhang, Y. Wan, Y. Liu, Z. Cui, Z. Zhang, and Z. Qiu Qwen2.5 technical report . External Links: 2412.15115 , Link Cited by: Appendix D . Sakaguchi et al. (2019) K. Sakaguchi, R. L. Bras, C. Bhagavatula, and Y. Choi WinoGrande: an adversarial winograd schema challenge at scale . External Links: 1907.10641 , Link Cited by: §5.2 .",
+      "source": "https://arxiv.org/html/2610.37934v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0044",
+      "section": "References",
+      "text": "Schulman and Lab (2025) J. Schulman and T. M. Lab LoRA without regret . Thinking Machines Lab: Connectionism . Note: https://thinkingmachines.ai/blog/lora/ External Links: Document Cited by: Appendix C , Appendix C , Appendix C . Torralba et al. (2008) A. Torralba, R. Fergus, and W. T. Freeman 80 million tiny images: a large data set for nonparametric object and scene recognition . IEEE Transactions on Pattern Analysis and Machine Intelligence 30 ( 11 ), pp. 1958–1970 . External Links: Document Cited by: §2 . Welbl et al. (2017) J. Welbl, N. F. Liu, and M. Gardner Crowdsourcing multiple choice science questions . External Links: 1707.06209 , Link Cited by: §5.2 . Yang et al. (2025) S. Yang, B. Wang, Y. Zhang, Y. Shen, and Y. Kim Parallelizing linear transformers with the delta rule over sequence length . External Links: 2406.06484 , Link Cited by: §5.2 . Zellers et al. (2019) R. Zellers, A. Holtzman, Y. Bisk, A. Farhadi, and Y. Choi HellaSwag: can a machine really finish your sentence? . External Links: 1905.07830 , Link Cited by: §5.2 . Zhao et al. (2024) J. Zhao, Z. Zhang, B. Chen, Z. Wang, A. Anandkumar, and Y. Tian GaLore: memory-efficient llm training by gradient low-rank projection . External Links: 2403.03507 , Link Cited by: §4 .",
+      "source": "https://arxiv.org/html/2610.37934v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0045",
+      "section": "Appendix A Momentum and Adam’s Update Rank",
+      "text": "For SGD with momentum, the update rank at time t t is upper-bounded by t ​ B tB since momentum is a linear combination of past gradients. In modern optimizers such as Adam Kingma and Ba (2017) , where first and second exponential moving averages (EMAs) are stored and transformed, the rank of the update is no longer bounded just by the batch size but depends on the rank of its first and second EMAs. Here we derive a loose upper-bound for Adam. For Adam, let G t ∈ ℝ n × m G_{t}\\in\\mathbb{R}^{n\\times m} denote the mini-batch gradient at step t t (for batch size B B , we have rank ⁡ ( G t ) ≤ min ⁡ ( n , m , B ) \\operatorname{rank}(G_{t})\\leq\\min(n,m,B) as above). Adam maintains exponential moving averages of the first and second moments: M t \\displaystyle M_{t} = β 1 ​ M t − 1 + ( 1 − β 1 ) ​ G t , \\displaystyle=\\beta_{1}M_{t-1}+(1-\\beta_{1})G_{t}, V t \\displaystyle V_{t} = β 2 ​ V t − 1 + ( 1 − β 2 ) ​ ( G t ⊙ G t ) , \\displaystyle=\\beta_{2}V_{t-1}+(1-\\beta_{2})(G_{t}\\odot G_{t}), where ⊙ \\odot denotes the element-wise product. The parameter update is Δ W t = − α M t V t + ε = − α M t ⊙ 1 V t + ε \\Delta W_{t}=-\\alpha\\frac{M_{t}}{\\sqrt{V_{t}}+\\varepsilon}=-\\alpha M_{t}\\odot\\frac{1}{\\sqrt{V_{t}}+\\varepsilon} where the division and square-root are applied element-wise. Using Hadamard product Since M t M_{t} is a linear combination of past gradients, M t = ( 1 − β 1 ) ​ ∑ k = 1 t β 1 t − k ​ G k , M_{t}=(1-\\beta_{1})\\sum_{k=1}^{t}\\beta_{1}^{t-k}G_{k}, and using rank ⁡ ( ∑ k = 1 t G k ) ≤ ∑ k = 1 t rank ⁡ ( G k ) \\operatorname{rank}(\\sum_{k=1}^{t}G_{k})\\leq\\sum_{k=1}^{t}\\operatorname{rank}(G_{k}) , we obtain an upper-bound rank ⁡ ( M t ) ≤ ∑ k = 1 t rank ⁡ ( G k ) ≤ t ​ B , \\operatorname{rank}(M_{t})\\leq\\sum_{k=1}^{t}\\operatorname{rank}(G_{k})\\leq tB,",
+      "source": "https://arxiv.org/html/2610.37934v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0046",
+      "section": "Appendix A Momentum and Adam’s Update Rank",
+      "text": "hence rank ⁡ ( M t ) ≤ min ⁡ ( n , m , t ​ B ) \\operatorname{rank}(M_{t})\\leq\\min(n,m,tB) . Using the Hadamard-rank inequality: for any A , B ∈ ℝ n × m A,B\\in\\mathbb{R}^{n\\times m} , rank ⁡ ( A ⊙ B ) ≤ rank ⁡ ( A ) ​ rank ⁡ ( B ) . \\operatorname{rank}(A\\odot B)\\leq\\operatorname{rank}(A)\\,\\operatorname{rank}(B). Applying this to Δ ​ W t \\Delta W_{t} yields rank ⁡ ( Δ ​ W t ) = rank ⁡ ( M t ⊙ 1 V t + ε ) ≤ rank ⁡ ( M t ) ​ rank ⁡ ( 1 V t + ε ) \\operatorname{rank}(\\Delta W_{t})=\\operatorname{rank}(M_{t}\\odot\\frac{1}{\\sqrt{V_{t}}+\\varepsilon})\\leq\\operatorname{rank}(M_{t})\\,\\operatorname{rank}(\\frac{1}{\\sqrt{V_{t}}+\\varepsilon}) Hence, for Adam, the rank of its Δ ​ W t \\Delta W_{t} is upper-bounded by the product of its first and second moments’ ranks. Here, we do not provide the rank of the second moment primarily because performing element-wise square-root on a matrix leads to full rank in some cases, even for rank-one matrices.",
+      "source": "https://arxiv.org/html/2610.37934v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0047",
+      "section": "Lemma B.1 .",
+      "text": "The upper bound for the rank of the update Δ ​ W = A ⁡ ( W + UV ) ​ B − W \\Delta\\mathrm{W}=\\mathrm{A}(\\mathrm{W}+\\mathrm{U}\\mathrm{V})\\mathrm{B}-\\mathrm{W} is 2 ​ R + r 2R+r , where R = rank ⁡ ( W ) R=\\operatorname{rank}(\\mathrm{W}) and r = rank ⁡ ( UV ) r=\\operatorname{rank}(\\mathrm{U}\\mathrm{V}) .",
+      "source": "https://arxiv.org/html/2610.37934v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0048",
+      "section": "Proof.",
+      "text": "We have Δ ​ W = A ⁡ ( W + UV ) ​ B − W = AWB + AUVB − W . \\Delta\\mathrm{W}=\\mathrm{A}(\\mathrm{W}+\\mathrm{U}\\mathrm{V})\\mathrm{B}-\\mathrm{W}=\\mathrm{A}\\mathrm{W}\\mathrm{B}+\\mathrm{A}\\mathrm{U}\\mathrm{V}\\mathrm{B}-\\mathrm{W}. For all conformable matrices X \\mathrm{X} and Y \\mathrm{Y} , rank ⁡ ( X + Y ) ≤ rank ⁡ ( X ) + rank ⁡ ( Y ) \\operatorname{rank}(\\mathrm{X}+\\mathrm{Y})\\leq\\operatorname{rank}(\\mathrm{X})+\\operatorname{rank}(\\mathrm{Y}) . Therefore, rank ⁡ ( AWB + AUVB − W ) ≤ rank ⁡ ( AWB ) + rank ⁡ ( AUVB ) + rank ⁡ ( − W ) . \\operatorname{rank}\\!\\bigl(\\mathrm{A}\\mathrm{W}\\mathrm{B}+\\mathrm{A}\\mathrm{U}\\mathrm{V}\\mathrm{B}-\\mathrm{W}\\bigr)\\leq\\operatorname{rank}(\\mathrm{A}\\mathrm{W}\\mathrm{B})+\\operatorname{rank}(\\mathrm{A}\\mathrm{U}\\mathrm{V}\\mathrm{B})+\\operatorname{rank}(-\\mathrm{W}). Since matrix multiplication cannot increase rank, rank ⁡ ( AXB ) ≤ rank ⁡ ( X ) \\operatorname{rank}(\\mathrm{A}\\mathrm{X}\\mathrm{B})\\leq\\operatorname{rank}(\\mathrm{X}) for any X \\mathrm{X} , and hence rank ⁡ ( AWB + AUVB − W ) ≤ rank ⁡ ( W ) + rank ⁡ ( UV ) + rank ⁡ ( − W ) . \\operatorname{rank}\\!\\bigl(\\mathrm{A}\\mathrm{W}\\mathrm{B}+\\mathrm{A}\\mathrm{U}\\mathrm{V}\\mathrm{B}-\\mathrm{W}\\bigr)\\leq\\operatorname{rank}(\\mathrm{W})+\\operatorname{rank}(\\mathrm{U}\\mathrm{V})+\\operatorname{rank}(-\\mathrm{W}). We have rank ⁡ ( UV ) = r \\operatorname{rank}(\\mathrm{U}\\mathrm{V})=r and rank ⁡ ( W ) = rank ⁡ ( − W ) = R \\operatorname{rank}(\\mathrm{W})=\\operatorname{rank}(-\\mathrm{W})=R , so rank ⁡ ( Δ ​ W ) ≤ R + r + R = 2 ​ R + r . \\operatorname{rank}\\!\\bigl(\\Delta\\mathrm{W}\\bigr)\\leq R+r+R=2R+r.",
+      "source": "https://arxiv.org/html/2610.37934v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0049",
+      "section": "Proof.",
+      "text": "Hence the rank of the update Δ ​ W \\Delta\\mathrm{W} is upper-bounded by 2 ​ R + r 2R+r . Trivially, it is also bounded by its dimensions so rank ⁡ ( Δ ​ W ) ≤ min ⁡ ( n , m , 2 ​ R + r ) \\operatorname{rank}(\\Delta\\mathrm{W})\\leq\\min(n,m,2R+r) ∎",
+      "source": "https://arxiv.org/html/2610.37934v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0050",
+      "section": "Appendix C FLOP Analysis",
+      "text": "For FLOP analysis, we use the same setup as Schulman and Lab (2025) . In full training, for a weight matrix W ∈ ℝ N × N \\mathrm{W}\\in\\mathbb{R}^{N\\times N} , an input x ∈ ℝ N x\\in\\mathbb{R}^{N} , and an output y ∈ ℝ N y\\in\\mathbb{R}^{N} , we have Forward: y \\displaystyle\\text{Forward:}\\qquad y = W ​ x \\displaystyle=\\mathrm{W}x ( N 2 ​ multiply-adds ) , \\displaystyle\\left(N^{2}\\text{ multiply-adds}\\right), Backward: x ¯ \\displaystyle\\text{Backward:}\\qquad\\bar{x} = W ⊤ ​ y ¯ \\displaystyle=\\mathrm{W}^{\\top}\\bar{y} ( N 2 ​ multiply-adds ) , \\displaystyle\\left(N^{2}\\text{ multiply-adds}\\right), W ¯ \\displaystyle\\bar{\\mathrm{W}} + = y ¯ x ⊤ \\displaystyle\\mathrel{+}=\\bar{y}x^{\\top} ( N 2 ​ multiply-adds ) . \\displaystyle\\left(N^{2}\\text{ multiply-adds}\\right). Here, W ¯ \\bar{\\mathrm{W}} , y ¯ \\bar{y} , and x ¯ \\bar{x} denote gradients of the loss with respect to W \\mathrm{W} , y y , and x x , respectively. Combining the forward pass ( N 2 ) \\left(N^{2}\\right) and backward pass ( 2 ​ N 2 ) \\left(2N^{2}\\right) gives FLOPs Full = 3 ​ N 2 . \\mathrm{FLOPs}_{\\mathrm{Full}}=3N^{2}. In BPT, we replace W \\mathrm{W} by A ⁡ ( W + UV ) ​ B \\mathrm{A}(\\mathrm{W}+\\mathrm{U}\\mathrm{V})\\mathrm{B} , where A , B ∈ ℝ N × N \\mathrm{A},\\mathrm{B}\\in\\mathbb{R}^{N\\times N} are diagonal matrices and U ∈ ℝ N × R \\mathrm{U}\\in\\mathbb{R}^{N\\times R} , V ∈ ℝ R × N \\mathrm{V}\\in\\mathbb{R}^{R\\times N} are low-rank matrices with R ≪ N R\\ll N . Since we only update A ¯ \\bar{\\mathrm{A}} , B ¯ \\bar{\\mathrm{B}} , U ¯ \\bar{\\mathrm{U}} , and V ¯ \\bar{\\mathrm{V}} , the update of W ¯ \\bar{\\mathrm{W}} is replaced by cheaper operations. The FLOP estimate for BPT is therefore",
+      "source": "https://arxiv.org/html/2610.37934v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0051",
+      "section": "Appendix C FLOP Analysis",
+      "text": "Forward: y \\displaystyle\\text{Forward:}\\qquad y = A ⁡ ( W + UV ) ​ B ​ x \\displaystyle=\\mathrm{A}(\\mathrm{W}+\\mathrm{U}\\mathrm{V})\\mathrm{B}x ( N 2 + 2 ​ N ​ R + 2 ​ N ​ multiply-adds ) , \\displaystyle\\left(N^{2}+2NR+2N\\text{ multiply-adds}\\right), Backward: x ¯ \\displaystyle\\text{Backward:}\\qquad\\bar{x} = B ⊤ ​ ( W + UV ) ⊤ ​ A ⊤ ​ y ¯ \\displaystyle=\\mathrm{B}^{\\top}(\\mathrm{W}+\\mathrm{U}\\mathrm{V})^{\\top}\\mathrm{A}^{\\top}\\bar{y} ( N 2 + 2 ​ N ​ R + 2 ​ N ​ multiply-adds ) , \\displaystyle\\left(N^{2}+2NR+2N\\text{ multiply-adds}\\right), U ¯ \\displaystyle\\bar{\\mathrm{U}} + = ( A ⊤ y ¯ ) ( VB x ) ⊤ \\displaystyle\\mathrel{+}=(\\mathrm{A}^{\\top}\\bar{y})(\\mathrm{V}\\mathrm{B}x)^{\\top} ( N ​ R ​ multiply-adds ) , \\displaystyle\\left(NR\\text{ multiply-adds}\\right), V ¯ \\displaystyle\\bar{\\mathrm{V}} + = ( U ⊤ A ⊤ y ¯ ) ( B x ) ⊤ \\displaystyle\\mathrel{+}=(\\mathrm{U}^{\\top}\\mathrm{A}^{\\top}\\bar{y})(\\mathrm{B}x)^{\\top} ( N ​ R ​ multiply-adds ) , \\displaystyle\\left(NR\\text{ multiply-adds}\\right), A ¯ \\displaystyle\\bar{\\mathrm{A}} + = y ¯ ⊙ ( ( W + UV ) B x ) \\displaystyle\\mathrel{+}=\\bar{y}\\odot\\bigl((\\mathrm{W}+\\mathrm{U}\\mathrm{V})\\mathrm{B}x\\bigr) ( N ​ multiply-adds ) , \\displaystyle\\left(N\\text{ multiply-adds}\\right), B ¯ \\displaystyle\\bar{\\mathrm{B}} + = ( ( W + UV ) ⊤ A ⊤ y ¯ ) ⊙ x \\displaystyle\\mathrel{+}=\\bigl((\\mathrm{W}+\\mathrm{U}\\mathrm{V})^{\\top}\\mathrm{A}^{\\top}\\bar{y}\\bigr)\\odot x ( N ​ multiply-adds ) . \\displaystyle\\left(N\\text{ multiply-adds}\\right). Thus, combining the BPT forward pass ( N 2 + 2 ​ N ​ R + 2 ​ N ) \\left(N^{2}+2NR+2N\\right) and backward pass ( N 2 + 4 ​ N ​ R + 4 ​ N ) \\left(N^{2}+4NR+4N\\right) gives FLOPs BPT = 2 ​ N 2 + 6 ​ N ​ R + 6 ​ N . \\mathrm{FLOPs}_{\\mathrm{BPT}}=2N^{2}+6NR+6N.",
+      "source": "https://arxiv.org/html/2610.37934v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0052",
+      "section": "Appendix C FLOP Analysis",
+      "text": "This is close to the FLOP estimate for LoRA Schulman and Lab (2025) , which is FLOPs LoRA = 2 ​ N 2 + 6 ​ N ​ R . \\mathrm{FLOPs}_{\\mathrm{LoRA}}=2N^{2}+6NR. BPT incurs an additional 6 ​ N 6N cost due to the diagonal factors. Compared to full training, which costs 3 ​ N 2 3N^{2} per layer, BPT uses FLOPs BPT FLOPs Full \\displaystyle\\frac{\\mathrm{FLOPs}_{\\mathrm{BPT}}}{\\mathrm{FLOPs}_{\\mathrm{Full}}} = 2 ​ N 2 + 6 ​ N ​ R + 6 ​ N 3 ​ N 2 = 2 3 + 2 ​ R N + 2 N . \\displaystyle=\\frac{2N^{2}+6NR+6N}{3N^{2}}=\\frac{2}{3}+\\frac{2R}{N}+\\frac{2}{N}. When R ≪ N R\\ll N , this is only slightly larger than 2 / 3 2/3 , meaning that BPT uses roughly two-thirds of the compute of full training. This analysis follows the same setup as Schulman and Lab (2025) and considers only FLOPs in linear layers, which account for the majority of FLOPs during training.",
+      "source": "https://arxiv.org/html/2610.37934v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0053",
+      "section": "Appendix D Model Architecture and Parameter Reduction",
+      "text": "All models are based on the Qwen2.5 architecture Qwen et al. (2025) : in addition to the standard 0.5B and 1.5B parameter versions, we developed a custom 100M parameter variant by scaling down the same architecture. We also pre-train OLMo-2-1B OLMo et al. (2024) . Although both models are transformer-based auto-regressive language models, they differ slightly in their attention implementation (Grouped Query Attention vs Multi-head Attention). Additionally, Qwen-2.5 ties its input and output embeddings, whereas OLMo-2 has separate input and output embeddings. For OLMo-2, we directly use the official implementation from the authors. Table 3: Model Architecture Detail and Total Training Tokens Models Layers Heads (Q / KV) Hidden Size Intermediate Size Training Tokens 100M 8 8/ 2 512 2048 10B 0.5B 24 14 / 2 896 4864 10B 1.5B 36 16 / 2 2048 11008 10B and 100B Table 4: Trainable parameter counts by method and model size Model Full BPT Total Non-embedding Trainable Trainable Reduction (%) Reduction (%) Small 108M 89M 17.8 63.5 Medium 0.5B 0.2B 58.2 80.4 Large 1.5B 0.5B 65.9 77.4",
+      "source": "https://arxiv.org/html/2610.37934v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0054",
+      "section": "Appendix E Hyperparameters and Experimental Setup",
+      "text": "For BPT and other baselines, we applied this method exclusively to the linear layers within the transformer blocks. Parameters such as layer normalization, embedding layers, and (lm_head) were kept fully trainable. For the Qwen2.5 architecture, attention matrices, such as the query projection layer q_head , have dimensions 518 by 128. Applying BPT to such layers would increase the number of trainable parameters if the low-rank matrices’ rank is set to 128, undermining the parameter efficiency goal for these specific matrices. Hence, we leave them unchanged. We did not conduct extensive hyperparameter search for learning rate. Following the trend of PEFT papers, where learning rate is higher compared to full fine-tuning. We simply used 10x of the base learning rate which was 2e-4 for all our base models. For ReLoRA with Qwen 1.5B model and LoRA with Qwen 0.5B model, we used a learning rate of 1e-3 after multiple crashes with learning rate 2e-3. Additionally, all the parameters in the model were trained using bf16 including the low-rank matrices with the exception of the diagonal matrices which were kept in fp32 for stability. For a fair comparison, all experiments for a given model size used the same batch size and were trained for the same total number of steps. The optimizer used was AdamW Loshchilov and Hutter (2019) , and the learning rate followed a warm-up and cosine decay schedule (WSD). Table 5: The hyperparameters used for pre-training Qwen-2.5 Models.",
+      "source": "https://arxiv.org/html/2610.37934v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0055",
+      "section": "Appendix E Hyperparameters and Experimental Setup",
+      "text": "Method Models 100M 0.5B 1.5B Optimizer AdamW Warmup Steps 2000 Decay Steps 10000,8000,8000 Max Grad Norm 1.0 Max Seq. Len 512 Batch Size 320,512,1024 LR Schedule WSD Tokens 10B Full Learning Rate 2e-4 BPT Learning Rate 2e-3 Rank 128,128,256 ReLoRA Learning Rate 2e-3,1e-3 Rank ,128,256 LoRA Learning Rate 1e-3 Rank 128 HyperAdapt Learning Rate 2e-3 Table 6: The hyperparameters used for pre-training OLMo-2-1B. Method Models 1B Optimizer AdamW Warmup Steps 2000 Decay Steps 8000 Max Grad Norm 1.0 Max Seq. Len 512 Batch Size 960 LR Schedule WSD Tokens 10B Full Learning Rate 2e-4 BPT Learning Rate 2e-3 Rank 256 ReLoRA Learning Rate 2e-3 Rank 256 Table 7: The hyperparameters used for pre-training Qwen-2.5 1.5B on 100 billion tokens. Method Models 1.5B Optimizer AdamW Warmup Steps 2000 Decay Steps 24,000 Max Grad Norm 1.0 Max Seq. Len 512 Batch Size 1024 LR Schedule WSD Tokens 100B Full Learning Rate 2e-4 BPT Learning Rate 2e-3 Rank 256",
+      "source": "https://arxiv.org/html/2610.37934v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0056",
+      "section": "Appendix F GPU Memory Footprint",
+      "text": "On a 4-GPU NVIDIA GH200 setup, we evaluate the memory consumption of Qwen-2.5-1.5B at approximately 8192 tokens per GPU (16 microbatches × \\times 512 sequence length). Compared to full training, BPT reduces peak GPU memory by 5.8 GB per GPU with torch.compile and by 7.9 GB per GPU with torch.compile plus gradient checkpointing, as summarized in Figure 6 . These memory savings come with roughly 7 % 7\\% wall-clock overhead under torch.compile ; because this uses a pure PyTorch implementation without custom kernels, the overhead is likely an upper bound.",
+      "source": "https://arxiv.org/html/2610.37934v1",
+      "offset": 0
+    }
+  ],
+  "links": [
+    {
+      "href": "mailto:",
+      "text": "gurung1@purdue.edu",
+      "section": "Bi-Phase Training: Learning Efficiently From Scratch",
+      "context": "Abel Gurung Affiliation: Purdue University Email: gurung1@purdue.edu",
+      "url": "mailto:"
+    },
+    {
+      "href": "mailto:",
+      "text": "joecamp@purdue.edu",
+      "section": "Bi-Phase Training: Learning Efficiently From Scratch",
+      "context": "Abel Gurung Affiliation: Purdue University Email: gurung1@purdue.edu Joseph Campbell Affiliation: Purdue University Email: joecamp@purdue.edu",
+      "url": "mailto:"
+    },
+    {
+      "href": "#bib.bib27",
+      "text": "DeepSeek-AI et al. (2025)",
+      "section": "1 Introduction",
+      "context": "Foundational models have demonstrated impressive general-purpose performance DeepSeek-AI et al. (2025)",
+      "url": "https://arxiv.org/html/2610.37934v1#bib.bib27"
+    },
+    {
+      "href": "#bib.bib15",
+      "text": "Grattafiori et al. (2024)",
+      "section": "1 Introduction",
+      "context": "Foundational models have demonstrated impressive general-purpose performance DeepSeek-AI et al. (2025) ; Grattafiori et al. (2024)",
+      "url": "https://arxiv.org/html/2610.37934v1#bib.bib15"
+    },
+    {
+      "href": "#bib.bib14",
+      "text": "Kaplan et al. (2020)",
+      "section": "1 Introduction",
+      "context": "Foundational models have demonstrated impressive general-purpose performance DeepSeek-AI et al. (2025) ; Grattafiori et al. (2024) . These models usually consist of billions of parameters, are trained on massive datasets, and have become the standard in modern deep learning. Empirical studies such as scaling laws have demonstrated that increasing model size generally leads to lower training loss Kaplan et al. (2020)",
+      "url": "https://arxiv.org/html/2610.37934v1#bib.bib14"
+    },
+    {
+      "href": "#bib.bib16",
+      "text": "Hoffmann et al. (2022)",
+      "section": "1 Introduction",
+      "context": "Foundational models have demonstrated impressive general-purpose performance DeepSeek-AI et al. (2025) ; Grattafiori et al. (2024) . These models usually consist of billions of parameters, are trained on massive datasets, and have become the standard in modern deep learning. Empirical studies such as scaling laws have demonstrated that increasing model size generally leads to lower training loss Kaplan et al. (2020) ; Hoffmann et al. (2022)",
+      "url": "https://arxiv.org/html/2610.37934v1#bib.bib16"
+    },
+    {
+      "href": "#bib.bib10",
+      "text": "Kingma and Ba (2017)",
+      "section": "1 Introduction",
+      "context": "During training, a given trainable parameter incurs a fixed memory overhead: the parameter itself ( n n ), its gradient ( n n ), and two optimizer states ( 2 ​ n 2n ) when using Adam family of optimizers Kingma and Ba (2017)",
+      "url": "https://arxiv.org/html/2610.37934v1#bib.bib10"
+    },
+    {
+      "href": "#bib.bib23",
+      "text": "Loshchilov and Hutter (2019)",
+      "section": "1 Introduction",
+      "context": "During training, a given trainable parameter incurs a fixed memory overhead: the parameter itself ( n n ), its gradient ( n n ), and two optimizer states ( 2 ​ n 2n ) when using Adam family of optimizers Kingma and Ba (2017) ; Loshchilov and Hutter (2019)",
+      "url": "https://arxiv.org/html/2610.37934v1#bib.bib23"
+    },
+    {
+      "href": "#bib.bib24",
+      "text": "Chen et al. (2016)",
+      "section": "1 Introduction",
+      "context": "During training, a given trainable parameter incurs a fixed memory overhead: the parameter itself ( n n ), its gradient ( n n ), and two optimizer states ( 2 ​ n 2n ) when using Adam family of optimizers Kingma and Ba (2017) ; Loshchilov and Hutter (2019) . While total training memory depends on several factors such as batch size and activation footprint Chen et al. (2016)",
+      "url": "https://arxiv.org/html/2610.37934v1#bib.bib24"
+    },
+    {
+      "href": "#bib.bib1",
+      "text": "Hu et al. (2021)",
+      "section": "1 Introduction",
+      "context": "neral learning dynamics of full-parameter training in terms of the rank of the update for SGD and Adam optimizers, showing that in full-parameter training, updates are high-rank, and verify this behavior on a simple model. Then, to preserve the learning dynamics of high-rank while being parameter-efficient, we introduce Bi-Phase Training (BPT), a novel parameter-efficient method for pre-training foundation models that updates a weight matrix W \\mathrm{W} by simultaneously applying constrained high-rank and low-rank updates. This work directly builds on prior works such as LoRA Hu et al. (2021)",
+      "url": "https://arxiv.org/html/2610.37934v1#bib.bib1"
+    },
+    {
+      "href": "#bib.bib25",
+      "text": "Lialin et al. (2023)",
+      "section": "1 Introduction",
+      "context": "l-parameter training in terms of the rank of the update for SGD and Adam optimizers, showing that in full-parameter training, updates are high-rank, and verify this behavior on a simple model. Then, to preserve the learning dynamics of high-rank while being parameter-efficient, we introduce Bi-Phase Training (BPT), a novel parameter-efficient method for pre-training foundation models that updates a weight matrix W \\mathrm{W} by simultaneously applying constrained high-rank and low-rank updates. This work directly builds on prior works such as LoRA Hu et al. (2021) , ReLoRA Lialin et al. (2023)",
+      "url": "https://arxiv.org/html/2610.37934v1#bib.bib25"
+    },
+    {
+      "href": "#bib.bib8",
+      "text": "Gurung and Campbell (2025)",
+      "section": "1 Introduction",
+      "context": " the update for SGD and Adam optimizers, showing that in full-parameter training, updates are high-rank, and verify this behavior on a simple model. Then, to preserve the learning dynamics of high-rank while being parameter-efficient, we introduce Bi-Phase Training (BPT), a novel parameter-efficient method for pre-training foundation models that updates a weight matrix W \\mathrm{W} by simultaneously applying constrained high-rank and low-rank updates. This work directly builds on prior works such as LoRA Hu et al. (2021) , ReLoRA Lialin et al. (2023) , and HyperAdapt Gurung and Campbell (2025)",
+      "url": "https://arxiv.org/html/2610.37934v1#bib.bib8"
+    },
+    {
+      "href": "#bib.bib25",
+      "text": "Lialin et al. (2023)",
+      "section": "1 Introduction",
+      "context": "The claim that a high-rank update is necessary is consistent with prior evidence. ReLoRA Lialin et al. (2023)",
+      "url": "https://arxiv.org/html/2610.37934v1#bib.bib25"
+    },
+    {
+      "href": "#bib.bib25",
+      "text": "Lialin et al. (2023)",
+      "section": "1 Introduction",
+      "context": "The claim that a high-rank update is necessary is consistent with prior evidence. ReLoRA Lialin et al. (2023) shows that allowing a brief period of full-parameter training before switching to low-rank adaptation improves optimization, suggesting early learning benefits from richer (higher-rank) update directions Lialin et al. (2023)",
+      "url": "https://arxiv.org/html/2610.37934v1#bib.bib25"
+    },
+    {
+      "href": "#bib.bib11",
+      "text": "Huh et al. (2024)",
+      "section": "1 Introduction",
+      "context": "m that a high-rank update is necessary is consistent with prior evidence. ReLoRA Lialin et al. (2023) shows that allowing a brief period of full-parameter training before switching to low-rank adaptation improves optimization, suggesting early learning benefits from richer (higher-rank) update directions Lialin et al. (2023) . Complementarily, systematic ablations that increase LoRA rank r r toward full-rank updates report that doing this matches full training performance when the model is trained from scratch, reinforcing the link between update rank and training performance Huh et al. (2024)",
+      "url": "https://arxiv.org/html/2610.37934v1#bib.bib11"
+    },
+    {
+      "href": "#A1",
+      "text": "Appendix A",
+      "section": "Full Parameterized Training",
+      "context": "Without loss of generality, let B ≤ min ⁡ ( n , m ) B\\leq\\min(n,m) . For the update Δ ​ W \\Delta\\mathrm{W} in SGD, the rank ⁡ ( Δ ​ W ) \\operatorname{rank}(\\Delta\\mathrm{W}) is at most B B . This means that the update rank’s upper-bound grows linearly with the batch size for SGD. Additionally, adding momentum or using Adam has a different upper-bound for the update rank even at smaller batch size, refer to Appendix A",
+      "url": "https://arxiv.org/html/2610.37934v1#A1"
+    },
+    {
+      "href": "#bib.bib1",
+      "text": "Hu et al. (2021)",
+      "section": "Parameter Efficient Training",
+      "context": "In LoRA Hu et al. (2021)",
+      "url": "https://arxiv.org/html/2610.37934v1#bib.bib1"
+    },
+    {
+      "href": "#bib.bib25",
+      "text": "Lialin et al. (2023)",
+      "section": "Parameter Efficient Training",
+      "context": "s the product of two low-rank matrices B ∈ ℝ n × r \\mathrm{B}\\in\\mathbb{R}^{n\\times r} and A ∈ ℝ r × m \\mathrm{A}\\in\\mathbb{R}^{r\\times m} such that Δ ​ W = α ​ BA \\Delta\\mathrm{W}=\\alpha\\mathrm{BA} , where α \\alpha is a scaling factor. LoRA trains the low-rank matrices, B \\mathrm{B} and A \\mathrm{A} , which contain significantly fewer trainable parameters than W \\mathrm{W} . LoRA yields strong results for fine-tuning a pre-trained weight matrix, however, the objective landscape for pre-training from scratch is too complex to be modeled by a single r r -rank subspace alone Lialin et al. (2023)",
+      "url": "https://arxiv.org/html/2610.37934v1#bib.bib25"
+    },
+    {
+      "href": "#bib.bib11",
+      "text": "Huh et al. (2024)",
+      "section": "Parameter Efficient Training",
+      "context": "ces B ∈ ℝ n × r \\mathrm{B}\\in\\mathbb{R}^{n\\times r} and A ∈ ℝ r × m \\mathrm{A}\\in\\mathbb{R}^{r\\times m} such that Δ ​ W = α ​ BA \\Delta\\mathrm{W}=\\alpha\\mathrm{BA} , where α \\alpha is a scaling factor. LoRA trains the low-rank matrices, B \\mathrm{B} and A \\mathrm{A} , which contain significantly fewer trainable parameters than W \\mathrm{W} . LoRA yields strong results for fine-tuning a pre-trained weight matrix, however, the objective landscape for pre-training from scratch is too complex to be modeled by a single r r -rank subspace alone Lialin et al. (2023) . Previous works Huh et al. (2024)",
+      "url": "https://arxiv.org/html/2610.37934v1#bib.bib11"
+    },
+    {
+      "href": "#bib.bib25",
+      "text": "Lialin et al. (2023)",
+      "section": "Parameter Efficient Training",
+      "context": "rix, however, the objective landscape for pre-training from scratch is too complex to be modeled by a single r r -rank subspace alone Lialin et al. (2023) . Previous works Huh et al. (2024) have empirically shown that for training models from scratch with LoRA with rank r = min ⁡ ( n , m ) r=\\min(n,m) equaling the maximum rank possible of the matrix can match the performance of full training from scratch. Since the Δ ​ W \\Delta\\mathrm{W} rank in LoRA is always bounded by r r , it can never utilize the full rank potential of W \\mathrm{W} . To address this limitation, ReLoRA Lialin et al. (2023)",
+      "url": "https://arxiv.org/html/2610.37934v1#bib.bib25"
+    },
+    {
+      "href": "#bib.bib25",
+      "text": "Lialin et al. (2023)",
+      "section": "Parameter Efficient Training",
+      "context": "the accumulated update Δ ​ W \\Delta\\mathrm{W} to surpass the rank constraint r r after multiple merge cycles. Despite this improvement, the rank of updates at any single step remains confined to a low-rank subspace. Also, for the duration of Δ ​ t \\Delta t between two merge cycles, the update is restricted to only a rank- r r update. This limits its ability to learn as efficiently as a fully parameterized model, as the update rank for a full parameterized model for any given timestep can be high-rank and results in weaker performance compared to full parameter pre-training Lialin et al. (2023)",
+      "url": "https://arxiv.org/html/2610.37934v1#bib.bib25"
+    },
+    {
+      "href": "#bib.bib25",
+      "text": "Lialin et al. (2023)",
+      "section": "Parameter Efficient Training",
+      "context": "single step remains confined to a low-rank subspace. Also, for the duration of Δ ​ t \\Delta t between two merge cycles, the update is restricted to only a rank- r r update. This limits its ability to learn as efficiently as a fully parameterized model, as the update rank for a full parameterized model for any given timestep can be high-rank and results in weaker performance compared to full parameter pre-training Lialin et al. (2023) . Additionally, merging less frequently gives better performance empirically, since the Adam EMAs are better estimates as training progresses Lialin et al. (2023)",
+      "url": "https://arxiv.org/html/2610.37934v1#bib.bib25"
+    },
+    {
+      "href": "#bib.bib11",
+      "text": "Huh et al. (2024)",
+      "section": "Parameter Efficient Training",
+      "context": "confined to a low-rank subspace. Also, for the duration of Δ ​ t \\Delta t between two merge cycles, the update is restricted to only a rank- r r update. This limits its ability to learn as efficiently as a fully parameterized model, as the update rank for a full parameterized model for any given timestep can be high-rank and results in weaker performance compared to full parameter pre-training Lialin et al. (2023) . Additionally, merging less frequently gives better performance empirically, since the Adam EMAs are better estimates as training progresses Lialin et al. (2023) ; Huh et al. (2024)",
+      "url": "https://arxiv.org/html/2610.37934v1#bib.bib11"
+    },
+    {
+      "href": "#bib.bib8",
+      "text": "Gurung and Campbell (2025)",
+      "section": "Parameter Efficient Training",
+      "context": "In a related work, HyperAdapt Gurung and Campbell (2025)",
+      "url": "https://arxiv.org/html/2610.37934v1#bib.bib8"
+    },
+    {
+      "href": "#bib.bib7",
+      "text": "Torralba et al. (2008)",
+      "section": "Parameter Efficient Training",
+      "context": "Empirical rank. We train a three-layer ReLU MLP on CIFAR-10 Torralba et al. (2008)",
+      "url": "https://arxiv.org/html/2610.37934v1#bib.bib7"
+    },
+    {
+      "href": "#S2.F2",
+      "text": "Figure 2",
+      "section": "Parameter Efficient Training",
+      "context": "Empirical rank. We train a three-layer ReLU MLP on CIFAR-10 Torralba et al. (2008) and track the second-layer update rank, rank ⁡ ( W t − W 0 ) \\mathrm{rank}(W_{t}-W_{0}) , across batch sizes and training steps; results are shown in Figure 2",
+      "url": "https://arxiv.org/html/2610.37934v1#S2.F2"
+    },
+    {
+      "href": "#S2.F2",
+      "text": "Figure 2",
+      "section": "3 Our Method",
+      "context": "Since a fully parameterized model can express high-rank updates at any step t t , as shown in Figure 2",
+      "url": "https://arxiv.org/html/2610.37934v1#S2.F2"
+    },
+    {
+      "href": "#S3.E2",
+      "text": "Equation 2",
+      "section": "Bi-Phase Training",
+      "context": "At any given time t t , the update in Equation 2",
+      "url": "https://arxiv.org/html/2610.37934v1#S3.E2"
+    },
+    {
+      "href": "#A2",
+      "text": "Appendix B",
+      "section": "Lemma 3.1 .",
+      "context": "The upper bound for the rank of the update Δ ​ W = A ⁡ ( W + UV ) ​ B − W \\Delta\\mathrm{W}=\\mathrm{A}(\\mathrm{W}+\\mathrm{U}\\mathrm{V})\\mathrm{B}-\\mathrm{W} is 2 ​ R + r 2R+r , where R = rank ⁡ ( W ) R=\\operatorname{rank}(\\mathrm{W}) and r = rank ⁡ ( UV ) r=\\operatorname{rank}(\\mathrm{U}\\mathrm{V}) . The proof is in the appendix Appendix B",
+      "url": "https://arxiv.org/html/2610.37934v1#A2"
+    },
+    {
+      "href": "#bib.bib22",
+      "text": "He et al. (2015)",
+      "section": "Initialization",
+      "context": "We initialize the fixed base weight W \\mathrm{W} with Kaiming initialization He et al. (2015)",
+      "url": "https://arxiv.org/html/2610.37934v1#bib.bib22"
+    },
+    {
+      "href": "#S3.E3",
+      "text": "Equation 3",
+      "section": "Merging",
+      "context": "During training, BPT periodically adds the learned low-rank update into the frozen base weight using Equation 3",
+      "url": "https://arxiv.org/html/2610.37934v1#S3.E3"
+    },
+    {
+      "href": "#S1",
+      "text": "section 1",
+      "section": "3.3 Parameter and Compute Efficiency",
+      "context": "This parameter reduction directly translates into lower memory overhead during training with efficient kernel implementation. This trainable parameter count reduces the fixed memory cost associated with training neural networks as stated in section 1",
+      "url": "https://arxiv.org/html/2610.37934v1#S1"
+    },
+    {
+      "href": "#A3",
+      "text": "Appendix C",
+      "section": "3.3 Parameter and Compute Efficiency",
+      "context": "This parameter reduction directly translates into lower memory overhead during training with efficient kernel implementation. This trainable parameter count reduces the fixed memory cost associated with training neural networks as stated in section 1 . Additionally, BPT requires approximately two-thirds of the linear-layer FLOPs of full training; we provide the full FLOP analysis in Appendix C",
+      "url": "https://arxiv.org/html/2610.37934v1#A3"
+    },
+    {
+      "href": "#bib.bib26",
+      "text": "Zhao et al. (2024)",
+      "section": "4 Related Work",
+      "context": "While the past few years have witnessed remarkable progress in reducing the memory footprint for fine-tuning large language models, memory-efficient pre-training remains considerably less explored. GaLore Zhao et al. (2024)",
+      "url": "https://arxiv.org/html/2610.37934v1#bib.bib26"
+    },
+    {
+      "href": "#bib.bib11",
+      "text": "Huh et al. (2024)",
+      "section": "4 Related Work",
+      "context": "LoRA-the-explorer (LTE) Huh et al. (2024)",
+      "url": "https://arxiv.org/html/2610.37934v1#bib.bib11"
+    },
+    {
+      "href": "#S2",
+      "text": "section 2",
+      "section": "4 Related Work",
+      "context": "LoRA-the-explorer (LTE) Huh et al. (2024) extends LoRA to pre-training by exploring the low-rank solution space in parallel across different computing nodes. While LTE’s parallel search strategy presents a seemingly promising avenue to mitigate the computational bottlenecks associated with full-rank pre-training, it unfortunately inherits the same fundamental drawback: at each step, optimization is limited to a low-rank subspace similar to other low-rank methods section 2",
+      "url": "https://arxiv.org/html/2610.37934v1#S2"
+    },
+    {
+      "href": "#bib.bib29",
+      "text": "Liu et al. (2024)",
+      "section": "4 Related Work",
+      "context": "Other LoRA variants further improve parameter-efficient adaptation but remain primarily designed for fine-tuning pretrained models. DoRA Liu et al. (2024)",
+      "url": "https://arxiv.org/html/2610.37934v1#bib.bib29"
+    },
+    {
+      "href": "#bib.bib30",
+      "text": "Kopiczko et al. (2024)",
+      "section": "4 Related Work",
+      "context": "Other LoRA variants further improve parameter-efficient adaptation but remain primarily designed for fine-tuning pretrained models. DoRA Liu et al. (2024) decomposes each pretrained weight into magnitude and direction components, using low-rank weights for directional updates while learning the magnitude separately. VeRA Kopiczko et al. (2024)",
+      "url": "https://arxiv.org/html/2610.37934v1#bib.bib30"
+    },
+    {
+      "href": "#bib.bib21",
+      "text": "Penedo et al. (2024)",
+      "section": "5 Empirical Experiments",
+      "context": "All models were pre-trained from scratch using the standard next-token prediction objective. We used a 10 and 100 billion token subset of the FineWeb-Edu dataset Penedo et al. (2024)",
+      "url": "https://arxiv.org/html/2610.37934v1#bib.bib21"
+    },
+    {
+      "href": "#bib.bib9",
+      "text": "OLMo et al. (2024)",
+      "section": "5 Empirical Experiments",
+      "context": "ective. We used a 10 and 100 billion token subset of the FineWeb-Edu dataset Penedo et al. (2024) . Our baselines for comparison are standard full-parameter pre-training (referred to as “Full”), where all model parameters are trainable, and ReLoRA. Importantly, all methods use the same underlying model architecture and the same total number of parameters; the difference lies solely in the number of trainable parameters during training. We train three scales of models based on the Qwen2.5 architecture: 100M, 0.5B, and 1.5B parameters. Additionally, we also pre-train OLMo-2-1B OLMo et al. (2024)",
+      "url": "https://arxiv.org/html/2610.37934v1#bib.bib9"
+    },
+    {
+      "href": "#A4",
+      "text": "Appendix D",
+      "section": "5 Empirical Experiments",
+      "context": "parison are standard full-parameter pre-training (referred to as “Full”), where all model parameters are trainable, and ReLoRA. Importantly, all methods use the same underlying model architecture and the same total number of parameters; the difference lies solely in the number of trainable parameters during training. We train three scales of models based on the Qwen2.5 architecture: 100M, 0.5B, and 1.5B parameters. Additionally, we also pre-train OLMo-2-1B OLMo et al. (2024) on the 10B tokens of the same dataset. The detailed specifications of the model architectures are provided in Appendix D",
+      "url": "https://arxiv.org/html/2610.37934v1#A4"
+    },
+    {
+      "href": "#A4.T4",
+      "text": "Table 4",
+      "section": "5 Empirical Experiments",
+      "context": "ere all model parameters are trainable, and ReLoRA. Importantly, all methods use the same underlying model architecture and the same total number of parameters; the difference lies solely in the number of trainable parameters during training. We train three scales of models based on the Qwen2.5 architecture: 100M, 0.5B, and 1.5B parameters. Additionally, we also pre-train OLMo-2-1B OLMo et al. (2024) on the 10B tokens of the same dataset. The detailed specifications of the model architectures are provided in Appendix D . We also summarize the parameter reduction achieved through BPT in Table 4",
+      "url": "https://arxiv.org/html/2610.37934v1#A4.T4"
+    },
+    {
+      "href": "#A5",
+      "text": "Appendix E",
+      "section": "5 Empirical Experiments",
+      "context": "ame underlying model architecture and the same total number of parameters; the difference lies solely in the number of trainable parameters during training. We train three scales of models based on the Qwen2.5 architecture: 100M, 0.5B, and 1.5B parameters. Additionally, we also pre-train OLMo-2-1B OLMo et al. (2024) on the 10B tokens of the same dataset. The detailed specifications of the model architectures are provided in Appendix D . We also summarize the parameter reduction achieved through BPT in Table 4 . For more details regarding hyperparameters and layers targeted, refer to Appendix E",
+      "url": "https://arxiv.org/html/2610.37934v1#A5"
+    },
+    {
+      "href": "#S1.F1",
+      "text": "Figure 1",
+      "section": "5.1 Pre-training Performance",
+      "context": "Our pre-training experiments at 10 billion tokens demonstrate BPT achieves validation perplexity close to full-parameter training across different model scales while achieving substantial reductions in trainable parameters. Figure 1",
+      "url": "https://arxiv.org/html/2610.37934v1#S1.F1"
+    },
+    {
+      "href": "#S3.F4",
+      "text": "4",
+      "section": "5.1 Pre-training Performance",
+      "context": "Figure 4",
+      "url": "https://arxiv.org/html/2610.37934v1#S3.F4"
+    },
+    {
+      "href": "#bib.bib2",
+      "text": "Gao et al. (2024)",
+      "section": "5.2 Downstream Evaluation",
+      "context": "The training loss and evaluation loss indicate strong performance for our proposed methods. To further evaluate whether the parameter efficiency of BPT impacts the model’s ability to generalize to unseen tasks, we perform downstream evaluations on our Qwen-2.5-1.5B and OLMo-2-1B models. For all our evaluations, we do not further finetune any additional dataset and report zero-shot performance. Evaluations were performed using the LM evaluation harness Gao et al. (2024)",
+      "url": "https://arxiv.org/html/2610.37934v1#bib.bib2"
+    },
+    {
+      "href": "#bib.bib5",
+      "text": "Allen-Zhu (2025)",
+      "section": "5.2 Downstream Evaluation",
+      "context": "The training loss and evaluation loss indicate strong performance for our proposed methods. To further evaluate whether the parameter efficiency of BPT impacts the model’s ability to generalize to unseen tasks, we perform downstream evaluations on our Qwen-2.5-1.5B and OLMo-2-1B models. For all our evaluations, we do not further finetune any additional dataset and report zero-shot performance. Evaluations were performed using the LM evaluation harness Gao et al. (2024) . Following prior work at a similar model and data scale Allen-Zhu (2025)",
+      "url": "https://arxiv.org/html/2610.37934v1#bib.bib5"
+    },
+    {
+      "href": "#bib.bib3",
+      "text": "Yang et al. (2025)",
+      "section": "5.2 Downstream Evaluation",
+      "context": "The training loss and evaluation loss indicate strong performance for our proposed methods. To further evaluate whether the parameter efficiency of BPT impacts the model’s ability to generalize to unseen tasks, we perform downstream evaluations on our Qwen-2.5-1.5B and OLMo-2-1B models. For all our evaluations, we do not further finetune any additional dataset and report zero-shot performance. Evaluations were performed using the LM evaluation harness Gao et al. (2024) . Following prior work at a similar model and data scale Allen-Zhu (2025) ; Yang et al. (2025)",
+      "url": "https://arxiv.org/html/2610.37934v1#bib.bib3"
+    },
+    {
+      "href": "#bib.bib12",
+      "text": "Zellers et al. (2019)",
+      "section": "5.2 Downstream Evaluation",
+      "context": "ance for our proposed methods. To further evaluate whether the parameter efficiency of BPT impacts the model’s ability to generalize to unseen tasks, we perform downstream evaluations on our Qwen-2.5-1.5B and OLMo-2-1B models. For all our evaluations, we do not further finetune any additional dataset and report zero-shot performance. Evaluations were performed using the LM evaluation harness Gao et al. (2024) . Following prior work at a similar model and data scale Allen-Zhu (2025) ; Yang et al. (2025) , we evaluate commonsense and reasoning benchmarks including HellaSwag Zellers et al. (2019)",
+      "url": "https://arxiv.org/html/2610.37934v1#bib.bib12"
+    },
+    {
+      "href": "#bib.bib13",
+      "text": "Sakaguchi et al. (2019)",
+      "section": "5.2 Downstream Evaluation",
+      "context": "ther evaluate whether the parameter efficiency of BPT impacts the model’s ability to generalize to unseen tasks, we perform downstream evaluations on our Qwen-2.5-1.5B and OLMo-2-1B models. For all our evaluations, we do not further finetune any additional dataset and report zero-shot performance. Evaluations were performed using the LM evaluation harness Gao et al. (2024) . Following prior work at a similar model and data scale Allen-Zhu (2025) ; Yang et al. (2025) , we evaluate commonsense and reasoning benchmarks including HellaSwag Zellers et al. (2019) , WinoGrande Sakaguchi et al. (2019)",
+      "url": "https://arxiv.org/html/2610.37934v1#bib.bib13"
+    },
+    {
+      "href": "#bib.bib18",
+      "text": "Bisk et al. (2019)",
+      "section": "5.2 Downstream Evaluation",
+      "context": "parameter efficiency of BPT impacts the model’s ability to generalize to unseen tasks, we perform downstream evaluations on our Qwen-2.5-1.5B and OLMo-2-1B models. For all our evaluations, we do not further finetune any additional dataset and report zero-shot performance. Evaluations were performed using the LM evaluation harness Gao et al. (2024) . Following prior work at a similar model and data scale Allen-Zhu (2025) ; Yang et al. (2025) , we evaluate commonsense and reasoning benchmarks including HellaSwag Zellers et al. (2019) , WinoGrande Sakaguchi et al. (2019) , PIQA Bisk et al. (2019)",
+      "url": "https://arxiv.org/html/2610.37934v1#bib.bib18"
+    },
+    {
+      "href": "#bib.bib19",
+      "text": "Clark et al. (2019)",
+      "section": "5.2 Downstream Evaluation",
+      "context": "impacts the model’s ability to generalize to unseen tasks, we perform downstream evaluations on our Qwen-2.5-1.5B and OLMo-2-1B models. For all our evaluations, we do not further finetune any additional dataset and report zero-shot performance. Evaluations were performed using the LM evaluation harness Gao et al. (2024) . Following prior work at a similar model and data scale Allen-Zhu (2025) ; Yang et al. (2025) , we evaluate commonsense and reasoning benchmarks including HellaSwag Zellers et al. (2019) , WinoGrande Sakaguchi et al. (2019) , PIQA Bisk et al. (2019) , BoolQ Clark et al. (2019)",
+      "url": "https://arxiv.org/html/2610.37934v1#bib.bib19"
+    },
+    {
+      "href": "#bib.bib31",
+      "text": "Welbl et al. (2017)",
+      "section": "5.2 Downstream Evaluation",
+      "context": " to generalize to unseen tasks, we perform downstream evaluations on our Qwen-2.5-1.5B and OLMo-2-1B models. For all our evaluations, we do not further finetune any additional dataset and report zero-shot performance. Evaluations were performed using the LM evaluation harness Gao et al. (2024) . Following prior work at a similar model and data scale Allen-Zhu (2025) ; Yang et al. (2025) , we evaluate commonsense and reasoning benchmarks including HellaSwag Zellers et al. (2019) , WinoGrande Sakaguchi et al. (2019) , PIQA Bisk et al. (2019) , BoolQ Clark et al. (2019) , SciQ Welbl et al. (2017)",
+      "url": "https://arxiv.org/html/2610.37934v1#bib.bib31"
+    },
+    {
+      "href": "#bib.bib32",
+      "text": "Mihaylov et al. (2018)",
+      "section": "5.2 Downstream Evaluation",
+      "context": "erform downstream evaluations on our Qwen-2.5-1.5B and OLMo-2-1B models. For all our evaluations, we do not further finetune any additional dataset and report zero-shot performance. Evaluations were performed using the LM evaluation harness Gao et al. (2024) . Following prior work at a similar model and data scale Allen-Zhu (2025) ; Yang et al. (2025) , we evaluate commonsense and reasoning benchmarks including HellaSwag Zellers et al. (2019) , WinoGrande Sakaguchi et al. (2019) , PIQA Bisk et al. (2019) , BoolQ Clark et al. (2019) , SciQ Welbl et al. (2017) , OpenBookQA Mihaylov et al. (2018)",
+      "url": "https://arxiv.org/html/2610.37934v1#bib.bib32"
+    },
+    {
+      "href": "#bib.bib17",
+      "text": "Clark et al. (2018)",
+      "section": "5.2 Downstream Evaluation",
+      "context": "-1.5B and OLMo-2-1B models. For all our evaluations, we do not further finetune any additional dataset and report zero-shot performance. Evaluations were performed using the LM evaluation harness Gao et al. (2024) . Following prior work at a similar model and data scale Allen-Zhu (2025) ; Yang et al. (2025) , we evaluate commonsense and reasoning benchmarks including HellaSwag Zellers et al. (2019) , WinoGrande Sakaguchi et al. (2019) , PIQA Bisk et al. (2019) , BoolQ Clark et al. (2019) , SciQ Welbl et al. (2017) , OpenBookQA Mihaylov et al. (2018) , and ARC-Easy/Challenge Clark et al. (2018)",
+      "url": "https://arxiv.org/html/2610.37934v1#bib.bib17"
+    },
+    {
+      "href": "#bib.bib33",
+      "text": "Merity et al. (2016)",
+      "section": "5.2 Downstream Evaluation",
+      "context": "ny additional dataset and report zero-shot performance. Evaluations were performed using the LM evaluation harness Gao et al. (2024) . Following prior work at a similar model and data scale Allen-Zhu (2025) ; Yang et al. (2025) , we evaluate commonsense and reasoning benchmarks including HellaSwag Zellers et al. (2019) , WinoGrande Sakaguchi et al. (2019) , PIQA Bisk et al. (2019) , BoolQ Clark et al. (2019) , SciQ Welbl et al. (2017) , OpenBookQA Mihaylov et al. (2018) , and ARC-Easy/Challenge Clark et al. (2018) . We also report perplexity on held-out text using WikiText Merity et al. (2016)",
+      "url": "https://arxiv.org/html/2610.37934v1#bib.bib33"
+    },
+    {
+      "href": "#bib.bib6",
+      "text": "Paperno et al. (2016)",
+      "section": "5.2 Downstream Evaluation",
+      "context": "ero-shot performance. Evaluations were performed using the LM evaluation harness Gao et al. (2024) . Following prior work at a similar model and data scale Allen-Zhu (2025) ; Yang et al. (2025) , we evaluate commonsense and reasoning benchmarks including HellaSwag Zellers et al. (2019) , WinoGrande Sakaguchi et al. (2019) , PIQA Bisk et al. (2019) , BoolQ Clark et al. (2019) , SciQ Welbl et al. (2017) , OpenBookQA Mihaylov et al. (2018) , and ARC-Easy/Challenge Clark et al. (2018) . We also report perplexity on held-out text using WikiText Merity et al. (2016) and LAMBADA Paperno et al. (2016)",
+      "url": "https://arxiv.org/html/2610.37934v1#bib.bib6"
+    },
+    {
+      "href": "#bib.bib4",
+      "text": "Lockard et al. (2019)",
+      "section": "5.2 Downstream Evaluation",
+      "context": "LM evaluation harness Gao et al. (2024) . Following prior work at a similar model and data scale Allen-Zhu (2025) ; Yang et al. (2025) , we evaluate commonsense and reasoning benchmarks including HellaSwag Zellers et al. (2019) , WinoGrande Sakaguchi et al. (2019) , PIQA Bisk et al. (2019) , BoolQ Clark et al. (2019) , SciQ Welbl et al. (2017) , OpenBookQA Mihaylov et al. (2018) , and ARC-Easy/Challenge Clark et al. (2018) . We also report perplexity on held-out text using WikiText Merity et al. (2016) and LAMBADA Paperno et al. (2016) , and evaluate generation using SWDE Lockard et al. (2019)",
+      "url": "https://arxiv.org/html/2610.37934v1#bib.bib4"
+    },
+    {
+      "href": "#S4.T1",
+      "text": "Table 1",
+      "section": "5.2 Downstream Evaluation",
+      "context": " prior work at a similar model and data scale Allen-Zhu (2025) ; Yang et al. (2025) , we evaluate commonsense and reasoning benchmarks including HellaSwag Zellers et al. (2019) , WinoGrande Sakaguchi et al. (2019) , PIQA Bisk et al. (2019) , BoolQ Clark et al. (2019) , SciQ Welbl et al. (2017) , OpenBookQA Mihaylov et al. (2018) , and ARC-Easy/Challenge Clark et al. (2018) . We also report perplexity on held-out text using WikiText Merity et al. (2016) and LAMBADA Paperno et al. (2016) , and evaluate generation using SWDE Lockard et al. (2019) . For Wikitext, we report byte perplexity. Table 1",
+      "url": "https://arxiv.org/html/2610.37934v1#S4.T1"
+    },
+    {
+      "href": "#S5.T2",
+      "text": "Table 2",
+      "section": "5.3 Comparison of PEFT Methods",
+      "context": "The result is summarized in Table 2",
+      "url": "https://arxiv.org/html/2610.37934v1#S5.T2"
+    },
+    {
+      "href": "#S5.F6",
+      "text": "Figure 6",
+      "section": "5.4 Rank and Merge Frequency",
+      "context": "To better understand the role of rank and merge frequency in BPT, we ablate both under the same setting as our main results, using the 100M model trained on 10B tokens. As shown in Figure 6",
+      "url": "https://arxiv.org/html/2610.37934v1#S5.F6"
+    },
+    {
+      "href": "#A6",
+      "text": "F",
+      "section": "5.4 Rank and Merge Frequency",
+      "context": "To better understand the role of rank and merge frequency in BPT, we ablate both under the same setting as our main results, using the 100M model trained on 10B tokens. As shown in Figure 6 , increasing rank improves evaluation loss with diminishing returns, while less frequent merges generally perform better by allowing Adam to estimate its moments more stably between resets. Detailed GPU memory measurements are provided in Appendix F",
+      "url": "https://arxiv.org/html/2610.37934v1#A6"
+    },
+    {
+      "href": "https://arxiv.org/abs/2512.17351",
+      "text": "Link",
+      "section": "References",
+      "context": "Allen-Zhu (2025) Z. Allen-Zhu Physics of language models: part 4.1, architecture design and the magic of canon layers . External Links: 2512.17351 , Link",
+      "url": "https://arxiv.org/abs/2512.17351"
+    },
+    {
+      "href": "#S5.SS2.p1.1",
+      "text": "§5.2",
+      "section": "References",
+      "context": "Allen-Zhu (2025) Z. Allen-Zhu Physics of language models: part 4.1, architecture design and the magic of canon layers . External Links: 2512.17351 , Link Cited by: §5.2",
+      "url": "https://arxiv.org/html/2610.37934v1#S5.SS2.p1.1"
+    },
+    {
+      "href": "https://arxiv.org/abs/1911.11641",
+      "text": "Link",
+      "section": "References",
+      "context": "Bisk et al. (2019) Y. Bisk, R. Zellers, R. L. Bras, J. Gao, and Y. Choi PIQA: reasoning about physical commonsense in natural language . External Links: 1911.11641 , Link",
+      "url": "https://arxiv.org/abs/1911.11641"
+    },
+    {
+      "href": "#S5.SS2.p1.1",
+      "text": "§5.2",
+      "section": "References",
+      "context": "Bisk et al. (2019) Y. Bisk, R. Zellers, R. L. Bras, J. Gao, and Y. Choi PIQA: reasoning about physical commonsense in natural language . External Links: 1911.11641 , Link Cited by: §5.2",
+      "url": "https://arxiv.org/html/2610.37934v1#S5.SS2.p1.1"
+    },
+    {
+      "href": "https://arxiv.org/abs/1604.06174",
+      "text": "Link",
+      "section": "References",
+      "context": "Chen et al. (2016) T. Chen, B. Xu, C. Zhang, and C. Guestrin Training deep nets with sublinear memory cost . External Links: 1604.06174 , Link",
+      "url": "https://arxiv.org/abs/1604.06174"
+    },
+    {
+      "href": "#S1.p2.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Chen et al. (2016) T. Chen, B. Xu, C. Zhang, and C. Guestrin Training deep nets with sublinear memory cost . External Links: 1604.06174 , Link Cited by: §1",
+      "url": "https://arxiv.org/html/2610.37934v1#S1.p2.1"
+    },
+    {
+      "href": "https://arxiv.org/abs/1905.10044",
+      "text": "Link",
+      "section": "References",
+      "context": "Clark et al. (2019) C. Clark, K. Lee, M. Chang, T. Kwiatkowski, M. Collins, and K. Toutanova BoolQ: exploring the surprising difficulty of natural yes/no questions . External Links: 1905.10044 , Link",
+      "url": "https://arxiv.org/abs/1905.10044"
+    },
+    {
+      "href": "#S5.SS2.p1.1",
+      "text": "§5.2",
+      "section": "References",
+      "context": "Clark et al. (2019) C. Clark, K. Lee, M. Chang, T. Kwiatkowski, M. Collins, and K. Toutanova BoolQ: exploring the surprising difficulty of natural yes/no questions . External Links: 1905.10044 , Link Cited by: §5.2",
+      "url": "https://arxiv.org/html/2610.37934v1#S5.SS2.p1.1"
+    },
+    {
+      "href": "https://arxiv.org/abs/1803.05457",
+      "text": "Link",
+      "section": "References",
+      "context": "Clark et al. (2018) P. Clark, I. Cowhey, O. Etzioni, T. Khot, A. Sabharwal, C. Schoenick, and O. Tafjord Think you have solved question answering? try arc, the ai2 reasoning challenge . External Links: 1803.05457 , Link",
+      "url": "https://arxiv.org/abs/1803.05457"
+    },
+    {
+      "href": "#S5.SS2.p1.1",
+      "text": "§5.2",
+      "section": "References",
+      "context": "Clark et al. (2018) P. Clark, I. Cowhey, O. Etzioni, T. Khot, A. Sabharwal, C. Schoenick, and O. Tafjord Think you have solved question answering? try arc, the ai2 reasoning challenge . External Links: 1803.05457 , Link Cited by: §5.2",
+      "url": "https://arxiv.org/html/2610.37934v1#S5.SS2.p1.1"
+    },
+    {
+      "href": "https://arxiv.org/abs/2412.19437",
+      "text": "Link",
+      "section": "References",
+      "context": "Zhu, Y. Zhang, Y. Xu, Y. Xu, Y. Huang, Y. Li, Y. Zhao, Y. Sun, Y. Li, Y. Wang, Y. Yu, Y. Zheng, Y. Zhang, Y. Shi, Y. Xiong, Y. He, Y. Tang, Y. Piao, Y. Wang, Y. Tan, Y. Ma, Y. Liu, Y. Guo, Y. Wu, Y. Ou, Y. Zhu, Y. Wang, Y. Gong, Y. Zou, Y. He, Y. Zha, Y. Xiong, Y. Ma, Y. Yan, Y. Luo, Y. You, Y. Liu, Y. Zhou, Z. F. Wu, Z. Z. Ren, Z. Ren, Z. Sha, Z. Fu, Z. Xu, Z. Huang, Z. Zhang, Z. Xie, Z. Zhang, Z. Hao, Z. Gou, Z. Ma, Z. Yan, Z. Shao, Z. Xu, Z. Wu, Z. Zhang, Z. Li, Z. Gu, Z. Zhu, Z. Liu, Z. Li, Z. Xie, Z. Song, Z. Gao, and Z. Pan DeepSeek-v3 technical report . External Links: 2412.19437 , Link",
+      "url": "https://arxiv.org/abs/2412.19437"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§1",
+      "section": "References",
+      "context": ", Y. Xu, Y. Xu, Y. Huang, Y. Li, Y. Zhao, Y. Sun, Y. Li, Y. Wang, Y. Yu, Y. Zheng, Y. Zhang, Y. Shi, Y. Xiong, Y. He, Y. Tang, Y. Piao, Y. Wang, Y. Tan, Y. Ma, Y. Liu, Y. Guo, Y. Wu, Y. Ou, Y. Zhu, Y. Wang, Y. Gong, Y. Zou, Y. He, Y. Zha, Y. Xiong, Y. Ma, Y. Yan, Y. Luo, Y. You, Y. Liu, Y. Zhou, Z. F. Wu, Z. Z. Ren, Z. Ren, Z. Sha, Z. Fu, Z. Xu, Z. Huang, Z. Zhang, Z. Xie, Z. Zhang, Z. Hao, Z. Gou, Z. Ma, Z. Yan, Z. Shao, Z. Xu, Z. Wu, Z. Zhang, Z. Li, Z. Gu, Z. Zhu, Z. Liu, Z. Li, Z. Xie, Z. Song, Z. Gao, and Z. Pan DeepSeek-v3 technical report . External Links: 2412.19437 , Link Cited by: §1",
+      "url": "https://arxiv.org/html/2610.37934v1#S1.p1.1"
+    },
+    {
+      "href": "https://dx.doi.org/10.5281/zenodo.12608602",
+      "text": "Document",
+      "section": "References",
+      "context": "Gao et al. (2024) L. Gao, J. Tow, B. Abbasi, S. Biderman, S. Black, A. DiPofi, C. Foster, L. Golding, J. Hsu, A. Le Noac’h, H. Li, K. McDonell, N. Muennighoff, C. Ociepa, J. Phang, L. Reynolds, H. Schoelkopf, A. Skowron, L. Sutawika, E. Tang, A. Thite, B. Wang, K. Wang, and A. Zou The language model evaluation harness . Zenodo . External Links: Document",
+      "url": "https://dx.doi.org/10.5281/zenodo.12608602"
+    },
+    {
+      "href": "https://zenodo.org/records/12608602",
+      "text": "Link",
+      "section": "References",
+      "context": "Gao et al. (2024) L. Gao, J. Tow, B. Abbasi, S. Biderman, S. Black, A. DiPofi, C. Foster, L. Golding, J. Hsu, A. Le Noac’h, H. Li, K. McDonell, N. Muennighoff, C. Ociepa, J. Phang, L. Reynolds, H. Schoelkopf, A. Skowron, L. Sutawika, E. Tang, A. Thite, B. Wang, K. Wang, and A. Zou The language model evaluation harness . Zenodo . External Links: Document , Link",
+      "url": "https://zenodo.org/records/12608602"
+    },
+    {
+      "href": "#S5.SS2.p1.1",
+      "text": "§5.2",
+      "section": "References",
+      "context": "Gao et al. (2024) L. Gao, J. Tow, B. Abbasi, S. Biderman, S. Black, A. DiPofi, C. Foster, L. Golding, J. Hsu, A. Le Noac’h, H. Li, K. McDonell, N. Muennighoff, C. Ociepa, J. Phang, L. Reynolds, H. Schoelkopf, A. Skowron, L. Sutawika, E. Tang, A. Thite, B. Wang, K. Wang, and A. Zou The language model evaluation harness . Zenodo . External Links: Document , Link Cited by: §5.2",
+      "url": "https://arxiv.org/html/2610.37934v1#S5.SS2.p1.1"
+    },
+    {
+      "href": "https://arxiv.org/abs/2407.21783",
+      "text": "Link",
+      "section": "References",
+      "context": "Goldman, T. Remez, T. Glaser, T. Best, T. Koehler, T. Robinson, T. Li, T. Zhang, T. Matthews, T. Chou, T. Shaked, V. Vontimitta, V. Ajayi, V. Montanez, V. Mohan, V. S. Kumar, V. Mangla, V. Ionescu, V. Poenaru, V. T. Mihailescu, V. Ivanov, W. Li, W. Wang, W. Jiang, W. Bouaziz, W. Constable, X. Tang, X. Wu, X. Wang, X. Wu, X. Gao, Y. Kleinman, Y. Chen, Y. Hu, Y. Jia, Y. Qi, Y. Li, Y. Zhang, Y. Zhang, Y. Adi, Y. Nam, Yu, Wang, Y. Zhao, Y. Hao, Y. Qian, Y. Li, Y. He, Z. Rait, Z. DeVito, Z. Rosnbrick, Z. Wen, Z. Yang, Z. Zhao, and Z. Ma The llama 3 herd of models . External Links: 2407.21783 , Link",
+      "url": "https://arxiv.org/abs/2407.21783"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "emez, T. Glaser, T. Best, T. Koehler, T. Robinson, T. Li, T. Zhang, T. Matthews, T. Chou, T. Shaked, V. Vontimitta, V. Ajayi, V. Montanez, V. Mohan, V. S. Kumar, V. Mangla, V. Ionescu, V. Poenaru, V. T. Mihailescu, V. Ivanov, W. Li, W. Wang, W. Jiang, W. Bouaziz, W. Constable, X. Tang, X. Wu, X. Wang, X. Wu, X. Gao, Y. Kleinman, Y. Chen, Y. Hu, Y. Jia, Y. Qi, Y. Li, Y. Zhang, Y. Zhang, Y. Adi, Y. Nam, Yu, Wang, Y. Zhao, Y. Hao, Y. Qian, Y. Li, Y. He, Z. Rait, Z. DeVito, Z. Rosnbrick, Z. Wen, Z. Yang, Z. Zhao, and Z. Ma The llama 3 herd of models . External Links: 2407.21783 , Link Cited by: §1",
+      "url": "https://arxiv.org/html/2610.37934v1#S1.p1.1"
+    },
+    {
+      "href": "https://arxiv.org/abs/2509.18629",
+      "text": "Link",
+      "section": "References",
+      "context": "Gurung and Campbell (2025) A. Gurung and J. Campbell HyperAdapt: simple high-rank adaptation . External Links: 2509.18629 , Link",
+      "url": "https://arxiv.org/abs/2509.18629"
+    },
+    {
+      "href": "#S1.p2.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Gurung and Campbell (2025) A. Gurung and J. Campbell HyperAdapt: simple high-rank adaptation . External Links: 2509.18629 , Link Cited by: §1",
+      "url": "https://arxiv.org/html/2610.37934v1#S1.p2.1"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px2.p3.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Gurung and Campbell (2025) A. Gurung and J. Campbell HyperAdapt: simple high-rank adaptation . External Links: 2509.18629 , Link Cited by: §1 , §2",
+      "url": "https://arxiv.org/html/2610.37934v1#S2.SS0.SSS0.Px2.p3.1"
+    },
+    {
+      "href": "https://arxiv.org/abs/1502.01852",
+      "text": "Link",
+      "section": "References",
+      "context": "He et al. (2015) K. He, X. Zhang, S. Ren, and J. Sun Delving deep into rectifiers: surpassing human-level performance on imagenet classification . External Links: 1502.01852 , Link",
+      "url": "https://arxiv.org/abs/1502.01852"
+    },
+    {
+      "href": "#S3.SS2.SSS0.Px1.p1.1",
+      "text": "§3.2",
+      "section": "References",
+      "context": "He et al. (2015) K. He, X. Zhang, S. Ren, and J. Sun Delving deep into rectifiers: surpassing human-level performance on imagenet classification . External Links: 1502.01852 , Link Cited by: §3.2",
+      "url": "https://arxiv.org/html/2610.37934v1#S3.SS2.SSS0.Px1.p1.1"
+    },
+    {
+      "href": "https://arxiv.org/abs/2203.15556",
+      "text": "Link",
+      "section": "References",
+      "context": "Hoffmann et al. (2022) J. Hoffmann, S. Borgeaud, A. Mensch, E. Buchatskaya, T. Cai, E. Rutherford, D. de Las Casas, L. A. Hendricks, J. Welbl, A. Clark, T. Hennigan, E. Noland, K. Millican, G. van den Driessche, B. Damoc, A. Guy, S. Osindero, K. Simonyan, E. Elsen, J. W. Rae, O. Vinyals, and L. Sifre Training compute-optimal large language models . External Links: 2203.15556 , Link",
+      "url": "https://arxiv.org/abs/2203.15556"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Hoffmann et al. (2022) J. Hoffmann, S. Borgeaud, A. Mensch, E. Buchatskaya, T. Cai, E. Rutherford, D. de Las Casas, L. A. Hendricks, J. Welbl, A. Clark, T. Hennigan, E. Noland, K. Millican, G. van den Driessche, B. Damoc, A. Guy, S. Osindero, K. Simonyan, E. Elsen, J. W. Rae, O. Vinyals, and L. Sifre Training compute-optimal large language models . External Links: 2203.15556 , Link Cited by: §1",
+      "url": "https://arxiv.org/html/2610.37934v1#S1.p1.1"
+    },
+    {
+      "href": "https://arxiv.org/abs/2106.09685",
+      "text": "Link",
+      "section": "References",
+      "context": "Hu et al. (2021) E. J. Hu, Y. Shen, P. Wallis, Z. Allen-Zhu, Y. Li, S. Wang, L. Wang, and W. Chen LoRA: low-rank adaptation of large language models . External Links: 2106.09685 , Link",
+      "url": "https://arxiv.org/abs/2106.09685"
+    },
+    {
+      "href": "#S1.p2.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Hu et al. (2021) E. J. Hu, Y. Shen, P. Wallis, Z. Allen-Zhu, Y. Li, S. Wang, L. Wang, and W. Chen LoRA: low-rank adaptation of large language models . External Links: 2106.09685 , Link Cited by: §1",
+      "url": "https://arxiv.org/html/2610.37934v1#S1.p2.1"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px2.p2.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Hu et al. (2021) E. J. Hu, Y. Shen, P. Wallis, Z. Allen-Zhu, Y. Li, S. Wang, L. Wang, and W. Chen LoRA: low-rank adaptation of large language models . External Links: 2106.09685 , Link Cited by: §1 , §2",
+      "url": "https://arxiv.org/html/2610.37934v1#S2.SS0.SSS0.Px2.p2.1"
+    },
+    {
+      "href": "https://arxiv.org/abs/2402.16828",
+      "text": "Link",
+      "section": "References",
+      "context": "Huh et al. (2024) M. Huh, B. Cheung, J. Bernstein, P. Isola, and P. Agrawal Training neural networks from scratch with parallel low-rank adapters . External Links: 2402.16828 , Link",
+      "url": "https://arxiv.org/abs/2402.16828"
+    },
+    {
+      "href": "#S1.p3.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Huh et al. (2024) M. Huh, B. Cheung, J. Bernstein, P. Isola, and P. Agrawal Training neural networks from scratch with parallel low-rank adapters . External Links: 2402.16828 , Link Cited by: §1",
+      "url": "https://arxiv.org/html/2610.37934v1#S1.p3.1"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px2.p2.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Huh et al. (2024) M. Huh, B. Cheung, J. Bernstein, P. Isola, and P. Agrawal Training neural networks from scratch with parallel low-rank adapters . External Links: 2402.16828 , Link Cited by: §1 , §2",
+      "url": "https://arxiv.org/html/2610.37934v1#S2.SS0.SSS0.Px2.p2.1"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px2.p2.2",
+      "text": "§2",
+      "section": "References",
+      "context": "Huh et al. (2024) M. Huh, B. Cheung, J. Bernstein, P. Isola, and P. Agrawal Training neural networks from scratch with parallel low-rank adapters . External Links: 2402.16828 , Link Cited by: §1 , §2 , §2",
+      "url": "https://arxiv.org/html/2610.37934v1#S2.SS0.SSS0.Px2.p2.2"
+    },
+    {
+      "href": "#S4.p2.1",
+      "text": "§4",
+      "section": "References",
+      "context": "Huh et al. (2024) M. Huh, B. Cheung, J. Bernstein, P. Isola, and P. Agrawal Training neural networks from scratch with parallel low-rank adapters . External Links: 2402.16828 , Link Cited by: §1 , §2 , §2 , §4",
+      "url": "https://arxiv.org/html/2610.37934v1#S4.p2.1"
+    },
+    {
+      "href": "https://arxiv.org/abs/2001.08361",
+      "text": "Link",
+      "section": "References",
+      "context": "Kaplan et al. (2020) J. Kaplan, S. McCandlish, T. Henighan, T. B. Brown, B. Chess, R. Child, S. Gray, A. Radford, J. Wu, and D. Amodei Scaling laws for neural language models . External Links: 2001.08361 , Link",
+      "url": "https://arxiv.org/abs/2001.08361"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Kaplan et al. (2020) J. Kaplan, S. McCandlish, T. Henighan, T. B. Brown, B. Chess, R. Child, S. Gray, A. Radford, J. Wu, and D. Amodei Scaling laws for neural language models . External Links: 2001.08361 , Link Cited by: §1",
+      "url": "https://arxiv.org/html/2610.37934v1#S1.p1.1"
+    },
+    {
+      "href": "https://arxiv.org/abs/1412.6980",
+      "text": "Link",
+      "section": "References",
+      "context": "Kingma and Ba (2017) D. P. Kingma and J. Ba Adam: a method for stochastic optimization . External Links: 1412.6980 , Link",
+      "url": "https://arxiv.org/abs/1412.6980"
+    },
+    {
+      "href": "#A1.p1.1",
+      "text": "Appendix A",
+      "section": "References",
+      "context": "Kingma and Ba (2017) D. P. Kingma and J. Ba Adam: a method for stochastic optimization . External Links: 1412.6980 , Link Cited by: Appendix A",
+      "url": "https://arxiv.org/html/2610.37934v1#A1.p1.1"
+    },
+    {
+      "href": "#S1.p2.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Kingma and Ba (2017) D. P. Kingma and J. Ba Adam: a method for stochastic optimization . External Links: 1412.6980 , Link Cited by: Appendix A , §1",
+      "url": "https://arxiv.org/html/2610.37934v1#S1.p2.1"
+    },
+    {
+      "href": "https://arxiv.org/abs/2310.11454",
+      "text": "Link",
+      "section": "References",
+      "context": "Kopiczko et al. (2024) D. J. Kopiczko, T. Blankevoort, and Y. M. Asano VeRA: vector-based random matrix adaptation . External Links: 2310.11454 , Link",
+      "url": "https://arxiv.org/abs/2310.11454"
+    },
+    {
+      "href": "#S4.p3.1",
+      "text": "§4",
+      "section": "References",
+      "context": "Kopiczko et al. (2024) D. J. Kopiczko, T. Blankevoort, and Y. M. Asano VeRA: vector-based random matrix adaptation . External Links: 2310.11454 , Link Cited by: §4",
+      "url": "https://arxiv.org/html/2610.37934v1#S4.p3.1"
+    },
+    {
+      "href": "https://arxiv.org/abs/2307.05695",
+      "text": "Link",
+      "section": "References",
+      "context": "Lialin et al. (2023) V. Lialin, N. Shivagunde, S. Muckatira, and A. Rumshisky ReLoRA: high-rank training through low-rank updates . External Links: 2307.05695 , Link",
+      "url": "https://arxiv.org/abs/2307.05695"
+    },
+    {
+      "href": "#S1.p2.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Lialin et al. (2023) V. Lialin, N. Shivagunde, S. Muckatira, and A. Rumshisky ReLoRA: high-rank training through low-rank updates . External Links: 2307.05695 , Link Cited by: §1",
+      "url": "https://arxiv.org/html/2610.37934v1#S1.p2.1"
+    },
+    {
+      "href": "#S1.p3.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Lialin et al. (2023) V. Lialin, N. Shivagunde, S. Muckatira, and A. Rumshisky ReLoRA: high-rank training through low-rank updates . External Links: 2307.05695 , Link Cited by: §1 , §1",
+      "url": "https://arxiv.org/html/2610.37934v1#S1.p3.1"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px2.p2.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Lialin et al. (2023) V. Lialin, N. Shivagunde, S. Muckatira, and A. Rumshisky ReLoRA: high-rank training through low-rank updates . External Links: 2307.05695 , Link Cited by: §1 , §1 , §2",
+      "url": "https://arxiv.org/html/2610.37934v1#S2.SS0.SSS0.Px2.p2.1"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px2.p2.2",
+      "text": "§2",
+      "section": "References",
+      "context": "Lialin et al. (2023) V. Lialin, N. Shivagunde, S. Muckatira, and A. Rumshisky ReLoRA: high-rank training through low-rank updates . External Links: 2307.05695 , Link Cited by: §1 , §1 , §2 , §2",
+      "url": "https://arxiv.org/html/2610.37934v1#S2.SS0.SSS0.Px2.p2.2"
+    },
+    {
+      "href": "https://arxiv.org/abs/2402.09353",
+      "text": "Link",
+      "section": "References",
+      "context": "Liu et al. (2024) S. Liu, C. Wang, H. Yin, P. Molchanov, Y. F. Wang, K. Cheng, and M. Chen DoRA: weight-decomposed low-rank adaptation . External Links: 2402.09353 , Link",
+      "url": "https://arxiv.org/abs/2402.09353"
+    },
+    {
+      "href": "#S4.p3.1",
+      "text": "§4",
+      "section": "References",
+      "context": "Liu et al. (2024) S. Liu, C. Wang, H. Yin, P. Molchanov, Y. F. Wang, K. Cheng, and M. Chen DoRA: weight-decomposed low-rank adaptation . External Links: 2402.09353 , Link Cited by: §4",
+      "url": "https://arxiv.org/html/2610.37934v1#S4.p3.1"
+    },
+    {
+      "href": "https://aclanthology.org/N19-1309/",
+      "text": "Link",
+      "section": "References",
+      "context": "Lockard et al. (2019) C. Lockard, P. Shiralkar, and X. L. Dong OpenCeres: When open information extraction meets the semi-structured web . In Proceedings of the 2019 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies, Volume 1 (Long and Short Papers) , J. Burstein, C. Doran, and T. Solorio (Eds.) , Minneapolis, Minnesota , pp. 3047–3056 . External Links: Link",
+      "url": "https://aclanthology.org/N19-1309/"
+    },
+    {
+      "href": "https://dx.doi.org/10.18653/v1/N19-1309",
+      "text": "Document",
+      "section": "References",
+      "context": "Lockard et al. (2019) C. Lockard, P. Shiralkar, and X. L. Dong OpenCeres: When open information extraction meets the semi-structured web . In Proceedings of the 2019 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies, Volume 1 (Long and Short Papers) , J. Burstein, C. Doran, and T. Solorio (Eds.) , Minneapolis, Minnesota , pp. 3047–3056 . External Links: Link , Document",
+      "url": "https://dx.doi.org/10.18653/v1/N19-1309"
+    },
+    {
+      "href": "#S5.SS2.p1.1",
+      "text": "§5.2",
+      "section": "References",
+      "context": "Lockard et al. (2019) C. Lockard, P. Shiralkar, and X. L. Dong OpenCeres: When open information extraction meets the semi-structured web . In Proceedings of the 2019 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies, Volume 1 (Long and Short Papers) , J. Burstein, C. Doran, and T. Solorio (Eds.) , Minneapolis, Minnesota , pp. 3047–3056 . External Links: Link , Document Cited by: §5.2",
+      "url": "https://arxiv.org/html/2610.37934v1#S5.SS2.p1.1"
+    },
+    {
+      "href": "https://arxiv.org/abs/1711.05101",
+      "text": "Link",
+      "section": "References",
+      "context": "Loshchilov and Hutter (2019) I. Loshchilov and F. Hutter Decoupled weight decay regularization . External Links: 1711.05101 , Link",
+      "url": "https://arxiv.org/abs/1711.05101"
+    },
+    {
+      "href": "#A5.p1.1",
+      "text": "Appendix E",
+      "section": "References",
+      "context": "Loshchilov and Hutter (2019) I. Loshchilov and F. Hutter Decoupled weight decay regularization . External Links: 1711.05101 , Link Cited by: Appendix E",
+      "url": "https://arxiv.org/html/2610.37934v1#A5.p1.1"
+    },
+    {
+      "href": "#S1.p2.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Loshchilov and Hutter (2019) I. Loshchilov and F. Hutter Decoupled weight decay regularization . External Links: 1711.05101 , Link Cited by: Appendix E , §1",
+      "url": "https://arxiv.org/html/2610.37934v1#S1.p2.1"
+    },
+    {
+      "href": "https://arxiv.org/abs/1609.07843",
+      "text": "Link",
+      "section": "References",
+      "context": "Merity et al. (2016) S. Merity, C. Xiong, J. Bradbury, and R. Socher Pointer sentinel mixture models . External Links: 1609.07843 , Link",
+      "url": "https://arxiv.org/abs/1609.07843"
+    },
+    {
+      "href": "#S5.SS2.p1.1",
+      "text": "§5.2",
+      "section": "References",
+      "context": "Merity et al. (2016) S. Merity, C. Xiong, J. Bradbury, and R. Socher Pointer sentinel mixture models . External Links: 1609.07843 , Link Cited by: §5.2",
+      "url": "https://arxiv.org/html/2610.37934v1#S5.SS2.p1.1"
+    },
+    {
+      "href": "https://arxiv.org/abs/1809.02789",
+      "text": "Link",
+      "section": "References",
+      "context": "Mihaylov et al. (2018) T. Mihaylov, P. Clark, T. Khot, and A. Sabharwal Can a suit of armor conduct electricity? a new dataset for open book question answering . External Links: 1809.02789 , Link",
+      "url": "https://arxiv.org/abs/1809.02789"
+    },
+    {
+      "href": "#S5.SS2.p1.1",
+      "text": "§5.2",
+      "section": "References",
+      "context": "Mihaylov et al. (2018) T. Mihaylov, P. Clark, T. Khot, and A. Sabharwal Can a suit of armor conduct electricity? a new dataset for open book question answering . External Links: 1809.02789 , Link Cited by: §5.2",
+      "url": "https://arxiv.org/html/2610.37934v1#S5.SS2.p1.1"
+    },
+    {
+      "href": "https://arxiv.org/abs/2501.00656",
+      "text": "Link",
+      "section": "References",
+      "context": "OLMo et al. (2024) T. OLMo, P. Walsh, L. Soldaini, D. Groeneveld, K. Lo, S. Arora, A. Bhagia, Y. Gu, S. Huang, M. Jordan, N. Lambert, D. Schwenk, O. Tafjord, T. Anderson, D. Atkinson, F. Brahman, C. Clark, P. Dasigi, N. Dziri, M. Guerquin, H. Ivison, P. W. Koh, J. Liu, S. Malik, W. Merrill, L. J. V. Miranda, J. Morrison, T. Murray, C. Nam, V. Pyatkin, A. Rangapur, M. Schmitz, S. Skjonsberg, D. Wadden, C. Wilhelm, M. Wilson, L. Zettlemoyer, A. Farhadi, N. A. Smith, and H. Hajishirzi 2 OLMo 2 Furious . External Links: 2501.00656 , Link",
+      "url": "https://arxiv.org/abs/2501.00656"
+    },
+    {
+      "href": "#A4.p1.1",
+      "text": "Appendix D",
+      "section": "References",
+      "context": "OLMo et al. (2024) T. OLMo, P. Walsh, L. Soldaini, D. Groeneveld, K. Lo, S. Arora, A. Bhagia, Y. Gu, S. Huang, M. Jordan, N. Lambert, D. Schwenk, O. Tafjord, T. Anderson, D. Atkinson, F. Brahman, C. Clark, P. Dasigi, N. Dziri, M. Guerquin, H. Ivison, P. W. Koh, J. Liu, S. Malik, W. Merrill, L. J. V. Miranda, J. Morrison, T. Murray, C. Nam, V. Pyatkin, A. Rangapur, M. Schmitz, S. Skjonsberg, D. Wadden, C. Wilhelm, M. Wilson, L. Zettlemoyer, A. Farhadi, N. A. Smith, and H. Hajishirzi 2 OLMo 2 Furious . External Links: 2501.00656 , Link Cited by: Appendix D",
+      "url": "https://arxiv.org/html/2610.37934v1#A4.p1.1"
+    },
+    {
+      "href": "#S5.p2.1",
+      "text": "§5",
+      "section": "References",
+      "context": "OLMo et al. (2024) T. OLMo, P. Walsh, L. Soldaini, D. Groeneveld, K. Lo, S. Arora, A. Bhagia, Y. Gu, S. Huang, M. Jordan, N. Lambert, D. Schwenk, O. Tafjord, T. Anderson, D. Atkinson, F. Brahman, C. Clark, P. Dasigi, N. Dziri, M. Guerquin, H. Ivison, P. W. Koh, J. Liu, S. Malik, W. Merrill, L. J. V. Miranda, J. Morrison, T. Murray, C. Nam, V. Pyatkin, A. Rangapur, M. Schmitz, S. Skjonsberg, D. Wadden, C. Wilhelm, M. Wilson, L. Zettlemoyer, A. Farhadi, N. A. Smith, and H. Hajishirzi 2 OLMo 2 Furious . External Links: 2501.00656 , Link Cited by: Appendix D , §5",
+      "url": "https://arxiv.org/html/2610.37934v1#S5.p2.1"
+    },
+    {
+      "href": "https://arxiv.org/abs/1606.06031",
+      "text": "Link",
+      "section": "References",
+      "context": "Paperno et al. (2016) D. Paperno, G. Kruszewski, A. Lazaridou, Q. N. Pham, R. Bernardi, S. Pezzelle, M. Baroni, G. Boleda, and R. Fernández The lambada dataset: word prediction requiring a broad discourse context . External Links: 1606.06031 , Link",
+      "url": "https://arxiv.org/abs/1606.06031"
+    },
+    {
+      "href": "#S5.SS2.p1.1",
+      "text": "§5.2",
+      "section": "References",
+      "context": "Paperno et al. (2016) D. Paperno, G. Kruszewski, A. Lazaridou, Q. N. Pham, R. Bernardi, S. Pezzelle, M. Baroni, G. Boleda, and R. Fernández The lambada dataset: word prediction requiring a broad discourse context . External Links: 1606.06031 , Link Cited by: §5.2",
+      "url": "https://arxiv.org/html/2610.37934v1#S5.SS2.p1.1"
+    },
+    {
+      "href": "https://arxiv.org/abs/2406.17557",
+      "text": "Link",
+      "section": "References",
+      "context": "Penedo et al. (2024) G. Penedo, H. Kydlíček, L. B. allal, A. Lozhkov, M. Mitchell, C. Raffel, L. V. Werra, and T. Wolf The fineweb datasets: decanting the web for the finest text data at scale . External Links: 2406.17557 , Link",
+      "url": "https://arxiv.org/abs/2406.17557"
+    },
+    {
+      "href": "#S5.p2.1",
+      "text": "§5",
+      "section": "References",
+      "context": "Penedo et al. (2024) G. Penedo, H. Kydlíček, L. B. allal, A. Lozhkov, M. Mitchell, C. Raffel, L. V. Werra, and T. Wolf The fineweb datasets: decanting the web for the finest text data at scale . External Links: 2406.17557 , Link Cited by: §5",
+      "url": "https://arxiv.org/html/2610.37934v1#S5.p2.1"
+    },
+    {
+      "href": "https://arxiv.org/abs/2412.15115",
+      "text": "Link",
+      "section": "References",
+      "context": "Qwen et al. (2025) Qwen, :, A. Yang, B. Yang, B. Zhang, B. Hui, B. Zheng, B. Yu, C. Li, D. Liu, F. Huang, H. Wei, H. Lin, J. Yang, J. Tu, J. Zhang, J. Yang, J. Yang, J. Zhou, J. Lin, K. Dang, K. Lu, K. Bao, K. Yang, L. Yu, M. Li, M. Xue, P. Zhang, Q. Zhu, R. Men, R. Lin, T. Li, T. Tang, T. Xia, X. Ren, X. Ren, Y. Fan, Y. Su, Y. Zhang, Y. Wan, Y. Liu, Z. Cui, Z. Zhang, and Z. Qiu Qwen2.5 technical report . External Links: 2412.15115 , Link",
+      "url": "https://arxiv.org/abs/2412.15115"
+    },
+    {
+      "href": "#A4.p1.1",
+      "text": "Appendix D",
+      "section": "References",
+      "context": "Qwen et al. (2025) Qwen, :, A. Yang, B. Yang, B. Zhang, B. Hui, B. Zheng, B. Yu, C. Li, D. Liu, F. Huang, H. Wei, H. Lin, J. Yang, J. Tu, J. Zhang, J. Yang, J. Yang, J. Zhou, J. Lin, K. Dang, K. Lu, K. Bao, K. Yang, L. Yu, M. Li, M. Xue, P. Zhang, Q. Zhu, R. Men, R. Lin, T. Li, T. Tang, T. Xia, X. Ren, X. Ren, Y. Fan, Y. Su, Y. Zhang, Y. Wan, Y. Liu, Z. Cui, Z. Zhang, and Z. Qiu Qwen2.5 technical report . External Links: 2412.15115 , Link Cited by: Appendix D",
+      "url": "https://arxiv.org/html/2610.37934v1#A4.p1.1"
+    },
+    {
+      "href": "https://arxiv.org/abs/1907.10641",
+      "text": "Link",
+      "section": "References",
+      "context": "Sakaguchi et al. (2019) K. Sakaguchi, R. L. Bras, C. Bhagavatula, and Y. Choi WinoGrande: an adversarial winograd schema challenge at scale . External Links: 1907.10641 , Link",
+      "url": "https://arxiv.org/abs/1907.10641"
+    },
+    {
+      "href": "#S5.SS2.p1.1",
+      "text": "§5.2",
+      "section": "References",
+      "context": "Sakaguchi et al. (2019) K. Sakaguchi, R. L. Bras, C. Bhagavatula, and Y. Choi WinoGrande: an adversarial winograd schema challenge at scale . External Links: 1907.10641 , Link Cited by: §5.2",
+      "url": "https://arxiv.org/html/2610.37934v1#S5.SS2.p1.1"
+    },
+    {
+      "href": "https://dx.doi.org/10.64434/tml.20250929",
+      "text": "Document",
+      "section": "References",
+      "context": "Schulman and Lab (2025) J. Schulman and T. M. Lab LoRA without regret . Thinking Machines Lab: Connectionism . Note: https://thinkingmachines.ai/blog/lora/ External Links: Document",
+      "url": "https://dx.doi.org/10.64434/tml.20250929"
+    },
+    {
+      "href": "#A3.p1.1",
+      "text": "Appendix C",
+      "section": "References",
+      "context": "Schulman and Lab (2025) J. Schulman and T. M. Lab LoRA without regret . Thinking Machines Lab: Connectionism . Note: https://thinkingmachines.ai/blog/lora/ External Links: Document Cited by: Appendix C",
+      "url": "https://arxiv.org/html/2610.37934v1#A3.p1.1"
+    },
+    {
+      "href": "#A3.p6.1",
+      "text": "Appendix C",
+      "section": "References",
+      "context": "Schulman and Lab (2025) J. Schulman and T. M. Lab LoRA without regret . Thinking Machines Lab: Connectionism . Note: https://thinkingmachines.ai/blog/lora/ External Links: Document Cited by: Appendix C , Appendix C",
+      "url": "https://arxiv.org/html/2610.37934v1#A3.p6.1"
+    },
+    {
+      "href": "#A3.p7.1",
+      "text": "Appendix C",
+      "section": "References",
+      "context": "Schulman and Lab (2025) J. Schulman and T. M. Lab LoRA without regret . Thinking Machines Lab: Connectionism . Note: https://thinkingmachines.ai/blog/lora/ External Links: Document Cited by: Appendix C , Appendix C , Appendix C",
+      "url": "https://arxiv.org/html/2610.37934v1#A3.p7.1"
+    },
+    {
+      "href": "https://dx.doi.org/10.1109/TPAMI.2008.128",
+      "text": "Document",
+      "section": "References",
+      "context": "Torralba et al. (2008) A. Torralba, R. Fergus, and W. T. Freeman 80 million tiny images: a large data set for nonparametric object and scene recognition . IEEE Transactions on Pattern Analysis and Machine Intelligence 30 ( 11 ), pp. 1958–1970 . External Links: Document",
+      "url": "https://dx.doi.org/10.1109/TPAMI.2008.128"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px2.p4.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Torralba et al. (2008) A. Torralba, R. Fergus, and W. T. Freeman 80 million tiny images: a large data set for nonparametric object and scene recognition . IEEE Transactions on Pattern Analysis and Machine Intelligence 30 ( 11 ), pp. 1958–1970 . External Links: Document Cited by: §2",
+      "url": "https://arxiv.org/html/2610.37934v1#S2.SS0.SSS0.Px2.p4.1"
+    },
+    {
+      "href": "https://arxiv.org/abs/1707.06209",
+      "text": "Link",
+      "section": "References",
+      "context": "Welbl et al. (2017) J. Welbl, N. F. Liu, and M. Gardner Crowdsourcing multiple choice science questions . External Links: 1707.06209 , Link",
+      "url": "https://arxiv.org/abs/1707.06209"
+    },
+    {
+      "href": "#S5.SS2.p1.1",
+      "text": "§5.2",
+      "section": "References",
+      "context": "Welbl et al. (2017) J. Welbl, N. F. Liu, and M. Gardner Crowdsourcing multiple choice science questions . External Links: 1707.06209 , Link Cited by: §5.2",
+      "url": "https://arxiv.org/html/2610.37934v1#S5.SS2.p1.1"
+    },
+    {
+      "href": "https://arxiv.org/abs/2406.06484",
+      "text": "Link",
+      "section": "References",
+      "context": "Yang et al. (2025) S. Yang, B. Wang, Y. Zhang, Y. Shen, and Y. Kim Parallelizing linear transformers with the delta rule over sequence length . External Links: 2406.06484 , Link",
+      "url": "https://arxiv.org/abs/2406.06484"
+    },
+    {
+      "href": "#S5.SS2.p1.1",
+      "text": "§5.2",
+      "section": "References",
+      "context": "Yang et al. (2025) S. Yang, B. Wang, Y. Zhang, Y. Shen, and Y. Kim Parallelizing linear transformers with the delta rule over sequence length . External Links: 2406.06484 , Link Cited by: §5.2",
+      "url": "https://arxiv.org/html/2610.37934v1#S5.SS2.p1.1"
+    },
+    {
+      "href": "https://arxiv.org/abs/1905.07830",
+      "text": "Link",
+      "section": "References",
+      "context": "Zellers et al. (2019) R. Zellers, A. Holtzman, Y. Bisk, A. Farhadi, and Y. Choi HellaSwag: can a machine really finish your sentence? . External Links: 1905.07830 , Link",
+      "url": "https://arxiv.org/abs/1905.07830"
+    },
+    {
+      "href": "#S5.SS2.p1.1",
+      "text": "§5.2",
+      "section": "References",
+      "context": "Zellers et al. (2019) R. Zellers, A. Holtzman, Y. Bisk, A. Farhadi, and Y. Choi HellaSwag: can a machine really finish your sentence? . External Links: 1905.07830 , Link Cited by: §5.2",
+      "url": "https://arxiv.org/html/2610.37934v1#S5.SS2.p1.1"
+    },
+    {
+      "href": "https://arxiv.org/abs/2403.03507",
+      "text": "Link",
+      "section": "References",
+      "context": "Zhao et al. (2024) J. Zhao, Z. Zhang, B. Chen, Z. Wang, A. Anandkumar, and Y. Tian GaLore: memory-efficient llm training by gradient low-rank projection . External Links: 2403.03507 , Link",
+      "url": "https://arxiv.org/abs/2403.03507"
+    },
+    {
+      "href": "#S4.p1.1",
+      "text": "§4",
+      "section": "References",
+      "context": "Zhao et al. (2024) J. Zhao, Z. Zhang, B. Chen, Z. Wang, A. Anandkumar, and Y. Tian GaLore: memory-efficient llm training by gradient low-rank projection . External Links: 2403.03507 , Link Cited by: §4",
+      "url": "https://arxiv.org/html/2610.37934v1#S4.p1.1"
+    },
+    {
+      "href": "#bib.bib10",
+      "text": "Kingma and Ba (2017)",
+      "section": "Appendix A Momentum and Adam’s Update Rank",
+      "context": "For SGD with momentum, the update rank at time t t is upper-bounded by t ​ B tB since momentum is a linear combination of past gradients. In modern optimizers such as Adam Kingma and Ba (2017)",
+      "url": "https://arxiv.org/html/2610.37934v1#bib.bib10"
+    },
+    {
+      "href": "#bib.bib28",
+      "text": "Schulman and Lab (2025)",
+      "section": "Appendix C FLOP Analysis",
+      "context": "For FLOP analysis, we use the same setup as Schulman and Lab (2025)",
+      "url": "https://arxiv.org/html/2610.37934v1#bib.bib28"
+    },
+    {
+      "href": "#bib.bib28",
+      "text": "Schulman and Lab (2025)",
+      "section": "Appendix C FLOP Analysis",
+      "context": "This is close to the FLOP estimate for LoRA Schulman and Lab (2025)",
+      "url": "https://arxiv.org/html/2610.37934v1#bib.bib28"
+    },
+    {
+      "href": "#bib.bib28",
+      "text": "Schulman and Lab (2025)",
+      "section": "Appendix C FLOP Analysis",
+      "context": "When R ≪ N R\\ll N , this is only slightly larger than 2 / 3 2/3 , meaning that BPT uses roughly two-thirds of the compute of full training. This analysis follows the same setup as Schulman and Lab (2025)",
+      "url": "https://arxiv.org/html/2610.37934v1#bib.bib28"
+    },
+    {
+      "href": "#bib.bib20",
+      "text": "Qwen et al. (2025)",
+      "section": "Appendix D Model Architecture and Parameter Reduction",
+      "context": "All models are based on the Qwen2.5 architecture Qwen et al. (2025)",
+      "url": "https://arxiv.org/html/2610.37934v1#bib.bib20"
+    },
+    {
+      "href": "#bib.bib9",
+      "text": "OLMo et al. (2024)",
+      "section": "Appendix D Model Architecture and Parameter Reduction",
+      "context": "All models are based on the Qwen2.5 architecture Qwen et al. (2025) : in addition to the standard 0.5B and 1.5B parameter versions, we developed a custom 100M parameter variant by scaling down the same architecture. We also pre-train OLMo-2-1B OLMo et al. (2024)",
+      "url": "https://arxiv.org/html/2610.37934v1#bib.bib9"
+    },
+    {
+      "href": "#bib.bib23",
+      "text": "Loshchilov and Hutter (2019)",
+      "section": "Appendix E Hyperparameters and Experimental Setup",
+      "context": "used 10x of the base learning rate which was 2e-4 for all our base models. For ReLoRA with Qwen 1.5B model and LoRA with Qwen 0.5B model, we used a learning rate of 1e-3 after multiple crashes with learning rate 2e-3. Additionally, all the parameters in the model were trained using bf16 including the low-rank matrices with the exception of the diagonal matrices which were kept in fp32 for stability. For a fair comparison, all experiments for a given model size used the same batch size and were trained for the same total number of steps. The optimizer used was AdamW Loshchilov and Hutter (2019)",
+      "url": "https://arxiv.org/html/2610.37934v1#bib.bib23"
+    },
+    {
+      "href": "#S5.F6",
+      "text": "Figure 6",
+      "section": "Appendix F GPU Memory Footprint",
+      "context": "On a 4-GPU NVIDIA GH200 setup, we evaluate the memory consumption of Qwen-2.5-1.5B at approximately 8192 tokens per GPU (16 microbatches × \\times 512 sequence length). Compared to full training, BPT reduces peak GPU memory by 5.8 GB per GPU with torch.compile and by 7.9 GB per GPU with torch.compile plus gradient checkpointing, as summarized in Figure 6",
+      "url": "https://arxiv.org/html/2610.37934v1#S5.F6"
+    }
+  ],
+  "note": "Extracted HTML text; equations and table formatting may be imperfect. No PDF extraction was attempted."
+}

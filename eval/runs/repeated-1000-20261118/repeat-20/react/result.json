@@ -1,0 +1,318 @@
+{
+  "run_id": "f786880159d04642a2424d3f9040a6c1",
+  "status": "completed",
+  "user_id": "dmitrii",
+  "profile_fingerprint": "a2480e0075ad9cdf236d40e30f74f9bfd87a08dd948530b42e6b57e4a123bfc0",
+  "pipeline_version": "react-v2",
+  "categories": [
+    "cs.LG",
+    "cs.CL",
+    "stat.ML",
+    "cs.AI",
+    "cs.IR"
+  ],
+  "date_from": "2026-09-28",
+  "date_to": "2026-11-15",
+  "papers": [
+    {
+      "paper_id": "2610.11730",
+      "summary": "Spectral weight decay lowers effective rank and improves SVD-LLM compression at matched validation loss. The paper also reports higher clean-test accuracy under label noise, with regularization tuned separately from five test replications.",
+      "relevance": "Directly addresses spectral regularization, quality-preserving low-rank compression, and memorization under noisy labels.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "Across LLaMA models with 124 124 M to 500 500 M parameters, spectral weight decay lowers effective rank and improves SVD-LLM compression at matched validation loss."
+        },
+        {
+          "source": "inspection",
+          "quote": "All coefficients are frozen before the five new label-corruption replications. Clean validation is not used to select checkpoints, and the replication test results are not used to tune coefficients."
+        }
+      ],
+      "title": "Spectral Weight Decay: Inducing Low-Rank Structure in Neural Network Weights",
+      "url": "https://arxiv.org/abs/2610.11730v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.06116",
+      "summary": "ORCA applies soft orthogonality regularization early in training and then removes it. The authors report lower final validation loss than Muon across several LLM architectures, including an 8B MoE run.",
+      "relevance": "Tests how temporary spectral shaping affects effective rank and pretraining quality across model scales.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "Across LLaMA, Qwen3, and fine-grained mixture-of-experts models ranging from 130M to 8B parameters, ORCA achieves lower final validation loss than Muon."
+        },
+        {
+          "source": "inspection",
+          "quote": "The 8 8 B experiment extends this result to a larger model trained on 100 100 B tokens, where ORCA also finishes below Muon"
+        }
+      ],
+      "title": "ORCA: The Annealed Spectral Conditioning Optimizer for Faster, Better LLM Training",
+      "url": "https://arxiv.org/abs/2610.06116v2",
+      "version": 2,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.04204",
+      "summary": "Clean approximates SOAP preconditioners with Nyström sketches; Q-Clean further compresses optimizer states. In matched LLaMA-1.3B runs, Clean reaches AdamW’s final validation loss in 64 rather than 81 hours, while Q-Clean uses 1.28G optimizer memory versus Muon’s 2.80G.",
+      "relevance": "Quantifies quality, optimizer-memory, peak-memory, and time tradeoffs in LLM pretraining.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "Muon ( Jordan et al., 2024 ) 16.97 0.83G 47.36G 11.78 2.80G 51.83G ALSO ( Romashov et al., 2026 ) 15.36 1.30G 47.88G 12.19 4.71G 53.82G Clean (Ours) 15.87 1.25G 47.68G 11.65 4.48G 53.44G Q-Clean (Ours) 16.44 0.38G 46.82G 12.10 1.28G 50.24G"
+        },
+        {
+          "source": "inspection",
+          "quote": "Clean reaches AdamW’s final performance in 64 hours instead of 81, while simultaneously reducing the optimizer memory footprint."
+        }
+      ],
+      "title": "Clean: Second-order LLM Training at Linear Memory Cost via Nystr{ö}m Sketching",
+      "url": "https://arxiv.org/abs/2610.04204v3",
+      "version": 3,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.17429",
+      "summary": "Monarch-Muon improves validation loss over Monarch-AdamW at fixed structure. Its larger-scale memory and timing results are systems benchmarks, not complete pretraining-quality runs.",
+      "relevance": "Connects structured parameterization, Muon, spectral behavior, and training-efficiency measurements.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "Monarch–Muon achieves lower final validation loss than Monarch–AdamW in all four structured comparisons (Table 1 )."
+        },
+        {
+          "source": "inspection",
+          "quote": "Systems benchmarks cover dense reference sizes up to 6.89B on an H100. These benchmarks measure the cost of the training operations at larger widths, while the complete pretraining runs test learning quality."
+        }
+      ],
+      "title": "Monarch-Muon: Structure-Aware Muon for Fast and Memory-Efficient Pretraining",
+      "url": "https://arxiv.org/abs/2610.17429v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.19844",
+      "summary": "PMRC retains optimizer state in a subspace and corrects updates with the residual gradient. In its 1.3B pretraining comparison, reported peak allocated memory is 53.44 GiB versus 57.77 GiB for AdamW; the retrieved passages do not establish matched-run throughput.",
+      "relevance": "Directly informs low-rank, memory-efficient LLM pretraining and residual correction.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "For projection-based methods, we set the projection rank to r = 256 r=256 and the refresh interval to 100 100 ."
+        },
+        {
+          "source": "inspection",
+          "quote": "Table 6: Peak allocated GPU memory (GiB) during 1.3 1.3 B pretraining. Model AdamW Muon GaLore GoLore Fira GUM PMRC 1.3B 57.77 57.77 55.52 55.52 54.00 54.00 54.00 54.00 54.00 54.00 53.85 53.85 53.44"
+        }
+      ],
+      "title": "Memory-Efficient Subspace Optimization with Residual Correction: From Momentum SGD to Muon",
+      "url": "https://arxiv.org/abs/2610.19844v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.08049",
+      "summary": "The paper derives LoRA preconditioning from a Riemannian metric and tests it on GPT-2 medium and LLaMA2-7B fine-tuning. Reported LLaMA2-7B average accuracy rises from 81.68 with standard AdamW LoRA to 82.34 with the proposed preconditioning.",
+      "relevance": "Addresses LoRA factorization geometry and practical language-model fine-tuning.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "we propose a new Riemannian metric that is specifically tailored to LoRA to close the gap to full fine-tuning at the weight level."
+        },
+        {
+          "source": "inspection",
+          "quote": "Table 3: Top-1 test accuracy in LoRA fine-tuning for the LLaMA2-7B model on the eight commonsense reasoning datasets with different preconditioning. Method BoolQ PIQA SIQA HellaS WinoG ARC-e ARC-c OBQA Ave. AdamW 73.33 83.41 79.38 92.36 83.74 85.77 72.87 82.60 81.68 w/ 4 74.31 84.17 77.99 93.12 83.43 86.28 74.23 82.20 81.97 w/ 5 (Ours) 73.55 83.62 79.02 92.95 85.48 86.41 74.32 83.40 82.34"
+        }
+      ],
+      "title": "A Riemannian Geometry for Low-rank Adaptation",
+      "url": "https://arxiv.org/abs/2610.08049v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.23343",
+      "summary": "The theory relates low-rank LoRA optima to a finite-rank map induced by frozen activations. A Qwen2.5-1.5B experiment reports a rank-threshold effect, but adapts only a narrow part of the model and evaluates training loss.",
+      "relevance": "Offers a structural account of LoRA rank requirements beyond NTK linearization.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "This yields global minimizers whose ranks are controlled by the rank of this map, which we call the bottleneck rank , rather than the sample size."
+        },
+        {
+          "source": "inspection",
+          "quote": "Only one query-projection block in one head of layers 7 and 8 is adapted; after a classification-head warm-up, both the backbone and classifier are frozen."
+        }
+      ],
+      "title": "How Finite-Rank Bottlenecks Shape the Low-Rank Adaptation Landscape",
+      "url": "https://arxiv.org/abs/2610.23343v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.10965",
+      "summary": "Targeted Muon experiments find that amplifying small momentum singular directions matters for NanoGPT performance. The paper cautions that higher parameter effective rank alone does not track lower loss.",
+      "relevance": "Directly probes Muon’s spectral mechanism and the relationship between update spectra, weight rank, and language-model loss.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "Orthogonalizing everything except the few largest singular values of each matrix gets within 0.03 of Muon while orthogonalizing only about 13% of the momentum matrix’s magnitude"
+        },
+        {
+          "source": "inspection",
+          "quote": "Note that structure and performance don’t move together: AdamW collapses rank and still performs well, the bottom targeted variants keep Muon’s rank without matching its loss"
+        }
+      ],
+      "title": "Spectrally Targeted Muon",
+      "url": "https://arxiv.org/abs/2610.10965v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.20857",
+      "summary": "Idea2Prior records candidate identities, assessments, evidence availability, and ranking decisions in an auditable paper-retrieval workflow. Its reported Hit@5 advantage comes from a small historical comparison with disclosed control limitations.",
+      "relevance": "Closely matches the goal of building an evidence-grounded research-digest harness.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "it preserves search queries, candidate identities, assessments, filtering reasons, PDF availability, and the final ranking."
+        },
+        {
+          "source": "inspection",
+          "quote": "The small, overlapping target set and historical protocol do not support a broad or statistically established superiority claim."
+        }
+      ],
+      "title": "Idea2Prior: Auditable Paper Retrieval and Ranking from Research Ideas",
+      "url": "https://arxiv.org/abs/2610.20857v2",
+      "version": 2,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.07174",
+      "summary": "MapHub scores daily arXiv submissions against researcher portfolios. In a small blind-rating test centered on astro-ph, its top 10% contained about 70% of raters’ top 5% papers, versus 33% for a TF-IDF baseline.",
+      "relevance": "Provides a directly applicable design and evaluation example for personalized research digests.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "MapHub’s top 10% about 70%, against 33% for a term-frequency baseline"
+        },
+        {
+          "source": "inspection",
+          "quote": "MapHub is still under development, and the test is small. Its ratings are subjective"
+        }
+      ],
+      "title": "MapHub: Daily Relevance Heatmaps of New arXiv Preprints for a Research Community",
+      "url": "https://arxiv.org/abs/2611.07174v2",
+      "version": 2,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    }
+  ],
+  "x_feature": null,
+  "limitations": [
+    "Results are author-reported; no independent replication or code execution was performed. Repository links do not establish reproducibility.",
+    "The inspected papers test different architectures and budgets, so their numerical results should not be compared across papers as a controlled ranking.",
+    "MapHub’s rating evidence is small and centered on astronomy; Idea2Prior’s evaluation is historical and has disclosed control limitations.",
+    "X analysis was disabled. Selection is limited to the supplied, already-fetched corpus.",
+    "inspect:2610.11730: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.17429: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.19844: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.08049: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.20857: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.23571: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.04249: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.06116: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.10965: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2611.07174: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.04204: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.23343: only question-relevant HTML passages were inspected, not the whole paper."
+  ],
+  "stats": {
+    "fetched_count": 1000,
+    "candidate_count": 1000,
+    "llm_calls": 22,
+    "steps": 17,
+    "inspections": 15,
+    "expansions": 1,
+    "screened": 49,
+    "usage": {
+      "recorded_calls": 22,
+      "llm_latency_seconds": 421.2987381259154,
+      "input_tokens": 1183188,
+      "output_tokens": 11468,
+      "estimated_api_cost_usd": null,
+      "calls_without_usage": 0,
+      "cost_note": "API-equivalent estimate using standard GPT-5.6-Luna rates checked 2026-11-17: $0.20/M input, $1.20/M output; above 272K input, $0.40/M and $1.80/M. Assumes all input is uncached; excludes cache writes and external tools. Not actual Codex subscription billing. Unknown usage/model yields null cost.",
+      "price_source": "https://developers.openai.com/api/docs/models/gpt-5.6-luna"
+    },
+    "tool_calls": 16,
+    "tool_latency_seconds": 52.19106458500028
+  }
+}

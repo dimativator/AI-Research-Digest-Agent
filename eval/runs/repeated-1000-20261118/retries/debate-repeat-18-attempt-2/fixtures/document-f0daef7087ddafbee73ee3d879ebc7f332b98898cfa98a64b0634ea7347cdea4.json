@@ -1,0 +1,1459 @@
+{
+  "status": "ok",
+  "source": "https://arxiv.org/html/2609.34264v1",
+  "extractor_version": "article-v1",
+  "chunks": [
+    {
+      "chunk_id": "chunk-0001",
+      "section": "Rotated Manifold Optimization for Low-Rank Adaptation",
+      "text": "Yuhui Ding † † thanks: Work done during Yuhui’s internship at Microsoft Research Cambridge. Affiliation: ETH Zurich Email: yuhui.ding@inf.ethz.ch Javier Zazo Affiliation: Microsoft Research Cambridge Email: javierzazo@microsoft.com James Hensman Affiliation: Microsoft Research Cambridge Email: jameshensman@microsoft.com",
+      "source": "https://arxiv.org/html/2609.34264v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0002",
+      "section": "Abstract",
+      "text": "We propose a novel optimizer for low-rank adaptation (LoRA) that explicitly incorporates the gauge symmetry of low-rank factorization. Our optimizer extends recent matrix optimizers for full-parameter training to the manifold of fixed-rank matrices by interpreting them as normalization under a rotated basis. We show how rotation and normalization can be integrated with the fixed-rank manifold efficiently. Our optimizer converges faster to lower held-out loss and achieves better or comparable downstream performance on both supervised finetuning and reinforcement learning tasks.",
+      "source": "https://arxiv.org/html/2609.34264v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0003",
+      "section": "1 Introduction",
+      "text": "Large language models (LLMs) based on the transformer architecture ( Vaswani et al., 2017 ) have achieved remarkable success in recent years ( Brown et al., 2020 ; Touvron et al., 2023 ; Guo et al., 2025 ) . These models typically adopt a pretraining-finetuning paradigm, where large-scale pretraining equips a model with general capabilities and subsequent finetuning adapts it to specific downstream applications. However, as LLMs grow to billions of parameters, full-parameter finetuning becomes expensive in both computation and memory. Such a challenge has motivated the development of parameter-efficient finetuning (PEFT) methods ( Houlsby et al., 2019 ) , which only update a small fraction of all parameters. Among these approaches, low-rank adaptation (LoRA) ( Hu et al., 2022 ) has emerged as a particularly effective method and has been widely adopted. LoRA freezes the pretrained weights and parametrizes the weight updates as products of low-rank matrices, substantially reducing the number of trainable parameters and the memory footprint, while maintaining competitive performance. Compared with full-parameter training, LoRA exhibits a unique geometric structure induced by its low-rank factorization. Specifically, the low-rank matrices have infinitely many reparameterizations that represent the same weight update, since the model’s output depends on these low-rank factors only through their product. This invariance, commonly referred to as gauge symmetry, suggests that optimization should respect the underlying geometry of the weight space of the LoRA parametrization. Motivated by this observation, we revisit the optimization of LoRA and aim to explicitly incorporate its gauge symmetry into the design of the optimization algorithm.",
+      "source": "https://arxiv.org/html/2609.34264v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0004",
+      "section": "1 Introduction",
+      "text": "We design our optimizer on the manifold of fixed-rank matrices, aiming to optimize the product of the low-rank factors directly rather than each factor separately. We extend the recent advances in matrix optimizers ( Gong et al., 2026 ; Jordan et al., 2024 ; Vyas et al., 2025 ) to the fixed-rank manifold by interpreting their update rules as normalization under a rotated basis. Our optimizer applies row and column normalization in a conditioning frame defined by the left singular vectors of the tangent momentum, projects the resulting direction back onto the tangent space, and retracts to the fixed-rank manifold. By exploiting the low-rank structure of tangent vectors, all operations can be performed using thin factors without materializing full weight-sized matrices. We refer to our proposed optimizer as RoM ( Ro tated M anifold Optimization). We evaluate RoM on supervised finetuning and reinforcement learning tasks. RoM achieves substantially lower held-out loss and better or comparable downstream task performance compared with other LoRA optimizers, with only modest additional computational overhead.",
+      "source": "https://arxiv.org/html/2609.34264v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0005",
+      "section": "2 Background",
+      "text": "We briefly review the rotated optimization framework ( Gong et al., 2026 ) and LoRA ( Hu et al., 2022 ) , and then introduce the basic concepts of Riemannian optimization. Notations defined in this section will be used throughout the paper. We discuss related work in Appendix B .",
+      "source": "https://arxiv.org/html/2609.34264v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0006",
+      "section": "2.1 Rotated optimization",
+      "text": "Recent matrix optimizers ( Jordan et al., 2024 ; Vyas et al., 2025 ) can be viewed through a rotated optimization framework ( Gong et al., 2026 ) . Given a matrix-valued momentum 𝑴 ∈ ℝ m × n {\\bm{M}}\\in\\mathbb{R}^{m\\times n} , the framework first expresses 𝑴 {\\bm{M}} in a rotated coordinate system defined by a rotation matrix 𝑹 ∈ SO ​ ( m ) {\\bm{R}}\\in\\text{SO}(m) , applies a normalization function h h in the rotated coordinates, and then rotates the result back to the original coordinates. The resulting update of the weight matrix 𝑾 {\\bm{W}} takes the form: Δ ​ 𝑾 ∝ − 𝑹 ​ h ​ ( 𝑹 ⊤ ​ 𝑴 ) . \\Delta{\\bm{W}}\\propto-{\\bm{R}}h\\big({\\bm{R}}^{\\top}{\\bm{M}}\\big)\\,. (1)",
+      "source": "https://arxiv.org/html/2609.34264v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0007",
+      "section": "2.2 Low-rank adaptation (LoRA)",
+      "text": "LoRA ( Hu et al., 2022 ) freezes the pretrained weight matrix 𝑾 0 ∈ ℝ m × n {\\bm{W}}_{0}\\in\\mathbb{R}^{m\\times n} and parametrizes the weight adaptation 𝑾 adp {\\bm{W}}_{\\text{adp}} as the product of two low-rank factors: 𝑾 eff = 𝑾 0 + 𝑾 adp = 𝑾 0 + 𝑨 ​ 𝑩 ⊤ , 𝑨 ∈ ℝ m × r , 𝑩 ∈ ℝ n × r \\bm{W}_{\\text{eff}}={\\bm{W}}_{0}+{\\bm{W}}_{\\text{adp}}=\\bm{W}_{0}+\\bm{A}\\bm{B}^{\\top},~~\\bm{A}\\in\\mathbb{R}^{m\\times r},~~\\bm{B}\\in\\mathbb{R}^{n\\times r} (2) with r ≪ min ⁡ ( m , n ) r\\ll\\min(m,n) . 𝑾 0 \\bm{W}_{0} denotes the pretrained weight matrix and is kept frozen throughout LoRA finetuning. The loss function ℓ \\ell can thus be written as ℓ ⁡ ( 𝑨 , 𝑩 ) \\ell(\\bm{A},\\bm{B}) . Note that, given the pretrained weight 𝑾 0 \\bm{W}_{0} , the output of the model depends only on the product of 𝑨 \\bm{A} and 𝑩 ⊤ \\bm{B}^{\\top} . Therefore, there exist many reparametrizations of 𝑨 \\bm{A} and 𝑩 \\bm{B} that keep ℓ \\ell unchanged: ℓ ⁡ ( 𝑨 , 𝑩 ) = ℓ ⁡ ( 𝑨 ​ 𝑸 − 1 , 𝑩 ​ 𝑸 ⊤ ) , ∀ 𝑸 ∈ GL ​ ( r ) \\ell(\\bm{A},\\bm{B})=\\ell(\\bm{A}\\bm{Q}^{-1},\\bm{B}\\bm{Q}^{\\top}),\\quad\\forall~\\bm{Q}\\in\\text{GL}(r) (3) where GL ​ ( r ) \\text{GL}(r) denotes the set of all r × r r\\times r invertible matrices. In this paper, we propose an optimizer that explicitly incorporates the gauge symmetry of the LoRA parametrization (Eq. 3 ) into its design.",
+      "source": "https://arxiv.org/html/2609.34264v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0008",
+      "section": "2.3 Riemannian optimization",
+      "text": "Let ℳ \\mathcal{M} be a smooth manifold ( Boumal, 2023 ) . We denote its tangent space at 𝒘 ∈ ℳ \\bm{w}\\in\\mathcal{M} by T 𝒘 ​ ℳ \\mathrm{T}_{\\bm{w}}\\mathcal{M} . Intuitively, T 𝒘 ​ ℳ \\mathrm{T}_{\\bm{w}}\\mathcal{M} is a linear approximation of ℳ \\mathcal{M} locally at 𝒘 \\bm{w} , and consists of all the velocities of smooth curves on ℳ \\mathcal{M} passing through 𝒘 \\bm{w} . We use T ​ ℳ \\mathrm{T}\\mathcal{M} to denote the tangent bundle, i.e., T ℳ = { ( 𝒘 , 𝒗 ) | 𝒘 ∈ ℳ , 𝒗 ∈ T 𝒘 ℳ } \\mathrm{T}\\mathcal{M}=\\{(\\bm{w},\\bm{v})~|~\\bm{w}\\in\\mathcal{M},\\bm{v}\\in\\mathrm{T}_{\\bm{w}}\\mathcal{M}\\} . A retraction Φ : T ​ ℳ → ℳ , ( 𝒘 , 𝒗 ) ↦ Φ 𝒘 ​ ( 𝒗 ) \\Phi:\\mathrm{T}\\mathcal{M}\\rightarrow\\mathcal{M},~(\\bm{w},\\bm{v})\\mapsto\\Phi_{\\bm{w}}(\\bm{v}) is a smooth map such that it defines a smooth curve t ↦ Φ 𝒘 ​ ( t ​ 𝒗 ) t\\mapsto\\Phi_{\\bm{w}}(t\\bm{v}) on ℳ \\mathcal{M} that satisfies Φ 𝒘 ​ ( 𝟎 ) = 𝒘 \\Phi_{\\bm{w}}(\\bm{0})=\\bm{w} and d d ​ t ​ Φ 𝒘 ​ ( t ​ 𝒗 ) | t = 0 = 𝒗 \\frac{d}{dt}\\Phi_{\\bm{w}}(t\\bm{v})|_{t=0}=\\bm{v} . We consider minimizing an objective f ⁡ ( 𝒘 ) f(\\bm{w}) over ℳ \\mathcal{M} . Since ℳ \\mathcal{M} is generally not a vector space, the notion of a gradient depends on how we measure the lengths and angles of tangent vectors. We therefore equip each tangent space T 𝒘 ​ ℳ \\mathrm{T}_{\\bm{w}}\\mathcal{M} with an inner product ⟨ 𝒖 , 𝒗 ⟩ 𝒘 \\langle\\bm{u},\\bm{v}\\rangle_{\\bm{w}} . Intuitively, this inner product specifies the local geometry of ℳ \\mathcal{M} around 𝒘 \\bm{w} (i.e., how to compute local norms and angles). If the assignment 𝒘 ↦ ⟨ ⋅ , ⋅ ⟩ 𝒘 \\bm{w}\\mapsto\\langle\\cdot,\\cdot\\rangle_{\\bm{w}} varies smoothly with 𝒘 \\bm{w} , it is called a Riemannian metric, and ℳ \\mathcal{M} is referred to as a Riemannian manifold.",
+      "source": "https://arxiv.org/html/2609.34264v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0009",
+      "section": "2.3 Riemannian optimization",
+      "text": "The Riemannian gradient of f f at 𝒘 \\bm{w} , denoted by grad ​ f ​ ( 𝒘 ) \\text{grad}f(\\bm{w}) , is defined as: ⟨ grad ​ f ​ ( 𝒘 ) , 𝒗 ⟩ 𝒘 = d d ​ t ​ f ​ ( c ⁡ ( t ) ) | t = 0 , ∀ 𝒗 ∈ T 𝒘 ​ ℳ \\langle\\text{grad}f(\\bm{w}),\\bm{v}\\rangle_{\\bm{w}}=\\frac{d}{dt}f(c(t))\\Big|_{t=0},\\quad\\forall~\\bm{v}\\in\\mathrm{T}_{\\bm{w}}\\mathcal{M} (4) where c : ℝ → ℳ c:\\mathbb{R}\\rightarrow\\mathcal{M} is any smooth curve on ℳ \\mathcal{M} satisfying c ⁡ ( 0 ) = 𝒘 c(0)=\\bm{w} and d d ​ t ​ c ​ ( t ) | t = 0 = 𝒗 \\frac{d}{dt}c(t)|_{t=0}=\\bm{v} . In practice, it is convenient to work with an extension f ¯ \\bar{f} defined in an open neighborhood ℳ ¯ \\bar{\\mathcal{M}} of ℳ \\mathcal{M} such that f f is the restriction of f ¯ \\bar{f} to ℳ \\mathcal{M} , i.e., f = f ¯ | ℳ f=\\bar{f}|_{\\mathcal{M}} . Let ∇ f ¯ ​ ( 𝒘 ) \\nabla\\bar{f}(\\bm{w}) denote the Euclidean gradient of f ¯ \\bar{f} at 𝒘 \\bm{w} , computed in the ambient space (e.g., via automatic differentiation in PyTorch). When ℳ \\mathcal{M} is an embedded submanifold of ℝ n \\mathbb{R}^{n} and inherits the Euclidean inner product, i.e., ⟨ 𝒖 , 𝒗 ⟩ 𝒘 = 𝒖 ⊤ ​ 𝒗 \\langle\\bm{u},\\bm{v}\\rangle_{\\bm{w}}=\\bm{u}^{\\top}\\bm{v} , we have the following relationship between grad ​ f ​ ( 𝒘 ) \\text{grad}f(\\bm{w}) and ∇ f ¯ ​ ( 𝒘 ) \\nabla\\bar{f}(\\bm{w}) : grad ​ f ​ ( 𝒘 ) = Proj 𝒘 ​ ( ∇ f ¯ ​ ( 𝒘 ) ) \\text{grad}f(\\bm{w})=\\text{Proj}_{\\bm{w}}\\left(\\nabla\\bar{f}(\\bm{w})\\right) (5) where Proj 𝒘 : ℝ n → T 𝒘 ​ ℳ \\text{Proj}_{\\bm{w}}:\\mathbb{R}^{n}\\rightarrow\\mathrm{T}_{\\bm{w}}\\mathcal{M} denotes the orthogonal projection onto T 𝒘 ​ ℳ \\mathrm{T}_{\\bm{w}}\\mathcal{M} . Finally, given a step size η > 0 \\eta>0 , a basic Riemannian gradient descent update takes the form:",
+      "source": "https://arxiv.org/html/2609.34264v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0010",
+      "section": "2.3 Riemannian optimization",
+      "text": "𝒘 k + 1 = Φ 𝒘 k ​ ( − η ​ grad ​ f ​ ( 𝒘 k ) ) . \\bm{w}_{k+1}=\\Phi_{\\bm{w}_{k}}\\big(-\\eta\\,\\text{grad}f(\\bm{w}_{k})\\big)\\,. (6)",
+      "source": "https://arxiv.org/html/2609.34264v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0011",
+      "section": "3 Method",
+      "text": "We propose Rotated Manifold Optimization (RoM), which directly optimizes the LoRA weight adaptation 𝑾 adp {\\bm{W}}_{\\text{adp}} on the manifold of fixed-rank matrices. For notational simplicity, throughout this section we write 𝑾 := 𝑾 adp {\\bm{W}}:={\\bm{W}}_{\\text{adp}} . We first introduce the geometry of the fixed-rank manifold in Section 3.1 and describe how to perform Riemannian optimization efficiently by exploiting the low-rank structure. Then in Section 3.2 we extend the rotated optimization framework (Eq. 1 ) to the manifold.",
+      "source": "https://arxiv.org/html/2609.34264v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0012",
+      "section": "3.1 Fixed-rank manifold",
+      "text": "We consider the set of all m × n m\\times n matrices with rank r r : ℳ r = { 𝑾 ∈ ℝ m × n | rank ​ ( 𝑾 ) = r } \\mathcal{M}_{r}=\\{\\bm{W}\\in\\mathbb{R}^{m\\times n}~|~\\text{rank}(\\bm{W})=r\\} (7) Each matrix 𝑾 ∈ ℳ r \\bm{W}\\in\\mathcal{M}_{r} admits an SVD decomposition 𝑾 = 𝑼 ​ 𝚺 ​ 𝑽 ⊤ \\bm{W}=\\bm{U}\\bm{\\Sigma}\\bm{V}^{\\top} , where 𝑼 ∈ ℝ m × r \\bm{U}\\in\\mathbb{R}^{m\\times r} and 𝑽 ∈ ℝ n × r \\bm{V}\\in\\mathbb{R}^{n\\times r} have orthonormal columns, i.e., 𝑼 ⊤ ​ 𝑼 = 𝑽 ⊤ ​ 𝑽 = 𝑰 r \\bm{U}^{\\top}\\bm{U}=\\bm{V}^{\\top}\\bm{V}=\\bm{I}_{r} , and 𝚺 = diag ​ ( 𝝈 ) \\bm{\\Sigma}=\\text{diag}(\\bm{\\sigma}) is a square diagonal matrix with positive diagonal entries 𝝈 ∈ ℝ + r \\bm{\\sigma}\\in\\mathbb{R}_{+}^{r} . We parametrize 𝑾 {\\bm{W}} using 𝑼 \\bm{U} , 𝝈 \\bm{\\sigma} and 𝑽 {\\bm{V}} . Compared with the 𝑨 \\bm{A} and 𝑩 \\bm{B} factors in standard LoRA (Eq. 2 ), we only need negligible additional memory to store 𝝈 \\bm{\\sigma} .",
+      "source": "https://arxiv.org/html/2609.34264v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0013",
+      "section": "Tangent space",
+      "text": "Given the factors 𝑼 \\bm{U} and 𝑽 \\bm{V} , the tangent space at 𝑾 \\bm{W} takes the form: T 𝑾 ℳ r = { 𝒁 ∈ ℝ m × n | \\displaystyle\\mathrm{T}_{{\\bm{W}}}\\mathcal{M}_{r}=\\Big\\{\\bm{Z}\\in\\mathbb{R}^{m\\times n}~\\Big| 𝒁 = 𝑼 ​ 𝑺 ​ 𝑽 ⊤ + 𝑼 p ​ 𝑽 ⊤ + 𝑼 ​ 𝑽 p ⊤ , \\displaystyle\\bm{Z}={\\bm{U}}{\\bm{S}}{\\bm{V}}^{\\top}+\\bm{U}_{p}{\\bm{V}}^{\\top}+{\\bm{U}}\\bm{V}_{p}^{\\top}, (8) 𝑺 ∈ ℝ r × r , 𝑼 p ∈ ℝ m × r , 𝑽 p ∈ ℝ n × r , \\displaystyle{\\displaystyle\\bm{S}}\\in\\mathbb{R}^{r\\times r},~\\bm{U}_{p}\\in\\mathbb{R}^{m\\times r},~\\bm{V}_{p}\\in\\mathbb{R}^{n\\times r}, 𝑼 ⊤ 𝑼 p = 𝟎 , 𝑽 ⊤ 𝑽 p = 𝟎 } . \\displaystyle{\\displaystyle\\bm{U}}^{\\top}\\bm{U}_{p}=\\bm{0},~{\\bm{V}}^{\\top}\\bm{V}_{p}=\\bm{0}\\Big\\}. Eq. 8 implies that, although a tangent vector 𝒁 ∈ T 𝑾 ​ ℳ r \\bm{Z}\\in\\mathrm{T}_{{\\bm{W}}}\\mathcal{M}_{r} has shape m × n m\\times n in the ambient space, it can actually be represented and stored using smaller components 𝑺 ∈ ℝ r × r {\\bm{S}}\\in\\mathbb{R}^{r\\times r} , 𝑼 p ∈ ℝ m × r {\\bm{U}}_{p}\\in\\mathbb{R}^{m\\times r} and 𝑽 p ∈ ℝ n × r {\\bm{V}}_{p}\\in\\mathbb{R}^{n\\times r} . A tangent vector 𝒁 {\\bm{Z}} defined as in Eq. 8 can be further written in the compact form: 𝒁 = [ 𝑼 𝑼 p ] ​ [ 𝑺 𝑰 r 𝑰 r 𝟎 ] ​ [ 𝑽 𝑽 p ] ⊤ \\bm{Z}=\\begin{bmatrix}{\\bm{U}}&{\\bm{U}}_{p}\\end{bmatrix}\\begin{bmatrix}{\\bm{S}}&{\\bm{I}}_{r}\\\\ {\\bm{I}}_{r}&\\bm{0}\\end{bmatrix}\\begin{bmatrix}{\\bm{V}}&{\\bm{V}}_{p}\\end{bmatrix}^{\\top} (9) which indicates rank ​ ( 𝒁 ) ≤ 2 ​ r \\text{rank}({\\bm{Z}})\\leq 2r for any 𝒁 ∈ T 𝑾 ​ ℳ r {\\bm{Z}}\\in\\mathrm{T}_{{\\bm{W}}}\\mathcal{M}_{r} .",
+      "source": "https://arxiv.org/html/2609.34264v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0014",
+      "section": "Orthogonal projection",
+      "text": "Let ℒ : ℳ r → ℝ \\mathcal{L}:\\mathcal{M}_{r}\\rightarrow\\mathbb{R} denote the objective to minimize and ℒ ¯ \\bar{\\mathcal{L}} a smooth extension of ℒ \\mathcal{L} to an open neighborhood of ℳ r \\mathcal{M}_{r} in the ambient space. Consistent with Section 2.3 , we denote the Euclidean gradient and the Riemannian gradient at 𝑾 {\\bm{W}} by ∇ ℒ ¯ ​ ( 𝑾 ) \\nabla\\bar{\\mathcal{L}}({\\bm{W}}) and grad ​ ℒ ​ ( 𝑾 ) \\text{grad}\\,\\mathcal{L}({\\bm{W}}) respectively. We equip ℳ r \\mathcal{M}_{r} with the Riemannian metric induced by the Euclidean inner product. Then we derive the orthogonal projection of ∇ ℒ ¯ ​ ( 𝑾 ) ∈ ℝ m × n \\nabla\\bar{\\mathcal{L}}({\\bm{W}})\\in\\mathbb{R}^{m\\times n} onto the tangent space T 𝑾 ​ ℳ r \\mathrm{T}_{{\\bm{W}}}\\mathcal{M}_{r} : Proj 𝑾 ( ∇ ℒ ¯ ( 𝑾 ) ) = ∇ ℒ ¯ ( 𝑾 ) − ( 𝑰 − 𝑼 𝑼 ⊤ ) ∇ ℒ ¯ ( 𝑾 ) ( 𝑰 − 𝑽 𝑽 ⊤ ) , \\text{Proj}_{{\\bm{W}}}\\big(\\nabla\\bar{\\mathcal{L}}({\\bm{W}})\\big)=\\nabla\\bar{\\mathcal{L}}({\\bm{W}})-({\\bm{I}}-{\\bm{U}}{\\bm{U}}^{\\top})\\,\\nabla\\bar{\\mathcal{L}}({\\bm{W}})\\,({\\bm{I}}-{\\bm{V}}{\\bm{V}}^{\\top})\\,, (10) and we have grad ​ ℒ ​ ( 𝑾 ) = Proj 𝑾 ​ ( ∇ ℒ ¯ ​ ( 𝑾 ) ) \\text{grad}\\,\\mathcal{L}({\\bm{W}})=\\text{Proj}_{{\\bm{W}}}\\big(\\nabla\\bar{\\mathcal{L}}({\\bm{W}})\\big) . Because Proj 𝑾 ​ ( ∇ ℒ ¯ ​ ( 𝑾 ) ) ∈ T 𝑾 ​ ℳ r \\text{Proj}_{{\\bm{W}}}\\big(\\nabla\\bar{\\mathcal{L}}({\\bm{W}})\\big)\\in\\mathrm{T}_{{\\bm{W}}}\\mathcal{M}_{r} , it admits the decomposition in Eq. 8 . Its three components can be expressed in terms of ∇ ℒ ¯ ​ ( 𝑾 ) , 𝑼 , 𝑽 \\nabla\\bar{\\mathcal{L}}({\\bm{W}}),{\\bm{U}},{\\bm{V}} as:",
+      "source": "https://arxiv.org/html/2609.34264v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0015",
+      "section": "Orthogonal projection",
+      "text": "𝑺 \\displaystyle{\\bm{S}} = 𝑼 ⊤ ∇ ℒ ¯ ( 𝑾 ) 𝑽 , \\displaystyle={\\bm{U}}^{\\top}\\,\\nabla\\bar{\\mathcal{L}}({\\bm{W}})\\,{\\bm{V}}\\,, (11) 𝑼 p \\displaystyle{\\bm{U}}_{p} = ∇ ℒ ¯ ​ ( 𝑾 ) ​ 𝑽 − 𝑼 ​ 𝑺 , \\displaystyle=\\nabla\\bar{\\mathcal{L}}({\\bm{W}})\\,{\\bm{V}}-{\\bm{U}}{\\bm{S}}\\,, 𝑽 p \\displaystyle{\\bm{V}}_{p} = ∇ ℒ ¯ ( 𝑾 ) ⊤ 𝑼 − 𝑽 𝑺 ⊤ . \\displaystyle=\\nabla\\bar{\\mathcal{L}}({\\bm{W}})^{\\top}\\,{\\bm{U}}-{\\bm{V}}{\\bm{S}}^{\\top}\\,.",
+      "source": "https://arxiv.org/html/2609.34264v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0016",
+      "section": "Practical Riemannian gradient computation",
+      "text": "While the relationship between the Euclidean gradient and the Riemannian gradient at 𝑾 {\\bm{W}} is straightforward (Eq. 5 ), naively applying the projection Eq. 10 to the Euclidean gradient ∇ ℒ ¯ ​ ( 𝑾 ) \\nabla\\bar{\\mathcal{L}}({\\bm{W}}) would require materializing a full m × n m\\times n matrix, which is memory intensive. We demonstrate how to compute the Riemannian gradient efficiently via a lightweight modification to the auto-differentiation, without instantiating ∇ ℒ ¯ ​ ( 𝑾 ) \\nabla\\bar{\\mathcal{L}}({\\bm{W}}) explicitly.",
+      "source": "https://arxiv.org/html/2609.34264v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0017",
+      "section": "Practical Riemannian gradient computation",
+      "text": "Consider 𝑾 ∈ ℝ m × n {\\bm{W}}\\in\\mathbb{R}^{m\\times n} as the weight adaptation of a linear layer that takes 𝑿 ∈ ℝ N × m {\\bm{X}}\\in\\mathbb{R}^{N\\times m} as input and outputs 𝒀 ∈ ℝ N × n {\\bm{Y}}\\in\\mathbb{R}^{N\\times n} , where N N represents the effective batch size (i.e., the total number of tokens in the mini-batch). In the standard auto-differentiation framework, 𝑿 {\\bm{X}} is saved during the forward pass for gradient computation, and when the gradient with respect to 𝒀 {\\bm{Y}} , denoted by 𝑮 Y = ∂ ℒ ¯ / ∂ 𝒀 ∈ ℝ N × n {\\bm{G}}_{Y}=\\partial\\bar{\\mathcal{L}}/\\partial{\\bm{Y}}\\in\\mathbb{R}^{N\\times n} is back-propagated to this layer, ∇ ℒ ¯ ​ ( 𝑾 ) \\nabla\\bar{\\mathcal{L}}({\\bm{W}}) is computed as ∇ ℒ ¯ ​ ( 𝑾 ) = 𝑿 ⊤ ​ 𝑮 Y \\nabla\\bar{\\mathcal{L}}({\\bm{W}})={\\bm{X}}^{\\top}{\\bm{G}}_{Y} . Note that to compute grad ​ ℒ ​ ( 𝑾 ) \\text{grad}\\,\\mathcal{L}({\\bm{W}}) , we only need 𝑺 {\\bm{S}} , 𝑼 p {\\bm{U}}_{p} and 𝑽 p {\\bm{V}}_{p} in Eq. 11 , which depend on ∇ ℒ ¯ ​ ( 𝑾 ) ​ 𝑽 \\nabla\\bar{\\mathcal{L}}({\\bm{W}}){\\bm{V}} and ∇ ℒ ¯ ( 𝑾 ) ⊤ 𝑼 \\nabla\\bar{\\mathcal{L}}({\\bm{W}})^{\\top}{\\bm{U}} rather than any standalone ∇ ℒ ¯ ​ ( 𝑾 ) \\nabla\\bar{\\mathcal{L}}({\\bm{W}}) . We can compute these two quantities directly without the need to materialize the m × n m\\times n matrix ∇ ℒ ¯ ​ ( 𝑾 ) \\nabla\\bar{\\mathcal{L}}({\\bm{W}}) : ∇ ℒ ¯ ( 𝑾 ) 𝑽 = 𝑿 ⊤ ( 𝑮 Y 𝑽 ) ∈ ℝ m × r ∇ ℒ ¯ ( 𝑾 ) ⊤ 𝑼 = 𝑮 Y ⊤ ( 𝑿 𝑼 ) ∈ ℝ n × r \\nabla\\bar{\\mathcal{L}}({\\bm{W}}){\\bm{V}}={\\bm{X}}^{\\top}\\Big({\\bm{G}}_{Y}{\\bm{V}}\\Big)\\in\\mathbb{R}^{m\\times r}\\qquad\\nabla\\bar{\\mathcal{L}}({\\bm{W}})^{\\top}{\\bm{U}}={\\bm{G}}_{Y}^{\\top}\\Big({\\bm{X}}{\\bm{U}}\\Big)\\in\\mathbb{R}^{n\\times r} (12)",
+      "source": "https://arxiv.org/html/2609.34264v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0018",
+      "section": "Practical Riemannian gradient computation",
+      "text": "We compute the bracketed products first, so that every matrix multiplication involves an operand with one dimension equal to r r , keeping all intermediate matrices low-rank and memory-efficient. We customize the backward propagation (e.g., via PyTorch’s backward hooks) to compute ∇ ℒ ¯ ​ ( 𝑾 ) ​ 𝑽 \\nabla\\bar{\\mathcal{L}}({\\bm{W}}){\\bm{V}} and ∇ ℒ ¯ ( 𝑾 ) ⊤ 𝑼 \\nabla\\bar{\\mathcal{L}}({\\bm{W}})^{\\top}{\\bm{U}} on the fly as in Eq. 12 , and store them for retraction. The memory usage is of the same order as that for computing and storing the gradients of 𝑨 {\\bm{A}} and 𝑩 {\\bm{B}} in standard LoRA (Eq. 2 ).",
+      "source": "https://arxiv.org/html/2609.34264v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0019",
+      "section": "Retraction",
+      "text": "Given a tangent update 𝒁 ∈ T 𝑾 ​ ℳ r {\\bm{Z}}\\in\\mathrm{T}_{{\\bm{W}}}\\mathcal{M}_{r} , we use the rank- r r truncated SVD as the retraction, i.e., Φ 𝑾 ​ ( 𝒁 ) = SVD r ​ ( 𝑾 + 𝒁 ) \\Phi_{{\\bm{W}}}({\\bm{Z}})=\\text{SVD}_{r}({\\bm{W}}+{\\bm{Z}}) , which retains the top r r singular values of 𝑾 + 𝒁 {\\bm{W}}+{\\bm{Z}} and their corresponding singular vectors. With the factorization of 𝒁 {\\bm{Z}} in Eq. 9 , 𝑾 + 𝒁 {\\bm{W}}+{\\bm{Z}} can be written in a compact form that enables efficient computation of the truncated SVD: 𝑾 + 𝒁 = [ 𝑼 𝑼 p ] ​ [ 𝚺 + 𝑺 𝑰 r 𝑰 r 𝟎 ] ​ [ 𝑽 𝑽 p ] ⊤ . {\\bm{W}}+{\\bm{Z}}=\\begin{bmatrix}{\\bm{U}}&{\\bm{U}}_{p}\\end{bmatrix}\\begin{bmatrix}\\bm{\\Sigma}+{\\bm{S}}&{\\bm{I}}_{r}\\\\ {\\bm{I}}_{r}&\\bm{0}\\end{bmatrix}\\begin{bmatrix}{\\bm{V}}&{\\bm{V}}_{p}\\end{bmatrix}^{\\top}\\,. (13) We apply thin QR factorizations 𝑼 p = 𝑸 U ​ 𝑹 U {\\bm{U}}_{p}={\\bm{Q}}_{U}{\\bm{R}}_{U} and 𝑽 p = 𝑸 V ​ 𝑹 V {\\bm{V}}_{p}={\\bm{Q}}_{V}{\\bm{R}}_{V} . Then the truncated SVD is only applied to the 2 ​ r × 2 ​ r 2r\\times 2r matrix [ 𝚺 + 𝑺 𝑹 V ⊤ 𝑹 U 𝟎 ] \\begin{bmatrix}\\bm{\\Sigma}+{\\bm{S}}&{\\bm{R}}_{V}^{\\top}\\\\ {\\bm{R}}_{U}&\\bm{0}\\end{bmatrix} . Let 𝑼 ~ ​ 𝚺 ~ ​ 𝑽 ~ ⊤ \\widetilde{{\\bm{U}}}\\widetilde{\\bm{\\Sigma}}\\widetilde{{\\bm{V}}}^{\\top} denote the rank- r r truncated SVD of this small matrix, then the retracted point can be written as: Φ 𝑾 ​ ( 𝒁 ) = ( [ 𝑼 ​ 𝑸 U ] ​ 𝑼 ~ ) ​ 𝚺 ~ ​ ( [ 𝑽 ​ 𝑸 V ] ​ 𝑽 ~ ) ⊤ \\Phi_{{\\bm{W}}}({\\bm{Z}})=([{\\bm{U}}~~{\\bm{Q}}_{U}]\\widetilde{{\\bm{U}}})\\widetilde{\\bm{\\Sigma}}([{\\bm{V}}~~{\\bm{Q}}_{V}]\\widetilde{{\\bm{V}}})^{\\top} (14) which gives a best rank- r r approximation of 𝑾 + 𝒁 {\\bm{W}}+{\\bm{Z}} in Frobenius norm.",
+      "source": "https://arxiv.org/html/2609.34264v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0020",
+      "section": "Momentum transport",
+      "text": "A natural extension of the standard (Euclidean) momentum to the manifold suggests taking the moving average of the Riemannian gradients. However, Riemannian gradients of an optimization trajectory live in different tangent spaces and cannot be combined directly. Let 𝑴 k ∈ T 𝑾 k ​ ℳ r {\\bm{M}}_{k}\\in\\mathrm{T}_{{\\bm{W}}_{k}}\\mathcal{M}_{r} be the momentum at the k k -th step of an optimization trajectory, and let grad ​ ℒ ​ ( 𝑾 k + 1 ) \\text{grad}\\,\\mathcal{L}({\\bm{W}}_{k+1}) be the fresh Riemannian gradient at 𝑾 k + 1 {\\bm{W}}_{k+1} . To get the updated momentum 𝑴 k + 1 {\\bm{M}}_{k+1} , we first project 𝑴 k {\\bm{M}}_{k} onto the new tangent space T 𝑾 k + 1 ​ ℳ r \\mathrm{T}_{{\\bm{W}}_{k+1}}\\mathcal{M}_{r} and then combine the projection of 𝑴 k {\\bm{M}}_{k} with grad ​ ℒ ​ ( 𝑾 k + 1 ) \\text{grad}\\,\\mathcal{L}({\\bm{W}}_{k+1}) : 𝑴 k → k + 1 = Proj 𝑾 k + 1 ​ ( 𝑴 k ) 𝑴 k + 1 = β ​ 𝑴 k → k + 1 + ( 1 − β ) ​ grad ​ ℒ ​ ( 𝑾 k + 1 ) {\\bm{M}}_{k\\rightarrow k+1}=\\text{Proj}_{{\\bm{W}}_{k+1}}\\big({\\bm{M}}_{k}\\big)\\qquad{\\bm{M}}_{k+1}=\\beta{\\bm{M}}_{k\\rightarrow k+1}+(1-\\beta)\\text{grad}\\,\\mathcal{L}({\\bm{W}}_{k+1}) (15) Similar to the Riemannian gradient, the momentum is also stored using its factorization (Eq. 8 ), and the transport operation (Eq. 15 ) remains factorized. A detailed algorithm on Eq. 15 is provided in Algorithm 2 in the appendix.",
+      "source": "https://arxiv.org/html/2609.34264v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0021",
+      "section": "3.2 Rotated optimization on manifold",
+      "text": "Algorithm 1 Rotated optimization on the fixed-rank manifold",
+      "source": "https://arxiv.org/html/2609.34264v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0022",
+      "section": "3.2 Rotated optimization on manifold",
+      "text": "Input: Weight adaptation 𝑾 = 𝑼 ​ 𝚺 ​ 𝑽 ⊤ {\\bm{W}}={\\bm{U}}\\bm{\\Sigma}{\\bm{V}}^{\\top} ; momentum 𝑴 ∈ T 𝑾 ​ ℳ r {\\bm{M}}\\in\\mathrm{T}_{{\\bm{W}}}\\mathcal{M}_{r} represented by components ( 𝑺 , 𝑼 p , 𝑽 p ) ({\\bm{S}},{\\bm{U}}_{p},{\\bm{V}}_{p}) ; conditioning frame 𝑭 ∈ ℝ m × 2 ​ r {\\bm{F}}\\in\\mathbb{R}^{m\\times 2r} with 𝑭 ⊤ ​ 𝑭 = 𝑰 2 ​ r {\\bm{F}}^{\\top}{\\bm{F}}=\\bm{I}_{2r} ; normalization function h h . Output: Components of the final tangent update: ( 𝑺 ~ , 𝑼 ~ p , 𝑽 ~ p ) (\\widetilde{{\\bm{S}}},\\widetilde{{\\bm{U}}}_{p},\\widetilde{{\\bm{V}}}_{p}) // Form thin factors 𝑳 , 𝑹 {\\bm{L}},{\\bm{R}} of 𝑴 {\\bm{M}} from its components ( 𝑴 = 𝑳 ​ 𝑹 ⊤ {\\bm{M}}={\\bm{L}}{\\bm{R}}^{\\top} ) 1 𝑳 ← [ 𝑼 ​ 𝑺 + 𝑼 p 𝑼 ] ∈ ℝ m × 2 ​ r {\\bm{L}}\\leftarrow\\begin{bmatrix}{\\bm{U}}{\\bm{S}}+{\\bm{U}}_{p}&{\\bm{U}}\\end{bmatrix}\\in\\mathbb{R}^{m\\times 2r} 2 𝑹 ← [ 𝑽 𝑽 p ] ∈ ℝ n × 2 ​ r {\\bm{R}}\\leftarrow\\begin{bmatrix}{\\bm{V}}&{\\bm{V}}_{p}\\end{bmatrix}\\in\\mathbb{R}^{n\\times 2r} // Express 𝑴 {\\bm{M}} in the rotated coordinates: 𝑪 = 𝑭 ⊤ ​ 𝑴 \\bm{C}={\\bm{F}}^{\\top}{\\bm{M}} // Note the order of products that avoids m × n m\\times n matrix 3 𝑪 ← ( 𝑭 ⊤ ​ 𝑳 ) ​ 𝑹 ⊤ ∈ ℝ 2 ​ r × n \\bm{C}\\leftarrow\\left({\\bm{F}}^{\\top}{\\bm{L}}\\right){\\bm{R}}^{\\top}\\in\\mathbb{R}^{2r\\times n} // Apply the normalization function h h 4 𝑪 ~ ← h ⁡ ( 𝑪 ) \\widetilde{\\bm{C}}\\leftarrow h(\\bm{C}) // Map back to the original coordinates 𝑭 ​ 𝑪 ~ {\\bm{F}}\\widetilde{\\bm{C}} and project // Matrix multiplications are reordered to avoid m × n m\\times n matrix 5 𝑷 ← 𝑭 ⊤ ​ 𝑼 ∈ ℝ 2 ​ r × r {\\bm{P}}\\leftarrow{\\bm{F}}^{\\top}{\\bm{U}}\\in\\mathbb{R}^{2r\\times r} 6 𝑸 ← 𝑪 ~ ​ 𝑽 ∈ ℝ 2 ​ r × r {\\bm{Q}}\\leftarrow\\widetilde{\\bm{C}}{\\bm{V}}\\in\\mathbb{R}^{2r\\times r} 7 𝑺 ~ ← 𝑷 ⊤ ​ 𝑸 \\widetilde{{\\bm{S}}}\\leftarrow{\\bm{P}}^{\\top}{\\bm{Q}} 8 𝑼 ~ p ← 𝑭 ​ 𝑸 − 𝑼 ​ 𝑺 ~",
+      "source": "https://arxiv.org/html/2609.34264v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0023",
+      "section": "3.2 Rotated optimization on manifold",
+      "text": "es r} 6 𝑸 ← 𝑪 ~ ​ 𝑽 ∈ ℝ 2 ​ r × r {\\bm{Q}}\\leftarrow\\widetilde{\\bm{C}}{\\bm{V}}\\in\\mathbb{R}^{2r\\times r} 7 𝑺 ~ ← 𝑷 ⊤ ​ 𝑸 \\widetilde{{\\bm{S}}}\\leftarrow{\\bm{P}}^{\\top}{\\bm{Q}} 8 𝑼 ~ p ← 𝑭 ​ 𝑸 − 𝑼 ​ 𝑺 ~ \\widetilde{{\\bm{U}}}_{p}\\leftarrow{\\bm{F}}{\\bm{Q}}-{\\bm{U}}\\widetilde{{\\bm{S}}} 9 𝑽 ~ p ← 𝑪 ~ ⊤ ​ 𝑷 − 𝑽 ​ 𝑺 ~ ⊤ \\widetilde{{\\bm{V}}}_{p}\\leftarrow\\widetilde{\\bm{C}}^{\\top}{\\bm{P}}-{\\bm{V}}\\widetilde{{\\bm{S}}}^{\\top} Starting from the tangent momentum 𝑴 ∈ T 𝑾 ​ ℳ r {\\bm{M}}\\in\\mathrm{T}_{{\\bm{W}}}\\mathcal{M}_{r} (Eq. 15 ), we now extend the rotated optimization framework (Eq. 1 ) to the manifold setting. This introduces two challenges. First, a naive rotation in the ambient space would require an m × m m\\times m rotation matrix ( O ⁡ ( m 2 ) O(m^{2}) memory), destroying the memory efficiency of LoRA. Second, after rotation and normalization, the resulting vector may not remain in the tangent space. We show that both issues can be addressed efficiently by using the rank- 2 ​ r 2r structure of tangent vectors.",
+      "source": "https://arxiv.org/html/2609.34264v1",
+      "offset": 1583
+    },
+    {
+      "chunk_id": "chunk-0024",
+      "section": "Conditioning frame",
+      "text": "Since the momentum 𝑴 ∈ T 𝑾 ​ ℳ r {\\bm{M}}\\in\\mathrm{T}_{{\\bm{W}}}\\mathcal{M}_{r} has rank at most 2 ​ r 2r , its column space is low-dimensional. Therefore, it suffices to perform the rotation within a 2 ​ r 2r -dimensional subspace containing the column space of 𝑴 {\\bm{M}} , rather than in the full ambient space 1 1 1 Any rotation acting only within the orthogonal complement of 𝑴 {\\bm{M}} ’s column space leaves 𝑴 {\\bm{M}} unchanged. . Concretely, we construct a conditioning frame 𝑭 ∈ ℝ m × 2 ​ r {\\bm{F}}\\in\\mathbb{R}^{m\\times 2r} with orthonormal columns (i.e., 𝑭 ⊤ ​ 𝑭 = 𝑰 2 ​ r {\\bm{F}}^{\\top}{\\bm{F}}={\\bm{I}}_{2r} ) for this subspace. The frame 𝑭 {\\bm{F}} defines the rotated coordinate system, in which 𝑴 {\\bm{M}} is represented by 𝑭 ⊤ ​ 𝑴 {\\bm{F}}^{\\top}{\\bm{M}} . In full-parameter training, the left singular vectors of 𝑴 {\\bm{M}} have been chosen by several previous works ( Jordan et al., 2024 ; Vyas et al., 2025 ) to define the rotated coordinate system, but computing them can be expensive. When 𝑴 ∈ T 𝑾 ​ ℳ r {\\bm{M}}\\in\\mathrm{T}_{{\\bm{W}}}\\mathcal{M}_{r} , its low-rank structure (Eq. 9 ) allows us to compute these singular vectors efficiently using two thin QR factorizations and an SVD of a 2 ​ r × 2 ​ r 2r\\times 2r matrix, analogous to how we compute the retraction in Section 3.1 . We therefore use the resulting left singular vectors as the conditioning frame 𝑭 {\\bm{F}} .",
+      "source": "https://arxiv.org/html/2609.34264v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0025",
+      "section": "Normalization function",
+      "text": "We next specify the normalization function h h applied to the momentum in the rotated coordinates. Note that the normalization is applied to the reduced representation 𝑭 ⊤ ​ 𝑴 ∈ ℝ 2 ​ r × n {\\bm{F}}^{\\top}{\\bm{M}}\\in\\mathbb{R}^{2r\\times n} , rather than to a full m × n m\\times n matrix. Following Scetbon et al. (2025) , we adopt a multi-norm normalization that has shown effectiveness in LLM pre-training ( Gong et al., 2026 ) . For any matrix 𝑮 ∈ ℝ m × n {\\bm{G}}\\in\\mathbb{R}^{m\\times n} , h h is defined as: h ( 𝑮 ) = arg ​ max 𝑯 ∈ ℝ m × n ⟨ 𝑮 , 𝑯 ⟩ s.t. max i ∥ 𝑯 i , : ∥ 2 = 1 and max j ∥ 𝑯 : , j ∥ 2 = 1 h({\\bm{G}})=\\operatorname*{arg\\,max}_{{\\bm{H}}\\in\\mathbb{R}^{m\\times n}}\\,\\langle{\\bm{G}},{\\bm{H}}\\rangle\\quad\\text{s.t.}\\quad\\max_{i}\\|{\\bm{H}}_{i,:}\\|_{2}=1\\quad\\text{and}\\quad\\max_{j}\\|{\\bm{H}}_{:,j}\\|_{2}=1 (16) Here, 𝑯 i , : {\\bm{H}}_{i,:} and 𝑯 : , j {\\bm{H}}_{:,j} denote the i i -th row ( 1 ≤ i ≤ m 1\\leq i\\leq m ) and j j -th column ( 1 ≤ j ≤ n 1\\leq j\\leq n ) of 𝑯 {\\bm{H}} respectively; ⟨ 𝑮 , 𝑯 ⟩ = tr ​ ( 𝑮 ​ 𝑯 ⊤ ) \\langle{\\bm{G}},{\\bm{H}}\\rangle=\\text{tr}({\\bm{G}}{\\bm{H}}^{\\top}) denotes the Frobenius inner product; and ∥ ⋅ ∥ 2 \\|\\cdot\\|_{2} denotes the ℓ 2 \\ell_{2} norm. Eq. 16 generalizes the single-norm steepest-descent formulation of Bernstein and Newhouse (2024) to simultaneous row- and column-norm constraints. In practice, we approximate Eq. 16 by alternating row and column normalization for a small fixed number of iterations K K , which we set to 5 5 throughout all experiments. The full procedure is given in Algorithm 3 in the appendix.",
+      "source": "https://arxiv.org/html/2609.34264v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0026",
+      "section": "Final update rule",
+      "text": "Given the conditioning frame 𝑭 {\\bm{F}} and tangent momentum 𝑴 ∈ T 𝑾 ​ ℳ r {\\bm{M}}\\in\\mathrm{T}_{{\\bm{W}}}\\mathcal{M}_{r} , we first represent 𝑴 {\\bm{M}} in the rotated coordinates as 𝑭 ⊤ ​ 𝑴 {\\bm{F}}^{\\top}{\\bm{M}} , apply the normalization function h h , and then map the resulting direction back to the original coordinates as 𝑭 ​ h ​ ( 𝑭 ⊤ ​ 𝑴 ) {\\bm{F}}h({\\bm{F}}^{\\top}{\\bm{M}}) . Although 𝑴 {\\bm{M}} lies in the tangent space T 𝑾 ​ ℳ r \\mathrm{T}_{{\\bm{W}}}\\mathcal{M}_{r} , the normalization function h h does not, in general, preserve this tangent space constraint. We therefore project the resulting direction back onto T 𝑾 ​ ℳ r \\mathrm{T}_{{\\bm{W}}}\\mathcal{M}_{r} . With a step size η > 0 \\eta>0 , the final tangent update 𝝃 ∈ T 𝑾 ​ ℳ r \\bm{\\xi}\\in\\mathrm{T}_{{\\bm{W}}}\\mathcal{M}_{r} is: 𝝃 = − η ​ Proj 𝑾 ​ ( 𝑭 ​ h ​ ( 𝑭 ⊤ ​ 𝑴 ) ) \\bm{\\xi}=-\\,\\eta\\,\\text{Proj}_{{\\bm{W}}}\\Big({\\bm{F}}h\\Big({\\bm{F}}^{\\top}{\\bm{M}}\\Big)\\Big) (17) Importantly, the orthogonal projection in Eq. 17 can be combined with the preceding operations so that 𝑭 ​ h ​ ( 𝑭 ⊤ ​ 𝑴 ) {\\bm{F}}h({\\bm{F}}^{\\top}{\\bm{M}}) is never materialized as a full m × n m\\times n matrix. We detail the efficient implementation of one step of RoM in Algorithm 1 .",
+      "source": "https://arxiv.org/html/2609.34264v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0027",
+      "section": "4 Experiments",
+      "text": "We evaluate RoM on supervised finetuning (SFT) and reinforcement learning (RL) tasks, comparing its optimization and downstream performance against existing LoRA optimizers. We describe the experimental setup in Section 4.1 , present the SFT and RL results in Section 4.2 and 4.3 , respectively, and further study the contribution of its components and its sensitivity to learning-rate selection in Section 4.4 . (a) Llama-3.2-3B (b) Llama-3.1-8B Figure 1: Validation loss (mean cross-entropy across response tokens) over the last 100 training steps on the math SFT task at rank r = 16 r=16 (see Appendix C for the r = 32 r=32 case and additional results across different ranks).",
+      "source": "https://arxiv.org/html/2609.34264v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0028",
+      "section": "4.1 Experimental setup",
+      "text": "We apply LoRA adapters 𝑾 = 𝑼 ​ 𝚺 ​ 𝑽 ⊤ {\\bm{W}}={\\bm{U}}\\bm{\\Sigma}{\\bm{V}}^{\\top} to the weight matrices of all linear layers in both the attention and MLP modules, while keeping one-dimensional parameters, input embeddings and the output head frozen. We initialize 𝑼 {\\bm{U}} and 𝑽 {\\bm{V}} randomly with orthonormal columns, and set 𝚺 = 10 − 3 ​ 𝑰 r \\bm{\\Sigma}=10^{-3}{\\bm{I}}_{r} . This initialization ensures that each adapter is a valid point on the fixed-rank manifold, while keeping the effective weights close enough to their pretrained values. We compare RoM with Adam ( Kingma and Ba, 2014 ) , Muon ( Jordan et al., 2024 ) , LoRA-RITE ( Yen et al., 2025 ) , BaLoRA ( Castin et al., 2026 ) , and Riemannion ( Bogachev et al., 2026 ) . Adam and Muon adopt the conventional two-factor LoRA (Eq. 2 ) and optimize each factor separately. LoRA-RITE ( Yen et al., 2025 ) uses matrix preconditioners to achieve transformation invariance. BaLoRA ( Castin et al., 2026 ) addresses the parametrization redundancy of LoRA (Eq. 3 ) through a balanced projection step after each Adam update to enforce 𝑨 ⊤ ​ 𝑨 = 𝑩 ⊤ ​ 𝑩 {\\bm{A}}^{\\top}{\\bm{A}}={\\bm{B}}^{\\top}{\\bm{B}} . Riemannion ( Bogachev et al., 2026 ) projects each Muon update onto the tangent space of the fixed-rank manifold.",
+      "source": "https://arxiv.org/html/2609.34264v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0029",
+      "section": "4.1 Experimental setup",
+      "text": "For SFT, we use the same learning rate schedule for all optimizers: linear warm-up over the first 5 % 5\\% of training steps, followed by linear decay to 10 % 10\\% of the peak learning rate. We find this warm-up schedule particularly beneficial for Adam, improving its performance compared with previously reported results. For RL finetuning, we follow the setup of Liu et al. (2025) and use a constant learning rate. For each optimizer, we tune its learning rate over the same logarithmically spaced grid and expand the grid when necessary to ensure that the best-performing value is bracketed on both sides. We use a momentum coefficient of 0.9 for all optimizers. For Adam, we set the second-moment coefficient to β 2 = 0.95 \\beta_{2}=0.95 . We use no weight decay. Table 1: Math SFT results for the Llama models at rank r = 16 r=16 : final MetaMathQA validation loss ( × 10 − 3 \\times 10^{-3} ) and test accuracies (%). Results are mean ± \\pm standard deviation over three seeds; the pretrained models are evaluated once. Bold marks the best entry and entries whose intervals overlap it; no entry is bold if all intervals overlap.",
+      "source": "https://arxiv.org/html/2609.34264v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0030",
+      "section": "4.1 Experimental setup",
+      "text": "Llama-3.2-3B Llama-3.1-8B MetaMathQA val ↓ \\downarrow GSM8K ↑ \\uparrow MATH ↑ \\uparrow MetaMathQA val ↓ \\downarrow GSM8K ↑ \\uparrow MATH ↑ \\uparrow Pretrained 728.23 18.1 7.3 652.22 41.9 15.5 RoM (ours) 182.69 ± \\pm 0.21 65.4 ± \\pm 0.1 18.2 ± \\pm 0.3 157.60 ± \\pm 0.06 77.7 ± \\pm 1.0 29.2 ± \\pm 0.3 Adam 184.11 ± \\pm 0.14 64.9 ± \\pm 0.9 18.0 ± \\pm 0.1 158.70 ± \\pm 0.26 77.2 ± \\pm 0.6 28.4 ± \\pm 0.4 Muon 185.42 ± \\pm 0.19 64.3 ± \\pm 0.9 17.8 ± \\pm 0.4 159.45 ± \\pm 0.13 77.3 ± \\pm 0.9 28.0 ± \\pm 0.5 Riemannion 185.79 ± \\pm 0.22 64.0 ± \\pm 0.7 17.7 ± \\pm 0.4 159.91 ± \\pm 0.13 76.9 ± \\pm 0.7 29.0 ± \\pm 0.6 LoRA-RITE 187.16 ± \\pm 0.16 64.5 ± \\pm 0.4 17.2 ± \\pm 0.5 160.54 ± \\pm 0.16 76.6 ± \\pm 0.8 28.0 ± \\pm 0.7 BaLoRA 190.31 ± \\pm 0.28 62.8 ± \\pm 1.1 17.3 ± \\pm 0.2 161.93 ± \\pm 0.12 76.1 ± \\pm 0.8 28.0 ± \\pm 0.2",
+      "source": "https://arxiv.org/html/2609.34264v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0031",
+      "section": "Mathematical reasoning",
+      "text": "We finetune Llama-3.2-3B, Llama-3.1-8B ( Grattafiori et al., 2024 ) , and Gemma-2-27B ( Gemma Team, 2024 ) at rank r = 16 r=16 on 100K MetaMathQA examples ( Yu et al., 2024 ) for one epoch, using an effective batch size of 128. We construct a held-out 10K-example validation set and measure validation loss as the mean cross-entropy over response tokens. For each optimizer, we independently select the learning rate that minimizes validation loss and repeat the selected configuration over three seeds. Training for additional epochs did not further reduce the final validation loss. We evaluate downstream performance using zero-shot accuracy on GSM8K (1319 examples) and MATH (5000 examples) with greedy decoding and bfloat16 precision. Figure 1 shows the validation-loss trajectories for the two Llama models. Tables 1 and 2 report the mean and standard deviation of the final validation loss and downstream accuracies for the Llama models and Gemma-2-27B, respectively. Math SFT val ↓ \\downarrow GSM8K ↑ \\uparrow MATH ↑ \\uparrow RoM (ours) 126.19 ± \\pm 0.13 84.2 ± \\pm 0.8 43.4 ± \\pm 0.3 Adam 126.55 ± \\pm 0.21 84.1 ± \\pm 0.6 42.2 ± \\pm 0.5 Muon 127.02 ± \\pm 0.29 83.8 ± \\pm 0.7 42.6 ± \\pm 0.4 Riemannion 127.85 ± \\pm 0.20 83.8 ± \\pm 0.9 42.2 ± \\pm 0.6 LoRA-RITE 129.71 ± \\pm 0.13 83.7 ± \\pm 0.5 42.7 ± \\pm 0.2 BaLoRA 129.05 ± \\pm 0.27 84.6 ± \\pm 0.9 43.3 ± \\pm 0.1 Table 2: Math SFT results for Gemma-2-27B at rank 16. Bold follows the convention in Table 1 .",
+      "source": "https://arxiv.org/html/2609.34264v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0032",
+      "section": "Mathematical reasoning",
+      "text": "At all three model sizes, RoM achieves the lowest final validation loss consistently, followed by Adam among the baselines 2 2 2 Our BaLoRA results use the same training protocol as the other optimizers in our comparison, including the learning-rate schedule and independent learning-rate tuning, and are therefore not directly comparable to those reported by Castin et al. (2026) . . RoM obtains the highest mean accuracy on both downstream benchmarks for the Llama models, although the differences are small relative to variation across seeds. On Gemma-2-27B, RoM yields the highest mean accuracy on MATH, while the standard-deviation intervals on GSM8K overlap across all optimizers. In contrast to these small downstream differences, the validation-loss gaps are much larger than the variation across seeds, showing a clear optimization advantage for RoM . (a) MATH-500 (b) GSM8K (c) OlympiadBench Figure 2: Evaluation accuracy (%) during GRPO finetuning of Qwen2.5-3B with rank r = 16 r=16 , on each of the three held-out benchmarks. The curves are smoothed using a 5-point centered moving average for visualization; higher accuracy is better. Figure 3: Validation loss over the final 100 training steps on the code SFT task, for Llama-3.1-8B at rank r = 32 r=32 . Code SFT val ↓ \\downarrow HumanEval ↑ \\uparrow MBPP ↑ \\uparrow Pretrained 811.99 42.7 60.6 RoM (ours) 676.81 ± \\pm 0.04 55.7 ± \\pm 2.6 68.5 ± \\pm 0.5 Adam 678.50 ± \\pm 0.03 55.3 ± \\pm 2.9 68.3 ± \\pm 0.3 Muon 678.19 ± \\pm 0.05 55.3 ± \\pm 0.9 68.7 ± \\pm 1.0 Riemannion 678.87 ± \\pm 0.06 55.7 ± \\pm 1.4 68.2 ± \\pm 0.4 LoRA-RITE 679.25 ± \\pm 0.08 55.5 ± \\pm 0.6 68.1 ± \\pm 0.6 BaLoRA 679.63 ± \\pm 0.15 56.7 ± \\pm 1.0 68.6 ± \\pm 1.0",
+      "source": "https://arxiv.org/html/2609.34264v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0033",
+      "section": "Mathematical reasoning",
+      "text": "Table 3: Code SFT results for Llama-3.1-8B at rank 32: final validation loss ( × 10 − 3 \\times 10^{-3} ) on CodeFeedback and Pass@1 (%) on HumanEval and MBPP. Results are mean ± \\pm standard deviation over 3 seeds except for the pretrained model. Bold follows the convention in Table 1 .",
+      "source": "https://arxiv.org/html/2609.34264v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0034",
+      "section": "Code generation",
+      "text": "We finetune the Llama-3.1-8B base model on 100K examples of the CodeFeedback dataset ( Zheng et al., 2024 ) using the Alpaca prompt templates ( Taori et al., 2023 ) . We compute validation loss as the mean cross-entropy over response tokens on a held-out validation set of 10K examples. Since CodeFeedback sequences are typically longer than those in MetaMathQA, we train for one epoch with a smaller effective batch size of 64. Figure 3 shows the validation loss over the final 100 training steps. RoM achieves the lowest validation loss. We evaluate the finetuned model on HumanEval ( Chen et al., 2021 ) (164 test examples) and MBPP ( Austin et al., 2021 ) (378 test examples curated by EvalPlus ( Liu et al., 2023 ) ) using greedy decoding with bfloat16 precision and no in-context examples, and report Pass@1. For each optimizer, we train three runs with different random seeds. Table 3 reports the mean and standard deviation of the final validation loss and downstream performance. All optimizers clearly improve Pass@1 over the pretrained model. However, the differences in Pass@1 among optimizers are minor relative to the variation across random seeds, and we therefore do not observe a clear downstream advantage for any optimizer. In contrast, the validation loss gaps substantially exceed the seed variation, with RoM achieving the lowest value. This suggests that RoM’s optimization advantage extends to code SFT, although it does not translate into a clear Pass@1 improvement in this setting.",
+      "source": "https://arxiv.org/html/2609.34264v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0035",
+      "section": "4.3 Reinforcement learning",
+      "text": "We further evaluate RoM on LoRA-based RL finetuning using the VeRL framework ( Sheng et al., 2025 ) . Since the other LoRA baselines do not specify an RL training recipe, we focus on comparing RoM against Adam. We train the Qwen2.5-3B base model ( Yang et al., 2024 ) using GRPO ( Shao et al., 2024 ) on the training split of MATH (7.5K problems) with rank r = 16 r=16 . At each rollout step, we sample 8 responses for each of 128 prompts, yielding 1024 sequences per optimization step. We use no KL penalty and train for 400 steps. Following the setup of Liu et al. (2025) , we use the bare questions as prompts with no chat template. We evaluate the finetuned model using greedy decoding on three held-out benchmarks: MATH-500 (500 examples), GSM8K test (1319 examples), and OlympiadBench ( He et al., 2024 ) (674 examples). We tune Adam’s learning rate on a logarithmic grid and select 3 × 10 − 6 3\\times 10^{-6} . We use the same learning rate for RoM without further tuning. Table 4: Final downstream accuracy (%) after GRPO finetuning over three independent runs. Results are mean ± \\pm standard deviation. “Time” denotes the median end-to-end wall clock time per optimizer step, normalized to Adam. MATH-500 GSM8K Olympiad Time Pretrained 55.5 56.8 22.0 – Adam 62.9 ± \\pm 0.3 82.7 ± \\pm 0.4 25.9 ± \\pm 0.8 1.00 × 1.00\\times RoM (ours) 64.9 ± \\pm 0.6 84.2 ± \\pm 0.4 29.0 ± \\pm 0.8 1.08 × 1.08\\times",
+      "source": "https://arxiv.org/html/2609.34264v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0036",
+      "section": "4.3 Reinforcement learning",
+      "text": "Figure 2 shows evaluation accuracy on the three held-out benchmarks throughout RL finetuning. RoM improves accuracy faster than Adam and reaches higher final accuracy on all three benchmarks. Table 4 reports the final evaluation results over three independent runs. Unlike in SFT, where downstream differences among optimizers are relatively small, RoM shows a clearer advantage over Adam in RL finetuning, while requiring only 1.08 × 1.08\\times the per-step training time on 4 NVIDIA RTX PRO 6000 GPUs.",
+      "source": "https://arxiv.org/html/2609.34264v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0037",
+      "section": "4.4 Additional analysis",
+      "text": "(a) Ablation study (b) Learning rate sensitivity Figure 4: Llama-3.2-3B at rank r = 32 r=32 on the math SFT task. (a) Validation loss over the last 100 training steps, removing parts of RoM ​. (b) Validation loss at different ratios of best learning rate.",
+      "source": "https://arxiv.org/html/2609.34264v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0038",
+      "section": "Ablation study",
+      "text": "We ablate the rotation and normalization components of RoM on the math SFT task using Llama-3.2-3B at rank r = 32 r=32 . We consider RoM without rotation, which applies the normalization function (Eq. 16 ) directly to the momentum (Eq. 15 ), and RoM without both rotation and normalization, which we refer to as Riemannian momentum . We tune the learning rate for each variant following the same procedure as in Section 4.2 . Figure 4(a) shows the validation loss over the final 100 training steps. Riemannian momentum performs substantially worse than RoM, while adding normalization without rotation reduces the gap and brings its performance close to Adam. Full RoM achieves the lowest validation loss, demonstrating the additional benefit of rotation.",
+      "source": "https://arxiv.org/html/2609.34264v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0039",
+      "section": "Learning rate sensitivity",
+      "text": "We evaluate each optimizer at 0.5 × 0.5\\times , 1 × 1\\times , and 2 × 2\\times its best learning rate under the same math SFT setting. Figure 4(b) shows the final validation loss at each learning-rate ratio. The optimizers that account for the symmetry of LoRA’s parametrization tend to exhibit less degradation away from their best learning rates than Adam and Muon. RoM maintains the lowest validation loss across all three learning-rate ratios.",
+      "source": "https://arxiv.org/html/2609.34264v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0040",
+      "section": "5 Conclusion",
+      "text": "We presented RoM, a manifold-based optimizer for LoRA that directly optimizes the fixed-rank weight adaptation while avoiding the redundancy of factorized parameterizations. By exploiting the low-rank structure of tangent vectors, RoM enables efficient Riemannian optimization with memory requirement comparable to conventional LoRA optimization. Across supervised finetuning and reinforcement learning experiments, RoM consistently achieves lower validation loss than existing LoRA optimizers, while also improving downstream performance in the RL setting. Ablation experiments further show that both normalization and rotation contribute to its optimization performance.",
+      "source": "https://arxiv.org/html/2609.34264v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0041",
+      "section": "AI use statement",
+      "text": "During the preparation of this work, we used LLMs to assist with coding and debugging, to help document and organize experimental progress, and to polish the text and figures of the manuscript. The authors have reviewed and verified all LLM-assisted outputs and take full responsibility for the final content presented in this work.",
+      "source": "https://arxiv.org/html/2609.34264v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0042",
+      "section": "Acknowledgments",
+      "text": "The authors thank Wenbo Gong and Chao Ma for their valuable feedback during the development of this work.",
+      "source": "https://arxiv.org/html/2609.34264v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0043",
+      "section": "References",
+      "text": "Austin et al. (2021) J. Austin, A. Odena, M. Nye, M. Bosma, H. Michalewski, D. Dohan, E. Jiang, C. Cai, M. Terry, Q. Le, et al. Program synthesis with large language models . arXiv preprint arXiv:2108.07732 . Cited by: §4.2 . Bernstein and Newhouse (2024) J. Bernstein and L. Newhouse Old optimizer, new norm: an anthology . arXiv preprint arXiv:2409.20325 . Cited by: §3.2 . Bogachev et al. (2026) V. Bogachev, V. Aletov, A. Molozhavenko, D. Bobkov, V. Soboleva, A. Alanov, and M. Rakhuba LoRA meets riemannion: muon optimizer for parametrization-independent low-rank adapters . In ICLR , Cited by: Appendix B , §4.1 . Boumal (2023) N. Boumal An introduction to optimization on smooth manifolds . Cambridge University Press . External Links: Document Cited by: §2.3 . Brown et al. (2020) T. Brown, B. Mann, N. Ryder, M. Subbiah, J. D. Kaplan, P. Dhariwal, A. Neelakantan, P. Shyam, G. Sastry, A. Askell, et al. Language models are few-shot learners . In NeurIPS , Cited by: §1 . Castin et al. (2026) V. Castin, K. Nadjahi, P. Ablin, and G. Peyré Balanced lora: removing parameter invariance to accelerate convergence . In ICML , Cited by: Appendix B , §4.1 , footnote 2 . Chen et al. (2021) M. Chen, J. Tworek, H. Jun, Q. Yuan, H. P. D. O. Pinto, J. Kaplan, H. Edwards, Y. Burda, N. Joseph, G. Brockman, et al. Evaluating large language models trained on code . arXiv preprint arXiv:2107.03374 . Cited by: §4.2 . Gemma Team (2024) Gemma Team Gemma 2: improving open language models at a practical size . arXiv preprint arXiv:2408.00118 . Cited by: §4.2 . Ghosh et al. (2026) N. Ghosh, T. Parshakova, and R. M. Gower PoLoRA: a preconditioned orthogonalized lora optimizer . arXiv preprint arXiv:2607.17620 . Cited by: Appendix B .",
+      "source": "https://arxiv.org/html/2609.34264v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0044",
+      "section": "References",
+      "text": "Gong et al. (2026) W. Gong, J. Zazo, Q. Luo, P. Wang, J. Hensman, and C. Ma ARO: a new lens on matrix optimization for large models . arXiv preprint arXiv:2602.09006 . Cited by: §1 , §2.1 , §2 , §3.2 . Grattafiori et al. (2024) A. Grattafiori, A. Dubey, A. Jauhri, A. Pandey, A. Kadian, A. Al-Dahle, A. Letman, A. Mathur, A. Schelten, A. Vaughan, et al. The llama 3 herd of models . arXiv preprint arXiv:2407.21783 . Cited by: §4.2 . Guo et al. (2025) D. Guo, D. Yang, H. Zhang, J. Song, P. Wang, Q. Zhu, R. Xu, R. Zhang, S. Ma, X. Bi, et al. DeepSeek-r1 incentivizes reasoning in llms through reinforcement learning . Nature . Cited by: §1 . Hayou et al. (2024) S. Hayou, N. Ghosh, and B. Yu LoRA+: efficient low rank adaptation of large models . In ICML , Cited by: Appendix B . He et al. (2024) C. He, R. Luo, Y. Bai, S. Hu, Z. Thai, J. Shen, J. Hu, X. Han, Y. Huang, Y. Zhang, et al. Olympiadbench: a challenging benchmark for promoting agi with olympiad-level bilingual multimodal scientific problems . In ACL , Cited by: §4.3 . Houlsby et al. (2019) N. Houlsby, A. Giurgiu, S. Jastrzebski, B. Morrone, Q. De Laroussilhe, A. Gesmundo, M. Attariyan, and S. Gelly Parameter-efficient transfer learning for nlp . In ICML , Cited by: §1 . Hu et al. (2022) E. J. Hu, yelong shen, P. Wallis, Z. Allen-Zhu, Y. Li, S. Wang, L. Wang, and W. Chen LoRA: low-rank adaptation of large language models . In ICLR , Cited by: §1 , §2.2 , §2 . Jordan et al. (2024) K. Jordan, Y. Jin, V. Boza, Y. Jiacheng, F. Cesista, L. Newhouse, and J. Bernstein Muon: an optimizer for hidden layers in neural networks . External Links: Link Cited by: §1 , §2.1 , §3.2 , §4.1 . Kingma and Ba (2014) D. P. Kingma and J. Ba Adam: a method for stochastic optimization . arXiv preprint arXiv:1412.6980 . Cited by: §4.1 .",
+      "source": "https://arxiv.org/html/2609.34264v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0045",
+      "section": "References",
+      "text": "Liu et al. (2023) J. Liu, C. S. Xia, Y. Wang, and L. Zhang Is your code generated by chatgpt really correct? rigorous evaluation of large language models for code generation . In NeurIPS , Cited by: §4.2 . Liu et al. (2025) Z. Liu, C. Chen, W. Li, P. Qi, T. Pang, C. Du, W. S. Lee, and M. Lin Understanding r1-zero-like training: a critical perspective . In COLM , Cited by: §4.1 , §4.3 . Scetbon et al. (2025) M. Scetbon, C. Ma, W. Gong, and E. Meeds Gradient multi-normalization for efficient LLM training . In NeurIPS , Cited by: §3.2 . Shao et al. (2024) Z. Shao, P. Wang, Q. Zhu, R. Xu, J. Song, X. Bi, H. Zhang, M. Zhang, Y. Li, Y. Wu, et al. Deepseekmath: pushing the limits of mathematical reasoning in open language models . arXiv preprint arXiv:2402.03300 . Cited by: §4.3 . Sheng et al. (2025) G. Sheng, C. Zhang, Z. Ye, X. Wu, W. Zhang, R. Zhang, Y. Peng, H. Lin, and C. Wu Hybridflow: a flexible and efficient rlhf framework . In Proceedings of the Twentieth European Conference on Computer Systems , Cited by: §4.3 . Taori et al. (2023) R. Taori, I. Gulrajani, T. Zhang, Y. Dubois, X. Li, C. Guestrin, P. Liang, and T. B. Hashimoto Stanford alpaca: an instruction-following llama model . GitHub . Note: https://github.com/tatsu-lab/stanford_alpaca Cited by: §4.2 . Touvron et al. (2023) H. Touvron, T. Lavril, G. Izacard, X. Martinet, M. Lachaux, T. Lacroix, B. Rozière, N. Goyal, E. Hambro, F. Azhar, et al. Llama: open and efficient foundation language models . arXiv preprint arXiv:2302.13971 . Cited by: §1 . Vaswani et al. (2017) A. Vaswani, N. Shazeer, N. Parmar, J. Uszkoreit, L. Jones, A. N. Gomez, Ł. Kaiser, and I. Polosukhin Attention is all you need . In NeurIPS , Cited by: §1 .",
+      "source": "https://arxiv.org/html/2609.34264v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0046",
+      "section": "References",
+      "text": "Vyas et al. (2025) N. Vyas, D. Morwani, R. Zhao, I. Shapira, D. Brandfonbrener, L. Janson, and S. M. Kakade SOAP: improving and stabilizing shampoo using adam for language modeling . In ICLR , Cited by: §1 , §2.1 , §3.2 . Yang et al. (2024) A. Yang, B. Yang, B. Hui, B. Zheng, B. Yu, C. Zhou, C. Li, C. Li, D. Liu, F. Huang, G. Dong, H. Wei, H. Lin, J. Tang, J. Wang, J. Yang, J. Tu, J. Zhang, J. Ma, J. Xu, J. Zhou, J. Bai, J. He, J. Lin, K. Dang, K. Lu, K. Chen, K. Yang, M. Li, M. Xue, N. Ni, P. Zhang, P. Wang, R. Peng, R. Men, R. Gao, R. Lin, S. Wang, S. Bai, S. Tan, T. Zhu, T. Li, T. Liu, W. Ge, X. Deng, X. Zhou, X. Ren, X. Zhang, X. Wei, X. Ren, Y. Fan, Y. Yao, Y. Zhang, Y. Wan, Y. Chu, Y. Liu, Z. Cui, Z. Zhang, and Z. Fan Qwen2 technical report . arXiv preprint arXiv:2407.10671 . Cited by: §4.3 . Yen et al. (2025) J. Yen, S. Si, Z. Meng, F. Yu, S. S. Duvvuri, I. S. Dhillon, C. Hsieh, and S. Kumar LoRA done RITE: robust invariant transformation equilibration for loRA optimization . In ICLR , Cited by: Appendix B , §4.1 . Yu et al. (2024) L. Yu, W. Jiang, H. Shi, J. YU, Z. Liu, Y. Zhang, J. Kwok, Z. Li, A. Weller, and W. Liu MetaMath: bootstrap your own mathematical questions for large language models . In ICLR , Cited by: §4.2 . Zhang and Pilanci (2024) F. Zhang and M. Pilanci Riemannian preconditioned loRA for fine-tuning foundation models . In ICML , Cited by: Appendix B . Zheng et al. (2024) T. Zheng, G. Zhang, T. Shen, X. Liu, B. Y. Lin, J. Fu, W. Chen, and X. Yue Opencodeinterpreter: integrating code generation with execution and refinement . In Findings of ACL , Cited by: §4.2 .",
+      "source": "https://arxiv.org/html/2609.34264v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0047",
+      "section": "Appendix A Algorithms",
+      "text": "Algorithm 2 Factorized momentum transport on the fixed-rank manifold",
+      "source": "https://arxiv.org/html/2609.34264v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0048",
+      "section": "Appendix A Algorithms",
+      "text": "Input: Old and new orthonormal frames 𝑼 k , 𝑽 k {\\bm{U}}_{k},{\\bm{V}}_{k} , 𝑼 k + 1 , 𝑽 k + 1 {\\bm{U}}_{k+1},{\\bm{V}}_{k+1} ; momentum coefficient β ∈ [ 0 , 1 ) \\beta\\in[0,1) ; old momentum components ( 𝑺 k , 𝑼 p , k , 𝑽 p , k ) ({\\bm{S}}_{k},{\\bm{U}}_{p,k},{\\bm{V}}_{p,k}) such that 𝑴 k = 𝑼 k ​ 𝑺 k ​ 𝑽 k ⊤ + 𝑼 p , k ​ 𝑽 k ⊤ + 𝑼 k ​ 𝑽 p , k ⊤ {\\bm{M}}_{k}={\\bm{U}}_{k}{\\bm{S}}_{k}{\\bm{V}}_{k}^{\\top}+{\\bm{U}}_{p,k}{\\bm{V}}_{k}^{\\top}+{\\bm{U}}_{k}{\\bm{V}}_{p,k}^{\\top} , with 𝑼 k ⊤ ​ 𝑼 p , k = 𝟎 {\\bm{U}}_{k}^{\\top}{\\bm{U}}_{p,k}=\\bm{0} and 𝑽 k ⊤ ​ 𝑽 p , k = 𝟎 {\\bm{V}}_{k}^{\\top}{\\bm{V}}_{p,k}=\\bm{0} ; fresh Riemannian gradient components ( 𝑺 k + 1 ( g ) , 𝑼 p , k + 1 ( g ) , 𝑽 p , k + 1 ( g ) ) ({\\bm{S}}^{(g)}_{k+1},{\\bm{U}}^{(g)}_{p,k+1},{\\bm{V}}^{(g)}_{p,k+1}) at 𝑾 k + 1 {\\bm{W}}_{k+1} . Output: Updated momentum components ( 𝑺 k + 1 , 𝑼 p , k + 1 , 𝑽 p , k + 1 ) ({\\bm{S}}_{k+1},{\\bm{U}}_{p,k+1},{\\bm{V}}_{p,k+1}) representing 𝑴 k + 1 = β ​ Proj 𝑾 k + 1 ​ ( 𝑴 k ) + ( 1 − β ) ​ grad ​ ℒ ​ ( 𝑾 k + 1 ) {\\bm{M}}_{k+1}=\\beta\\,\\text{Proj}_{{\\bm{W}}_{k+1}}({\\bm{M}}_{k})+(1-\\beta)\\text{grad}\\,\\mathcal{L}({\\bm{W}}_{k+1}) . // Compute frame overlaps 1 𝑪 U ← 𝑼 k ⊤ ​ 𝑼 k + 1 {\\bm{C}}_{U}\\leftarrow{\\bm{U}}_{k}^{\\top}{\\bm{U}}_{k+1} , 𝑪 V ← 𝑽 k ⊤ ​ 𝑽 k + 1 {\\bm{C}}_{V}\\leftarrow{\\bm{V}}_{k}^{\\top}{\\bm{V}}_{k+1} // Compute 𝚿 V = 𝑴 k ​ 𝑽 k + 1 \\bm{\\Psi}_{V}={\\bm{M}}_{k}{\\bm{V}}_{k+1} (no m × n m\\times n matrix) 2 𝚿 V ← 𝑼 k ​ ( 𝑺 k ​ 𝑪 V + 𝑽 p , k ⊤ ​ 𝑽 k + 1 ) + 𝑼 p , k ​ 𝑪 V \\bm{\\Psi}_{V}\\leftarrow{\\bm{U}}_{k}\\big({\\bm{S}}_{k}{\\bm{C}}_{V}+{\\bm{V}}_{p,k}^{\\top}{\\bm{V}}_{k+1}\\big)+{\\bm{U}}_{p,k}{\\bm{C}}_{V} // Compute 𝚿 U = 𝑴 k ⊤ ​ 𝑼 k + 1 \\bm{\\Psi}_{U}={\\bm{M}}_{k}^{\\top}{\\bm{U}}_{k+1} (no m × n m\\times n matrix) 3 𝚿 U ← 𝑽 k ​ ( 𝑺 k ⊤ ​ 𝑪 U + 𝑼 p , k ⊤ ​ 𝑼 k + 1 ) + 𝑽 p , k ​ 𝑪 U",
+      "source": "https://arxiv.org/html/2609.34264v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0049",
+      "section": "Appendix A Algorithms",
+      "text": "m{U}}_{p,k}{\\bm{C}}_{V} // Compute 𝚿 U = 𝑴 k ⊤ ​ 𝑼 k + 1 \\bm{\\Psi}_{U}={\\bm{M}}_{k}^{\\top}{\\bm{U}}_{k+1} (no m × n m\\times n matrix) 3 𝚿 U ← 𝑽 k ​ ( 𝑺 k ⊤ ​ 𝑪 U + 𝑼 p , k ⊤ ​ 𝑼 k + 1 ) + 𝑽 p , k ​ 𝑪 U \\bm{\\Psi}_{U}\\leftarrow{\\bm{V}}_{k}\\big({\\bm{S}}_{k}^{\\top}{\\bm{C}}_{U}+{\\bm{U}}_{p,k}^{\\top}{\\bm{U}}_{k+1}\\big)+{\\bm{V}}_{p,k}{\\bm{C}}_{U} // Project onto new tangent space 4 𝑺 k → k + 1 ← 𝑼 k + 1 ⊤ ​ 𝚿 V {\\bm{S}}_{k\\rightarrow k+1}\\leftarrow{\\bm{U}}_{k+1}^{\\top}\\bm{\\Psi}_{V} 5 𝑼 p , k → k + 1 ← 𝚿 V − 𝑼 k + 1 ​ 𝑺 k → k + 1 {\\bm{U}}_{p,k\\rightarrow k+1}\\leftarrow\\bm{\\Psi}_{V}-{\\bm{U}}_{k+1}{\\bm{S}}_{k\\rightarrow k+1} 6 𝑽 p , k → k + 1 ← 𝚿 U − 𝑽 k + 1 ​ 𝑺 k → k + 1 ⊤ {\\bm{V}}_{p,k\\rightarrow k+1}\\leftarrow\\bm{\\Psi}_{U}-{\\bm{V}}_{k+1}{\\bm{S}}_{k\\rightarrow k+1}^{\\top} // Accumulate with fresh Riemannian gradient 7 𝑺 k + 1 ← β ​ 𝑺 k → k + 1 + ( 1 − β ) ​ 𝑺 k + 1 ( g ) {\\bm{S}}_{k+1}\\leftarrow\\beta\\,{\\bm{S}}_{k\\rightarrow k+1}+(1-\\beta)\\,{\\bm{S}}^{(g)}_{k+1} 8 𝑼 p , k + 1 ← β ​ 𝑼 p , k → k + 1 + ( 1 − β ) ​ 𝑼 p , k + 1 ( g ) {\\bm{U}}_{p,k+1}\\leftarrow\\beta\\,{\\bm{U}}_{p,k\\rightarrow k+1}+(1-\\beta)\\,{\\bm{U}}^{(g)}_{p,k+1} 9 𝑽 p , k + 1 ← β ​ 𝑽 p , k → k + 1 + ( 1 − β ) ​ 𝑽 p , k + 1 ( g ) {\\bm{V}}_{p,k+1}\\leftarrow\\beta\\,{\\bm{V}}_{p,k\\rightarrow k+1}+(1-\\beta)\\,{\\bm{V}}^{(g)}_{p,k+1} Algorithm 3 Row and column normalization function h h",
+      "source": "https://arxiv.org/html/2609.34264v1",
+      "offset": 1588
+    },
+    {
+      "chunk_id": "chunk-0050",
+      "section": "Appendix A Algorithms",
+      "text": "Input: Reduced representation 𝑪 ∈ ℝ 2 ​ r × n \\bm{C}\\in\\mathbb{R}^{2r\\times n} ; number of iterations K K . Output: Normalized representation 𝑪 ~ ∈ ℝ 2 ​ r × n \\widetilde{\\bm{C}}\\in\\mathbb{R}^{2r\\times n} . 1 for k = 1 , … , K k=1,\\dots,K do 2 𝑪 i , : ← 𝑪 i , : / ∥ 𝑪 i , : ∥ 2 \\bm{C}_{i,:}\\leftarrow\\bm{C}_{i,:}\\,/\\,\\lVert\\bm{C}_{i,:}\\rVert_{2} for i = 1 , … , 2 ​ r i=1,\\dots,2r 3 𝑪 : , j ← 𝑪 : , j / ∥ 𝑪 : , j ∥ 2 \\bm{C}_{:,j}\\leftarrow\\bm{C}_{:,j}\\,/\\,\\lVert\\bm{C}_{:,j}\\rVert_{2} for j = 1 , … , n j=1,\\dots,n 4 return 𝑪 ~ ← 𝑪 \\widetilde{\\bm{C}}\\leftarrow\\bm{C}",
+      "source": "https://arxiv.org/html/2609.34264v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0051",
+      "section": "Appendix B Related work",
+      "text": "We review the relevant literature on optimization methods for LoRA. Hayou et al. (2024) advocate setting different learning rates for the two low-rank factors to achieve efficient feature learning. Zhang and Pilanci (2024) extend this approach by introducing matrix preconditioners to stabilize feature learning and draw a connection to a Riemannian metric on a quotient manifold. Yen et al. (2025) design preconditioners that make the update to the weight adapter (i.e., 𝑾 adp {\\bm{W}}_{\\text{adp}} ) invariant to reparametrizations of low-rank factors. Castin et al. (2026) enforce the condition 𝑨 ⊤ ​ 𝑨 = 𝑩 ⊤ ​ 𝑩 {\\bm{A}}^{\\top}{\\bm{A}}={\\bm{B}}^{\\top}{\\bm{B}} after each Adam update step via a balanced projection operation and theoretically demonstrate that balanced low-rank factors yield fast convergence. However, their analysis does not take into account the effect of momentum. A concurrent work ( Ghosh et al., 2026 ) extends prior preconditioning approaches by bounding the per-sample loss change. These optimizers compute individual updates for each low-rank factor. The most relevant work to ours is Riemannion ( Bogachev et al., 2026 ) , which projects the Muon update onto the tangent space of the fixed-rank manifold. While our approach also adopts the fixed-rank manifold perspective, we develop our optimizer through the rotated optimization framework, with rotation and normalization as its core components, distinguishing it from Riemannion ( Bogachev et al., 2026 ) .",
+      "source": "https://arxiv.org/html/2609.34264v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0052",
+      "section": "Appendix C Effect of LoRA rank",
+      "text": "(a) Llama-3.2-3B (b) Llama-3.1-8B Figure 5: Validation loss (mean cross-entropy across response tokens) over the last 100 training steps on the math SFT task at rank r = 32 r=32 , the counterpart of Figure 1 . Figure 6: Final validation loss for RoM and Adam across LoRA ranks on math SFT, using Llama-3.2-3B. Learning rate is independently tuned for each optimizer and rank.",
+      "source": "https://arxiv.org/html/2609.34264v1",
+      "offset": 0
+    }
+  ],
+  "links": [
+    {
+      "href": "mailto:",
+      "text": "yuhui.ding@inf.ethz.ch",
+      "section": "Rotated Manifold Optimization for Low-Rank Adaptation",
+      "context": "Yuhui Ding † † thanks: Work done during Yuhui’s internship at Microsoft Research Cambridge. Affiliation: ETH Zurich Email: yuhui.ding@inf.ethz.ch",
+      "url": "mailto:"
+    },
+    {
+      "href": "mailto:",
+      "text": "javierzazo@microsoft.com",
+      "section": "Rotated Manifold Optimization for Low-Rank Adaptation",
+      "context": "Yuhui Ding † † thanks: Work done during Yuhui’s internship at Microsoft Research Cambridge. Affiliation: ETH Zurich Email: yuhui.ding@inf.ethz.ch Javier Zazo Affiliation: Microsoft Research Cambridge Email: javierzazo@microsoft.com",
+      "url": "mailto:"
+    },
+    {
+      "href": "mailto:",
+      "text": "jameshensman@microsoft.com",
+      "section": "Rotated Manifold Optimization for Low-Rank Adaptation",
+      "context": "Yuhui Ding † † thanks: Work done during Yuhui’s internship at Microsoft Research Cambridge. Affiliation: ETH Zurich Email: yuhui.ding@inf.ethz.ch Javier Zazo Affiliation: Microsoft Research Cambridge Email: javierzazo@microsoft.com James Hensman Affiliation: Microsoft Research Cambridge Email: jameshensman@microsoft.com",
+      "url": "mailto:"
+    },
+    {
+      "href": "#bib.bib26",
+      "text": "Vaswani et al., 2017",
+      "section": "1 Introduction",
+      "context": "Large language models (LLMs) based on the transformer architecture ( Vaswani et al., 2017",
+      "url": "https://arxiv.org/html/2609.34264v1#bib.bib26"
+    },
+    {
+      "href": "#bib.bib24",
+      "text": "Brown et al., 2020",
+      "section": "1 Introduction",
+      "context": "Large language models (LLMs) based on the transformer architecture ( Vaswani et al., 2017 ) have achieved remarkable success in recent years ( Brown et al., 2020",
+      "url": "https://arxiv.org/html/2609.34264v1#bib.bib24"
+    },
+    {
+      "href": "#bib.bib27",
+      "text": "Touvron et al., 2023",
+      "section": "1 Introduction",
+      "context": "Large language models (LLMs) based on the transformer architecture ( Vaswani et al., 2017 ) have achieved remarkable success in recent years ( Brown et al., 2020 ; Touvron et al., 2023",
+      "url": "https://arxiv.org/html/2609.34264v1#bib.bib27"
+    },
+    {
+      "href": "#bib.bib25",
+      "text": "Guo et al., 2025",
+      "section": "1 Introduction",
+      "context": "Large language models (LLMs) based on the transformer architecture ( Vaswani et al., 2017 ) have achieved remarkable success in recent years ( Brown et al., 2020 ; Touvron et al., 2023 ; Guo et al., 2025",
+      "url": "https://arxiv.org/html/2609.34264v1#bib.bib25"
+    },
+    {
+      "href": "#bib.bib28",
+      "text": "Houlsby et al., 2019",
+      "section": "1 Introduction",
+      "context": "tecture ( Vaswani et al., 2017 ) have achieved remarkable success in recent years ( Brown et al., 2020 ; Touvron et al., 2023 ; Guo et al., 2025 ) . These models typically adopt a pretraining-finetuning paradigm, where large-scale pretraining equips a model with general capabilities and subsequent finetuning adapts it to specific downstream applications. However, as LLMs grow to billions of parameters, full-parameter finetuning becomes expensive in both computation and memory. Such a challenge has motivated the development of parameter-efficient finetuning (PEFT) methods ( Houlsby et al., 2019",
+      "url": "https://arxiv.org/html/2609.34264v1#bib.bib28"
+    },
+    {
+      "href": "#bib.bib3",
+      "text": "Hu et al., 2022",
+      "section": "1 Introduction",
+      "context": " Guo et al., 2025 ) . These models typically adopt a pretraining-finetuning paradigm, where large-scale pretraining equips a model with general capabilities and subsequent finetuning adapts it to specific downstream applications. However, as LLMs grow to billions of parameters, full-parameter finetuning becomes expensive in both computation and memory. Such a challenge has motivated the development of parameter-efficient finetuning (PEFT) methods ( Houlsby et al., 2019 ) , which only update a small fraction of all parameters. Among these approaches, low-rank adaptation (LoRA) ( Hu et al., 2022",
+      "url": "https://arxiv.org/html/2609.34264v1#bib.bib3"
+    },
+    {
+      "href": "#bib.bib1",
+      "text": "Gong et al., 2026",
+      "section": "1 Introduction",
+      "context": "We design our optimizer on the manifold of fixed-rank matrices, aiming to optimize the product of the low-rank factors directly rather than each factor separately. We extend the recent advances in matrix optimizers ( Gong et al., 2026",
+      "url": "https://arxiv.org/html/2609.34264v1#bib.bib1"
+    },
+    {
+      "href": "#bib.bib6",
+      "text": "Jordan et al., 2024",
+      "section": "1 Introduction",
+      "context": "We design our optimizer on the manifold of fixed-rank matrices, aiming to optimize the product of the low-rank factors directly rather than each factor separately. We extend the recent advances in matrix optimizers ( Gong et al., 2026 ; Jordan et al., 2024",
+      "url": "https://arxiv.org/html/2609.34264v1#bib.bib6"
+    },
+    {
+      "href": "#bib.bib5",
+      "text": "Vyas et al., 2025",
+      "section": "1 Introduction",
+      "context": "We design our optimizer on the manifold of fixed-rank matrices, aiming to optimize the product of the low-rank factors directly rather than each factor separately. We extend the recent advances in matrix optimizers ( Gong et al., 2026 ; Jordan et al., 2024 ; Vyas et al., 2025",
+      "url": "https://arxiv.org/html/2609.34264v1#bib.bib5"
+    },
+    {
+      "href": "#bib.bib1",
+      "text": "Gong et al., 2026",
+      "section": "2 Background",
+      "context": "We briefly review the rotated optimization framework ( Gong et al., 2026",
+      "url": "https://arxiv.org/html/2609.34264v1#bib.bib1"
+    },
+    {
+      "href": "#bib.bib3",
+      "text": "Hu et al., 2022",
+      "section": "2 Background",
+      "context": "We briefly review the rotated optimization framework ( Gong et al., 2026 ) and LoRA ( Hu et al., 2022",
+      "url": "https://arxiv.org/html/2609.34264v1#bib.bib3"
+    },
+    {
+      "href": "#A2",
+      "text": "B",
+      "section": "2 Background",
+      "context": "We briefly review the rotated optimization framework ( Gong et al., 2026 ) and LoRA ( Hu et al., 2022 ) , and then introduce the basic concepts of Riemannian optimization. Notations defined in this section will be used throughout the paper. We discuss related work in Appendix B",
+      "url": "https://arxiv.org/html/2609.34264v1#A2"
+    },
+    {
+      "href": "#bib.bib6",
+      "text": "Jordan et al., 2024",
+      "section": "2.1 Rotated optimization",
+      "context": "Recent matrix optimizers ( Jordan et al., 2024",
+      "url": "https://arxiv.org/html/2609.34264v1#bib.bib6"
+    },
+    {
+      "href": "#bib.bib5",
+      "text": "Vyas et al., 2025",
+      "section": "2.1 Rotated optimization",
+      "context": "Recent matrix optimizers ( Jordan et al., 2024 ; Vyas et al., 2025",
+      "url": "https://arxiv.org/html/2609.34264v1#bib.bib5"
+    },
+    {
+      "href": "#bib.bib1",
+      "text": "Gong et al., 2026",
+      "section": "2.1 Rotated optimization",
+      "context": "Recent matrix optimizers ( Jordan et al., 2024 ; Vyas et al., 2025 ) can be viewed through a rotated optimization framework ( Gong et al., 2026",
+      "url": "https://arxiv.org/html/2609.34264v1#bib.bib1"
+    },
+    {
+      "href": "#bib.bib3",
+      "text": "Hu et al., 2022",
+      "section": "2.2 Low-rank adaptation (LoRA)",
+      "context": "LoRA ( Hu et al., 2022",
+      "url": "https://arxiv.org/html/2609.34264v1#bib.bib3"
+    },
+    {
+      "href": "#S2.E3",
+      "text": "3",
+      "section": "2.2 Low-rank adaptation (LoRA)",
+      "context": "where GL ​ ( r ) \\text{GL}(r) denotes the set of all r × r r\\times r invertible matrices. In this paper, we propose an optimizer that explicitly incorporates the gauge symmetry of the LoRA parametrization (Eq. 3",
+      "url": "https://arxiv.org/html/2609.34264v1#S2.E3"
+    },
+    {
+      "href": "#bib.bib4",
+      "text": "Boumal, 2023",
+      "section": "2.3 Riemannian optimization",
+      "context": "Let ℳ \\mathcal{M} be a smooth manifold ( Boumal, 2023",
+      "url": "https://arxiv.org/html/2609.34264v1#bib.bib4"
+    },
+    {
+      "href": "#S3.SS1",
+      "text": "3.1",
+      "section": "3 Method",
+      "context": "We propose Rotated Manifold Optimization (RoM), which directly optimizes the LoRA weight adaptation 𝑾 adp {\\bm{W}}_{\\text{adp}} on the manifold of fixed-rank matrices. For notational simplicity, throughout this section we write 𝑾 := 𝑾 adp {\\bm{W}}:={\\bm{W}}_{\\text{adp}} . We first introduce the geometry of the fixed-rank manifold in Section 3.1",
+      "url": "https://arxiv.org/html/2609.34264v1#S3.SS1"
+    },
+    {
+      "href": "#S3.SS2",
+      "text": "3.2",
+      "section": "3 Method",
+      "context": "We propose Rotated Manifold Optimization (RoM), which directly optimizes the LoRA weight adaptation 𝑾 adp {\\bm{W}}_{\\text{adp}} on the manifold of fixed-rank matrices. For notational simplicity, throughout this section we write 𝑾 := 𝑾 adp {\\bm{W}}:={\\bm{W}}_{\\text{adp}} . We first introduce the geometry of the fixed-rank manifold in Section 3.1 and describe how to perform Riemannian optimization efficiently by exploiting the low-rank structure. Then in Section 3.2",
+      "url": "https://arxiv.org/html/2609.34264v1#S3.SS2"
+    },
+    {
+      "href": "#S2.E1",
+      "text": "1",
+      "section": "3 Method",
+      "context": "We propose Rotated Manifold Optimization (RoM), which directly optimizes the LoRA weight adaptation 𝑾 adp {\\bm{W}}_{\\text{adp}} on the manifold of fixed-rank matrices. For notational simplicity, throughout this section we write 𝑾 := 𝑾 adp {\\bm{W}}:={\\bm{W}}_{\\text{adp}} . We first introduce the geometry of the fixed-rank manifold in Section 3.1 and describe how to perform Riemannian optimization efficiently by exploiting the low-rank structure. Then in Section 3.2 we extend the rotated optimization framework (Eq. 1",
+      "url": "https://arxiv.org/html/2609.34264v1#S2.E1"
+    },
+    {
+      "href": "#S2.E2",
+      "text": "2",
+      "section": "3.1 Fixed-rank manifold",
+      "context": "} admits an SVD decomposition 𝑾 = 𝑼 ​ 𝚺 ​ 𝑽 ⊤ \\bm{W}=\\bm{U}\\bm{\\Sigma}\\bm{V}^{\\top} , where 𝑼 ∈ ℝ m × r \\bm{U}\\in\\mathbb{R}^{m\\times r} and 𝑽 ∈ ℝ n × r \\bm{V}\\in\\mathbb{R}^{n\\times r} have orthonormal columns, i.e., 𝑼 ⊤ ​ 𝑼 = 𝑽 ⊤ ​ 𝑽 = 𝑰 r \\bm{U}^{\\top}\\bm{U}=\\bm{V}^{\\top}\\bm{V}=\\bm{I}_{r} , and 𝚺 = diag ​ ( 𝝈 ) \\bm{\\Sigma}=\\text{diag}(\\bm{\\sigma}) is a square diagonal matrix with positive diagonal entries 𝝈 ∈ ℝ + r \\bm{\\sigma}\\in\\mathbb{R}_{+}^{r} . We parametrize 𝑾 {\\bm{W}} using 𝑼 \\bm{U} , 𝝈 \\bm{\\sigma} and 𝑽 {\\bm{V}} . Compared with the 𝑨 \\bm{A} and 𝑩 \\bm{B} factors in standard LoRA (Eq. 2",
+      "url": "https://arxiv.org/html/2609.34264v1#S2.E2"
+    },
+    {
+      "href": "#S3.E8",
+      "text": "8",
+      "section": "Tangent space",
+      "context": "Eq. 8",
+      "url": "https://arxiv.org/html/2609.34264v1#S3.E8"
+    },
+    {
+      "href": "#S3.E8",
+      "text": "8",
+      "section": "Tangent space",
+      "context": "Eq. 8 implies that, although a tangent vector 𝒁 ∈ T 𝑾 ​ ℳ r \\bm{Z}\\in\\mathrm{T}_{{\\bm{W}}}\\mathcal{M}_{r} has shape m × n m\\times n in the ambient space, it can actually be represented and stored using smaller components 𝑺 ∈ ℝ r × r {\\bm{S}}\\in\\mathbb{R}^{r\\times r} , 𝑼 p ∈ ℝ m × r {\\bm{U}}_{p}\\in\\mathbb{R}^{m\\times r} and 𝑽 p ∈ ℝ n × r {\\bm{V}}_{p}\\in\\mathbb{R}^{n\\times r} . A tangent vector 𝒁 {\\bm{Z}} defined as in Eq. 8",
+      "url": "https://arxiv.org/html/2609.34264v1#S3.E8"
+    },
+    {
+      "href": "#S2.SS3",
+      "text": "2.3",
+      "section": "Orthogonal projection",
+      "context": "Let ℒ : ℳ r → ℝ \\mathcal{L}:\\mathcal{M}_{r}\\rightarrow\\mathbb{R} denote the objective to minimize and ℒ ¯ \\bar{\\mathcal{L}} a smooth extension of ℒ \\mathcal{L} to an open neighborhood of ℳ r \\mathcal{M}_{r} in the ambient space. Consistent with Section 2.3",
+      "url": "https://arxiv.org/html/2609.34264v1#S2.SS3"
+    },
+    {
+      "href": "#S3.E8",
+      "text": "8",
+      "section": "Orthogonal projection",
+      "context": "and we have grad ​ ℒ ​ ( 𝑾 ) = Proj 𝑾 ​ ( ∇ ℒ ¯ ​ ( 𝑾 ) ) \\text{grad}\\,\\mathcal{L}({\\bm{W}})=\\text{Proj}_{{\\bm{W}}}\\big(\\nabla\\bar{\\mathcal{L}}({\\bm{W}})\\big) . Because Proj 𝑾 ​ ( ∇ ℒ ¯ ​ ( 𝑾 ) ) ∈ T 𝑾 ​ ℳ r \\text{Proj}_{{\\bm{W}}}\\big(\\nabla\\bar{\\mathcal{L}}({\\bm{W}})\\big)\\in\\mathrm{T}_{{\\bm{W}}}\\mathcal{M}_{r} , it admits the decomposition in Eq. 8",
+      "url": "https://arxiv.org/html/2609.34264v1#S3.E8"
+    },
+    {
+      "href": "#S2.E5",
+      "text": "5",
+      "section": "Practical Riemannian gradient computation",
+      "context": "While the relationship between the Euclidean gradient and the Riemannian gradient at 𝑾 {\\bm{W}} is straightforward (Eq. 5",
+      "url": "https://arxiv.org/html/2609.34264v1#S2.E5"
+    },
+    {
+      "href": "#S3.E10",
+      "text": "10",
+      "section": "Practical Riemannian gradient computation",
+      "context": "While the relationship between the Euclidean gradient and the Riemannian gradient at 𝑾 {\\bm{W}} is straightforward (Eq. 5 ), naively applying the projection Eq. 10",
+      "url": "https://arxiv.org/html/2609.34264v1#S3.E10"
+    },
+    {
+      "href": "#S3.E11",
+      "text": "11",
+      "section": "Practical Riemannian gradient computation",
+      "context": "ferentiation framework, 𝑿 {\\bm{X}} is saved during the forward pass for gradient computation, and when the gradient with respect to 𝒀 {\\bm{Y}} , denoted by 𝑮 Y = ∂ ℒ ¯ / ∂ 𝒀 ∈ ℝ N × n {\\bm{G}}_{Y}=\\partial\\bar{\\mathcal{L}}/\\partial{\\bm{Y}}\\in\\mathbb{R}^{N\\times n} is back-propagated to this layer, ∇ ℒ ¯ ​ ( 𝑾 ) \\nabla\\bar{\\mathcal{L}}({\\bm{W}}) is computed as ∇ ℒ ¯ ​ ( 𝑾 ) = 𝑿 ⊤ ​ 𝑮 Y \\nabla\\bar{\\mathcal{L}}({\\bm{W}})={\\bm{X}}^{\\top}{\\bm{G}}_{Y} . Note that to compute grad ​ ℒ ​ ( 𝑾 ) \\text{grad}\\,\\mathcal{L}({\\bm{W}}) , we only need 𝑺 {\\bm{S}} , 𝑼 p {\\bm{U}}_{p} and 𝑽 p {\\bm{V}}_{p} in Eq. 11",
+      "url": "https://arxiv.org/html/2609.34264v1#S3.E11"
+    },
+    {
+      "href": "#S3.E12",
+      "text": "12",
+      "section": "Practical Riemannian gradient computation",
+      "context": "We compute the bracketed products first, so that every matrix multiplication involves an operand with one dimension equal to r r , keeping all intermediate matrices low-rank and memory-efficient. We customize the backward propagation (e.g., via PyTorch’s backward hooks) to compute ∇ ℒ ¯ ​ ( 𝑾 ) ​ 𝑽 \\nabla\\bar{\\mathcal{L}}({\\bm{W}}){\\bm{V}} and ∇ ℒ ¯ ( 𝑾 ) ⊤ 𝑼 \\nabla\\bar{\\mathcal{L}}({\\bm{W}})^{\\top}{\\bm{U}} on the fly as in Eq. 12",
+      "url": "https://arxiv.org/html/2609.34264v1#S3.E12"
+    },
+    {
+      "href": "#S2.E2",
+      "text": "2",
+      "section": "Practical Riemannian gradient computation",
+      "context": "pute the bracketed products first, so that every matrix multiplication involves an operand with one dimension equal to r r , keeping all intermediate matrices low-rank and memory-efficient. We customize the backward propagation (e.g., via PyTorch’s backward hooks) to compute ∇ ℒ ¯ ​ ( 𝑾 ) ​ 𝑽 \\nabla\\bar{\\mathcal{L}}({\\bm{W}}){\\bm{V}} and ∇ ℒ ¯ ( 𝑾 ) ⊤ 𝑼 \\nabla\\bar{\\mathcal{L}}({\\bm{W}})^{\\top}{\\bm{U}} on the fly as in Eq. 12 , and store them for retraction. The memory usage is of the same order as that for computing and storing the gradients of 𝑨 {\\bm{A}} and 𝑩 {\\bm{B}} in standard LoRA (Eq. 2",
+      "url": "https://arxiv.org/html/2609.34264v1#S2.E2"
+    },
+    {
+      "href": "#S3.E9",
+      "text": "9",
+      "section": "Retraction",
+      "context": "Given a tangent update 𝒁 ∈ T 𝑾 ​ ℳ r {\\bm{Z}}\\in\\mathrm{T}_{{\\bm{W}}}\\mathcal{M}_{r} , we use the rank- r r truncated SVD as the retraction, i.e., Φ 𝑾 ​ ( 𝒁 ) = SVD r ​ ( 𝑾 + 𝒁 ) \\Phi_{{\\bm{W}}}({\\bm{Z}})=\\text{SVD}_{r}({\\bm{W}}+{\\bm{Z}}) , which retains the top r r singular values of 𝑾 + 𝒁 {\\bm{W}}+{\\bm{Z}} and their corresponding singular vectors. With the factorization of 𝒁 {\\bm{Z}} in Eq. 9",
+      "url": "https://arxiv.org/html/2609.34264v1#S3.E9"
+    },
+    {
+      "href": "#S3.E8",
+      "text": "8",
+      "section": "Momentum transport",
+      "context": "Similar to the Riemannian gradient, the momentum is also stored using its factorization (Eq. 8",
+      "url": "https://arxiv.org/html/2609.34264v1#S3.E8"
+    },
+    {
+      "href": "#S3.E15",
+      "text": "15",
+      "section": "Momentum transport",
+      "context": "Similar to the Riemannian gradient, the momentum is also stored using its factorization (Eq. 8 ), and the transport operation (Eq. 15",
+      "url": "https://arxiv.org/html/2609.34264v1#S3.E15"
+    },
+    {
+      "href": "#S3.E15",
+      "text": "15",
+      "section": "Momentum transport",
+      "context": "Similar to the Riemannian gradient, the momentum is also stored using its factorization (Eq. 8 ), and the transport operation (Eq. 15 ) remains factorized. A detailed algorithm on Eq. 15",
+      "url": "https://arxiv.org/html/2609.34264v1#S3.E15"
+    },
+    {
+      "href": "#algorithm2",
+      "text": "2",
+      "section": "Momentum transport",
+      "context": "Similar to the Riemannian gradient, the momentum is also stored using its factorization (Eq. 8 ), and the transport operation (Eq. 15 ) remains factorized. A detailed algorithm on Eq. 15 is provided in Algorithm 2",
+      "url": "https://arxiv.org/html/2609.34264v1#algorithm2"
+    },
+    {
+      "href": "#S3.E15",
+      "text": "15",
+      "section": "3.2 Rotated optimization on manifold",
+      "context": " 𝑼 ∈ ℝ 2 ​ r × r {\\bm{P}}\\leftarrow{\\bm{F}}^{\\top}{\\bm{U}}\\in\\mathbb{R}^{2r\\times r} 6 𝑸 ← 𝑪 ~ ​ 𝑽 ∈ ℝ 2 ​ r × r {\\bm{Q}}\\leftarrow\\widetilde{\\bm{C}}{\\bm{V}}\\in\\mathbb{R}^{2r\\times r} 7 𝑺 ~ ← 𝑷 ⊤ ​ 𝑸 \\widetilde{{\\bm{S}}}\\leftarrow{\\bm{P}}^{\\top}{\\bm{Q}} 8 𝑼 ~ p ← 𝑭 ​ 𝑸 − 𝑼 ​ 𝑺 ~ \\widetilde{{\\bm{U}}}_{p}\\leftarrow{\\bm{F}}{\\bm{Q}}-{\\bm{U}}\\widetilde{{\\bm{S}}} 9 𝑽 ~ p ← 𝑪 ~ ⊤ ​ 𝑷 − 𝑽 ​ 𝑺 ~ ⊤ \\widetilde{{\\bm{V}}}_{p}\\leftarrow\\widetilde{\\bm{C}}^{\\top}{\\bm{P}}-{\\bm{V}}\\widetilde{{\\bm{S}}}^{\\top} Starting from the tangent momentum 𝑴 ∈ T 𝑾 ​ ℳ r {\\bm{M}}\\in\\mathrm{T}_{{\\bm{W}}}\\mathcal{M}_{r} (Eq. 15",
+      "url": "https://arxiv.org/html/2609.34264v1#S3.E15"
+    },
+    {
+      "href": "#S2.E1",
+      "text": "1",
+      "section": "3.2 Rotated optimization on manifold",
+      "context": "in\\mathbb{R}^{2r\\times r} 6 𝑸 ← 𝑪 ~ ​ 𝑽 ∈ ℝ 2 ​ r × r {\\bm{Q}}\\leftarrow\\widetilde{\\bm{C}}{\\bm{V}}\\in\\mathbb{R}^{2r\\times r} 7 𝑺 ~ ← 𝑷 ⊤ ​ 𝑸 \\widetilde{{\\bm{S}}}\\leftarrow{\\bm{P}}^{\\top}{\\bm{Q}} 8 𝑼 ~ p ← 𝑭 ​ 𝑸 − 𝑼 ​ 𝑺 ~ \\widetilde{{\\bm{U}}}_{p}\\leftarrow{\\bm{F}}{\\bm{Q}}-{\\bm{U}}\\widetilde{{\\bm{S}}} 9 𝑽 ~ p ← 𝑪 ~ ⊤ ​ 𝑷 − 𝑽 ​ 𝑺 ~ ⊤ \\widetilde{{\\bm{V}}}_{p}\\leftarrow\\widetilde{\\bm{C}}^{\\top}{\\bm{P}}-{\\bm{V}}\\widetilde{{\\bm{S}}}^{\\top} Starting from the tangent momentum 𝑴 ∈ T 𝑾 ​ ℳ r {\\bm{M}}\\in\\mathrm{T}_{{\\bm{W}}}\\mathcal{M}_{r} (Eq. 15 ), we now extend the rotated optimization framework (Eq. 1",
+      "url": "https://arxiv.org/html/2609.34264v1#S2.E1"
+    },
+    {
+      "href": "#bib.bib6",
+      "text": "Jordan et al., 2024",
+      "section": "Conditioning frame",
+      "context": "pace 1 1 1 Any rotation acting only within the orthogonal complement of 𝑴 {\\bm{M}} ’s column space leaves 𝑴 {\\bm{M}} unchanged. . Concretely, we construct a conditioning frame 𝑭 ∈ ℝ m × 2 ​ r {\\bm{F}}\\in\\mathbb{R}^{m\\times 2r} with orthonormal columns (i.e., 𝑭 ⊤ ​ 𝑭 = 𝑰 2 ​ r {\\bm{F}}^{\\top}{\\bm{F}}={\\bm{I}}_{2r} ) for this subspace. The frame 𝑭 {\\bm{F}} defines the rotated coordinate system, in which 𝑴 {\\bm{M}} is represented by 𝑭 ⊤ ​ 𝑴 {\\bm{F}}^{\\top}{\\bm{M}} . In full-parameter training, the left singular vectors of 𝑴 {\\bm{M}} have been chosen by several previous works ( Jordan et al., 2024",
+      "url": "https://arxiv.org/html/2609.34264v1#bib.bib6"
+    },
+    {
+      "href": "#bib.bib5",
+      "text": "Vyas et al., 2025",
+      "section": "Conditioning frame",
+      "context": "ion acting only within the orthogonal complement of 𝑴 {\\bm{M}} ’s column space leaves 𝑴 {\\bm{M}} unchanged. . Concretely, we construct a conditioning frame 𝑭 ∈ ℝ m × 2 ​ r {\\bm{F}}\\in\\mathbb{R}^{m\\times 2r} with orthonormal columns (i.e., 𝑭 ⊤ ​ 𝑭 = 𝑰 2 ​ r {\\bm{F}}^{\\top}{\\bm{F}}={\\bm{I}}_{2r} ) for this subspace. The frame 𝑭 {\\bm{F}} defines the rotated coordinate system, in which 𝑴 {\\bm{M}} is represented by 𝑭 ⊤ ​ 𝑴 {\\bm{F}}^{\\top}{\\bm{M}} . In full-parameter training, the left singular vectors of 𝑴 {\\bm{M}} have been chosen by several previous works ( Jordan et al., 2024 ; Vyas et al., 2025",
+      "url": "https://arxiv.org/html/2609.34264v1#bib.bib5"
+    },
+    {
+      "href": "#S3.E9",
+      "text": "9",
+      "section": "Conditioning frame",
+      "context": "}\\in\\mathbb{R}^{m\\times 2r} with orthonormal columns (i.e., 𝑭 ⊤ ​ 𝑭 = 𝑰 2 ​ r {\\bm{F}}^{\\top}{\\bm{F}}={\\bm{I}}_{2r} ) for this subspace. The frame 𝑭 {\\bm{F}} defines the rotated coordinate system, in which 𝑴 {\\bm{M}} is represented by 𝑭 ⊤ ​ 𝑴 {\\bm{F}}^{\\top}{\\bm{M}} . In full-parameter training, the left singular vectors of 𝑴 {\\bm{M}} have been chosen by several previous works ( Jordan et al., 2024 ; Vyas et al., 2025 ) to define the rotated coordinate system, but computing them can be expensive. When 𝑴 ∈ T 𝑾 ​ ℳ r {\\bm{M}}\\in\\mathrm{T}_{{\\bm{W}}}\\mathcal{M}_{r} , its low-rank structure (Eq. 9",
+      "url": "https://arxiv.org/html/2609.34264v1#S3.E9"
+    },
+    {
+      "href": "#S3.SS1",
+      "text": "3.1",
+      "section": "Conditioning frame",
+      "context": " which 𝑴 {\\bm{M}} is represented by 𝑭 ⊤ ​ 𝑴 {\\bm{F}}^{\\top}{\\bm{M}} . In full-parameter training, the left singular vectors of 𝑴 {\\bm{M}} have been chosen by several previous works ( Jordan et al., 2024 ; Vyas et al., 2025 ) to define the rotated coordinate system, but computing them can be expensive. When 𝑴 ∈ T 𝑾 ​ ℳ r {\\bm{M}}\\in\\mathrm{T}_{{\\bm{W}}}\\mathcal{M}_{r} , its low-rank structure (Eq. 9 ) allows us to compute these singular vectors efficiently using two thin QR factorizations and an SVD of a 2 ​ r × 2 ​ r 2r\\times 2r matrix, analogous to how we compute the retraction in Section 3.1",
+      "url": "https://arxiv.org/html/2609.34264v1#S3.SS1"
+    },
+    {
+      "href": "#bib.bib8",
+      "text": "Scetbon et al. (2025)",
+      "section": "Normalization function",
+      "context": "We next specify the normalization function h h applied to the momentum in the rotated coordinates. Note that the normalization is applied to the reduced representation 𝑭 ⊤ ​ 𝑴 ∈ ℝ 2 ​ r × n {\\bm{F}}^{\\top}{\\bm{M}}\\in\\mathbb{R}^{2r\\times n} , rather than to a full m × n m\\times n matrix. Following Scetbon et al. (2025)",
+      "url": "https://arxiv.org/html/2609.34264v1#bib.bib8"
+    },
+    {
+      "href": "#bib.bib1",
+      "text": "Gong et al., 2026",
+      "section": "Normalization function",
+      "context": "We next specify the normalization function h h applied to the momentum in the rotated coordinates. Note that the normalization is applied to the reduced representation 𝑭 ⊤ ​ 𝑴 ∈ ℝ 2 ​ r × n {\\bm{F}}^{\\top}{\\bm{M}}\\in\\mathbb{R}^{2r\\times n} , rather than to a full m × n m\\times n matrix. Following Scetbon et al. (2025) , we adopt a multi-norm normalization that has shown effectiveness in LLM pre-training ( Gong et al., 2026",
+      "url": "https://arxiv.org/html/2609.34264v1#bib.bib1"
+    },
+    {
+      "href": "#S3.E16",
+      "text": "16",
+      "section": "Normalization function",
+      "context": "Here, 𝑯 i , : {\\bm{H}}_{i,:} and 𝑯 : , j {\\bm{H}}_{:,j} denote the i i -th row ( 1 ≤ i ≤ m 1\\leq i\\leq m ) and j j -th column ( 1 ≤ j ≤ n 1\\leq j\\leq n ) of 𝑯 {\\bm{H}} respectively; ⟨ 𝑮 , 𝑯 ⟩ = tr ​ ( 𝑮 ​ 𝑯 ⊤ ) \\langle{\\bm{G}},{\\bm{H}}\\rangle=\\text{tr}({\\bm{G}}{\\bm{H}}^{\\top}) denotes the Frobenius inner product; and ∥ ⋅ ∥ 2 \\|\\cdot\\|_{2} denotes the ℓ 2 \\ell_{2} norm. Eq. 16",
+      "url": "https://arxiv.org/html/2609.34264v1#S3.E16"
+    },
+    {
+      "href": "#bib.bib7",
+      "text": "Bernstein and Newhouse (2024)",
+      "section": "Normalization function",
+      "context": "Here, 𝑯 i , : {\\bm{H}}_{i,:} and 𝑯 : , j {\\bm{H}}_{:,j} denote the i i -th row ( 1 ≤ i ≤ m 1\\leq i\\leq m ) and j j -th column ( 1 ≤ j ≤ n 1\\leq j\\leq n ) of 𝑯 {\\bm{H}} respectively; ⟨ 𝑮 , 𝑯 ⟩ = tr ​ ( 𝑮 ​ 𝑯 ⊤ ) \\langle{\\bm{G}},{\\bm{H}}\\rangle=\\text{tr}({\\bm{G}}{\\bm{H}}^{\\top}) denotes the Frobenius inner product; and ∥ ⋅ ∥ 2 \\|\\cdot\\|_{2} denotes the ℓ 2 \\ell_{2} norm. Eq. 16 generalizes the single-norm steepest-descent formulation of Bernstein and Newhouse (2024)",
+      "url": "https://arxiv.org/html/2609.34264v1#bib.bib7"
+    },
+    {
+      "href": "#S3.E16",
+      "text": "16",
+      "section": "Normalization function",
+      "context": "Here, 𝑯 i , : {\\bm{H}}_{i,:} and 𝑯 : , j {\\bm{H}}_{:,j} denote the i i -th row ( 1 ≤ i ≤ m 1\\leq i\\leq m ) and j j -th column ( 1 ≤ j ≤ n 1\\leq j\\leq n ) of 𝑯 {\\bm{H}} respectively; ⟨ 𝑮 , 𝑯 ⟩ = tr ​ ( 𝑮 ​ 𝑯 ⊤ ) \\langle{\\bm{G}},{\\bm{H}}\\rangle=\\text{tr}({\\bm{G}}{\\bm{H}}^{\\top}) denotes the Frobenius inner product; and ∥ ⋅ ∥ 2 \\|\\cdot\\|_{2} denotes the ℓ 2 \\ell_{2} norm. Eq. 16 generalizes the single-norm steepest-descent formulation of Bernstein and Newhouse (2024) to simultaneous row- and column-norm constraints. In practice, we approximate Eq. 16",
+      "url": "https://arxiv.org/html/2609.34264v1#S3.E16"
+    },
+    {
+      "href": "#algorithm3",
+      "text": "3",
+      "section": "Normalization function",
+      "context": " ≤ n 1\\leq j\\leq n ) of 𝑯 {\\bm{H}} respectively; ⟨ 𝑮 , 𝑯 ⟩ = tr ​ ( 𝑮 ​ 𝑯 ⊤ ) \\langle{\\bm{G}},{\\bm{H}}\\rangle=\\text{tr}({\\bm{G}}{\\bm{H}}^{\\top}) denotes the Frobenius inner product; and ∥ ⋅ ∥ 2 \\|\\cdot\\|_{2} denotes the ℓ 2 \\ell_{2} norm. Eq. 16 generalizes the single-norm steepest-descent formulation of Bernstein and Newhouse (2024) to simultaneous row- and column-norm constraints. In practice, we approximate Eq. 16 by alternating row and column normalization for a small fixed number of iterations K K , which we set to 5 5 throughout all experiments. The full procedure is given in Algorithm 3",
+      "url": "https://arxiv.org/html/2609.34264v1#algorithm3"
+    },
+    {
+      "href": "#S3.E17",
+      "text": "17",
+      "section": "Final update rule",
+      "context": "Importantly, the orthogonal projection in Eq. 17",
+      "url": "https://arxiv.org/html/2609.34264v1#S3.E17"
+    },
+    {
+      "href": "#algorithm1",
+      "text": "1",
+      "section": "Final update rule",
+      "context": "Importantly, the orthogonal projection in Eq. 17 can be combined with the preceding operations so that 𝑭 ​ h ​ ( 𝑭 ⊤ ​ 𝑴 ) {\\bm{F}}h({\\bm{F}}^{\\top}{\\bm{M}}) is never materialized as a full m × n m\\times n matrix. We detail the efficient implementation of one step of RoM in Algorithm 1",
+      "url": "https://arxiv.org/html/2609.34264v1#algorithm1"
+    },
+    {
+      "href": "#S4.SS1",
+      "text": "4.1",
+      "section": "4 Experiments",
+      "context": "We evaluate RoM on supervised finetuning (SFT) and reinforcement learning (RL) tasks, comparing its optimization and downstream performance against existing LoRA optimizers. We describe the experimental setup in Section 4.1",
+      "url": "https://arxiv.org/html/2609.34264v1#S4.SS1"
+    },
+    {
+      "href": "#S4.SS2",
+      "text": "4.2",
+      "section": "4 Experiments",
+      "context": "We evaluate RoM on supervised finetuning (SFT) and reinforcement learning (RL) tasks, comparing its optimization and downstream performance against existing LoRA optimizers. We describe the experimental setup in Section 4.1 , present the SFT and RL results in Section 4.2",
+      "url": "https://arxiv.org/html/2609.34264v1#S4.SS2"
+    },
+    {
+      "href": "#S4.SS3",
+      "text": "4.3",
+      "section": "4 Experiments",
+      "context": "We evaluate RoM on supervised finetuning (SFT) and reinforcement learning (RL) tasks, comparing its optimization and downstream performance against existing LoRA optimizers. We describe the experimental setup in Section 4.1 , present the SFT and RL results in Section 4.2 and 4.3",
+      "url": "https://arxiv.org/html/2609.34264v1#S4.SS3"
+    },
+    {
+      "href": "#S4.SS4",
+      "text": "4.4",
+      "section": "4 Experiments",
+      "context": "We evaluate RoM on supervised finetuning (SFT) and reinforcement learning (RL) tasks, comparing its optimization and downstream performance against existing LoRA optimizers. We describe the experimental setup in Section 4.1 , present the SFT and RL results in Section 4.2 and 4.3 , respectively, and further study the contribution of its components and its sensitivity to learning-rate selection in Section 4.4",
+      "url": "https://arxiv.org/html/2609.34264v1#S4.SS4"
+    },
+    {
+      "href": "#A3",
+      "text": "C",
+      "section": "4 Experiments",
+      "context": "Figure 1: Validation loss (mean cross-entropy across response tokens) over the last 100 training steps on the math SFT task at rank r = 16 r=16 (see Appendix C",
+      "url": "https://arxiv.org/html/2609.34264v1#A3"
+    },
+    {
+      "href": "#bib.bib11",
+      "text": "Kingma and Ba, 2014",
+      "section": "4.1 Experimental setup",
+      "context": "We compare RoM with Adam ( Kingma and Ba, 2014",
+      "url": "https://arxiv.org/html/2609.34264v1#bib.bib11"
+    },
+    {
+      "href": "#bib.bib6",
+      "text": "Jordan et al., 2024",
+      "section": "4.1 Experimental setup",
+      "context": "We compare RoM with Adam ( Kingma and Ba, 2014 ) , Muon ( Jordan et al., 2024",
+      "url": "https://arxiv.org/html/2609.34264v1#bib.bib6"
+    },
+    {
+      "href": "#bib.bib30",
+      "text": "Yen et al., 2025",
+      "section": "4.1 Experimental setup",
+      "context": "We compare RoM with Adam ( Kingma and Ba, 2014 ) , Muon ( Jordan et al., 2024 ) , LoRA-RITE ( Yen et al., 2025",
+      "url": "https://arxiv.org/html/2609.34264v1#bib.bib30"
+    },
+    {
+      "href": "#bib.bib2",
+      "text": "Castin et al., 2026",
+      "section": "4.1 Experimental setup",
+      "context": "We compare RoM with Adam ( Kingma and Ba, 2014 ) , Muon ( Jordan et al., 2024 ) , LoRA-RITE ( Yen et al., 2025 ) , BaLoRA ( Castin et al., 2026",
+      "url": "https://arxiv.org/html/2609.34264v1#bib.bib2"
+    },
+    {
+      "href": "#bib.bib9",
+      "text": "Bogachev et al., 2026",
+      "section": "4.1 Experimental setup",
+      "context": "We compare RoM with Adam ( Kingma and Ba, 2014 ) , Muon ( Jordan et al., 2024 ) , LoRA-RITE ( Yen et al., 2025 ) , BaLoRA ( Castin et al., 2026 ) , and Riemannion ( Bogachev et al., 2026",
+      "url": "https://arxiv.org/html/2609.34264v1#bib.bib9"
+    },
+    {
+      "href": "#S2.E2",
+      "text": "2",
+      "section": "4.1 Experimental setup",
+      "context": "We compare RoM with Adam ( Kingma and Ba, 2014 ) , Muon ( Jordan et al., 2024 ) , LoRA-RITE ( Yen et al., 2025 ) , BaLoRA ( Castin et al., 2026 ) , and Riemannion ( Bogachev et al., 2026 ) . Adam and Muon adopt the conventional two-factor LoRA (Eq. 2",
+      "url": "https://arxiv.org/html/2609.34264v1#S2.E2"
+    },
+    {
+      "href": "#bib.bib30",
+      "text": "Yen et al., 2025",
+      "section": "4.1 Experimental setup",
+      "context": "We compare RoM with Adam ( Kingma and Ba, 2014 ) , Muon ( Jordan et al., 2024 ) , LoRA-RITE ( Yen et al., 2025 ) , BaLoRA ( Castin et al., 2026 ) , and Riemannion ( Bogachev et al., 2026 ) . Adam and Muon adopt the conventional two-factor LoRA (Eq. 2 ) and optimize each factor separately. LoRA-RITE ( Yen et al., 2025",
+      "url": "https://arxiv.org/html/2609.34264v1#bib.bib30"
+    },
+    {
+      "href": "#bib.bib2",
+      "text": "Castin et al., 2026",
+      "section": "4.1 Experimental setup",
+      "context": "We compare RoM with Adam ( Kingma and Ba, 2014 ) , Muon ( Jordan et al., 2024 ) , LoRA-RITE ( Yen et al., 2025 ) , BaLoRA ( Castin et al., 2026 ) , and Riemannion ( Bogachev et al., 2026 ) . Adam and Muon adopt the conventional two-factor LoRA (Eq. 2 ) and optimize each factor separately. LoRA-RITE ( Yen et al., 2025 ) uses matrix preconditioners to achieve transformation invariance. BaLoRA ( Castin et al., 2026",
+      "url": "https://arxiv.org/html/2609.34264v1#bib.bib2"
+    },
+    {
+      "href": "#S2.E3",
+      "text": "3",
+      "section": "4.1 Experimental setup",
+      "context": "We compare RoM with Adam ( Kingma and Ba, 2014 ) , Muon ( Jordan et al., 2024 ) , LoRA-RITE ( Yen et al., 2025 ) , BaLoRA ( Castin et al., 2026 ) , and Riemannion ( Bogachev et al., 2026 ) . Adam and Muon adopt the conventional two-factor LoRA (Eq. 2 ) and optimize each factor separately. LoRA-RITE ( Yen et al., 2025 ) uses matrix preconditioners to achieve transformation invariance. BaLoRA ( Castin et al., 2026 ) addresses the parametrization redundancy of LoRA (Eq. 3",
+      "url": "https://arxiv.org/html/2609.34264v1#S2.E3"
+    },
+    {
+      "href": "#bib.bib9",
+      "text": "Bogachev et al., 2026",
+      "section": "4.1 Experimental setup",
+      "context": ") , Muon ( Jordan et al., 2024 ) , LoRA-RITE ( Yen et al., 2025 ) , BaLoRA ( Castin et al., 2026 ) , and Riemannion ( Bogachev et al., 2026 ) . Adam and Muon adopt the conventional two-factor LoRA (Eq. 2 ) and optimize each factor separately. LoRA-RITE ( Yen et al., 2025 ) uses matrix preconditioners to achieve transformation invariance. BaLoRA ( Castin et al., 2026 ) addresses the parametrization redundancy of LoRA (Eq. 3 ) through a balanced projection step after each Adam update to enforce 𝑨 ⊤ ​ 𝑨 = 𝑩 ⊤ ​ 𝑩 {\\bm{A}}^{\\top}{\\bm{A}}={\\bm{B}}^{\\top}{\\bm{B}} . Riemannion ( Bogachev et al., 2026",
+      "url": "https://arxiv.org/html/2609.34264v1#bib.bib9"
+    },
+    {
+      "href": "#bib.bib12",
+      "text": "Liu et al. (2025)",
+      "section": "4.1 Experimental setup",
+      "context": "For SFT, we use the same learning rate schedule for all optimizers: linear warm-up over the first 5 % 5\\% of training steps, followed by linear decay to 10 % 10\\% of the peak learning rate. We find this warm-up schedule particularly beneficial for Adam, improving its performance compared with previously reported results. For RL finetuning, we follow the setup of Liu et al. (2025)",
+      "url": "https://arxiv.org/html/2609.34264v1#bib.bib12"
+    },
+    {
+      "href": "#bib.bib14",
+      "text": "Grattafiori et al., 2024",
+      "section": "Mathematical reasoning",
+      "context": "We finetune Llama-3.2-3B, Llama-3.1-8B ( Grattafiori et al., 2024",
+      "url": "https://arxiv.org/html/2609.34264v1#bib.bib14"
+    },
+    {
+      "href": "#bib.bib29",
+      "text": "Gemma Team, 2024",
+      "section": "Mathematical reasoning",
+      "context": "We finetune Llama-3.2-3B, Llama-3.1-8B ( Grattafiori et al., 2024 ) , and Gemma-2-27B ( Gemma Team, 2024",
+      "url": "https://arxiv.org/html/2609.34264v1#bib.bib29"
+    },
+    {
+      "href": "#bib.bib13",
+      "text": "Yu et al., 2024",
+      "section": "Mathematical reasoning",
+      "context": "We finetune Llama-3.2-3B, Llama-3.1-8B ( Grattafiori et al., 2024 ) , and Gemma-2-27B ( Gemma Team, 2024 ) at rank r = 16 r=16 on 100K MetaMathQA examples ( Yu et al., 2024",
+      "url": "https://arxiv.org/html/2609.34264v1#bib.bib13"
+    },
+    {
+      "href": "#S4.F1",
+      "text": "1",
+      "section": "Mathematical reasoning",
+      "context": "amples ( Yu et al., 2024 ) for one epoch, using an effective batch size of 128. We construct a held-out 10K-example validation set and measure validation loss as the mean cross-entropy over response tokens. For each optimizer, we independently select the learning rate that minimizes validation loss and repeat the selected configuration over three seeds. Training for additional epochs did not further reduce the final validation loss. We evaluate downstream performance using zero-shot accuracy on GSM8K (1319 examples) and MATH (5000 examples) with greedy decoding and bfloat16 precision. Figure 1",
+      "url": "https://arxiv.org/html/2609.34264v1#S4.F1"
+    },
+    {
+      "href": "#S4.T1",
+      "text": "1",
+      "section": "Mathematical reasoning",
+      "context": " 128. We construct a held-out 10K-example validation set and measure validation loss as the mean cross-entropy over response tokens. For each optimizer, we independently select the learning rate that minimizes validation loss and repeat the selected configuration over three seeds. Training for additional epochs did not further reduce the final validation loss. We evaluate downstream performance using zero-shot accuracy on GSM8K (1319 examples) and MATH (5000 examples) with greedy decoding and bfloat16 precision. Figure 1 shows the validation-loss trajectories for the two Llama models. Tables 1",
+      "url": "https://arxiv.org/html/2609.34264v1#S4.T1"
+    },
+    {
+      "href": "#S4.T2",
+      "text": "2",
+      "section": "Mathematical reasoning",
+      "context": "We construct a held-out 10K-example validation set and measure validation loss as the mean cross-entropy over response tokens. For each optimizer, we independently select the learning rate that minimizes validation loss and repeat the selected configuration over three seeds. Training for additional epochs did not further reduce the final validation loss. We evaluate downstream performance using zero-shot accuracy on GSM8K (1319 examples) and MATH (5000 examples) with greedy decoding and bfloat16 precision. Figure 1 shows the validation-loss trajectories for the two Llama models. Tables 1 and 2",
+      "url": "https://arxiv.org/html/2609.34264v1#S4.T2"
+    },
+    {
+      "href": "#S4.T1",
+      "text": "1",
+      "section": "Mathematical reasoning",
+      "context": "Table 2: Math SFT results for Gemma-2-27B at rank 16. Bold follows the convention in Table 1",
+      "url": "https://arxiv.org/html/2609.34264v1#S4.T1"
+    },
+    {
+      "href": "#bib.bib2",
+      "text": "Castin et al. (2026)",
+      "section": "Mathematical reasoning",
+      "context": "At all three model sizes, RoM achieves the lowest final validation loss consistently, followed by Adam among the baselines 2 2 2 Our BaLoRA results use the same training protocol as the other optimizers in our comparison, including the learning-rate schedule and independent learning-rate tuning, and are therefore not directly comparable to those reported by Castin et al. (2026)",
+      "url": "https://arxiv.org/html/2609.34264v1#bib.bib2"
+    },
+    {
+      "href": "#S4.T1",
+      "text": "1",
+      "section": "Mathematical reasoning",
+      "context": "Table 3: Code SFT results for Llama-3.1-8B at rank 32: final validation loss ( × 10 − 3 \\times 10^{-3} ) on CodeFeedback and Pass@1 (%) on HumanEval and MBPP. Results are mean ± \\pm standard deviation over 3 seeds except for the pretrained model. Bold follows the convention in Table 1",
+      "url": "https://arxiv.org/html/2609.34264v1#S4.T1"
+    },
+    {
+      "href": "#bib.bib16",
+      "text": "Zheng et al., 2024",
+      "section": "Code generation",
+      "context": "We finetune the Llama-3.1-8B base model on 100K examples of the CodeFeedback dataset ( Zheng et al., 2024",
+      "url": "https://arxiv.org/html/2609.34264v1#bib.bib16"
+    },
+    {
+      "href": "#bib.bib15",
+      "text": "Taori et al., 2023",
+      "section": "Code generation",
+      "context": "We finetune the Llama-3.1-8B base model on 100K examples of the CodeFeedback dataset ( Zheng et al., 2024 ) using the Alpaca prompt templates ( Taori et al., 2023",
+      "url": "https://arxiv.org/html/2609.34264v1#bib.bib15"
+    },
+    {
+      "href": "#S4.F3",
+      "text": "3",
+      "section": "Code generation",
+      "context": "We finetune the Llama-3.1-8B base model on 100K examples of the CodeFeedback dataset ( Zheng et al., 2024 ) using the Alpaca prompt templates ( Taori et al., 2023 ) . We compute validation loss as the mean cross-entropy over response tokens on a held-out validation set of 10K examples. Since CodeFeedback sequences are typically longer than those in MetaMathQA, we train for one epoch with a smaller effective batch size of 64. Figure 3",
+      "url": "https://arxiv.org/html/2609.34264v1#S4.F3"
+    },
+    {
+      "href": "#bib.bib17",
+      "text": "Chen et al., 2021",
+      "section": "Code generation",
+      "context": "We evaluate the finetuned model on HumanEval ( Chen et al., 2021",
+      "url": "https://arxiv.org/html/2609.34264v1#bib.bib17"
+    },
+    {
+      "href": "#bib.bib18",
+      "text": "Austin et al., 2021",
+      "section": "Code generation",
+      "context": "We evaluate the finetuned model on HumanEval ( Chen et al., 2021 ) (164 test examples) and MBPP ( Austin et al., 2021",
+      "url": "https://arxiv.org/html/2609.34264v1#bib.bib18"
+    },
+    {
+      "href": "#bib.bib19",
+      "text": "Liu et al., 2023",
+      "section": "Code generation",
+      "context": "We evaluate the finetuned model on HumanEval ( Chen et al., 2021 ) (164 test examples) and MBPP ( Austin et al., 2021 ) (378 test examples curated by EvalPlus ( Liu et al., 2023",
+      "url": "https://arxiv.org/html/2609.34264v1#bib.bib19"
+    },
+    {
+      "href": "#S4.F3",
+      "text": "3",
+      "section": "Code generation",
+      "context": "We evaluate the finetuned model on HumanEval ( Chen et al., 2021 ) (164 test examples) and MBPP ( Austin et al., 2021 ) (378 test examples curated by EvalPlus ( Liu et al., 2023 ) ) using greedy decoding with bfloat16 precision and no in-context examples, and report Pass@1. For each optimizer, we train three runs with different random seeds. Table 3",
+      "url": "https://arxiv.org/html/2609.34264v1#S4.F3"
+    },
+    {
+      "href": "#bib.bib22",
+      "text": "Sheng et al., 2025",
+      "section": "4.3 Reinforcement learning",
+      "context": "We further evaluate RoM on LoRA-based RL finetuning using the VeRL framework ( Sheng et al., 2025",
+      "url": "https://arxiv.org/html/2609.34264v1#bib.bib22"
+    },
+    {
+      "href": "#bib.bib20",
+      "text": "Yang et al., 2024",
+      "section": "4.3 Reinforcement learning",
+      "context": "We further evaluate RoM on LoRA-based RL finetuning using the VeRL framework ( Sheng et al., 2025 ) . Since the other LoRA baselines do not specify an RL training recipe, we focus on comparing RoM against Adam. We train the Qwen2.5-3B base model ( Yang et al., 2024",
+      "url": "https://arxiv.org/html/2609.34264v1#bib.bib20"
+    },
+    {
+      "href": "#bib.bib21",
+      "text": "Shao et al., 2024",
+      "section": "4.3 Reinforcement learning",
+      "context": "We further evaluate RoM on LoRA-based RL finetuning using the VeRL framework ( Sheng et al., 2025 ) . Since the other LoRA baselines do not specify an RL training recipe, we focus on comparing RoM against Adam. We train the Qwen2.5-3B base model ( Yang et al., 2024 ) using GRPO ( Shao et al., 2024",
+      "url": "https://arxiv.org/html/2609.34264v1#bib.bib21"
+    },
+    {
+      "href": "#bib.bib12",
+      "text": "Liu et al. (2025)",
+      "section": "4.3 Reinforcement learning",
+      "context": "We further evaluate RoM on LoRA-based RL finetuning using the VeRL framework ( Sheng et al., 2025 ) . Since the other LoRA baselines do not specify an RL training recipe, we focus on comparing RoM against Adam. We train the Qwen2.5-3B base model ( Yang et al., 2024 ) using GRPO ( Shao et al., 2024 ) on the training split of MATH (7.5K problems) with rank r = 16 r=16 . At each rollout step, we sample 8 responses for each of 128 prompts, yielding 1024 sequences per optimization step. We use no KL penalty and train for 400 steps. Following the setup of Liu et al. (2025)",
+      "url": "https://arxiv.org/html/2609.34264v1#bib.bib12"
+    },
+    {
+      "href": "#bib.bib23",
+      "text": "He et al., 2024",
+      "section": "4.3 Reinforcement learning",
+      "context": "m. We train the Qwen2.5-3B base model ( Yang et al., 2024 ) using GRPO ( Shao et al., 2024 ) on the training split of MATH (7.5K problems) with rank r = 16 r=16 . At each rollout step, we sample 8 responses for each of 128 prompts, yielding 1024 sequences per optimization step. We use no KL penalty and train for 400 steps. Following the setup of Liu et al. (2025) , we use the bare questions as prompts with no chat template. We evaluate the finetuned model using greedy decoding on three held-out benchmarks: MATH-500 (500 examples), GSM8K test (1319 examples), and OlympiadBench ( He et al., 2024",
+      "url": "https://arxiv.org/html/2609.34264v1#bib.bib23"
+    },
+    {
+      "href": "#S4.F2",
+      "text": "2",
+      "section": "4.3 Reinforcement learning",
+      "context": "Figure 2",
+      "url": "https://arxiv.org/html/2609.34264v1#S4.F2"
+    },
+    {
+      "href": "#S4.T4",
+      "text": "4",
+      "section": "4.3 Reinforcement learning",
+      "context": "Figure 2 shows evaluation accuracy on the three held-out benchmarks throughout RL finetuning. RoM improves accuracy faster than Adam and reaches higher final accuracy on all three benchmarks. Table 4",
+      "url": "https://arxiv.org/html/2609.34264v1#S4.T4"
+    },
+    {
+      "href": "#S3.E16",
+      "text": "16",
+      "section": "Ablation study",
+      "context": "We ablate the rotation and normalization components of RoM on the math SFT task using Llama-3.2-3B at rank r = 32 r=32 . We consider RoM without rotation, which applies the normalization function (Eq. 16",
+      "url": "https://arxiv.org/html/2609.34264v1#S3.E16"
+    },
+    {
+      "href": "#S3.E15",
+      "text": "15",
+      "section": "Ablation study",
+      "context": "We ablate the rotation and normalization components of RoM on the math SFT task using Llama-3.2-3B at rank r = 32 r=32 . We consider RoM without rotation, which applies the normalization function (Eq. 16 ) directly to the momentum (Eq. 15",
+      "url": "https://arxiv.org/html/2609.34264v1#S3.E15"
+    },
+    {
+      "href": "#S4.SS2",
+      "text": "4.2",
+      "section": "Ablation study",
+      "context": "We ablate the rotation and normalization components of RoM on the math SFT task using Llama-3.2-3B at rank r = 32 r=32 . We consider RoM without rotation, which applies the normalization function (Eq. 16 ) directly to the momentum (Eq. 15 ), and RoM without both rotation and normalization, which we refer to as Riemannian momentum . We tune the learning rate for each variant following the same procedure as in Section 4.2",
+      "url": "https://arxiv.org/html/2609.34264v1#S4.SS2"
+    },
+    {
+      "href": "#S4.F4.sf1",
+      "text": "4(a)",
+      "section": "Ablation study",
+      "context": "We ablate the rotation and normalization components of RoM on the math SFT task using Llama-3.2-3B at rank r = 32 r=32 . We consider RoM without rotation, which applies the normalization function (Eq. 16 ) directly to the momentum (Eq. 15 ), and RoM without both rotation and normalization, which we refer to as Riemannian momentum . We tune the learning rate for each variant following the same procedure as in Section 4.2 . Figure 4(a)",
+      "url": "https://arxiv.org/html/2609.34264v1#S4.F4.sf1"
+    },
+    {
+      "href": "#S4.F4.sf2",
+      "text": "4(b)",
+      "section": "Learning rate sensitivity",
+      "context": "We evaluate each optimizer at 0.5 × 0.5\\times , 1 × 1\\times , and 2 × 2\\times its best learning rate under the same math SFT setting. Figure 4(b)",
+      "url": "https://arxiv.org/html/2609.34264v1#S4.F4.sf2"
+    },
+    {
+      "href": "#S4.SS2.SSS0.Px2.p2.1",
+      "text": "§4.2",
+      "section": "References",
+      "context": "Austin et al. (2021) J. Austin, A. Odena, M. Nye, M. Bosma, H. Michalewski, D. Dohan, E. Jiang, C. Cai, M. Terry, Q. Le, et al. Program synthesis with large language models . arXiv preprint arXiv:2108.07732 . Cited by: §4.2",
+      "url": "https://arxiv.org/html/2609.34264v1#S4.SS2.SSS0.Px2.p2.1"
+    },
+    {
+      "href": "#S3.SS2.SSS0.Px2.p1.2",
+      "text": "§3.2",
+      "section": "References",
+      "context": "Bernstein and Newhouse (2024) J. Bernstein and L. Newhouse Old optimizer, new norm: an anthology . arXiv preprint arXiv:2409.20325 . Cited by: §3.2",
+      "url": "https://arxiv.org/html/2609.34264v1#S3.SS2.SSS0.Px2.p1.2"
+    },
+    {
+      "href": "#A2.p1.1",
+      "text": "Appendix B",
+      "section": "References",
+      "context": "Bogachev et al. (2026) V. Bogachev, V. Aletov, A. Molozhavenko, D. Bobkov, V. Soboleva, A. Alanov, and M. Rakhuba LoRA meets riemannion: muon optimizer for parametrization-independent low-rank adapters . In ICLR , Cited by: Appendix B",
+      "url": "https://arxiv.org/html/2609.34264v1#A2.p1.1"
+    },
+    {
+      "href": "#S4.SS1.p2.1",
+      "text": "§4.1",
+      "section": "References",
+      "context": "Bogachev et al. (2026) V. Bogachev, V. Aletov, A. Molozhavenko, D. Bobkov, V. Soboleva, A. Alanov, and M. Rakhuba LoRA meets riemannion: muon optimizer for parametrization-independent low-rank adapters . In ICLR , Cited by: Appendix B , §4.1",
+      "url": "https://arxiv.org/html/2609.34264v1#S4.SS1.p2.1"
+    },
+    {
+      "href": "https://dx.doi.org/10.1017/9781009166164",
+      "text": "Document",
+      "section": "References",
+      "context": "Boumal (2023) N. Boumal An introduction to optimization on smooth manifolds . Cambridge University Press . External Links: Document",
+      "url": "https://dx.doi.org/10.1017/9781009166164"
+    },
+    {
+      "href": "#S2.SS3.p1.1",
+      "text": "§2.3",
+      "section": "References",
+      "context": "Boumal (2023) N. Boumal An introduction to optimization on smooth manifolds . Cambridge University Press . External Links: Document Cited by: §2.3",
+      "url": "https://arxiv.org/html/2609.34264v1#S2.SS3.p1.1"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Brown et al. (2020) T. Brown, B. Mann, N. Ryder, M. Subbiah, J. D. Kaplan, P. Dhariwal, A. Neelakantan, P. Shyam, G. Sastry, A. Askell, et al. Language models are few-shot learners . In NeurIPS , Cited by: §1",
+      "url": "https://arxiv.org/html/2609.34264v1#S1.p1.1"
+    },
+    {
+      "href": "#A2.p1.1",
+      "text": "Appendix B",
+      "section": "References",
+      "context": "Castin et al. (2026) V. Castin, K. Nadjahi, P. Ablin, and G. Peyré Balanced lora: removing parameter invariance to accelerate convergence . In ICML , Cited by: Appendix B",
+      "url": "https://arxiv.org/html/2609.34264v1#A2.p1.1"
+    },
+    {
+      "href": "#S4.SS1.p2.1",
+      "text": "§4.1",
+      "section": "References",
+      "context": "Castin et al. (2026) V. Castin, K. Nadjahi, P. Ablin, and G. Peyré Balanced lora: removing parameter invariance to accelerate convergence . In ICML , Cited by: Appendix B , §4.1",
+      "url": "https://arxiv.org/html/2609.34264v1#S4.SS1.p2.1"
+    },
+    {
+      "href": "#footnote2",
+      "text": "footnote 2",
+      "section": "References",
+      "context": "Castin et al. (2026) V. Castin, K. Nadjahi, P. Ablin, and G. Peyré Balanced lora: removing parameter invariance to accelerate convergence . In ICML , Cited by: Appendix B , §4.1 , footnote 2",
+      "url": "https://arxiv.org/html/2609.34264v1#footnote2"
+    },
+    {
+      "href": "#S4.SS2.SSS0.Px2.p2.1",
+      "text": "§4.2",
+      "section": "References",
+      "context": "Chen et al. (2021) M. Chen, J. Tworek, H. Jun, Q. Yuan, H. P. D. O. Pinto, J. Kaplan, H. Edwards, Y. Burda, N. Joseph, G. Brockman, et al. Evaluating large language models trained on code . arXiv preprint arXiv:2107.03374 . Cited by: §4.2",
+      "url": "https://arxiv.org/html/2609.34264v1#S4.SS2.SSS0.Px2.p2.1"
+    },
+    {
+      "href": "#S4.SS2.SSS0.Px1.p1.1",
+      "text": "§4.2",
+      "section": "References",
+      "context": "Gemma Team (2024) Gemma Team Gemma 2: improving open language models at a practical size . arXiv preprint arXiv:2408.00118 . Cited by: §4.2",
+      "url": "https://arxiv.org/html/2609.34264v1#S4.SS2.SSS0.Px1.p1.1"
+    },
+    {
+      "href": "#A2.p1.1",
+      "text": "Appendix B",
+      "section": "References",
+      "context": "Ghosh et al. (2026) N. Ghosh, T. Parshakova, and R. M. Gower PoLoRA: a preconditioned orthogonalized lora optimizer . arXiv preprint arXiv:2607.17620 . Cited by: Appendix B",
+      "url": "https://arxiv.org/html/2609.34264v1#A2.p1.1"
+    },
+    {
+      "href": "#S1.p3.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Gong et al. (2026) W. Gong, J. Zazo, Q. Luo, P. Wang, J. Hensman, and C. Ma ARO: a new lens on matrix optimization for large models . arXiv preprint arXiv:2602.09006 . Cited by: §1",
+      "url": "https://arxiv.org/html/2609.34264v1#S1.p3.1"
+    },
+    {
+      "href": "#S2.SS1.p1.1",
+      "text": "§2.1",
+      "section": "References",
+      "context": "Gong et al. (2026) W. Gong, J. Zazo, Q. Luo, P. Wang, J. Hensman, and C. Ma ARO: a new lens on matrix optimization for large models . arXiv preprint arXiv:2602.09006 . Cited by: §1 , §2.1",
+      "url": "https://arxiv.org/html/2609.34264v1#S2.SS1.p1.1"
+    },
+    {
+      "href": "#S2.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Gong et al. (2026) W. Gong, J. Zazo, Q. Luo, P. Wang, J. Hensman, and C. Ma ARO: a new lens on matrix optimization for large models . arXiv preprint arXiv:2602.09006 . Cited by: §1 , §2.1 , §2",
+      "url": "https://arxiv.org/html/2609.34264v1#S2.p1.1"
+    },
+    {
+      "href": "#S3.SS2.SSS0.Px2.p1.1",
+      "text": "§3.2",
+      "section": "References",
+      "context": "Gong et al. (2026) W. Gong, J. Zazo, Q. Luo, P. Wang, J. Hensman, and C. Ma ARO: a new lens on matrix optimization for large models . arXiv preprint arXiv:2602.09006 . Cited by: §1 , §2.1 , §2 , §3.2",
+      "url": "https://arxiv.org/html/2609.34264v1#S3.SS2.SSS0.Px2.p1.1"
+    },
+    {
+      "href": "#S4.SS2.SSS0.Px1.p1.1",
+      "text": "§4.2",
+      "section": "References",
+      "context": "Grattafiori et al. (2024) A. Grattafiori, A. Dubey, A. Jauhri, A. Pandey, A. Kadian, A. Al-Dahle, A. Letman, A. Mathur, A. Schelten, A. Vaughan, et al. The llama 3 herd of models . arXiv preprint arXiv:2407.21783 . Cited by: §4.2",
+      "url": "https://arxiv.org/html/2609.34264v1#S4.SS2.SSS0.Px1.p1.1"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Guo et al. (2025) D. Guo, D. Yang, H. Zhang, J. Song, P. Wang, Q. Zhu, R. Xu, R. Zhang, S. Ma, X. Bi, et al. DeepSeek-r1 incentivizes reasoning in llms through reinforcement learning . Nature . Cited by: §1",
+      "url": "https://arxiv.org/html/2609.34264v1#S1.p1.1"
+    },
+    {
+      "href": "#A2.p1.1",
+      "text": "Appendix B",
+      "section": "References",
+      "context": "Hayou et al. (2024) S. Hayou, N. Ghosh, and B. Yu LoRA+: efficient low rank adaptation of large models . In ICML , Cited by: Appendix B",
+      "url": "https://arxiv.org/html/2609.34264v1#A2.p1.1"
+    },
+    {
+      "href": "#S4.SS3.p1.1",
+      "text": "§4.3",
+      "section": "References",
+      "context": "He et al. (2024) C. He, R. Luo, Y. Bai, S. Hu, Z. Thai, J. Shen, J. Hu, X. Han, Y. Huang, Y. Zhang, et al. Olympiadbench: a challenging benchmark for promoting agi with olympiad-level bilingual multimodal scientific problems . In ACL , Cited by: §4.3",
+      "url": "https://arxiv.org/html/2609.34264v1#S4.SS3.p1.1"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Houlsby et al. (2019) N. Houlsby, A. Giurgiu, S. Jastrzebski, B. Morrone, Q. De Laroussilhe, A. Gesmundo, M. Attariyan, and S. Gelly Parameter-efficient transfer learning for nlp . In ICML , Cited by: §1",
+      "url": "https://arxiv.org/html/2609.34264v1#S1.p1.1"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Hu et al. (2022) E. J. Hu, yelong shen, P. Wallis, Z. Allen-Zhu, Y. Li, S. Wang, L. Wang, and W. Chen LoRA: low-rank adaptation of large language models . In ICLR , Cited by: §1",
+      "url": "https://arxiv.org/html/2609.34264v1#S1.p1.1"
+    },
+    {
+      "href": "#S2.SS2.p1.1",
+      "text": "§2.2",
+      "section": "References",
+      "context": "Hu et al. (2022) E. J. Hu, yelong shen, P. Wallis, Z. Allen-Zhu, Y. Li, S. Wang, L. Wang, and W. Chen LoRA: low-rank adaptation of large language models . In ICLR , Cited by: §1 , §2.2",
+      "url": "https://arxiv.org/html/2609.34264v1#S2.SS2.p1.1"
+    },
+    {
+      "href": "#S2.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Hu et al. (2022) E. J. Hu, yelong shen, P. Wallis, Z. Allen-Zhu, Y. Li, S. Wang, L. Wang, and W. Chen LoRA: low-rank adaptation of large language models . In ICLR , Cited by: §1 , §2.2 , §2",
+      "url": "https://arxiv.org/html/2609.34264v1#S2.p1.1"
+    },
+    {
+      "href": "https://kellerjordan.github.io/posts/muon/",
+      "text": "Link",
+      "section": "References",
+      "context": "Jordan et al. (2024) K. Jordan, Y. Jin, V. Boza, Y. Jiacheng, F. Cesista, L. Newhouse, and J. Bernstein Muon: an optimizer for hidden layers in neural networks . External Links: Link",
+      "url": "https://kellerjordan.github.io/posts/muon/"
+    },
+    {
+      "href": "#S1.p3.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Jordan et al. (2024) K. Jordan, Y. Jin, V. Boza, Y. Jiacheng, F. Cesista, L. Newhouse, and J. Bernstein Muon: an optimizer for hidden layers in neural networks . External Links: Link Cited by: §1",
+      "url": "https://arxiv.org/html/2609.34264v1#S1.p3.1"
+    },
+    {
+      "href": "#S2.SS1.p1.1",
+      "text": "§2.1",
+      "section": "References",
+      "context": "Jordan et al. (2024) K. Jordan, Y. Jin, V. Boza, Y. Jiacheng, F. Cesista, L. Newhouse, and J. Bernstein Muon: an optimizer for hidden layers in neural networks . External Links: Link Cited by: §1 , §2.1",
+      "url": "https://arxiv.org/html/2609.34264v1#S2.SS1.p1.1"
+    },
+    {
+      "href": "#S3.SS2.SSS0.Px1.p1.1",
+      "text": "§3.2",
+      "section": "References",
+      "context": "Jordan et al. (2024) K. Jordan, Y. Jin, V. Boza, Y. Jiacheng, F. Cesista, L. Newhouse, and J. Bernstein Muon: an optimizer for hidden layers in neural networks . External Links: Link Cited by: §1 , §2.1 , §3.2",
+      "url": "https://arxiv.org/html/2609.34264v1#S3.SS2.SSS0.Px1.p1.1"
+    },
+    {
+      "href": "#S4.SS1.p2.1",
+      "text": "§4.1",
+      "section": "References",
+      "context": "Jordan et al. (2024) K. Jordan, Y. Jin, V. Boza, Y. Jiacheng, F. Cesista, L. Newhouse, and J. Bernstein Muon: an optimizer for hidden layers in neural networks . External Links: Link Cited by: §1 , §2.1 , §3.2 , §4.1",
+      "url": "https://arxiv.org/html/2609.34264v1#S4.SS1.p2.1"
+    },
+    {
+      "href": "#S4.SS1.p2.1",
+      "text": "§4.1",
+      "section": "References",
+      "context": "Kingma and Ba (2014) D. P. Kingma and J. Ba Adam: a method for stochastic optimization . arXiv preprint arXiv:1412.6980 . Cited by: §4.1",
+      "url": "https://arxiv.org/html/2609.34264v1#S4.SS1.p2.1"
+    },
+    {
+      "href": "#S4.SS2.SSS0.Px2.p2.1",
+      "text": "§4.2",
+      "section": "References",
+      "context": "Liu et al. (2023) J. Liu, C. S. Xia, Y. Wang, and L. Zhang Is your code generated by chatgpt really correct? rigorous evaluation of large language models for code generation . In NeurIPS , Cited by: §4.2",
+      "url": "https://arxiv.org/html/2609.34264v1#S4.SS2.SSS0.Px2.p2.1"
+    },
+    {
+      "href": "#S4.SS1.p3.1",
+      "text": "§4.1",
+      "section": "References",
+      "context": "Liu et al. (2025) Z. Liu, C. Chen, W. Li, P. Qi, T. Pang, C. Du, W. S. Lee, and M. Lin Understanding r1-zero-like training: a critical perspective . In COLM , Cited by: §4.1",
+      "url": "https://arxiv.org/html/2609.34264v1#S4.SS1.p3.1"
+    },
+    {
+      "href": "#S4.SS3.p1.1",
+      "text": "§4.3",
+      "section": "References",
+      "context": "Liu et al. (2025) Z. Liu, C. Chen, W. Li, P. Qi, T. Pang, C. Du, W. S. Lee, and M. Lin Understanding r1-zero-like training: a critical perspective . In COLM , Cited by: §4.1 , §4.3",
+      "url": "https://arxiv.org/html/2609.34264v1#S4.SS3.p1.1"
+    },
+    {
+      "href": "#S3.SS2.SSS0.Px2.p1.1",
+      "text": "§3.2",
+      "section": "References",
+      "context": "Scetbon et al. (2025) M. Scetbon, C. Ma, W. Gong, and E. Meeds Gradient multi-normalization for efficient LLM training . In NeurIPS , Cited by: §3.2",
+      "url": "https://arxiv.org/html/2609.34264v1#S3.SS2.SSS0.Px2.p1.1"
+    },
+    {
+      "href": "#S4.SS3.p1.1",
+      "text": "§4.3",
+      "section": "References",
+      "context": "Shao et al. (2024) Z. Shao, P. Wang, Q. Zhu, R. Xu, J. Song, X. Bi, H. Zhang, M. Zhang, Y. Li, Y. Wu, et al. Deepseekmath: pushing the limits of mathematical reasoning in open language models . arXiv preprint arXiv:2402.03300 . Cited by: §4.3",
+      "url": "https://arxiv.org/html/2609.34264v1#S4.SS3.p1.1"
+    },
+    {
+      "href": "#S4.SS3.p1.1",
+      "text": "§4.3",
+      "section": "References",
+      "context": "Sheng et al. (2025) G. Sheng, C. Zhang, Z. Ye, X. Wu, W. Zhang, R. Zhang, Y. Peng, H. Lin, and C. Wu Hybridflow: a flexible and efficient rlhf framework . In Proceedings of the Twentieth European Conference on Computer Systems , Cited by: §4.3",
+      "url": "https://arxiv.org/html/2609.34264v1#S4.SS3.p1.1"
+    },
+    {
+      "href": "https://github.com/tatsu-lab/stanford_alpaca",
+      "text": "https://github.com/tatsu-lab/stanford_alpaca",
+      "section": "References",
+      "context": "Taori et al. (2023) R. Taori, I. Gulrajani, T. Zhang, Y. Dubois, X. Li, C. Guestrin, P. Liang, and T. B. Hashimoto Stanford alpaca: an instruction-following llama model . GitHub . Note: https://github.com/tatsu-lab/stanford_alpaca",
+      "url": "https://github.com/tatsu-lab/stanford_alpaca"
+    },
+    {
+      "href": "#S4.SS2.SSS0.Px2.p1.1",
+      "text": "§4.2",
+      "section": "References",
+      "context": "Taori et al. (2023) R. Taori, I. Gulrajani, T. Zhang, Y. Dubois, X. Li, C. Guestrin, P. Liang, and T. B. Hashimoto Stanford alpaca: an instruction-following llama model . GitHub . Note: https://github.com/tatsu-lab/stanford_alpaca Cited by: §4.2",
+      "url": "https://arxiv.org/html/2609.34264v1#S4.SS2.SSS0.Px2.p1.1"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Touvron et al. (2023) H. Touvron, T. Lavril, G. Izacard, X. Martinet, M. Lachaux, T. Lacroix, B. Rozière, N. Goyal, E. Hambro, F. Azhar, et al. Llama: open and efficient foundation language models . arXiv preprint arXiv:2302.13971 . Cited by: §1",
+      "url": "https://arxiv.org/html/2609.34264v1#S1.p1.1"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Vaswani et al. (2017) A. Vaswani, N. Shazeer, N. Parmar, J. Uszkoreit, L. Jones, A. N. Gomez, Ł. Kaiser, and I. Polosukhin Attention is all you need . In NeurIPS , Cited by: §1",
+      "url": "https://arxiv.org/html/2609.34264v1#S1.p1.1"
+    },
+    {
+      "href": "#S1.p3.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Vyas et al. (2025) N. Vyas, D. Morwani, R. Zhao, I. Shapira, D. Brandfonbrener, L. Janson, and S. M. Kakade SOAP: improving and stabilizing shampoo using adam for language modeling . In ICLR , Cited by: §1",
+      "url": "https://arxiv.org/html/2609.34264v1#S1.p3.1"
+    },
+    {
+      "href": "#S2.SS1.p1.1",
+      "text": "§2.1",
+      "section": "References",
+      "context": "Vyas et al. (2025) N. Vyas, D. Morwani, R. Zhao, I. Shapira, D. Brandfonbrener, L. Janson, and S. M. Kakade SOAP: improving and stabilizing shampoo using adam for language modeling . In ICLR , Cited by: §1 , §2.1",
+      "url": "https://arxiv.org/html/2609.34264v1#S2.SS1.p1.1"
+    },
+    {
+      "href": "#S3.SS2.SSS0.Px1.p1.1",
+      "text": "§3.2",
+      "section": "References",
+      "context": "Vyas et al. (2025) N. Vyas, D. Morwani, R. Zhao, I. Shapira, D. Brandfonbrener, L. Janson, and S. M. Kakade SOAP: improving and stabilizing shampoo using adam for language modeling . In ICLR , Cited by: §1 , §2.1 , §3.2",
+      "url": "https://arxiv.org/html/2609.34264v1#S3.SS2.SSS0.Px1.p1.1"
+    },
+    {
+      "href": "#S4.SS3.p1.1",
+      "text": "§4.3",
+      "section": "References",
+      "context": "Yang et al. (2024) A. Yang, B. Yang, B. Hui, B. Zheng, B. Yu, C. Zhou, C. Li, C. Li, D. Liu, F. Huang, G. Dong, H. Wei, H. Lin, J. Tang, J. Wang, J. Yang, J. Tu, J. Zhang, J. Ma, J. Xu, J. Zhou, J. Bai, J. He, J. Lin, K. Dang, K. Lu, K. Chen, K. Yang, M. Li, M. Xue, N. Ni, P. Zhang, P. Wang, R. Peng, R. Men, R. Gao, R. Lin, S. Wang, S. Bai, S. Tan, T. Zhu, T. Li, T. Liu, W. Ge, X. Deng, X. Zhou, X. Ren, X. Zhang, X. Wei, X. Ren, Y. Fan, Y. Yao, Y. Zhang, Y. Wan, Y. Chu, Y. Liu, Z. Cui, Z. Zhang, and Z. Fan Qwen2 technical report . arXiv preprint arXiv:2407.10671 . Cited by: §4.3",
+      "url": "https://arxiv.org/html/2609.34264v1#S4.SS3.p1.1"
+    },
+    {
+      "href": "#A2.p1.1",
+      "text": "Appendix B",
+      "section": "References",
+      "context": "Yen et al. (2025) J. Yen, S. Si, Z. Meng, F. Yu, S. S. Duvvuri, I. S. Dhillon, C. Hsieh, and S. Kumar LoRA done RITE: robust invariant transformation equilibration for loRA optimization . In ICLR , Cited by: Appendix B",
+      "url": "https://arxiv.org/html/2609.34264v1#A2.p1.1"
+    },
+    {
+      "href": "#S4.SS1.p2.1",
+      "text": "§4.1",
+      "section": "References",
+      "context": "Yen et al. (2025) J. Yen, S. Si, Z. Meng, F. Yu, S. S. Duvvuri, I. S. Dhillon, C. Hsieh, and S. Kumar LoRA done RITE: robust invariant transformation equilibration for loRA optimization . In ICLR , Cited by: Appendix B , §4.1",
+      "url": "https://arxiv.org/html/2609.34264v1#S4.SS1.p2.1"
+    },
+    {
+      "href": "#S4.SS2.SSS0.Px1.p1.1",
+      "text": "§4.2",
+      "section": "References",
+      "context": "Yu et al. (2024) L. Yu, W. Jiang, H. Shi, J. YU, Z. Liu, Y. Zhang, J. Kwok, Z. Li, A. Weller, and W. Liu MetaMath: bootstrap your own mathematical questions for large language models . In ICLR , Cited by: §4.2",
+      "url": "https://arxiv.org/html/2609.34264v1#S4.SS2.SSS0.Px1.p1.1"
+    },
+    {
+      "href": "#A2.p1.1",
+      "text": "Appendix B",
+      "section": "References",
+      "context": "Zhang and Pilanci (2024) F. Zhang and M. Pilanci Riemannian preconditioned loRA for fine-tuning foundation models . In ICML , Cited by: Appendix B",
+      "url": "https://arxiv.org/html/2609.34264v1#A2.p1.1"
+    },
+    {
+      "href": "#S4.SS2.SSS0.Px2.p1.1",
+      "text": "§4.2",
+      "section": "References",
+      "context": "Zheng et al. (2024) T. Zheng, G. Zhang, T. Shen, X. Liu, B. Y. Lin, J. Fu, W. Chen, and X. Yue Opencodeinterpreter: integrating code generation with execution and refinement . In Findings of ACL , Cited by: §4.2",
+      "url": "https://arxiv.org/html/2609.34264v1#S4.SS2.SSS0.Px2.p1.1"
+    },
+    {
+      "href": "#bib.bib31",
+      "text": "Hayou et al. (2024)",
+      "section": "Appendix B Related work",
+      "context": "We review the relevant literature on optimization methods for LoRA. Hayou et al. (2024)",
+      "url": "https://arxiv.org/html/2609.34264v1#bib.bib31"
+    },
+    {
+      "href": "#bib.bib32",
+      "text": "Zhang and Pilanci (2024)",
+      "section": "Appendix B Related work",
+      "context": "We review the relevant literature on optimization methods for LoRA. Hayou et al. (2024) advocate setting different learning rates for the two low-rank factors to achieve efficient feature learning. Zhang and Pilanci (2024)",
+      "url": "https://arxiv.org/html/2609.34264v1#bib.bib32"
+    },
+    {
+      "href": "#bib.bib30",
+      "text": "Yen et al. (2025)",
+      "section": "Appendix B Related work",
+      "context": "We review the relevant literature on optimization methods for LoRA. Hayou et al. (2024) advocate setting different learning rates for the two low-rank factors to achieve efficient feature learning. Zhang and Pilanci (2024) extend this approach by introducing matrix preconditioners to stabilize feature learning and draw a connection to a Riemannian metric on a quotient manifold. Yen et al. (2025)",
+      "url": "https://arxiv.org/html/2609.34264v1#bib.bib30"
+    },
+    {
+      "href": "#bib.bib2",
+      "text": "Castin et al. (2026)",
+      "section": "Appendix B Related work",
+      "context": "We review the relevant literature on optimization methods for LoRA. Hayou et al. (2024) advocate setting different learning rates for the two low-rank factors to achieve efficient feature learning. Zhang and Pilanci (2024) extend this approach by introducing matrix preconditioners to stabilize feature learning and draw a connection to a Riemannian metric on a quotient manifold. Yen et al. (2025) design preconditioners that make the update to the weight adapter (i.e., 𝑾 adp {\\bm{W}}_{\\text{adp}} ) invariant to reparametrizations of low-rank factors. Castin et al. (2026)",
+      "url": "https://arxiv.org/html/2609.34264v1#bib.bib2"
+    },
+    {
+      "href": "#bib.bib10",
+      "text": "Ghosh et al., 2026",
+      "section": "Appendix B Related work",
+      "context": "nection to a Riemannian metric on a quotient manifold. Yen et al. (2025) design preconditioners that make the update to the weight adapter (i.e., 𝑾 adp {\\bm{W}}_{\\text{adp}} ) invariant to reparametrizations of low-rank factors. Castin et al. (2026) enforce the condition 𝑨 ⊤ ​ 𝑨 = 𝑩 ⊤ ​ 𝑩 {\\bm{A}}^{\\top}{\\bm{A}}={\\bm{B}}^{\\top}{\\bm{B}} after each Adam update step via a balanced projection operation and theoretically demonstrate that balanced low-rank factors yield fast convergence. However, their analysis does not take into account the effect of momentum. A concurrent work ( Ghosh et al., 2026",
+      "url": "https://arxiv.org/html/2609.34264v1#bib.bib10"
+    },
+    {
+      "href": "#bib.bib9",
+      "text": "Bogachev et al., 2026",
+      "section": "Appendix B Related work",
+      "context": "ctors. Castin et al. (2026) enforce the condition 𝑨 ⊤ ​ 𝑨 = 𝑩 ⊤ ​ 𝑩 {\\bm{A}}^{\\top}{\\bm{A}}={\\bm{B}}^{\\top}{\\bm{B}} after each Adam update step via a balanced projection operation and theoretically demonstrate that balanced low-rank factors yield fast convergence. However, their analysis does not take into account the effect of momentum. A concurrent work ( Ghosh et al., 2026 ) extends prior preconditioning approaches by bounding the per-sample loss change. These optimizers compute individual updates for each low-rank factor. The most relevant work to ours is Riemannion ( Bogachev et al., 2026",
+      "url": "https://arxiv.org/html/2609.34264v1#bib.bib9"
+    },
+    {
+      "href": "#bib.bib9",
+      "text": "Bogachev et al., 2026",
+      "section": "Appendix B Related work",
+      "context": "m. A concurrent work ( Ghosh et al., 2026 ) extends prior preconditioning approaches by bounding the per-sample loss change. These optimizers compute individual updates for each low-rank factor. The most relevant work to ours is Riemannion ( Bogachev et al., 2026 ) , which projects the Muon update onto the tangent space of the fixed-rank manifold. While our approach also adopts the fixed-rank manifold perspective, we develop our optimizer through the rotated optimization framework, with rotation and normalization as its core components, distinguishing it from Riemannion ( Bogachev et al., 2026",
+      "url": "https://arxiv.org/html/2609.34264v1#bib.bib9"
+    },
+    {
+      "href": "#S4.F1",
+      "text": "1",
+      "section": "Appendix C Effect of LoRA rank",
+      "context": "Figure 5: Validation loss (mean cross-entropy across response tokens) over the last 100 training steps on the math SFT task at rank r = 32 r=32 , the counterpart of Figure 1",
+      "url": "https://arxiv.org/html/2609.34264v1#S4.F1"
+    }
+  ],
+  "note": "Extracted HTML text; equations and table formatting may be imperfect. No PDF extraction was attempted."
+}

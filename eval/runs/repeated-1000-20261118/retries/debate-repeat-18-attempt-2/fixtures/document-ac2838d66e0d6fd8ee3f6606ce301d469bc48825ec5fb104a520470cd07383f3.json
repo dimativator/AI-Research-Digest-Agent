@@ -1,0 +1,1088 @@
+{
+  "status": "ok",
+  "source": "https://arxiv.org/html/2611.11752v1",
+  "extractor_version": "article-v1",
+  "chunks": [
+    {
+      "chunk_id": "chunk-0001",
+      "section": "Spectral Rank and Step-Direction Dynamics in Language-Model Post-Training",
+      "text": "Khurram Khalil khurram.khalil@missouri.edu Affiliation: Department of Electrical Engineering & Computer Science Affiliation: University of Missouri-Columbia, MO, USA Khaza Anuarul Hoque hoquek@missouri.edu Affiliation: Department of Electrical Engineering & Computer Science Affiliation: University of Missouri-Columbia, MO, USA",
+      "source": "https://arxiv.org/html/2611.11752v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0002",
+      "section": "Abstract",
+      "text": "Understanding how language models change during post-training requires characterizing both the structure of cumulative weight updates and the directions of successive training displacements. Existing studies report seemingly contrasting spectral properties, including nearly full-rank updates and low stable-rank cumulative changes. We show that these observations are mathematically compatible and investigate how weight-update directions evolve during training. For singular values σ i ∝ i − α \\sigma_{i}\\propto i^{-\\alpha} , 0 < α ≤ 1 / 2 0<\\alpha\\leq 1/2 , we prove that stable rank becomes negligible relative to fixed-energy rank as dimension grows. Full singular value decompositions of selected OLMo-2-7B updates verify this separation. Three attention updates from proximal policy optimization (PPO) have stable ranks 9.6 9.6 – 18.3 18.3 but require 532 532 – 1,222 1{,}222 components for 80 % 80\\% of their energy. We then measure consecutive checkpoint-displacement cosines using full-model inner products. Across nine public stages of reinforcement learning from verifiable rewards (RLVR), all 131 131 adjacent pairs have negative cosine on their native checkpoint grids, including PPO and Group Relative Policy Optimization (GRPO) releases. Supervised comparisons across four model families reveal configuration-dependent alignment, with negative late-training cosines in Mistral and FP32 Llama runs. A controlled OLMo-2-1B study with three paired seeds and a 2,048 2{,}048 -token response cap compares group-relative advantages with a learned critic and generalized advantage estimation. At matched 60-rollout windows, their late-training mean cosines are + 0.259 +0.259 and + 0.012 +0.012 , with a paired difference of − 0.247 -0.247 and a seed-level 95 % 95\\% interval of [ − 0.358 ,",
+      "source": "https://arxiv.org/html/2611.11752v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0003",
+      "section": "Abstract",
+      "text": "n. At matched 60-rollout windows, their late-training mean cosines are + 0.259 +0.259 and + 0.012 +0.012 , with a paired difference of − 0.247 -0.247 and a seed-level 95 % 95\\% interval of [ − 0.358 , − 0.137 ] [-0.358,-0.137] . Together, these results separate spectral concentration, energy coverage, and trajectory direction, and show that the advantage system affects directional alignment under matched training conditions.",
+      "source": "https://arxiv.org/html/2611.11752v1",
+      "offset": 1599
+    },
+    {
+      "chunk_id": "chunk-0004",
+      "section": "Abstract",
+      "text": "Reviewed on OpenReview: https://openreview.net/forum?id=UGIcayxHMI",
+      "source": "https://arxiv.org/html/2611.11752v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0005",
+      "section": "1 Introduction",
+      "text": "Language-model post-training changes a model’s behavior by changing its weights. Supervised fine-tuning ( sft ) learns from demonstration responses, while reinforcement learning from verifiable rewards ( rlvr ) learns from sampled responses scored by an automatic checker. Weight-space measurements describe how these procedures alter a pretrained model and inform methods that operate on weight differences, including task arithmetic and low-rank adaptation ( Ilharco et al., 2023 ; Hu et al., 2022 ) . Interpreting those measurements requires separating the mathematical object being measured from the functional applied to it. That distinction matters when comparing recent accounts of post-training geometry. Mukherjee et al. (2025) report sparse, nearly full-algebraic-rank rlvr updates. Zhu et al. (2025) analyze update localization, numerical precision, and alignment with principal weight subspaces. Shen et al. (2026) compare cumulative updates in on-policy distillation, rlvr , and sft , reporting low stable rank for distillation and the rlvr endpoint. These studies characterize different aspects of adaptation. Yet their rank descriptions can appear incompatible if algebraic rank, stable rank, and energy coverage are treated as interchangeable. A comparison on the same update matrix is needed to determine what each description actually implies. We address this question with an explicit spectral construction and full-spectrum measurements of selected updates.",
+      "source": "https://arxiv.org/html/2611.11752v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0006",
+      "section": "1 Introduction",
+      "text": "Even a complete endpoint spectrum leaves a second question unanswered. It does not determine whether consecutive training displacements reinforce or oppose one another. Analyses of full weight matrices ( He & Cao, 2025 ) and trajectory-level linear trends ( Wang et al., 2026 ) provide complementary information, but neither an endpoint change nor a fitted trend determines the inner products between consecutive finite displacements. We therefore measure direction at specified checkpoint widths and separations. These measurements describe local alignment on the saved checkpoint grid. Differences in trajectory alignment raise a third question. How does the advantage estimator affect the direction of weight updates under a shared training schedule? We investigate this question through a controlled comparison of group-relative advantages and a learned critic with generalized advantage estimation. Holding the actor schedule and sampled prompt stream fixed connects the observed geometry to a specific change in the training procedure. These investigations provide complementary views of post-training geometry. Spectral analysis characterizes how the cumulative weight change is distributed across singular directions, while trajectory analysis examines how successive weight changes interact during training. The controlled comparison then investigates whether changing the advantage system alters these directional relationships. Together, these measurements distinguish the structure of the final update from the geometry of the path taken to reach it.",
+      "source": "https://arxiv.org/html/2611.11752v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0007",
+      "section": "1 Introduction",
+      "text": "Our contributions follow these three questions. First, we prove that low stable rank and large fixed-energy rank coexist for a family of power-law singular spectra, and verify the separation with full decompositions of OLMo-2-7B cumulative updates. Second, we document negative consecutive-displacement cosines across nine public rlvr stage trajectories, including ppo and grpo releases, quantify their temporal extent and opposing components, and test supervised alignment across four model families and two Llama precision settings. Third, we identify an advantage-system effect in six matched OLMo-2-1B runs. The critic–GAE arm reduces late-training alignment by 0.247 0.247 on average relative to the group-relative arm, with a paired seed-level 95 % 95\\% interval of [ − 0.358 , − 0.137 ] [-0.358,-0.137] for the signed difference. Together, these contributions reconcile spectral descriptions of post-training and establish trajectory direction as a separately measurable aspect of adaptation.",
+      "source": "https://arxiv.org/html/2611.11752v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0008",
+      "section": "2.1 How post-training changes the weights",
+      "text": "Let π θ ​ ( y ∣ x ) \\pi_{\\theta}(y\\mid x) denote the probability of response y y to prompt x x under parameters θ \\theta . For a batch ℬ \\mathcal{B} of tokenized demonstrations z z , sft minimizes a masked next-token negative log likelihood L SFT ​ ( θ ) = − ∑ z ∈ ℬ ∑ j = 2 | z | m j ​ ( z ) ​ log ⁡ π θ ​ ( z j ∣ z < j ) ∑ z ∈ ℬ ∑ j = 2 | z | m j ​ ( z ) . L_{\\mathrm{SFT}}(\\theta)=-\\frac{\\sum_{z\\in\\mathcal{B}}\\sum_{j=2}^{|z|}m_{j}(z)\\log\\pi_{\\theta}(z_{j}\\mid z_{<j})}{\\sum_{z\\in\\mathcal{B}}\\sum_{j=2}^{|z|}m_{j}(z)}. (1) Here m j ​ ( z ) m_{j}(z) selects supervised positions and excludes padding. Response-only supervision selects response positions; our sft experiments supervise all non-padding conversation tokens with a preceding token, including prompt and response text. The target tokens are fixed demonstrations. The loss supplies gradients, and an optimizer such as Adam converts those gradients into parameter changes. A saved weight displacement therefore aggregates the optimizer-preconditioned updates between checkpoints. In rlvr , the current policy samples responses and a checker supplies a reward R ⁡ ( x , y ) R(x,y) , for example whether a final mathematical answer is correct. A common objective balances expected reward against deviation from a frozen reference policy π ref \\pi_{\\mathrm{ref}} . Practical implementations optimize sample-based surrogate losses. Proximal policy optimization ( ppo ) ( Schulman et al., 2017 ) uses a token probability ratio r j ​ ( θ ) = π θ ​ ( y j ∣ x , y < j ) / π old ​ ( y j ∣ x , y < j ) r_{j}(\\theta)=\\pi_{\\theta}(y_{j}\\mid x,y_{<j})/\\pi_{\\mathrm{old}}(y_{j}\\mid x,y_{<j}) and the clipped objective",
+      "source": "https://arxiv.org/html/2611.11752v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0009",
+      "section": "2.1 How post-training changes the weights",
+      "text": "L actor ​ ( θ ) = − 𝔼 j ​ min ⁡ ( r j ​ ( θ ) ​ A ^ j , clip ⁡ ( r j ​ ( θ ) , 1 − ϵ , 1 + ϵ ) ​ A ^ j ) + β ​ D ^ KL . L_{\\mathrm{actor}}(\\theta)=-\\mathbb{E}_{j}\\min\\left(r_{j}(\\theta)\\widehat{A}_{j},\\operatorname{clip}(r_{j}(\\theta),1-\\epsilon,1+\\epsilon)\\widehat{A}_{j}\\right)+\\beta\\widehat{D}_{\\mathrm{KL}}. (2) Here A ^ j \\widehat{A}_{j} estimates the advantage of a sampled token or response, ϵ \\epsilon controls ratio clipping, and β \\beta weights the reference-policy penalty. Multiple optimization passes may reuse the same sampled responses. The advantage estimator distinguishes important implementations of this objective. A learned value function estimates expected future reward, and generalized advantage estimation (GAE) combines temporal-difference residuals ( Schulman et al., 2016 ) . Group Relative Policy Optimization ( grpo ) instead compares rewards among responses to the same prompt without a learned value function ( Shao et al., 2024 ) . Our controlled arms share Equation 2 and differ in this advantage-system package. We name the two arms group-relative and critic–GAE after their advantage estimators. Appendix B specifies their estimators and training configuration. The reference for a weight displacement must follow this training sequence. The public OLMo-2-7B instruction model follows sft , direct preference optimization ( dpo ), and then rlvr ( OLMo Team et al., 2025 ) . dpo learns from preferred and dispreferred responses ( Rafailov et al., 2023 ) . Consequently, the pure rlvr displacement is W RLVR − W DPO W_{\\mathrm{RLVR}}-W_{\\mathrm{DPO}} . Subtracting the sft checkpoint instead adds the intervening dpo change. All PPO endpoint measurements use the immediate dpo initialization.",
+      "source": "https://arxiv.org/html/2611.11752v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0010",
+      "section": "2.2 Endpoint functionals",
+      "text": "For a nonzero matrix displacement Δ = W T − W 0 ∈ ℝ m × n \\Delta=W_{T}-W_{0}\\in\\mathbb{R}^{m\\times n} , let σ 1 ≥ ⋯ ≥ σ d ≥ 0 \\sigma_{1}\\geq\\cdots\\geq\\sigma_{d}\\geq 0 , d = min ⁡ ( m , n ) d=\\min(m,n) , be its singular values. Algebraic rank counts nonzero singular values. Stable rank measures total squared singular energy relative to the largest squared singular value r stable ​ ( Δ ) = ‖ Δ ‖ F 2 ‖ Δ ‖ 2 2 = ∑ i σ i 2 σ 1 2 , E k ​ ( Δ ) = ∑ i = 1 k σ i 2 ∑ i = 1 d σ i 2 , k τ ​ ( Δ ) = min ⁡ { k ∣ E k ​ ( Δ ) ≥ τ } . r_{\\mathrm{stable}}(\\Delta)=\\frac{\\|\\Delta\\|_{F}^{2}}{\\|\\Delta\\|_{2}^{2}}=\\frac{\\sum_{i}\\sigma_{i}^{2}}{\\sigma_{1}^{2}},\\qquad E_{k}(\\Delta)=\\frac{\\sum_{i=1}^{k}\\sigma_{i}^{2}}{\\sum_{i=1}^{d}\\sigma_{i}^{2}},\\qquad k_{\\tau}(\\Delta)=\\min\\{k\\mid E_{k}(\\Delta)\\geq\\tau\\}. (3) We call k τ k_{\\tau} the energy-threshold rank . This avoids ambiguity with entropy-based effective rank ( Roy & Vetterli, 2007 ) . Stable rank is a continuous measure of spectral concentration, while k 0.8 k_{0.8} explicitly counts the components needed for 80 % 80\\% of the squared Frobenius norm. These definitions imply 1 ≤ r stable ≤ rank ⁡ ( Δ ) 1\\leq r_{\\mathrm{stable}}\\leq\\operatorname{rank}(\\Delta) and k τ ≥ τ ​ r stable k_{\\tau}\\geq\\tau r_{\\mathrm{stable}} , since ∑ i = 1 k σ i 2 ≤ k ​ σ 1 2 \\sum_{i=1}^{k}\\sigma_{i}^{2}\\leq k\\sigma_{1}^{2} . They supply no converse bound of comparable size, as the next proposition shows.",
+      "source": "https://arxiv.org/html/2611.11752v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0011",
+      "section": "2.2 Endpoint functionals",
+      "text": "Intuitively, smaller stable rank indicates stronger concentration around the largest singular value, whereas energy-threshold rank measures how many singular components are needed to capture a specified fraction of the total energy. For example, an update may contain one dominant singular value and hundreds of smaller but collectively significant singular values. Such an update can have low stable rank while requiring hundreds of components to capture a specified energy threshold (e.g., 80%, as used in our experiments).",
+      "source": "https://arxiv.org/html/2611.11752v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0012",
+      "section": "Proposition 1 (Separation of stable rank and fixed-energy rank) .",
+      "text": "For σ i = i − α \\sigma_{i}=i^{-\\alpha} , i = 1 , … , n i=1,\\ldots,n , and fixed τ ∈ ( 0 , 1 ) \\tau\\in(0,1) , r stable / k τ → 0 r_{\\mathrm{stable}}/k_{\\tau}\\to 0 as n → ∞ n\\to\\infty whenever 0 < α ≤ 1 / 2 0<\\alpha\\leq 1/2 . For 0 < α < 1 / 2 0<\\alpha<1/2 , with b = 1 − 2 ​ α b=1-2\\alpha , r stable ≤ 1 + n b − 1 b , k τ ≥ τ 1 / b ​ ( n b − 1 ) 1 / b = Θ ⁡ ( n ) . r_{\\mathrm{stable}}\\leq 1+\\frac{n^{b}-1}{b},\\qquad k_{\\tau}\\geq\\tau^{1/b}(n^{b}-1)^{1/b}=\\Theta(n). (4) For α = 1 / 2 \\alpha=1/2 , r stable ≤ 1 + log ⁡ n r_{\\mathrm{stable}}\\leq 1+\\log n and k τ ≥ n τ / e k_{\\tau}\\geq n^{\\tau}/e . Appendix A proves the proposition by integral comparison. The construction shows how a leading singular value and a broad energetic tail produce the two rank descriptions simultaneously. These spectral quantities do not specify how many entries of an update are zero. We therefore consider support sparsity separately. Exact zero-entry fraction 1 − ‖ Δ ‖ 0 / ( m ​ n ) 1-\\|\\Delta\\|_{0}/(mn) and thresholded sparsity depend on the coordinate basis and numerical precision. A diagonal matrix with all diagonal entries nonzero has fixed support and an arbitrary positive singular spectrum. It can have stable rank close to one or equal to n n without changing that support. Orthogonal changes of basis preserve its spectrum while generally making it dense. Thus support sparsity does not determine either spectral rank.",
+      "source": "https://arxiv.org/html/2611.11752v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0013",
+      "section": "2.3 Finite-displacement direction",
+      "text": "Endpoint functionals do not specify the path to the endpoint. Let θ t ∈ ℝ P \\theta_{t}\\in\\mathbb{R}^{P} be the vector obtained by flattening and concatenating the model parameters at checkpoint t t , with tied parameters counted once; P P is the number of parameter coordinates measured. On a grid with width h h , define the full-parameter displacement D j ( h ) = θ j ​ h − θ ( j − 1 ) ​ h D_{j}^{(h)}=\\theta_{jh}-\\theta_{(j-1)h} . Thus D j ( h ) ∈ ℝ P D_{j}^{(h)}\\in\\mathbb{R}^{P} . We use the Euclidean inner product ⟨ x , y ⟩ = x ⊤ ​ y \\langle x,y\\rangle=x^{\\top}y and norm ‖ x ‖ 2 = x ⊤ ​ x \\|x\\|_{2}=\\sqrt{x^{\\top}x} . For nonzero displacements, define their directional correlation at separation ℓ \\ell as ρ j , ℓ ( h ) = ⟨ D j ( h ) , D j − ℓ ( h ) ⟩ ‖ D j ( h ) ‖ 2 ​ ‖ D j − ℓ ( h ) ‖ 2 . \\rho_{j,\\ell}^{(h)}=\\frac{\\langle D_{j}^{(h)},D_{j-\\ell}^{(h)}\\rangle}{\\|D_{j}^{(h)}\\|_{2}\\|D_{j-\\ell}^{(h)}\\|_{2}}. (5) A positive cosine indicates that the compared displacements point in broadly similar directions, whereas a negative cosine indicates that they contain opposing directional components. Importantly, negative cosine does not imply that training is reversing or that model performance is deteriorating. Instead, it describes only the geometric relationship between the compared weight changes. For consecutive displacements, ℓ = 1 \\ell=1 . Width h h and separation ℓ \\ell are distinct. Increasing h h aggregates more training updates, whereas increasing ℓ \\ell compares displacements further apart on a fixed grid. We refer to a negative consecutive cosine as consecutive anti-alignment .",
+      "source": "https://arxiv.org/html/2611.11752v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0014",
+      "section": "2.3 Finite-displacement direction",
+      "text": "The amount projected against the previous displacement also depends on norms. Writing D j = a j ​ D j − 1 + D j ⟂ D_{j}=a_{j}D_{j-1}+D_{j}^{\\perp} , with ⟨ D j ⟂ , D j − 1 ⟩ = 0 \\langle D_{j}^{\\perp},D_{j-1}\\rangle=0 , gives a j = ⟨ D j , D j − 1 ⟩ ‖ D j − 1 ‖ 2 2 = ρ j , 1 ( h ) ​ ‖ D j ‖ 2 ‖ D j − 1 ‖ 2 . a_{j}=\\frac{\\langle D_{j},D_{j-1}\\rangle}{\\|D_{j-1}\\|_{2}^{2}}=\\rho_{j,1}^{(h)}\\frac{\\|D_{j}\\|_{2}}{\\|D_{j-1}\\|_{2}}. (6) For example, cosine − 0.25 -0.25 gives a j = − 0.025 a_{j}=-0.025 if the current norm is one tenth of the previous norm, and a j = − 0.5 a_{j}=-0.5 if it is twice as large.",
+      "source": "https://arxiv.org/html/2611.11752v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0015",
+      "section": "3.1 Public trajectories and supervised comparisons",
+      "text": "Our public-release analysis covers nine rlvr stages in the OLMo-2, OLMoE, and Olmo-3 releases. Table 3 lists each stage and its native checkpoint width. The OLMo-2 stages include 7B and 13B ppo releases and 1B and 32B grpo releases. We report successive stages within each model lineage separately and retain their shared lineage in the checkpoint inventory. For sft , we analyze author-run trajectories from four model families on a uniform 500-optimizer-step grid through step 5,000. The comparison includes OLMo-2-7B and Llama-3.2-3B at seeds 42, 43, and 44, Mistral-7B-v0.3 at seeds 42 and 43, and Qwen2.5-3B at seed 42. Each trajectory contains ten displacements and nine adjacent pairs. All runs use the Tülu-3 OLMo-2 data mixture ( Lambert et al., 2025 ; OLMo Team et al., 2025 ) , the same plain-text role formatting and all-token objective in Equation 1 , effective batch size 64, sequence cap 4,096, and learning rate 10 − 5 10^{-5} with 3% warmup and linear decay over the two-epoch horizon. Training stops at step 5,000 while preserving that schedule. The OLMo seed-42 run continues to step 29,356 and supplies the sft endpoint for spectral analysis. The cross-family runs store trainable parameters and Adam states in BF16. Two additional Llama runs at seeds 42 and 43 use FP32 parameters and Adam states with BF16 autocast, retaining the data mixture, effective batch size, learning-rate schedule, and measurement grid. Appendix G reports each completed run, the precision comparison, and the full-model measurement checks. These comparisons match example and optimizer-step budgets; tokenization and realized token counts vary across families.",
+      "source": "https://arxiv.org/html/2611.11752v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0016",
+      "section": "3.1 Public trajectories and supervised comparisons",
+      "text": "The spectral validation uses fourteen matrices selected by layer position and shape before inspecting approximation errors. For each of the 7B PPO and author-run 7B sft endpoints, we select query projections at layers 0, 16, and 31, up projections at layers 0 and 31, the down projection at layer 16, and the embedding matrix. Table 1 states their dimensions and the complete 7B matrix inventory. The endpoints differ in objective, initialization, data exposure, and horizon. We examine each matrix’s spectral functionals and compare their concentration and energy coverage across these endpoints. Table 1: Matrix dimensions in the OLMo-2-7B endpoint analysis. Stored orientation is rows by columns. The 226 matrices exclude one-dimensional normalization weights, which remain included in full-model directional measurements. Matrix class Rows Columns Count Attention query, key, value, output 4,096 4,096 128 MLP up and gate 11,008 4,096 64 MLP down 4,096 11,008 32 Token embedding and language-model head 100,352 4,096 2",
+      "source": "https://arxiv.org/html/2611.11752v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0017",
+      "section": "3.2 Controlled advantage-system comparison",
+      "text": "The controlled study starts both arms from OLMo-2-0425-1B-DPO and trains on RLVR-GSM for 360 rollout batches. Seeds 42, 43, and 44 each define a paired prompt stream. Both arms use eight prompts and eight sampled responses per prompt, four update passes, eight-response minibatches, learning rate 4 × 10 − 7 4\\times 10^{-7} with linear decay, ratio clipping 0.2 0.2 , KL coefficient 0.05 0.05 , and prompt and response caps of 2,048 tokens. This response cap follows the published OLMo-2 PPO recipe. The rollout batch is smaller than that published recipe, and the experiment uses a shared custom trainer. The shared trainer holds the actor schedule fixed while changing the advantage system. Each rollout batch generates 64 responses and performs 32 actor optimizer updates. A displacement width of 60 rollouts therefore represents 3,840 responses and 1,920 actor optimizer updates. We match these quantities between arms and report realized generated-token counts in Appendix C . Generated-token totals vary with the evolving policies. Public trajectories retain the release-specific step units listed in Table 3 . The prespecified primary outcome is each seed’s mean consecutive cosine at width 60 for endpoints after rollout 180, comprising endpoints 240, 300, and 360. We report all three seed values and the paired critic-minus-group difference. A Student interval uses the three seed-level differences with two degrees of freedom. Widths 10, 20, and 40 and all-window summaries are secondary descriptive checks. Appendix B records the full protocol.",
+      "source": "https://arxiv.org/html/2611.11752v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0018",
+      "section": "3.3 Exact directional measurements and spectral validation",
+      "text": "Directional measurements accumulate full-parameter dot products and squared norms in FP64 over coordinate chunks, including normalization weights. For eight retained trajectories, we independently compute the displacement Gram matrix G i ​ j = ⟨ D i , D j ⟩ G_{ij}=\\langle D_{i},D_{j}\\rangle , which supplies both higher-separation correlations and norm-aware projections. Online and saved-checkpoint cosines for the six matched runs agree within 1.4 × 10 − 12 1.4\\times 10^{-12} in absolute value. For the fourteen selected spectral cases, we compute a full FP64 singular decomposition. Reduced QR followed by full SVD preserves the complete singular spectrum of high-aspect-ratio matrices. Leading singular-triplet residuals are below 10 − 10 10^{-10} . We compare these results with the original randomized SVD configuration, ten oversamples and four power iterations ( Halko et al., 2011 ) , using seeds 42, 43, and 44, and a stronger setting with forty oversamples and eight iterations at seed 42. Rank-256 and rank-512 approximations are computed independently. We separate singular-value error from error introduced by the original FP32 norm and denominator regularizer. Energy-threshold reporting requires sufficient spectral accuracy. If an approximate top- K K energy remains below τ \\tau , approximation error alone may explain the shortfall. Without a certified error bound, we label the threshold unresolved at the computed budget , not k τ > K k_{\\tau}>K . All energy-threshold ranks used as quantitative evidence below come from full decompositions. Appendix F documents the corrected initialization and coordinate-sketch errors in the earlier analysis.",
+      "source": "https://arxiv.org/html/2611.11752v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0019",
+      "section": "4.1 Low stable rank coexists with large energy rank",
+      "text": "Full decompositions verify the spectral separation on the same update matrices. Table 2 reports all fourteen cases, and Figure 1 shows representative cumulative energy curves. The three PPO query updates have stable ranks 9.58 9.58 , 18.14 18.14 , and 18.27 18.27 , while their 80 % 80\\% -energy ranks are 532 532 , 1,222 1{,}222 , and 1,149 1{,}149 . These matrices combine strong leading-value concentration with an energetic tail spanning hundreds of components. The same distinction applies to the MLP updates. The selected PPO down projection at layer 16 has stable rank 58.78 58.78 but k 0.8 = 2,120 k_{0.8}=2{,}120 . Its sft counterpart has stable rank 792.32 792.32 and k 0.8 = 2,250 k_{0.8}=2{,}250 . The stable ranks differ by more than an order of magnitude while their energy ranks are close. Conversely, the sft query update at layer 0 has k 0.8 = 1 k_{0.8}=1 . The two functionals thus reveal different aspects of variation across matrices, with stable rank distinguishing concentration even when energy ranks are similar. These observations reconcile the logical content of the prior rank descriptions. Near-full algebraic rank permits a dominant leading singular value, and a dominant leading value permits a long energetic tail. Proposition 1 supplies an explicit family with this behavior. Thus, low stable rank alone does not generally imply that a small number of singular components captures most of the update energy.",
+      "source": "https://arxiv.org/html/2611.11752v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0020",
+      "section": "4.1 Low stable rank coexists with large energy rank",
+      "text": "Table 2: Full-SVD endpoint measurements for the shape-stratified 7B sample. PPO subtracts the immediate DPO checkpoint. SFT subtracts the base checkpoint. Each row refers to the same named matrix in the two endpoints. k 0.8 k_{0.8} is computed from the complete spectrum. E 512 E_{512} abbreviates E k ​ ( Δ ) E_{k}(\\Delta) from Equation 3 at k = 512 k=512 , the fraction of squared singular energy in the leading 512 components. PPO SFT Matrix r stable r_{\\mathrm{stable}} E 512 E_{512} k 0.8 k_{0.8} r stable r_{\\mathrm{stable}} E 512 E_{512} k 0.8 k_{0.8} Query 0 9.58 0.790 532 1.10 0.987 1 MLP up 0 115.60 0.368 2,077 356.95 0.289 2,221 Query 16 18.14 0.536 1,222 1.48 0.848 255 MLP down 16 58.78 0.345 2,120 792.32 0.277 2,250 Query 31 18.27 0.564 1,149 1.99 0.779 599 MLP up 31 45.72 0.342 2,114 200.56 0.291 2,210 Embedding 1026.35 0.200 2,831 916.65 0.175 2,982 Figure 1: Cumulative singular energy from full FP64 decompositions. The PPO query update at layer 0 has stable rank 9.58 9.58 but requires 532 components for 80 % 80\\% energy. The layer-16 MLP down update requires 2,120. The SFT layer-16 query curve also illustrates a threshold near the rank-256 budget.",
+      "source": "https://arxiv.org/html/2611.11752v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0021",
+      "section": "4.2 Production anti-alignment extends beyond PPO",
+      "text": "Every native-grid adjacent pair in the nine public stage trajectories has negative full-model cosine. Table 3 reports 131 such pairs, with stage means between − 0.263 -0.263 and − 0.193 -0.193 . Consecutive anti-alignment is consistent across this collection of PPO and GRPO releases, model sizes, and checkpoint widths. The supervised comparison reveals configuration-dependent alignment across four model families. Table 14 reports all seeds on the common 500-step grid. The BF16 OLMo, Llama, and Qwen trajectories have positive cosines throughout, with seed means between + 0.2226 +0.2226 and + 0.2381 +0.2381 . Both Mistral seeds instead have seven negative pairs out of nine and means of − 0.0100 -0.0100 and − 0.0099 -0.0099 . The Mistral runs thus provide a same-size-class comparison in which sft also exhibits consecutive anti-alignment. The Llama precision comparison further shows that alignment depends on the numerical training configuration. With FP32 parameters and Adam states, the seed-42 and seed-43 means fall to + 0.0206 +0.0206 and + 0.0209 +0.0209 , and the final five pairs are negative in both runs. Table 16 reports the paired series. Positive alignment therefore replicates across several BF16 settings, while the Mistral and FP32 Llama results establish that cosine sign varies within sft itself. Table 3: Consecutive full-model cosines on native public checkpoint grids. Width is in release step labels. Every listed pair is negative. Counts refer to adjacent pairs within each stage. Successive stages retain their shared model lineage.",
+      "source": "https://arxiv.org/html/2611.11752v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0022",
+      "section": "4.2 Production anti-alignment extends beyond PPO",
+      "text": "Public stage Released method Width Pairs Mean cosine OLMo-2 7B PPO 60 5 − 0.2202 -0.2202 OLMo-2 13B RLVR1 PPO 60 12 − 0.2446 -0.2446 OLMo-2 13B RLVR2 PPO 60 12 − 0.2541 -0.2541 OLMo-2 13B final PPO 60 12 − 0.2582 -0.2582 OLMo-2 1B RLVR1 GRPO 200 12 − 0.2293 -0.2293 OLMo-2 1B final GRPO 200 12 − 0.2327 -0.2327 OLMo-2 32B GRPO 20 16 − 0.1929 -0.1929 OLMoE 1B active / 7B RLVR 40 43 − 0.2633 -0.2633 Olmo-3 7B OlmoRL 50 7 − 0.2153 -0.2153 Higher-separation correlations quantify how far the directional relationship extends along the trajectory. Table 4 reports these correlations for the public 7B PPO trajectory at a fixed width of 60 release steps. Mean cosine changes from − 0.2202 -0.2202 at separation one to − 0.0244 -0.0244 and − 0.0087 -0.0087 at separations two and three. The negative correlation is strongest between adjacent displacements and approaches zero at the larger separations measured here. Cosine describes directional alignment but does not measure the magnitude of the component opposing the previous displacement. The projection coefficient accounts for the ratio of displacement norms. In the same public 7B run, Equation 6 yields coefficients from − 0.2204 -0.2204 to − 0.1741 -0.1741 . Each displacement has a component opposite the preceding displacement with magnitude 17–22% of the preceding norm. These observations demonstrate that consecutive weight displacements can exhibit systematic directional opposition, even though their cumulative effect is not characterized by the individual displacement cosines.",
+      "source": "https://arxiv.org/html/2611.11752v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0023",
+      "section": "4.2 Production anti-alignment extends beyond PPO",
+      "text": "Table 4: Directional correlations at fixed displacement width. Entries are means with pair counts in parentheses. Separation changes within each row; width does not. Each trajectory retains its native width and training exposure. All six controlled runs appear in Appendix D . Trajectory Width and unit ℓ = 1 \\ell=1 ℓ = 2 \\ell=2 ℓ = 3 \\ell=3 Public 7B PPO 60 release steps − 0.2202 -0.2202 (5) − 0.0244 -0.0244 (4) − 0.0087 -0.0087 (3) 7B SFT seed 42 500 trainer steps + 0.2275 +0.2275 (9) + 0.1740 +0.1740 (8) + 0.1411 +0.1411 (7)",
+      "source": "https://arxiv.org/html/2611.11752v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0024",
+      "section": "4.3 A controlled effect on alignment magnitude",
+      "text": "To test whether the advantage system changes alignment under a shared training schedule, we turn from the public trajectories to the matched study. Table 5 reports all three paired seeds for the primary late-training outcome. The group-relative mean is + 0.259 +0.259 and the critic–GAE mean is + 0.012 +0.012 . The paired critic-minus-group difference is − 0.247 -0.247 , with a seed-level 95 % 95\\% Student interval of [ − 0.358 , − 0.137 ] [-0.358,-0.137] . Every paired seed has lower alignment in the critic arm. The paired contrast shows that the advantage system changes directional alignment consistently across the three seeds. Table 5: Primary matched outcome. Each seed value averages the width-60 cosines ending at rollouts 240, 300, and 360. The interval uses the three paired seed means. Difference means critic–GAE minus group-relative. Seed Group-relative Critic–GAE Difference 42 + 0.3178 +0.3178 + 0.0193 +0.0193 − 0.2985 -0.2985 43 + 0.2363 +0.2363 + 0.0094 +0.0094 − 0.2269 -0.2269 44 + 0.2229 +0.2229 + 0.0060 +0.0060 − 0.2168 -0.2168 Mean + 0.2590 +0.2590 + 0.0116 +0.0116 − 0.2474 -0.2474 95% interval [ + 0.1314 , + 0.3866 ] [+0.1314,+0.3866] [ − 0.0056 , + 0.0287 ] [-0.0056,+0.0287] [ − 0.3580 , − 0.1368 ] [-0.3580,-0.1368] The critic mean is close to zero, and its own seed-level interval, [ − 0.0056 , + 0.0287 ] [-0.0056,+0.0287] , includes zero. Replacing group-relative advantages with the critic–GAE package therefore lowers mean alignment toward zero. Neither local arm reproduces the consistently negative production pattern.",
+      "source": "https://arxiv.org/html/2611.11752v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0025",
+      "section": "4.3 A controlled effect on alignment magnitude",
+      "text": "The effect persists in the secondary matched-width summaries. At widths 10, 20, and 40, all paired late-training differences are negative (Appendix C ). Their magnitudes change with width, illustrating why equal aggregation units matter. The group-relative seed mean increases from 0.071 0.071 at width 10 to 0.259 0.259 at width 60. Matching aggregation width makes the measured advantage-system effect interpretable at a shared response and optimizer-update budget. Training-health checks accompany the geometry measurements. The runs record realized response lengths, EOS completion, and finite updates. Training cap-hit fractions range from 0.213 % 0.213\\% to 1.189 % 1.189\\% . The fixed 32-example held-out diagnostic shows no consistent improvement over the initial policy. Appendix B reports the per-run counts. The geometry measurements show sensitivity to the advantage-system configuration, while the held-out diagnostic shows no consistent performance improvement.",
+      "source": "https://arxiv.org/html/2611.11752v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0026",
+      "section": "4.4 Numerical accuracy depends on the reported functional",
+      "text": "The SVD validation supports accurate leading-value estimates in the selected sample but exposes material errors in threshold and angle interpretations. With an FP64 Frobenius denominator, the baseline randomized approximation’s maximum relative stable-rank error is 8.78 × 10 − 5 8.78\\times 10^{-5} , or 0.0088 % 0.0088\\% . Including the original FP32 norm and denominator regularizer raises the maximum original-pipeline error to 2.38 % 2.38\\% . The maximum absolute E 512 E_{512} error with the FP64 denominator is 0.01353 0.01353 , or 1.353 percentage points. Appendix E gives the per-matrix errors. An energy error of this size matters near a reporting threshold. For the sft layer-16 query update, full SVD gives k 0.8 = 255 k_{0.8}=255 and E 256 = 0.8002792 E_{256}=0.8002792 . The baseline rank-256 approximation gives 0.7975442 0.7975442 . All three baseline seeds and the stronger randomized setting fall below 0.8 0.8 when normalized by the accurate Frobenius norm. These are four configuration disagreements on one matrix. They demonstrate why an unreached approximate threshold is not a certified lower bound on energy rank. Subspace angles are more sensitive still. The largest absolute discrepancy between the original FP32 angle calculation and the full-SVD reference is 3.09 3.09 degrees in this sample. For the PPO embedding, the original estimate is 0.09279 0.09279 degrees and the full-SVD value is 0.00103 0.00103 degrees. Randomized SVD supports efficient broad scans, while these functional-specific errors motivate full decompositions for the reported energy ranks and subspace angles. These findings highlight the importance of validating numerical approximations against the specific spectral or geometric quantity being reported.",
+      "source": "https://arxiv.org/html/2611.11752v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0027",
+      "section": "5 Discussion and Limitations",
+      "text": "The spectral and trajectory results describe complementary aspects of adaptation. Stable rank measures concentration around the leading singular value, while energy-threshold rank measures the breadth of the spectrum needed to retain a specified energy fraction. Consecutive-displacement cosine adds information about how successive changes interact. The public trajectories show anti-alignment across several RLVR recipes, and the controlled study demonstrates that the advantage system affects alignment magnitude under a shared actor schedule. The rank reconciliation explains how the reported spectral descriptions coexist. The power-law construction establishes this compatibility analytically, and the full decompositions demonstrate it on selected updates. Its practical implication is that a small stable rank can accompany substantial energy outside a low-rank approximation. Assessing the task-level value of that energy requires evaluating models after spectral truncation. The public survey measures aggregated changes on each release’s native checkpoint grid. Differences in schedules, exposure budgets, storage precision, and related stages limit causal comparisons across releases. The supervised study spans four model families under one data mixture and schedule, with the FP32 follow-up covering two Llama seeds. Its negative Mistral and FP32 Llama pairs show why trajectory sign should be interpreted together with the model and numerical training configuration. The controlled RL study covers one 1B initialization, one task source, one shared trainer, and three paired seeds. Its seed-level intervals characterize variation within that setting.",
+      "source": "https://arxiv.org/html/2611.11752v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0028",
+      "section": "5 Discussion and Limitations",
+      "text": "The controlled intervention combines critic fitting, GAE, and advantage normalization, so its effect applies to that package. Generated-token exposure remains policy-dependent, and the small held-out diagnostic shows no consistent performance improvement. Both local arms have higher mean alignment than the public RLVR trajectories. Identifying the source of this difference requires interventions within the production implementation, with matched exposure and adequate task evaluation. Full-SVD validation covers fourteen matrices selected by shape and layer position. The resulting accuracy measurements apply to this sample. All geometric quantities describe stored checkpoint weights, whose numerical precision affects apparent support sparsity and small displacements.",
+      "source": "https://arxiv.org/html/2611.11752v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0029",
+      "section": "6 Conclusion",
+      "text": "In this work, we studied language-model post-training by separating the structure of cumulative weight updates from the directions of successive training displacements. Our power-law construction showed that low stable rank and large fixed-energy rank are mathematically compatible, and full decompositions verified this separation in selected OLMo-2-7B updates. A dominant singular value can therefore coexist with hundreds of components needed to retain most of an update’s energy. This distinction clarifies why different rank measures can give contrasting descriptions of the same matrix. Trajectory measurements add information about how successive weight changes interact. All 131 measured adjacent pairs across nine public RLVR stages from the OLMo-2, OLMoE, and Olmo-3 releases had negative cosine on their native checkpoint grids, including PPO and GRPO releases. Supervised comparisons of OLMo-2-7B, Llama-3.2-3B, Qwen2.5-3B, and Mistral-7B-v0.3 showed configuration-dependent alignment, with late anti-alignment in Mistral and FP32 Llama runs. In a three-seed matched RL study initialized from OLMo-2-0425-1B-DPO and trained on the RLVR-GSM mathematical-answer dataset, replacing group-relative advantages with the critic–GAE package consistently lowered alignment under a shared actor schedule. Together, these findings support a more precise account of post-training geometry. Spectral concentration, energy coverage, and trajectory direction answer different questions and should be reported separately. Comparisons also require explicit initialization checkpoints, aggregation widths, and numerical settings. Our full-SVD checks further showed why approximation accuracy must be assessed for the particular quantity being reported. These distinctions provide a basis for interpreting",
+      "source": "https://arxiv.org/html/2611.11752v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0030",
+      "section": "6 Conclusion",
+      "text": ", and numerical settings. Our full-SVD checks further showed why approximation accuracy must be assessed for the particular quantity being reported. These distinctions provide a basis for interpreting weight-space measurements across post-training procedures.",
+      "source": "https://arxiv.org/html/2611.11752v1",
+      "offset": 1598
+    },
+    {
+      "chunk_id": "chunk-0031",
+      "section": "Acknowledgments",
+      "text": "This work was supported by the NVIDIA Academic Grant Program, which provided 8× NVIDIA A100 80 GB GPU resources on the Brev platform. The authors would like to acknowledge the use of Grammarly (an AI-assisted editing tool), for language editing, proofreading, and typographical corrections during the preparation of this manuscript. All technical content, analyses, and conclusions were manually drafted and verified by the authors.",
+      "source": "https://arxiv.org/html/2611.11752v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0032",
+      "section": "Reproducibility and Broader Impact",
+      "text": "Appendices B – G specify the controlled protocol, exposure units, numerical checks, corrections, and cross-family supervised comparisons. The accompanying revision artifacts retain per-case results and checkpoint identifiers. No new human-subject data are collected. The study analyzes open-weight models and mathematical-reasoning data. General risks associated with language models remain applicable.",
+      "source": "https://arxiv.org/html/2611.11752v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0033",
+      "section": "References",
+      "text": "Cobbe et al. (2021) Karl Cobbe, Vineet Kosaraju, Mohammad Bavarian, Mark Chen, Heewoo Jun, Lukasz Kaiser, Matthias Plappert, Jerry Tworek, Jacob Hilton, Reiichiro Nakano, Christopher Hesse, and John Schulman. Training verifiers to solve math word problems. arXiv preprint arXiv:2110.14168 , 2021. URL https://arxiv.org/abs/2110.14168 . Halko et al. (2011) Nathan Halko, Per-Gunnar Martinsson, and Joel A. Tropp. Finding structure with randomness: Probabilistic algorithms for constructing approximate matrix decompositions. SIAM Review , 53(2):217–288, 2011. doi: 10.1137/090771806 . He & Cao (2025) Xinyu He and Xianghui Cao. Understanding post-training structural changes in large language models. arXiv preprint arXiv:2509.17866 , 2025. URL https://arxiv.org/abs/2509.17866 . Hu et al. (2022) Edward J. Hu, Yelong Shen, Phillip Wallis, Zeyuan Allen-Zhu, Yuanzhi Li, Shean Wang, Lu Wang, and Weizhu Chen. LoRA: Low-rank adaptation of large language models. In International Conference on Learning Representations , 2022. Ilharco et al. (2023) Gabriel Ilharco, Marco Tulio Ribeiro, Mitchell Wortsman, Suchin Gururangan, Ludwig Schmidt, Hannaneh Hajishirzi, and Ali Farhadi. Editing models with task arithmetic. In International Conference on Learning Representations , 2023. Lambert et al. (2025) Nathan Lambert, Jacob Morrison, Valentina Pyatkin, Shengyi Huang, Hamish Ivison, Faeze Brahman, Lester James V. Miranda, Alisa Liu, Nouha Dziri, Xinxi Lyu, et al. Tülu 3: Pushing frontiers in open language model post-training. In Conference on Language Modeling , 2025. URL https://openreview.net/forum?id=i1uGbfHHpH .",
+      "source": "https://arxiv.org/html/2611.11752v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0034",
+      "section": "References",
+      "text": "Mukherjee et al. (2025) Sagnik Mukherjee, Lifan Yuan, Dilek Hakkani-Tur, and Hao Peng. Reinforcement learning finetunes small subnetworks in large language models. In Advances in Neural Information Processing Systems , volume 38, pp. 132119–132138, 2025. URL https://proceedings.neurips.cc/paper_files/paper/2025/hash/bf235a1d6780afd979f2f81676f43413-Abstract-Conference.html . OLMo Team et al. (2025) OLMo Team, Pete Walsh, Luca Soldaini, Dirk Groeneveld, Kyle Lo, Shane Arora, Akshita Bhagia, Yuling Gu, Shengyi Huang, Matt Jordan, et al. 2 OLMo 2 Furious (COLM’s version). In Conference on Language Modeling , 2025. URL https://openreview.net/forum?id=2ezugTT9kU . Rafailov et al. (2023) Rafael Rafailov, Archit Sharma, Eric Mitchell, Christopher D. Manning, Stefano Ermon, and Chelsea Finn. Direct preference optimization: Your language model is secretly a reward model. In Advances in Neural Information Processing Systems , 2023. Roy & Vetterli (2007) Olivier Roy and Martin Vetterli. The effective rank: A measure of effective dimensionality. In Proceedings of the 15th European Signal Processing Conference , pp. 606–610, 2007. URL https://www.eurasip.org/Proceedings/Eusipco/Eusipco2007/Papers/a5p-h05.pdf . Schulman et al. (2016) John Schulman, Philipp Moritz, Sergey Levine, Michael Jordan, and Pieter Abbeel. High-dimensional continuous control using generalized advantage estimation. In International Conference on Learning Representations , 2016. Schulman et al. (2017) John Schulman, Filip Wolski, Prafulla Dhariwal, Alec Radford, and Oleg Klimov. Proximal policy optimization algorithms. arXiv preprint arXiv:1707.06347 , 2017. URL https://arxiv.org/abs/1707.06347 .",
+      "source": "https://arxiv.org/html/2611.11752v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0035",
+      "section": "References",
+      "text": "Shao et al. (2024) Zhihong Shao, Peiyi Wang, Qihao Zhu, Runxin Xu, Junxiao Song, Xiao Bi, Haowei Zhang, Mingchuan Zhang, Y. K. Li, Y. Wu, and Daya Guo. DeepSeekMath: Pushing the limits of mathematical reasoning in open language models. arXiv preprint arXiv:2402.03300 , 2024. URL https://arxiv.org/abs/2402.03300 . Shen et al. (2026) Zhennan Shen, Yanshu Li, Qingyu Yin, Chak Tou Leong, Zhilin Wang, Yanxu Chen, Rongduo Han, Sunbowen Lee, and Yi R. Fung. On the geometry of on-policy distillation. arXiv preprint arXiv:2606.07082 , 2026. URL https://arxiv.org/abs/2606.07082 . Wang et al. (2026) Tianle Wang, Jiayu Liu, Zhongyuan Wu, Shenghao Jin, Wei Chen, Hao Xu, and Ning Miao. Linear dynamics in the RLVR training of large language models. arXiv preprint arXiv:2601.04537 , 2026. URL https://arxiv.org/abs/2601.04537 . Zhu et al. (2025) Hanqing Zhu, Zhenyu Zhang, Hanxian Huang, DiJia Su, Zechun Liu, Jiawei Zhao, Igor Fedorov, Hamed Pirsiavash, Zhizhou Sha, Jinwon Lee, David Z. Pan, Zhangyang Wang, Yuandong Tian, and Kai Sheng Tai. The path not taken: RLVR provably learns off the principals. arXiv preprint arXiv:2511.08567 , 2025. URL https://arxiv.org/abs/2511.08567 .",
+      "source": "https://arxiv.org/html/2611.11752v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0036",
+      "section": "Appendix A Proof and Support-Sparsity Examples",
+      "text": "Write S k = ∑ i = 1 k i − 2 ​ α S_{k}=\\sum_{i=1}^{k}i^{-2\\alpha} . Because σ 1 = 1 \\sigma_{1}=1 , r stable = S n r_{\\mathrm{stable}}=S_{n} and k τ = min ⁡ { k ∣ S k ≥ τ ​ S n } k_{\\tau}=\\min\\{k\\mid S_{k}\\geq\\tau S_{n}\\} . For 0 < α < 1 / 2 0<\\alpha<1/2 , set b = 1 − 2 ​ α b=1-2\\alpha . Integral comparison gives S n ≤ 1 + ∫ 1 n x − 2 ​ α ​ 𝑑 x = 1 + n b − 1 b , S n ≥ ∫ 1 n + 1 x − 2 ​ α ​ 𝑑 x ≥ n b − 1 b . S_{n}\\leq 1+\\int_{1}^{n}x^{-2\\alpha}\\,dx=1+\\frac{n^{b}-1}{b},\\qquad S_{n}\\geq\\int_{1}^{n+1}x^{-2\\alpha}\\,dx\\geq\\frac{n^{b}-1}{b}. Also S k ≤ ∫ 0 k x − 2 ​ α ​ 𝑑 x = k b / b S_{k}\\leq\\int_{0}^{k}x^{-2\\alpha}\\,dx=k^{b}/b . Hence S k ≥ τ ​ S n S_{k}\\geq\\tau S_{n} implies k b ≥ τ ⁡ ( n b − 1 ) , k ≥ τ 1 / b ​ ( n b − 1 ) 1 / b . k^{b}\\geq\\tau(n^{b}-1),\\qquad k\\geq\\tau^{1/b}(n^{b}-1)^{1/b}. The latter expression grows linearly with n n . Since k τ ≤ n k_{\\tau}\\leq n , k τ = Θ ⁡ ( n ) k_{\\tau}=\\Theta(n) , whereas r stable = O ⁡ ( n b ) r_{\\mathrm{stable}}=O(n^{b}) and b < 1 b<1 . Thus r stable / k τ = O ⁡ ( n − 2 ​ α ) → 0 r_{\\mathrm{stable}}/k_{\\tau}=O(n^{-2\\alpha})\\to 0 . For α = 1 / 2 \\alpha=1/2 , S k = H k S_{k}=H_{k} is the harmonic sum, with log ⁡ ( k + 1 ) ≤ H k ≤ 1 + log ⁡ k \\log(k+1)\\leq H_{k}\\leq 1+\\log k . Consequently r stable ≤ 1 + log ⁡ n r_{\\mathrm{stable}}\\leq 1+\\log n . If H k ≥ τ ​ H n H_{k}\\geq\\tau H_{n} , then 1 + log ⁡ k ≥ τ ​ log ⁡ n 1+\\log k\\geq\\tau\\log n , so k ≥ n τ / e k\\geq n^{\\tau}/e . This proves r stable / k τ = O ⁡ ( log ⁡ n / n τ ) → 0 r_{\\mathrm{stable}}/k_{\\tau}=O(\\log n/n^{\\tau})\\to 0 for every fixed τ ∈ ( 0 , 1 ) \\tau\\in(0,1) and completes Proposition 1 .",
+      "source": "https://arxiv.org/html/2611.11752v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0037",
+      "section": "Appendix A Proof and Support-Sparsity Examples",
+      "text": "For an illustrative finite dimension, n = 4096 n=4096 , α = 0.4 \\alpha=0.4 , and τ = 0.8 \\tau=0.8 give the relaxed upper bound r stable ≤ 1 + 4096 0.2 / 0.2 < 27.4 r_{\\mathrm{stable}}\\leq 1+4096^{0.2}/0.2<27.4 and the lower bound k 0.8 ≳ 469 k_{0.8}\\gtrsim 469 . This finite-dimensional example illustrates the separation in the constructed spectrum. The support examples do not require a power law. Let D = diag ⁡ ( d 1 , … , d n ) D=\\operatorname{diag}(d_{1},\\ldots,d_{n}) with every d i > 0 d_{i}>0 . Its support always contains exactly n n entries, while its singular values are the d i d_{i} in decreasing order. Setting all d i = 1 d_{i}=1 gives stable rank n n ; setting d 1 = 1 d_{1}=1 and the others to a sufficiently small positive value gives stable rank arbitrarily close to one and k τ = 1 k_{\\tau}=1 for fixed τ < 1 \\tau<1 . For generic orthogonal U , V U,V , the matrix U ​ D ​ V ⊤ UDV^{\\top} has the same spectrum and dense support. Conversely, dense unit vectors u , v u,v give a dense rank-one matrix u ​ v ⊤ uv^{\\top} . These examples show that support sparsity and spectral concentration describe distinct matrix properties.",
+      "source": "https://arxiv.org/html/2611.11752v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0038",
+      "section": "B.1 Shared configuration",
+      "text": "Both arms initialize the policy and frozen reference from allenai/OLMo-2-0425-1B-DPO . Training examples come from allenai/RLVR-GSM , a verifiable mathematical-answer task source related to GSM8K ( Cobbe et al., 2021 ) . We use the same prompt template, numeric final-answer checker, prompt stream, sampling configuration, and actor optimizer configuration within each seed pair. Table 6 lists the implementation settings. Table 6: Configuration of the six controlled runs. A rollout batch is the unit that advances the learning-rate schedule and geometry clock. Setting Value Paired seeds 42, 43, 44 Rollout batches 360 per run Prompts and responses 8 prompts, 8 responses per prompt Prompt cap and response cap 2,048 tokens each Sampling Temperature 1, top- p p 1, no top- k k restriction Actor update passes 4 per rollout batch Actor minibatch and microbatch 8 responses and 1 response Actor optimizer updates 32 per rollout, 11,520 per run Policy parameters and optimizer states FP32 with BF16 autocast Optimizer AdamW, zero weight decay, ϵ Adam = 10 − 8 \\epsilon_{\\mathrm{Adam}}=10^{-8} Actor learning rate 4 × 10 − 7 4\\times 10^{-7} , linear decay over rollouts Ratio clip and gradient norm limit 0.2 and 1 Reference KL penalty coefficient 0.05 Reward Correct final answer 1, incorrect 0, missing EOS − 10 -10 Critic architecture Separate model backbone and zero-initialized scalar head Critic optimizer Separate AdamW, learning rate 4 × 10 − 7 4\\times 10^{-7} GAE discount and trace parameter γ = 1 \\gamma=1 , λ = 0.95 \\lambda=0.95 Value clipping 0.2 around the rollout value estimate Full policy checkpoints Every 60 rollouts and at completion Online geometry widths 10, 20, 40, 60 rollout batches",
+      "source": "https://arxiv.org/html/2611.11752v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0039",
+      "section": "B.1 Shared configuration",
+      "text": "Each response is trimmed after its first EOS token. That EOS remains in the loss, and subsequent padding does not. Within an eight-response minibatch, we sum token losses and divide by the total retained response-token count. Microbatch accumulation therefore preserves the same token-weighted minibatch objective in both arms. The reference penalty is the nonnegative sample estimator exp ⁡ ( z j ) − z j − 1 \\exp(z_{j})-z_{j}-1 , where z j = log ⁡ π ref ​ ( y j ∣ x , y < j ) − log ⁡ π θ ​ ( y j ∣ x , y < j ) z_{j}=\\log\\pi_{\\mathrm{ref}}(y_{j}\\mid x,y_{<j})-\\log\\pi_{\\theta}(y_{j}\\mid x,y_{<j}) . The group-relative arm assigns all tokens in response i i the normalized outcome advantage ( R i − R ¯ ) / ( s R + 10 − 6 ) (R_{i}-\\bar{R})/(s_{R}+10^{-6}) , where the mean and population standard deviation are over the eight responses to that prompt. The critic–GAE arm instead forms terminal-reward temporal-difference residuals δ j = r j + γ ​ V ​ ( s j + 1 ) − V ⁡ ( s j ) , A ^ j = ∑ l = 0 T − j ( γ ​ λ ) l ​ δ j + l , \\delta_{j}=r_{j}+\\gamma V(s_{j+1})-V(s_{j}),\\qquad\\widehat{A}_{j}=\\sum_{l=0}^{T-j}(\\gamma\\lambda)^{l}\\delta_{j+l}, Here r j r_{j} denotes the token reward, with the outcome reward assigned to the terminal token and zero reward at earlier tokens; the terminal bootstrap value is zero. The arm whitens advantages over all retained response tokens in the rollout. The critic target is the unwhitened GAE return. Its loss is one half the maximum of unclipped and clipped squared value errors, token averaged within the minibatch. The critic has a separate optimizer, so this experiment changes an advantage-system package that includes critic fitting and normalization.",
+      "source": "https://arxiv.org/html/2611.11752v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0040",
+      "section": "B.1 Shared configuration",
+      "text": "The shared implementation checks finite losses and gradients and validates saved parameters. The experiment ran on the existing eight-A100 node, with six independent training processes for the paired seeds. The protocol was written before the corrected runs. An execution-order amendment started seeds 43 and 44 concurrently after smoke tests instead of waiting for the seed-42 60-rollout checkpoint. The outcome definitions, hyperparameters, and acceptance criteria remained unchanged, and all completed seeds enter the analysis.",
+      "source": "https://arxiv.org/html/2611.11752v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0041",
+      "section": "B.2 Scope relative to published recipes",
+      "text": "Table 18 of the expanded OLMo-2 technical report lists a 2,048-token response cap, learning rate 4 × 10 − 7 4\\times 10^{-7} with a linear schedule, and KL coefficient 0.05 0.05 ( OLMo Team et al., 2025 ) . The table is available in the expanded technical report . Our controlled study uses these settings but a 1B model and a smaller rollout batch. The shared custom trainer and critic initialization are specified in Table 6 . Public release step labels are retained in their original units. The 2,048-token cap expands the response budget beyond the earlier local 384/768-token experiments. Table 7 reports the realized cap-hit fractions for the controlled runs.",
+      "source": "https://arxiv.org/html/2611.11752v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0042",
+      "section": "B.3 Training health and small held-out diagnostic",
+      "text": "Each run uses the same fixed 32 held-out examples with greedy decoding and the 2,048-token response cap. The initial policy answers 20 of 32 correctly. Table 7 reports final counts and training cap-hit fractions. The final counts range from 16 to 20 correct answers, compared with 20 initially. This small diagnostic shows no consistent improvement. Table 7: Health diagnostics for the matched runs. Cap-hit fraction counts training responses that reach 2,048 tokens without EOS. Held-out results use 32 fixed examples and are descriptive. Arm Seed Final correct Final EOS Training cap hit Group-relative 42 16/32 32/32 1.102% Group-relative 43 18/32 32/32 1.189% Group-relative 44 20/32 32/32 0.786% Critic–GAE 42 19/32 27/32 0.291% Critic–GAE 43 18/32 28/32 0.269% Critic–GAE 44 18/32 29/32 0.213%",
+      "source": "https://arxiv.org/html/2611.11752v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0043",
+      "section": "Appendix C Exposure Budgets and Matched-Width Results",
+      "text": "All six runs generate 23,040 responses and perform 11,520 actor optimizer updates. Actual generated-token totals differ across policies and seeds, as Table 8 records. These totals count each generated token once across the four update passes. The saved results also retain token counts for every aggregation window. Table 8: Realized exposure in the matched runs. Every row contains 360 rollouts, 23,040 responses, and 11,520 actor optimizer updates. Arm Seed Generated tokens Group-relative 42 5,286,865 Critic–GAE 42 5,832,426 Group-relative 43 4,779,950 Critic–GAE 43 5,861,391 Group-relative 44 5,072,345 Critic–GAE 44 4,776,819 For a width h h , the paired comparison matches 64 ​ h 64h responses and 32 ​ h 32h actor optimizer updates. The late-window rule retains cosine endpoints greater than 180. At widths 10, 20, 40, and 60 this gives 18, 9, 5, and 3 cosines per seed, respectively. The width-40 grid includes a window crossing the midpoint, under the prespecified endpoint-based rule. The secondary intervals in Table 9 use the same three seed pairs at each width. These descriptive intervals are unadjusted for multiple comparisons across widths. Table 9: Late-window means and paired uncertainty at matched local widths. Seed values are ordered 42, 43, 44. Intervals are seed-level Student intervals.",
+      "source": "https://arxiv.org/html/2611.11752v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0044",
+      "section": "Appendix C Exposure Budgets and Matched-Width Results",
+      "text": "Width Group-relative seeds Critic–GAE seeds Paired 95% interval 10 + 0.0897 +0.0897 , + 0.0669 +0.0669 , + 0.0576 +0.0576 + 0.0220 +0.0220 , + 0.0140 +0.0140 , + 0.0223 +0.0223 [ − 0.0922 , − 0.0118 ] [-0.0922,-0.0118] 20 + 0.1392 +0.1392 , + 0.1007 +0.1007 , + 0.0904 +0.0904 + 0.0063 +0.0063 , + 0.0093 +0.0093 , + 0.0090 +0.0090 [ − 0.1698 , − 0.0341 ] [-0.1698,-0.0341] 40 + 0.2594 +0.2594 , + 0.1996 +0.1996 , + 0.1762 +0.1762 + 0.0132 +0.0132 , + 0.0121 +0.0121 , + 0.0049 +0.0049 [ − 0.2997 , − 0.1037 ] [-0.2997,-0.1037] 60 + 0.3178 +0.3178 , + 0.2363 +0.2363 , + 0.2229 +0.2229 + 0.0193 +0.0193 , + 0.0094 +0.0094 , + 0.0060 +0.0060 [ − 0.3580 , − 0.1368 ] [-0.3580,-0.1368]",
+      "source": "https://arxiv.org/html/2611.11752v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0045",
+      "section": "Appendix D Fixed-Width Temporal Checks and Checkpoint Inventory",
+      "text": "Table 10 reports correlations at separations one, two, and three from full-parameter displacement Gram matrices. Each public or local RL row has six native displacements and therefore five, four, and three pairs. The SFT row has ten displacements and nine, eight, and seven pairs. Each summary averages the available pairs within its trajectory. Table 10: Fixed-width directional correlations. Local controlled widths are 60 rollouts, the public PPO width is 60 release steps, and SFT width is 500 trainer steps. Only the local controlled arms have matched exposure units. Trajectory Separation 1 Separation 2 Separation 3 Public 7B PPO − 0.220162 -0.220162 − 0.024420 -0.024420 − 0.008670 -0.008670 7B SFT seed 42 + 0.227479 +0.227479 + 0.173982 +0.173982 + 0.141078 +0.141078 Group-relative seed 42 + 0.394134 +0.394134 + 0.297558 +0.297558 + 0.227189 +0.227189 Group-relative seed 43 + 0.349763 +0.349763 + 0.251865 +0.251865 + 0.210152 +0.210152 Group-relative seed 44 + 0.317653 +0.317653 + 0.245254 +0.245254 + 0.184630 +0.184630 Critic–GAE seed 42 + 0.008941 +0.008941 + 0.015477 +0.015477 + 0.014242 +0.014242 Critic–GAE seed 43 + 0.023189 +0.023189 + 0.013839 +0.013839 − 0.001997 -0.001997 Critic–GAE seed 44 + 0.010831 +0.010831 + 0.015073 +0.015073 + 0.004019 +0.004019 The three OLMo-2-7B SFT seeds are assessed on the same 500-step grid through step 5,000. Their means and sign counts are given below. The longer endpoint trajectory continues the same seed-42 run. Appendix G extends this comparison to the other model families and precision settings. SFT seed Mean cosine Positive pairs 42 + 0.227479 +0.227479 9/9 43 + 0.227273 +0.227273 9/9 44 + 0.226147 +0.226147 9/9",
+      "source": "https://arxiv.org/html/2611.11752v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0046",
+      "section": "Appendix D Fixed-Width Temporal Checks and Checkpoint Inventory",
+      "text": "The public 7B PPO calculation includes the immediate DPO initialization and six released checkpoints at labels 60 through 360. Its full-parameter Gram matrix covers 7,298,617,344 stored parameter coordinates. Adjacent cosines are − 0.14379 -0.14379 , − 0.21128 -0.21128 , − 0.23898 -0.23898 , − 0.25304 -0.25304 , and − 0.25372 -0.25372 . Equation 6 combines these cosines with displacement-norm ratios to obtain the projection coefficients. Across the nine public stages, the per-stage coefficient ranges are in Table 11 . Table 11: Projection coefficient onto the preceding displacement at native public widths. A negative coefficient describes one component of a step. Stage Minimum coefficient Maximum coefficient OLMo-2 7B − 0.2204 -0.2204 − 0.1741 -0.1741 OLMo-2 13B RLVR1 − 0.2534 -0.2534 − 0.1807 -0.1807 OLMo-2 13B RLVR2 − 0.2619 -0.2619 − 0.1848 -0.1848 OLMo-2 13B final − 0.2643 -0.2643 − 0.1837 -0.1837 OLMo-2 1B RLVR1 − 0.2779 -0.2779 − 0.1042 -0.1042 OLMo-2 1B final − 0.2762 -0.2762 − 0.1774 -0.1774 OLMo-2 32B − 0.2603 -0.2603 − 0.1172 -0.1172 OLMoE 1B active / 7B − 0.2751 -0.2751 − 0.1884 -0.1884 Olmo-3 7B − 0.2615 -0.2615 − 0.1930 -0.1930 The release repositories and immediate references used in the survey are listed below. All names have the allenai/ organization prefix. The accompanying machine-readable results retain full snapshot identifiers where available. Stage names identify the released training segment within each model lineage. OLMo-2 7B Release OLMo-2-1124-7B-Instruct . Immediate reference OLMo-2-1124-7B-DPO . OLMo-2 13B RLVR1 Release OLMo-2-1124-13B-Instruct-RLVR1 . Immediate reference OLMo-2-1124-13B-DPO . OLMo-2 13B RLVR2 Release OLMo-2-1124-13B-Instruct-RLVR2 . Immediate reference OLMo-2-1124-13B-Instruct-RLVR1 .",
+      "source": "https://arxiv.org/html/2611.11752v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0047",
+      "section": "Appendix D Fixed-Width Temporal Checks and Checkpoint Inventory",
+      "text": "OLMo-2 13B final Release OLMo-2-1124-13B-Instruct . Immediate reference OLMo-2-1124-13B-Instruct-RLVR2 . OLMo-2 1B RLVR1 Release OLMo-2-0425-1B-RLVR1 . Immediate reference OLMo-2-0425-1B-DPO . OLMo-2 1B final Release OLMo-2-0425-1B-Instruct . Immediate reference OLMo-2-0425-1B-RLVR1 . OLMo-2 32B Release OLMo-2-0325-32B-Instruct . Immediate reference OLMo-2-0325-32B-DPO . OLMoE 1B active / 7B Release OLMoE-1B-7B-0125-Instruct . Immediate reference OLMoE-1B-7B-0125-DPO . Olmo-3 7B Release Olmo-3-7B-Instruct . Immediate reference Olmo-3-7B-Instruct-DPO . Table 12: Additional matrix-shape inventory for the public releases. Counts cover matrices of the stated shape and exclude one-dimensional normalization weights. The latter remain in full-parameter cosine calculations. OLMoE counts include individual expert matrices and router matrices. Model Rows Columns Count OLMo-2 1B final 100,352 2,048 2 2,048 8,192 16 8,192 2,048 32 2,048 2,048 64 OLMo-2 13B final 100,352 5,120 2 5,120 13,824 40 13,824 5,120 80 5,120 5,120 160 OLMo-2 32B 100,352 5,120 2 5,120 27,648 64 27,648 5,120 128 1,024 5,120 128 5,120 5,120 128 Olmo-3 7B 100,278 4,096 2 4,096 11,008 32 11,008 4,096 64 4,096 4,096 128 OLMoE 1B active / 7B 50,304 2,048 2 2,048 1,024 1,024 1,024 2,048 2,048 64 2,048 16 2,048 2,048 64",
+      "source": "https://arxiv.org/html/2611.11752v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0048",
+      "section": "Appendix E Full-SVD Validation",
+      "text": "The validation uses NumPy 1.26.4, scikit-learn 1.8.0, and PyTorch 2.12.0+cu130. A reduced QR factorization followed by LAPACK full SVD preserves the complete singular spectrum for rectangular cases. The largest selected matrix is the 100352 × 4096 100352\\times 4096 embedding, for which reduced QR makes the full-spectrum calculation tractable. For subspaces, let U 0 , U T U_{0},U_{T} contain the leading 64 left singular vectors of the reference and endpoint weight matrices. We compute the largest principal angle as arcsin ⁡ ‖ ( I − U 0 ​ U 0 ⊤ ) ​ U T ‖ 2 \\arcsin\\|(I-U_{0}U_{0}^{\\top})U_{T}\\|_{2} using orthonormal FP64 bases. This avoids the small-angle floor of an arccos calculation. We separately reproduce the original FP32 arccos calculation. Table 13 gives baseline approximation errors and both angle estimates. Original angle is the largest principal angle computed by the original randomized-SVD and FP32 procedure. Let U ^ 0 , U ^ T \\widehat{U}_{0},\\widehat{U}_{T} be the first 64 left singular vectors returned by the rank-256 approximations. In degrees, this calculation is ϕ original = 180 π ​ arccos ⁡ ( clip [ − 1 , 1 ] ⁡ [ σ min ​ ( U ^ 0 ⊤ ​ U ^ T ) ] ) . \\phi_{\\mathrm{original}}=\\frac{180}{\\pi}\\arccos\\!\\left(\\operatorname{clip}_{[-1,1]}\\!\\left[\\sigma_{\\min}(\\widehat{U}_{0}^{\\top}\\widehat{U}_{T})\\right]\\right). The cross-product and its singular values are computed in FP32. For energy, the approximation and absolute error are E ^ 512 = ∑ i = 1 512 σ ^ i 2 ‖ Δ ‖ F 2 , ε E = | E ^ 512 − E 512 full | . \\widehat{E}_{512}=\\frac{\\sum_{i=1}^{512}\\widehat{\\sigma}_{i}^{2}}{\\|\\Delta\\|_{F}^{2}},\\qquad\\varepsilon_{E}=\\left|\\widehat{E}_{512}-E_{512}^{\\mathrm{full}}\\right|.",
+      "source": "https://arxiv.org/html/2611.11752v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0049",
+      "section": "Appendix E Full-SVD Validation",
+      "text": "Here σ ^ i \\widehat{\\sigma}_{i} are the rank-512 randomized-SVD singular values, E 512 full E_{512}^{\\mathrm{full}} comes from the full decomposition, and both fractions use the same FP64 squared Frobenius norm. Table 13 reports ε E \\varepsilon_{E} as a fraction; 0.01 0.01 equals one percentage point. Table 13: Baseline numerical audit on the fourteen selected matrices. The stable-rank error isolates singular-value error with an FP64 Frobenius norm. Energy error is absolute error in E 512 E_{512} . Here E 512 = E k ​ ( Δ ) E_{512}=E_{k}(\\Delta) from Equation 3 at k = 512 k=512 ; the energy-error and original-angle formulas appear above. Angles are the largest of the 64 principal angles, in degrees. The original-pipeline stable-rank error can be larger because its normalization differs. Run Matrix Relative stable-rank error Energy error Original angle Full-SVD angle PPO Query 0 3.9e-07 0.00514 0.31404 0.29726 PPO MLP up 0 1.5e-06 0.00939 0.09487 0.07653 PPO Query 16 5.7e-07 0.00818 0.09691 0.05868 PPO MLP down 16 4.3e-07 0.01029 0.08623 0.08062 PPO Query 31 1e-07 0.00761 0.13848 0.13671 PPO MLP up 31 1.7e-07 0.01044 0.13122 0.17695 PPO Embedding 8.8e-05 0.01350 0.09279 0.00103 SFT Query 0 4.2e-07 0.00029 76.20685 76.26711 SFT MLP up 0 1.1e-06 0.01247 1.62522 1.96539 SFT Query 16 2e-07 0.00296 8.71772 8.72792 SFT MLP down 16 7.5e-05 0.01282 1.94431 2.76619 SFT Query 31 2e-07 0.00412 5.86628 5.85589 SFT MLP up 31 3.9e-07 0.01231 5.37735 2.28540 SFT Embedding 1.9e-05 0.01353 0.10279 0.06163",
+      "source": "https://arxiv.org/html/2611.11752v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0050",
+      "section": "Appendix E Full-SVD Validation",
+      "text": "The threshold failure occurs in the SFT layer-16 query projection. Full SVD gives E 256 = 0.80027920 E_{256}=0.80027920 and k 0.8 = 255 k_{0.8}=255 . Independent baseline rank-256 calls at seeds 42, 43, and 44 give 0.79754418 0.79754418 , 0.79760081 0.79760081 , and 0.79759122 0.79759122 . Forty oversamples and eight iterations at seed 42 give 0.79972833 0.79972833 . All four approximate energies use the same FP64 denominator as the full result. The original FP32 denominator introduces an additional shift. Full-spectrum ranks resolve the threshold for these selected cases.",
+      "source": "https://arxiv.org/html/2611.11752v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0051",
+      "section": "Appendix F Corrections and Disposition of Earlier Analyses",
+      "text": "The original public 7B PPO endpoint subtracted SFT and therefore contained both DPO and PPO changes. Revised PPO spectral cases subtract the immediate DPO checkpoint. We withdraw the earlier MLP stable-rank headline near 37 as a pure-PPO statistic. Separately, the intended reservoir sketch admitted no coordinates after its first two million entries. All reported full-model cosines now use full-coordinate accumulation, and we withdraw the earlier sketch-error estimate. The reference cancels between two fixed checkpoints but affects the initial displacement and all cumulative descriptors. Independently, correcting the sketch can change every previously sampled global cosine. The Qwen ablations had unequal optimizer-update counts, unset critic seeds, and post-EOS padding entering losses. We replace them with the shared, paired implementation in Section 3.2 and withdraw claims that clipping is ruled out or that an advantage estimator explains production anti-alignment. The original local 7B GRPO run started from SFT, not DPO, and its requested 60-step reconstruction is unavailable in the retained inventory. We remove the matched-initialization claim. The paired 1B experiment supplies the controlled comparison in the revised analysis. Energy-rank and angle claims follow Section 4.4 . These corrections preserve the spectral compatibility proposition.",
+      "source": "https://arxiv.org/html/2611.11752v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0052",
+      "section": "G.1 Shared training and measurement protocol",
+      "text": "The cross-family study extends the OLMo-2-7B comparison to meta-llama/Llama-3.2-3B , Qwen/Qwen2.5-3B , and mistralai/Mistral-7B-v0.3 . All runs train on allenai/tulu-3-sft-olmo-2-mixture with the same plain-text system, user, and assistant role formatting. The causal language-model loss supervises all retained non-padding conversation tokens with a preceding token, as specified in Equation 1 . The maximum sequence length is 4,096 tokens. The effective batch contains 64 examples, and AdamW uses learning rate 10 − 5 10^{-5} , zero weight decay, 3% warmup, and linear decay over the full two-epoch schedule of 29,356 optimizer steps. A stop callback ends the comparison at step 5,000 without rescaling that schedule. The baseline runs hold model parameters and Adam states in BF16. The Llama precision follow-ups hold both in FP32 and perform forward and backward computation under BF16 autocast. The BF16 Llama and Qwen runs use microbatches of two examples per device, while the Mistral and FP32 Llama runs use one; gradient accumulation and device count maintain the effective batch of 64. All arms use gradient checkpointing. The precision comparison consequently concerns the numerical training configuration, including parameter and optimizer-state precision.",
+      "source": "https://arxiv.org/html/2611.11752v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0053",
+      "section": "G.1 Shared training and measurement protocol",
+      "text": "At steps 0, 500, …, 5,000, we record the full parameter vector. The checkpoint-based and in-memory implementations both form displacements in FP64 before accumulating their full-coordinate Gram matrix. For tied parameters, each independent parameter is counted once. The in-memory method avoids retaining another complete checkpoint series on disk. A comparison on Mistral seed 43 at steps 0, 500, and 1,000 gives a maximum absolute Gram-entry discrepancy of 1.28 × 10 − 13 1.28\\times 10^{-13} and relative discrepancy of 1.75 × 10 − 15 1.75\\times 10^{-15} across 7,248,023,552 parameter coordinates. Table 14 reports every completed 5,000-step trajectory in the study. The extensions were sequential. Three Llama seeds formed the initial cross-family test; Mistral and Qwen were added subsequently. The negative Mistral outcome motivated a second Mistral seed and the Llama precision follow-ups. A 2,000-step FP32 seed-42 pilot preceded a fresh 5,000-step run with the same seed and schedule. Its first three cosines, + 0.1766 +0.1766 , + 0.0678 +0.0678 , and + 0.0233 +0.0233 , agree closely with the corresponding values in Table 16 . The tables summarize the complete 5,000-step grids, with the pilot treated as a diagnostic of the same setting. Table 14: SFT comparisons at width 500 optimizer steps through step 5,000. Precision denotes trainable parameters and Adam states. Each run contains nine adjacent displacement pairs. OLMo rows reproduce the seed summary in Appendix D .",
+      "source": "https://arxiv.org/html/2611.11752v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0054",
+      "section": "G.1 Shared training and measurement protocol",
+      "text": "Model Precision Seed Mean cosine Positive Negative OLMo-2-7B BF16 42 + 0.2275 +0.2275 9/9 0/9 OLMo-2-7B BF16 43 + 0.2273 +0.2273 9/9 0/9 OLMo-2-7B BF16 44 + 0.2261 +0.2261 9/9 0/9 Llama-3.2-3B BF16 42 + 0.2375 +0.2375 9/9 0/9 Llama-3.2-3B BF16 43 + 0.2381 +0.2381 9/9 0/9 Llama-3.2-3B BF16 44 + 0.2372 +0.2372 9/9 0/9 Qwen2.5-3B BF16 42 + 0.2226 +0.2226 9/9 0/9 Mistral-7B-v0.3 BF16 42 − 0.0100 -0.0100 2/9 7/9 Mistral-7B-v0.3 BF16 43 − 0.0099 -0.0099 2/9 7/9 Llama-3.2-3B FP32 42 + 0.0206 +0.0206 4/9 5/9 Llama-3.2-3B FP32 43 + 0.0209 +0.0209 4/9 5/9",
+      "source": "https://arxiv.org/html/2611.11752v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0055",
+      "section": "G.2 Family and precision dependence",
+      "text": "The BF16 Llama comparison reproduces positive alignment across three seeds, with means + 0.2375 +0.2375 , + 0.2381 +0.2381 , and + 0.2372 +0.2372 . The Qwen run also has nine positive pairs and mean + 0.2226 +0.2226 . In contrast, the two Mistral seeds each have seven negative pairs, beginning with the pair ending at step 2,000. Their full-grid means are − 0.0100 -0.0100 and − 0.0099 -0.0099 . Thus the shared supervised recipe produces different directional patterns across models. The temporal summaries retain this contrast at larger widths. Table 15 holds width fixed when increasing separation and separately aggregates displacements into widths 1,000 and 1,500. The BF16 Llama and Qwen means remain positive under these summaries. Mistral’s width-1,000 means are approximately − 0.0159 -0.0159 for both seeds. Within Llama, changing the numerical training configuration substantially lowers alignment. The FP32 seed-42 and seed-43 full-grid means are + 0.0206 +0.0206 and + 0.0209 +0.0209 , with four positive and five negative pairs each. Table 16 shows the change over training. Both runs first become negative at the pair ending at step 3,000 and remain negative through step 5,000. Full-grid means remain positive because of the early positive pairs. These results establish that the positive sign in the BF16 Llama runs is sensitive to numerical training configuration; they also show that supervised updates can exhibit consecutive anti-alignment. Table 15: Additional cross-family SFT temporal summaries. Separation-two and separation-three means use width 500 and contain eight and seven pairs. Width-1,000 and width-1,500 means aggregate consecutive displacements and contain four and two adjacent pairs. The width-1,500 grid ends at step 4,500.",
+      "source": "https://arxiv.org/html/2611.11752v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0056",
+      "section": "G.2 Family and precision dependence",
+      "text": "Model Precision Seed Sep. 2 Sep. 3 Width 1,000 Width 1,500 Llama-3.2-3B BF16 42 + 0.1889 +0.1889 + 0.1593 +0.1593 + 0.3195 +0.3195 + 0.3609 +0.3609 Llama-3.2-3B BF16 43 + 0.1891 +0.1891 + 0.1578 +0.1578 + 0.3194 +0.3194 + 0.3594 +0.3594 Llama-3.2-3B BF16 44 + 0.1881 +0.1881 + 0.1584 +0.1584 + 0.3172 +0.3172 + 0.3605 +0.3605 Qwen2.5-3B BF16 42 + 0.1784 +0.1784 + 0.1510 +0.1510 + 0.3037 +0.3037 + 0.3449 +0.3449 Mistral-7B-v0.3 BF16 42 − 0.0031 -0.0031 − 0.0005 -0.0005 − 0.0159 -0.0159 − 0.0144 -0.0144 Mistral-7B-v0.3 BF16 43 − 0.0035 -0.0035 − 0.0004 -0.0004 − 0.0159 -0.0159 − 0.0150 -0.0150 Llama-3.2-3B FP32 42 + 0.0273 +0.0273 + 0.0275 +0.0275 + 0.0408 +0.0408 + 0.0691 +0.0691 Llama-3.2-3B FP32 43 + 0.0269 +0.0269 + 0.0273 +0.0273 + 0.0408 +0.0408 + 0.0683 +0.0683 Table 16: Llama precision comparison at width 500. Each entry is the cosine between the displacement ending at the listed step and its immediate predecessor. BF16 and FP32 denote parameter and Adam-state precision. Seed 42 Seed 43 Endpoint BF16 FP32 BF16 FP32 1000 + 0.3724 +0.3724 + 0.1765 +0.1765 + 0.3676 +0.3676 + 0.1774 +0.1774 1500 + 0.3763 +0.3763 + 0.0678 +0.0678 + 0.3767 +0.3767 + 0.0708 +0.0708 2000 + 0.2993 +0.2993 + 0.0232 +0.0232 + 0.3023 +0.3023 + 0.0226 +0.0226 2500 + 0.2454 +0.2454 + 0.0031 +0.0031 + 0.2478 +0.2478 + 0.0031 +0.0031 3000 + 0.2120 +0.2120 − 0.0066 -0.0066 + 0.2072 +0.2072 − 0.0095 -0.0095 3500 + 0.1868 +0.1868 − 0.0142 -0.0142 + 0.1911 +0.1911 − 0.0141 -0.0141 4000 + 0.1648 +0.1648 − 0.0184 -0.0184 + 0.1660 +0.1660 − 0.0177 -0.0177 4500 + 0.1493 +0.1493 − 0.0217 -0.0217 + 0.1481 +0.1481 − 0.0216 -0.0216 5000 + 0.1309 +0.1309 − 0.0242 -0.0242 + 0.1359 +0.1359 − 0.0231 -0.0231",
+      "source": "https://arxiv.org/html/2611.11752v1",
+      "offset": 0
+    }
+  ],
+  "links": [
+    {
+      "href": "https://openreview.net/forum?id=UGIcayxHMI",
+      "text": "https://openreview.net/forum?id=UGIcayxHMI",
+      "section": "Abstract",
+      "context": "Reviewed on OpenReview: https://openreview.net/forum?id=UGIcayxHMI",
+      "url": "https://openreview.net/forum?id=UGIcayxHMI"
+    },
+    {
+      "href": "#bib.bib5",
+      "text": "Ilharco et al., 2023",
+      "section": "1 Introduction",
+      "context": "Language-model post-training changes a model’s behavior by changing its weights. Supervised fine-tuning ( sft ) learns from demonstration responses, while reinforcement learning from verifiable rewards ( rlvr ) learns from sampled responses scored by an automatic checker. Weight-space measurements describe how these procedures alter a pretrained model and inform methods that operate on weight differences, including task arithmetic and low-rank adaptation ( Ilharco et al., 2023",
+      "url": "https://arxiv.org/html/2611.11752v1#bib.bib5"
+    },
+    {
+      "href": "#bib.bib4",
+      "text": "Hu et al., 2022",
+      "section": "1 Introduction",
+      "context": "Language-model post-training changes a model’s behavior by changing its weights. Supervised fine-tuning ( sft ) learns from demonstration responses, while reinforcement learning from verifiable rewards ( rlvr ) learns from sampled responses scored by an automatic checker. Weight-space measurements describe how these procedures alter a pretrained model and inform methods that operate on weight differences, including task arithmetic and low-rank adaptation ( Ilharco et al., 2023 ; Hu et al., 2022",
+      "url": "https://arxiv.org/html/2611.11752v1#bib.bib4"
+    },
+    {
+      "href": "#bib.bib7",
+      "text": "Mukherjee et al. (2025)",
+      "section": "1 Introduction",
+      "context": "That distinction matters when comparing recent accounts of post-training geometry. Mukherjee et al. (2025)",
+      "url": "https://arxiv.org/html/2611.11752v1#bib.bib7"
+    },
+    {
+      "href": "#bib.bib16",
+      "text": "Zhu et al. (2025)",
+      "section": "1 Introduction",
+      "context": "That distinction matters when comparing recent accounts of post-training geometry. Mukherjee et al. (2025) report sparse, nearly full-algebraic-rank rlvr updates. Zhu et al. (2025)",
+      "url": "https://arxiv.org/html/2611.11752v1#bib.bib16"
+    },
+    {
+      "href": "#bib.bib14",
+      "text": "Shen et al. (2026)",
+      "section": "1 Introduction",
+      "context": "That distinction matters when comparing recent accounts of post-training geometry. Mukherjee et al. (2025) report sparse, nearly full-algebraic-rank rlvr updates. Zhu et al. (2025) analyze update localization, numerical precision, and alignment with principal weight subspaces. Shen et al. (2026)",
+      "url": "https://arxiv.org/html/2611.11752v1#bib.bib14"
+    },
+    {
+      "href": "#bib.bib3",
+      "text": "He & Cao, 2025",
+      "section": "1 Introduction",
+      "context": "Even a complete endpoint spectrum leaves a second question unanswered. It does not determine whether consecutive training displacements reinforce or oppose one another. Analyses of full weight matrices ( He & Cao, 2025",
+      "url": "https://arxiv.org/html/2611.11752v1#bib.bib3"
+    },
+    {
+      "href": "#bib.bib15",
+      "text": "Wang et al., 2026",
+      "section": "1 Introduction",
+      "context": "Even a complete endpoint spectrum leaves a second question unanswered. It does not determine whether consecutive training displacements reinforce or oppose one another. Analyses of full weight matrices ( He & Cao, 2025 ) and trajectory-level linear trends ( Wang et al., 2026",
+      "url": "https://arxiv.org/html/2611.11752v1#bib.bib15"
+    },
+    {
+      "href": "#bib.bib12",
+      "text": "Schulman et al., 2017",
+      "section": "2.1 How post-training changes the weights",
+      "context": "In rlvr , the current policy samples responses and a checker supplies a reward R ⁡ ( x , y ) R(x,y) , for example whether a final mathematical answer is correct. A common objective balances expected reward against deviation from a frozen reference policy π ref \\pi_{\\mathrm{ref}} . Practical implementations optimize sample-based surrogate losses. Proximal policy optimization ( ppo ) ( Schulman et al., 2017",
+      "url": "https://arxiv.org/html/2611.11752v1#bib.bib12"
+    },
+    {
+      "href": "#bib.bib11",
+      "text": "Schulman et al., 2016",
+      "section": "2.1 How post-training changes the weights",
+      "context": "The advantage estimator distinguishes important implementations of this objective. A learned value function estimates expected future reward, and generalized advantage estimation (GAE) combines temporal-difference residuals ( Schulman et al., 2016",
+      "url": "https://arxiv.org/html/2611.11752v1#bib.bib11"
+    },
+    {
+      "href": "#bib.bib13",
+      "text": "Shao et al., 2024",
+      "section": "2.1 How post-training changes the weights",
+      "context": "The advantage estimator distinguishes important implementations of this objective. A learned value function estimates expected future reward, and generalized advantage estimation (GAE) combines temporal-difference residuals ( Schulman et al., 2016 ) . Group Relative Policy Optimization ( grpo ) instead compares rewards among responses to the same prompt without a learned value function ( Shao et al., 2024",
+      "url": "https://arxiv.org/html/2611.11752v1#bib.bib13"
+    },
+    {
+      "href": "#S2.E2",
+      "text": "2",
+      "section": "2.1 How post-training changes the weights",
+      "context": "The advantage estimator distinguishes important implementations of this objective. A learned value function estimates expected future reward, and generalized advantage estimation (GAE) combines temporal-difference residuals ( Schulman et al., 2016 ) . Group Relative Policy Optimization ( grpo ) instead compares rewards among responses to the same prompt without a learned value function ( Shao et al., 2024 ) . Our controlled arms share Equation 2",
+      "url": "https://arxiv.org/html/2611.11752v1#S2.E2"
+    },
+    {
+      "href": "#A2",
+      "text": "B",
+      "section": "2.1 How post-training changes the weights",
+      "context": "The advantage estimator distinguishes important implementations of this objective. A learned value function estimates expected future reward, and generalized advantage estimation (GAE) combines temporal-difference residuals ( Schulman et al., 2016 ) . Group Relative Policy Optimization ( grpo ) instead compares rewards among responses to the same prompt without a learned value function ( Shao et al., 2024 ) . Our controlled arms share Equation 2 and differ in this advantage-system package. We name the two arms group-relative and critic–GAE after their advantage estimators. Appendix B",
+      "url": "https://arxiv.org/html/2611.11752v1#A2"
+    },
+    {
+      "href": "#bib.bib8",
+      "text": "OLMo Team et al., 2025",
+      "section": "2.1 How post-training changes the weights",
+      "context": "The reference for a weight displacement must follow this training sequence. The public OLMo-2-7B instruction model follows sft , direct preference optimization ( dpo ), and then rlvr ( OLMo Team et al., 2025",
+      "url": "https://arxiv.org/html/2611.11752v1#bib.bib8"
+    },
+    {
+      "href": "#bib.bib9",
+      "text": "Rafailov et al., 2023",
+      "section": "2.1 How post-training changes the weights",
+      "context": "The reference for a weight displacement must follow this training sequence. The public OLMo-2-7B instruction model follows sft , direct preference optimization ( dpo ), and then rlvr ( OLMo Team et al., 2025 ) . dpo learns from preferred and dispreferred responses ( Rafailov et al., 2023",
+      "url": "https://arxiv.org/html/2611.11752v1#bib.bib9"
+    },
+    {
+      "href": "#bib.bib10",
+      "text": "Roy & Vetterli, 2007",
+      "section": "2.2 Endpoint functionals",
+      "context": "We call k τ k_{\\tau} the energy-threshold rank . This avoids ambiguity with entropy-based effective rank ( Roy & Vetterli, 2007",
+      "url": "https://arxiv.org/html/2611.11752v1#bib.bib10"
+    },
+    {
+      "href": "#A1",
+      "text": "A",
+      "section": "Proposition 1 (Separation of stable rank and fixed-energy rank) .",
+      "context": "Appendix A",
+      "url": "https://arxiv.org/html/2611.11752v1#A1"
+    },
+    {
+      "href": "#S4.T3",
+      "text": "3",
+      "section": "3.1 Public trajectories and supervised comparisons",
+      "context": "Our public-release analysis covers nine rlvr stages in the OLMo-2, OLMoE, and Olmo-3 releases. Table 3",
+      "url": "https://arxiv.org/html/2611.11752v1#S4.T3"
+    },
+    {
+      "href": "#bib.bib6",
+      "text": "Lambert et al., 2025",
+      "section": "3.1 Public trajectories and supervised comparisons",
+      "context": "For sft , we analyze author-run trajectories from four model families on a uniform 500-optimizer-step grid through step 5,000. The comparison includes OLMo-2-7B and Llama-3.2-3B at seeds 42, 43, and 44, Mistral-7B-v0.3 at seeds 42 and 43, and Qwen2.5-3B at seed 42. Each trajectory contains ten displacements and nine adjacent pairs. All runs use the Tülu-3 OLMo-2 data mixture ( Lambert et al., 2025",
+      "url": "https://arxiv.org/html/2611.11752v1#bib.bib6"
+    },
+    {
+      "href": "#bib.bib8",
+      "text": "OLMo Team et al., 2025",
+      "section": "3.1 Public trajectories and supervised comparisons",
+      "context": "For sft , we analyze author-run trajectories from four model families on a uniform 500-optimizer-step grid through step 5,000. The comparison includes OLMo-2-7B and Llama-3.2-3B at seeds 42, 43, and 44, Mistral-7B-v0.3 at seeds 42 and 43, and Qwen2.5-3B at seed 42. Each trajectory contains ten displacements and nine adjacent pairs. All runs use the Tülu-3 OLMo-2 data mixture ( Lambert et al., 2025 ; OLMo Team et al., 2025",
+      "url": "https://arxiv.org/html/2611.11752v1#bib.bib8"
+    },
+    {
+      "href": "#S2.E1",
+      "text": "1",
+      "section": "3.1 Public trajectories and supervised comparisons",
+      "context": "For sft , we analyze author-run trajectories from four model families on a uniform 500-optimizer-step grid through step 5,000. The comparison includes OLMo-2-7B and Llama-3.2-3B at seeds 42, 43, and 44, Mistral-7B-v0.3 at seeds 42 and 43, and Qwen2.5-3B at seed 42. Each trajectory contains ten displacements and nine adjacent pairs. All runs use the Tülu-3 OLMo-2 data mixture ( Lambert et al., 2025 ; OLMo Team et al., 2025 ) , the same plain-text role formatting and all-token objective in Equation 1",
+      "url": "https://arxiv.org/html/2611.11752v1#S2.E1"
+    },
+    {
+      "href": "#A7",
+      "text": "G",
+      "section": "3.1 Public trajectories and supervised comparisons",
+      "context": "The cross-family runs store trainable parameters and Adam states in BF16. Two additional Llama runs at seeds 42 and 43 use FP32 parameters and Adam states with BF16 autocast, retaining the data mixture, effective batch size, learning-rate schedule, and measurement grid. Appendix G",
+      "url": "https://arxiv.org/html/2611.11752v1#A7"
+    },
+    {
+      "href": "#S3.T1",
+      "text": "1",
+      "section": "3.1 Public trajectories and supervised comparisons",
+      "context": "The spectral validation uses fourteen matrices selected by layer position and shape before inspecting approximation errors. For each of the 7B PPO and author-run 7B sft endpoints, we select query projections at layers 0, 16, and 31, up projections at layers 0 and 31, the down projection at layer 16, and the embedding matrix. Table 1",
+      "url": "https://arxiv.org/html/2611.11752v1#S3.T1"
+    },
+    {
+      "href": "#A3",
+      "text": "C",
+      "section": "3.2 Controlled advantage-system comparison",
+      "context": "Each rollout batch generates 64 responses and performs 32 actor optimizer updates. A displacement width of 60 rollouts therefore represents 3,840 responses and 1,920 actor optimizer updates. We match these quantities between arms and report realized generated-token counts in Appendix C",
+      "url": "https://arxiv.org/html/2611.11752v1#A3"
+    },
+    {
+      "href": "#S4.T3",
+      "text": "3",
+      "section": "3.2 Controlled advantage-system comparison",
+      "context": "Each rollout batch generates 64 responses and performs 32 actor optimizer updates. A displacement width of 60 rollouts therefore represents 3,840 responses and 1,920 actor optimizer updates. We match these quantities between arms and report realized generated-token counts in Appendix C . Generated-token totals vary with the evolving policies. Public trajectories retain the release-specific step units listed in Table 3",
+      "url": "https://arxiv.org/html/2611.11752v1#S4.T3"
+    },
+    {
+      "href": "#A2",
+      "text": "B",
+      "section": "3.2 Controlled advantage-system comparison",
+      "context": "The prespecified primary outcome is each seed’s mean consecutive cosine at width 60 for endpoints after rollout 180, comprising endpoints 240, 300, and 360. We report all three seed values and the paired critic-minus-group difference. A Student interval uses the three seed-level differences with two degrees of freedom. Widths 10, 20, and 40 and all-window summaries are secondary descriptive checks. Appendix B",
+      "url": "https://arxiv.org/html/2611.11752v1#A2"
+    },
+    {
+      "href": "#bib.bib2",
+      "text": "Halko et al., 2011",
+      "section": "3.3 Exact directional measurements and spectral validation",
+      "context": "For the fourteen selected spectral cases, we compute a full FP64 singular decomposition. Reduced QR followed by full SVD preserves the complete singular spectrum of high-aspect-ratio matrices. Leading singular-triplet residuals are below 10 − 10 10^{-10} . We compare these results with the original randomized SVD configuration, ten oversamples and four power iterations ( Halko et al., 2011",
+      "url": "https://arxiv.org/html/2611.11752v1#bib.bib2"
+    },
+    {
+      "href": "#A6",
+      "text": "F",
+      "section": "3.3 Exact directional measurements and spectral validation",
+      "context": "Energy-threshold reporting requires sufficient spectral accuracy. If an approximate top- K K energy remains below τ \\tau , approximation error alone may explain the shortfall. Without a certified error bound, we label the threshold unresolved at the computed budget , not k τ > K k_{\\tau}>K . All energy-threshold ranks used as quantitative evidence below come from full decompositions. Appendix F",
+      "url": "https://arxiv.org/html/2611.11752v1#A6"
+    },
+    {
+      "href": "#S4.T2",
+      "text": "2",
+      "section": "4.1 Low stable rank coexists with large energy rank",
+      "context": "Full decompositions verify the spectral separation on the same update matrices. Table 2",
+      "url": "https://arxiv.org/html/2611.11752v1#S4.T2"
+    },
+    {
+      "href": "#S4.F1",
+      "text": "1",
+      "section": "4.1 Low stable rank coexists with large energy rank",
+      "context": "Full decompositions verify the spectral separation on the same update matrices. Table 2 reports all fourteen cases, and Figure 1",
+      "url": "https://arxiv.org/html/2611.11752v1#S4.F1"
+    },
+    {
+      "href": "#Thmproposition1",
+      "text": "1",
+      "section": "4.1 Low stable rank coexists with large energy rank",
+      "context": "These observations reconcile the logical content of the prior rank descriptions. Near-full algebraic rank permits a dominant leading singular value, and a dominant leading value permits a long energetic tail. Proposition 1",
+      "url": "https://arxiv.org/html/2611.11752v1#Thmproposition1"
+    },
+    {
+      "href": "#S2.E3",
+      "text": "3",
+      "section": "4.1 Low stable rank coexists with large energy rank",
+      "context": "Table 2: Full-SVD endpoint measurements for the shape-stratified 7B sample. PPO subtracts the immediate DPO checkpoint. SFT subtracts the base checkpoint. Each row refers to the same named matrix in the two endpoints. k 0.8 k_{0.8} is computed from the complete spectrum. E 512 E_{512} abbreviates E k ​ ( Δ ) E_{k}(\\Delta) from Equation 3",
+      "url": "https://arxiv.org/html/2611.11752v1#S2.E3"
+    },
+    {
+      "href": "#S4.T3",
+      "text": "3",
+      "section": "4.2 Production anti-alignment extends beyond PPO",
+      "context": "Every native-grid adjacent pair in the nine public stage trajectories has negative full-model cosine. Table 3",
+      "url": "https://arxiv.org/html/2611.11752v1#S4.T3"
+    },
+    {
+      "href": "#A7.T14",
+      "text": "14",
+      "section": "4.2 Production anti-alignment extends beyond PPO",
+      "context": "The supervised comparison reveals configuration-dependent alignment across four model families. Table 14",
+      "url": "https://arxiv.org/html/2611.11752v1#A7.T14"
+    },
+    {
+      "href": "#A7.T16",
+      "text": "16",
+      "section": "4.2 Production anti-alignment extends beyond PPO",
+      "context": "The Llama precision comparison further shows that alignment depends on the numerical training configuration. With FP32 parameters and Adam states, the seed-42 and seed-43 means fall to + 0.0206 +0.0206 and + 0.0209 +0.0209 , and the final five pairs are negative in both runs. Table 16",
+      "url": "https://arxiv.org/html/2611.11752v1#A7.T16"
+    },
+    {
+      "href": "#S4.T4",
+      "text": "4",
+      "section": "4.2 Production anti-alignment extends beyond PPO",
+      "context": "Higher-separation correlations quantify how far the directional relationship extends along the trajectory. Table 4",
+      "url": "https://arxiv.org/html/2611.11752v1#S4.T4"
+    },
+    {
+      "href": "#S2.E6",
+      "text": "6",
+      "section": "4.2 Production anti-alignment extends beyond PPO",
+      "context": "Cosine describes directional alignment but does not measure the magnitude of the component opposing the previous displacement. The projection coefficient accounts for the ratio of displacement norms. In the same public 7B run, Equation 6",
+      "url": "https://arxiv.org/html/2611.11752v1#S2.E6"
+    },
+    {
+      "href": "#A4",
+      "text": "D",
+      "section": "4.2 Production anti-alignment extends beyond PPO",
+      "context": "Table 4: Directional correlations at fixed displacement width. Entries are means with pair counts in parentheses. Separation changes within each row; width does not. Each trajectory retains its native width and training exposure. All six controlled runs appear in Appendix D",
+      "url": "https://arxiv.org/html/2611.11752v1#A4"
+    },
+    {
+      "href": "#S4.T5",
+      "text": "5",
+      "section": "4.3 A controlled effect on alignment magnitude",
+      "context": "To test whether the advantage system changes alignment under a shared training schedule, we turn from the public trajectories to the matched study. Table 5",
+      "url": "https://arxiv.org/html/2611.11752v1#S4.T5"
+    },
+    {
+      "href": "#A3",
+      "text": "C",
+      "section": "4.3 A controlled effect on alignment magnitude",
+      "context": "The effect persists in the secondary matched-width summaries. At widths 10, 20, and 40, all paired late-training differences are negative (Appendix C",
+      "url": "https://arxiv.org/html/2611.11752v1#A3"
+    },
+    {
+      "href": "#A2",
+      "text": "B",
+      "section": "4.3 A controlled effect on alignment magnitude",
+      "context": "Training-health checks accompany the geometry measurements. The runs record realized response lengths, EOS completion, and finite updates. Training cap-hit fractions range from 0.213 % 0.213\\% to 1.189 % 1.189\\% . The fixed 32-example held-out diagnostic shows no consistent improvement over the initial policy. Appendix B",
+      "url": "https://arxiv.org/html/2611.11752v1#A2"
+    },
+    {
+      "href": "#A5",
+      "text": "E",
+      "section": "4.4 Numerical accuracy depends on the reported functional",
+      "context": "The SVD validation supports accurate leading-value estimates in the selected sample but exposes material errors in threshold and angle interpretations. With an FP64 Frobenius denominator, the baseline randomized approximation’s maximum relative stable-rank error is 8.78 × 10 − 5 8.78\\times 10^{-5} , or 0.0088 % 0.0088\\% . Including the original FP32 norm and denominator regularizer raises the maximum original-pipeline error to 2.38 % 2.38\\% . The maximum absolute E 512 E_{512} error with the FP64 denominator is 0.01353 0.01353 , or 1.353 percentage points. Appendix E",
+      "url": "https://arxiv.org/html/2611.11752v1#A5"
+    },
+    {
+      "href": "#A2",
+      "text": "B",
+      "section": "Reproducibility and Broader Impact",
+      "context": "Appendices B",
+      "url": "https://arxiv.org/html/2611.11752v1#A2"
+    },
+    {
+      "href": "#A7",
+      "text": "G",
+      "section": "Reproducibility and Broader Impact",
+      "context": "Appendices B – G",
+      "url": "https://arxiv.org/html/2611.11752v1#A7"
+    },
+    {
+      "href": "https://arxiv.org/abs/2110.14168",
+      "text": "https://arxiv.org/abs/2110.14168",
+      "section": "References",
+      "context": "Cobbe et al. (2021) Karl Cobbe, Vineet Kosaraju, Mohammad Bavarian, Mark Chen, Heewoo Jun, Lukasz Kaiser, Matthias Plappert, Jerry Tworek, Jacob Hilton, Reiichiro Nakano, Christopher Hesse, and John Schulman. Training verifiers to solve math word problems. arXiv preprint arXiv:2110.14168 , 2021. URL https://arxiv.org/abs/2110.14168",
+      "url": "https://arxiv.org/abs/2110.14168"
+    },
+    {
+      "href": "https://arxiv.org/abs/2509.17866",
+      "text": "https://arxiv.org/abs/2509.17866",
+      "section": "References",
+      "context": "He & Cao (2025) Xinyu He and Xianghui Cao. Understanding post-training structural changes in large language models. arXiv preprint arXiv:2509.17866 , 2025. URL https://arxiv.org/abs/2509.17866",
+      "url": "https://arxiv.org/abs/2509.17866"
+    },
+    {
+      "href": "https://openreview.net/forum?id=i1uGbfHHpH",
+      "text": "https://openreview.net/forum?id=i1uGbfHHpH",
+      "section": "References",
+      "context": "Lambert et al. (2025) Nathan Lambert, Jacob Morrison, Valentina Pyatkin, Shengyi Huang, Hamish Ivison, Faeze Brahman, Lester James V. Miranda, Alisa Liu, Nouha Dziri, Xinxi Lyu, et al. Tülu 3: Pushing frontiers in open language model post-training. In Conference on Language Modeling , 2025. URL https://openreview.net/forum?id=i1uGbfHHpH",
+      "url": "https://openreview.net/forum?id=i1uGbfHHpH"
+    },
+    {
+      "href": "https://proceedings.neurips.cc/paper_files/paper/2025/hash/bf235a1d6780afd979f2f81676f43413-Abstract-Conference.html",
+      "text": "https://proceedings.neurips.cc/paper_files/paper/2025/hash/bf235a1d6780afd979f2f81676f43413-Abstract-Conference.html",
+      "section": "References",
+      "context": "Mukherjee et al. (2025) Sagnik Mukherjee, Lifan Yuan, Dilek Hakkani-Tur, and Hao Peng. Reinforcement learning finetunes small subnetworks in large language models. In Advances in Neural Information Processing Systems , volume 38, pp. 132119–132138, 2025. URL https://proceedings.neurips.cc/paper_files/paper/2025/hash/bf235a1d6780afd979f2f81676f43413-Abstract-Conference.html",
+      "url": "https://proceedings.neurips.cc/paper_files/paper/2025/hash/bf235a1d6780afd979f2f81676f43413-Abstract-Conference.html"
+    },
+    {
+      "href": "https://openreview.net/forum?id=2ezugTT9kU",
+      "text": "https://openreview.net/forum?id=2ezugTT9kU",
+      "section": "References",
+      "context": "OLMo Team et al. (2025) OLMo Team, Pete Walsh, Luca Soldaini, Dirk Groeneveld, Kyle Lo, Shane Arora, Akshita Bhagia, Yuling Gu, Shengyi Huang, Matt Jordan, et al. 2 OLMo 2 Furious (COLM’s version). In Conference on Language Modeling , 2025. URL https://openreview.net/forum?id=2ezugTT9kU",
+      "url": "https://openreview.net/forum?id=2ezugTT9kU"
+    },
+    {
+      "href": "https://www.eurasip.org/Proceedings/Eusipco/Eusipco2007/Papers/a5p-h05.pdf",
+      "text": "https://www.eurasip.org/Proceedings/Eusipco/Eusipco2007/Papers/a5p-h05.pdf",
+      "section": "References",
+      "context": "Roy & Vetterli (2007) Olivier Roy and Martin Vetterli. The effective rank: A measure of effective dimensionality. In Proceedings of the 15th European Signal Processing Conference , pp. 606–610, 2007. URL https://www.eurasip.org/Proceedings/Eusipco/Eusipco2007/Papers/a5p-h05.pdf",
+      "url": "https://www.eurasip.org/Proceedings/Eusipco/Eusipco2007/Papers/a5p-h05.pdf"
+    },
+    {
+      "href": "https://arxiv.org/abs/1707.06347",
+      "text": "https://arxiv.org/abs/1707.06347",
+      "section": "References",
+      "context": "Schulman et al. (2017) John Schulman, Filip Wolski, Prafulla Dhariwal, Alec Radford, and Oleg Klimov. Proximal policy optimization algorithms. arXiv preprint arXiv:1707.06347 , 2017. URL https://arxiv.org/abs/1707.06347",
+      "url": "https://arxiv.org/abs/1707.06347"
+    },
+    {
+      "href": "https://arxiv.org/abs/2402.03300",
+      "text": "https://arxiv.org/abs/2402.03300",
+      "section": "References",
+      "context": "Shao et al. (2024) Zhihong Shao, Peiyi Wang, Qihao Zhu, Runxin Xu, Junxiao Song, Xiao Bi, Haowei Zhang, Mingchuan Zhang, Y. K. Li, Y. Wu, and Daya Guo. DeepSeekMath: Pushing the limits of mathematical reasoning in open language models. arXiv preprint arXiv:2402.03300 , 2024. URL https://arxiv.org/abs/2402.03300",
+      "url": "https://arxiv.org/abs/2402.03300"
+    },
+    {
+      "href": "https://arxiv.org/abs/2606.07082",
+      "text": "https://arxiv.org/abs/2606.07082",
+      "section": "References",
+      "context": "Shen et al. (2026) Zhennan Shen, Yanshu Li, Qingyu Yin, Chak Tou Leong, Zhilin Wang, Yanxu Chen, Rongduo Han, Sunbowen Lee, and Yi R. Fung. On the geometry of on-policy distillation. arXiv preprint arXiv:2606.07082 , 2026. URL https://arxiv.org/abs/2606.07082",
+      "url": "https://arxiv.org/abs/2606.07082"
+    },
+    {
+      "href": "https://arxiv.org/abs/2601.04537",
+      "text": "https://arxiv.org/abs/2601.04537",
+      "section": "References",
+      "context": "Wang et al. (2026) Tianle Wang, Jiayu Liu, Zhongyuan Wu, Shenghao Jin, Wei Chen, Hao Xu, and Ning Miao. Linear dynamics in the RLVR training of large language models. arXiv preprint arXiv:2601.04537 , 2026. URL https://arxiv.org/abs/2601.04537",
+      "url": "https://arxiv.org/abs/2601.04537"
+    },
+    {
+      "href": "https://arxiv.org/abs/2511.08567",
+      "text": "https://arxiv.org/abs/2511.08567",
+      "section": "References",
+      "context": "Zhu et al. (2025) Hanqing Zhu, Zhenyu Zhang, Hanxian Huang, DiJia Su, Zechun Liu, Jiawei Zhao, Igor Fedorov, Hamed Pirsiavash, Zhizhou Sha, Jinwon Lee, David Z. Pan, Zhangyang Wang, Yuandong Tian, and Kai Sheng Tai. The path not taken: RLVR provably learns off the principals. arXiv preprint arXiv:2511.08567 , 2025. URL https://arxiv.org/abs/2511.08567",
+      "url": "https://arxiv.org/abs/2511.08567"
+    },
+    {
+      "href": "#Thmproposition1",
+      "text": "1",
+      "section": "Appendix A Proof and Support-Sparsity Examples",
+      "context": "For α = 1 / 2 \\alpha=1/2 , S k = H k S_{k}=H_{k} is the harmonic sum, with log ⁡ ( k + 1 ) ≤ H k ≤ 1 + log ⁡ k \\log(k+1)\\leq H_{k}\\leq 1+\\log k . Consequently r stable ≤ 1 + log ⁡ n r_{\\mathrm{stable}}\\leq 1+\\log n . If H k ≥ τ ​ H n H_{k}\\geq\\tau H_{n} , then 1 + log ⁡ k ≥ τ ​ log ⁡ n 1+\\log k\\geq\\tau\\log n , so k ≥ n τ / e k\\geq n^{\\tau}/e . This proves r stable / k τ = O ⁡ ( log ⁡ n / n τ ) → 0 r_{\\mathrm{stable}}/k_{\\tau}=O(\\log n/n^{\\tau})\\to 0 for every fixed τ ∈ ( 0 , 1 ) \\tau\\in(0,1) and completes Proposition 1",
+      "url": "https://arxiv.org/html/2611.11752v1#Thmproposition1"
+    },
+    {
+      "href": "#bib.bib1",
+      "text": "Cobbe et al., 2021",
+      "section": "B.1 Shared configuration",
+      "context": "Both arms initialize the policy and frozen reference from allenai/OLMo-2-0425-1B-DPO . Training examples come from allenai/RLVR-GSM , a verifiable mathematical-answer task source related to GSM8K ( Cobbe et al., 2021",
+      "url": "https://arxiv.org/html/2611.11752v1#bib.bib1"
+    },
+    {
+      "href": "#A2.T6",
+      "text": "6",
+      "section": "B.1 Shared configuration",
+      "context": "Both arms initialize the policy and frozen reference from allenai/OLMo-2-0425-1B-DPO . Training examples come from allenai/RLVR-GSM , a verifiable mathematical-answer task source related to GSM8K ( Cobbe et al., 2021 ) . We use the same prompt template, numeric final-answer checker, prompt stream, sampling configuration, and actor optimizer configuration within each seed pair. Table 6",
+      "url": "https://arxiv.org/html/2611.11752v1#A2.T6"
+    },
+    {
+      "href": "#bib.bib8",
+      "text": "OLMo Team et al., 2025",
+      "section": "B.2 Scope relative to published recipes",
+      "context": "Table 18 of the expanded OLMo-2 technical report lists a 2,048-token response cap, learning rate 4 × 10 − 7 4\\times 10^{-7} with a linear schedule, and KL coefficient 0.05 0.05 ( OLMo Team et al., 2025",
+      "url": "https://arxiv.org/html/2611.11752v1#bib.bib8"
+    },
+    {
+      "href": "https://arxiv.org/html/2501.00656v3#S5.T18",
+      "text": "expanded technical report",
+      "section": "B.2 Scope relative to published recipes",
+      "context": "Table 18 of the expanded OLMo-2 technical report lists a 2,048-token response cap, learning rate 4 × 10 − 7 4\\times 10^{-7} with a linear schedule, and KL coefficient 0.05 0.05 ( OLMo Team et al., 2025 ) . The table is available in the expanded technical report",
+      "url": "https://arxiv.org/html/2501.00656v3#S5.T18"
+    },
+    {
+      "href": "#A2.T6",
+      "text": "6",
+      "section": "B.2 Scope relative to published recipes",
+      "context": "Table 18 of the expanded OLMo-2 technical report lists a 2,048-token response cap, learning rate 4 × 10 − 7 4\\times 10^{-7} with a linear schedule, and KL coefficient 0.05 0.05 ( OLMo Team et al., 2025 ) . The table is available in the expanded technical report . Our controlled study uses these settings but a 1B model and a smaller rollout batch. The shared custom trainer and critic initialization are specified in Table 6",
+      "url": "https://arxiv.org/html/2611.11752v1#A2.T6"
+    },
+    {
+      "href": "#A2.T7",
+      "text": "7",
+      "section": "B.2 Scope relative to published recipes",
+      "context": "The 2,048-token cap expands the response budget beyond the earlier local 384/768-token experiments. Table 7",
+      "url": "https://arxiv.org/html/2611.11752v1#A2.T7"
+    },
+    {
+      "href": "#A2.T7",
+      "text": "7",
+      "section": "B.3 Training health and small held-out diagnostic",
+      "context": "Each run uses the same fixed 32 held-out examples with greedy decoding and the 2,048-token response cap. The initial policy answers 20 of 32 correctly. Table 7",
+      "url": "https://arxiv.org/html/2611.11752v1#A2.T7"
+    },
+    {
+      "href": "#A3.T8",
+      "text": "8",
+      "section": "Appendix C Exposure Budgets and Matched-Width Results",
+      "context": "All six runs generate 23,040 responses and perform 11,520 actor optimizer updates. Actual generated-token totals differ across policies and seeds, as Table 8",
+      "url": "https://arxiv.org/html/2611.11752v1#A3.T8"
+    },
+    {
+      "href": "#A3.T9",
+      "text": "9",
+      "section": "Appendix C Exposure Budgets and Matched-Width Results",
+      "context": "For a width h h , the paired comparison matches 64 ​ h 64h responses and 32 ​ h 32h actor optimizer updates. The late-window rule retains cosine endpoints greater than 180. At widths 10, 20, 40, and 60 this gives 18, 9, 5, and 3 cosines per seed, respectively. The width-40 grid includes a window crossing the midpoint, under the prespecified endpoint-based rule. The secondary intervals in Table 9",
+      "url": "https://arxiv.org/html/2611.11752v1#A3.T9"
+    },
+    {
+      "href": "#A4.T10",
+      "text": "10",
+      "section": "Appendix D Fixed-Width Temporal Checks and Checkpoint Inventory",
+      "context": "Table 10",
+      "url": "https://arxiv.org/html/2611.11752v1#A4.T10"
+    },
+    {
+      "href": "#A7",
+      "text": "G",
+      "section": "Appendix D Fixed-Width Temporal Checks and Checkpoint Inventory",
+      "context": "The three OLMo-2-7B SFT seeds are assessed on the same 500-step grid through step 5,000. Their means and sign counts are given below. The longer endpoint trajectory continues the same seed-42 run. Appendix G",
+      "url": "https://arxiv.org/html/2611.11752v1#A7"
+    },
+    {
+      "href": "#S2.E6",
+      "text": "6",
+      "section": "Appendix D Fixed-Width Temporal Checks and Checkpoint Inventory",
+      "context": "The public 7B PPO calculation includes the immediate DPO initialization and six released checkpoints at labels 60 through 360. Its full-parameter Gram matrix covers 7,298,617,344 stored parameter coordinates. Adjacent cosines are − 0.14379 -0.14379 , − 0.21128 -0.21128 , − 0.23898 -0.23898 , − 0.25304 -0.25304 , and − 0.25372 -0.25372 . Equation 6",
+      "url": "https://arxiv.org/html/2611.11752v1#S2.E6"
+    },
+    {
+      "href": "#A4.T11",
+      "text": "11",
+      "section": "Appendix D Fixed-Width Temporal Checks and Checkpoint Inventory",
+      "context": "The public 7B PPO calculation includes the immediate DPO initialization and six released checkpoints at labels 60 through 360. Its full-parameter Gram matrix covers 7,298,617,344 stored parameter coordinates. Adjacent cosines are − 0.14379 -0.14379 , − 0.21128 -0.21128 , − 0.23898 -0.23898 , − 0.25304 -0.25304 , and − 0.25372 -0.25372 . Equation 6 combines these cosines with displacement-norm ratios to obtain the projection coefficients. Across the nine public stages, the per-stage coefficient ranges are in Table 11",
+      "url": "https://arxiv.org/html/2611.11752v1#A4.T11"
+    },
+    {
+      "href": "https://huggingface.co/allenai/OLMo-2-1124-7B-Instruct",
+      "text": "OLMo-2-1124-7B-Instruct",
+      "section": "Appendix D Fixed-Width Temporal Checks and Checkpoint Inventory",
+      "context": "OLMo-2 7B Release OLMo-2-1124-7B-Instruct",
+      "url": "https://huggingface.co/allenai/OLMo-2-1124-7B-Instruct"
+    },
+    {
+      "href": "https://huggingface.co/allenai/OLMo-2-1124-7B-DPO",
+      "text": "OLMo-2-1124-7B-DPO",
+      "section": "Appendix D Fixed-Width Temporal Checks and Checkpoint Inventory",
+      "context": "Immediate reference OLMo-2-1124-7B-DPO",
+      "url": "https://huggingface.co/allenai/OLMo-2-1124-7B-DPO"
+    },
+    {
+      "href": "https://huggingface.co/allenai/OLMo-2-1124-13B-Instruct-RLVR1",
+      "text": "OLMo-2-1124-13B-Instruct-RLVR1",
+      "section": "Appendix D Fixed-Width Temporal Checks and Checkpoint Inventory",
+      "context": "OLMo-2 13B RLVR1 Release OLMo-2-1124-13B-Instruct-RLVR1",
+      "url": "https://huggingface.co/allenai/OLMo-2-1124-13B-Instruct-RLVR1"
+    },
+    {
+      "href": "https://huggingface.co/allenai/OLMo-2-1124-13B-DPO",
+      "text": "OLMo-2-1124-13B-DPO",
+      "section": "Appendix D Fixed-Width Temporal Checks and Checkpoint Inventory",
+      "context": "Immediate reference OLMo-2-1124-13B-DPO",
+      "url": "https://huggingface.co/allenai/OLMo-2-1124-13B-DPO"
+    },
+    {
+      "href": "https://huggingface.co/allenai/OLMo-2-1124-13B-Instruct-RLVR2",
+      "text": "OLMo-2-1124-13B-Instruct-RLVR2",
+      "section": "Appendix D Fixed-Width Temporal Checks and Checkpoint Inventory",
+      "context": "OLMo-2 13B RLVR2 Release OLMo-2-1124-13B-Instruct-RLVR2",
+      "url": "https://huggingface.co/allenai/OLMo-2-1124-13B-Instruct-RLVR2"
+    },
+    {
+      "href": "https://huggingface.co/allenai/OLMo-2-1124-13B-Instruct-RLVR1",
+      "text": "OLMo-2-1124-13B-Instruct-RLVR1",
+      "section": "Appendix D Fixed-Width Temporal Checks and Checkpoint Inventory",
+      "context": "Immediate reference OLMo-2-1124-13B-Instruct-RLVR1",
+      "url": "https://huggingface.co/allenai/OLMo-2-1124-13B-Instruct-RLVR1"
+    },
+    {
+      "href": "https://huggingface.co/allenai/OLMo-2-1124-13B-Instruct",
+      "text": "OLMo-2-1124-13B-Instruct",
+      "section": "Appendix D Fixed-Width Temporal Checks and Checkpoint Inventory",
+      "context": "OLMo-2 13B final Release OLMo-2-1124-13B-Instruct",
+      "url": "https://huggingface.co/allenai/OLMo-2-1124-13B-Instruct"
+    },
+    {
+      "href": "https://huggingface.co/allenai/OLMo-2-1124-13B-Instruct-RLVR2",
+      "text": "OLMo-2-1124-13B-Instruct-RLVR2",
+      "section": "Appendix D Fixed-Width Temporal Checks and Checkpoint Inventory",
+      "context": "Immediate reference OLMo-2-1124-13B-Instruct-RLVR2",
+      "url": "https://huggingface.co/allenai/OLMo-2-1124-13B-Instruct-RLVR2"
+    },
+    {
+      "href": "https://huggingface.co/allenai/OLMo-2-0425-1B-RLVR1",
+      "text": "OLMo-2-0425-1B-RLVR1",
+      "section": "Appendix D Fixed-Width Temporal Checks and Checkpoint Inventory",
+      "context": "OLMo-2 1B RLVR1 Release OLMo-2-0425-1B-RLVR1",
+      "url": "https://huggingface.co/allenai/OLMo-2-0425-1B-RLVR1"
+    },
+    {
+      "href": "https://huggingface.co/allenai/OLMo-2-0425-1B-DPO",
+      "text": "OLMo-2-0425-1B-DPO",
+      "section": "Appendix D Fixed-Width Temporal Checks and Checkpoint Inventory",
+      "context": "Immediate reference OLMo-2-0425-1B-DPO",
+      "url": "https://huggingface.co/allenai/OLMo-2-0425-1B-DPO"
+    },
+    {
+      "href": "https://huggingface.co/allenai/OLMo-2-0425-1B-Instruct",
+      "text": "OLMo-2-0425-1B-Instruct",
+      "section": "Appendix D Fixed-Width Temporal Checks and Checkpoint Inventory",
+      "context": "OLMo-2 1B final Release OLMo-2-0425-1B-Instruct",
+      "url": "https://huggingface.co/allenai/OLMo-2-0425-1B-Instruct"
+    },
+    {
+      "href": "https://huggingface.co/allenai/OLMo-2-0425-1B-RLVR1",
+      "text": "OLMo-2-0425-1B-RLVR1",
+      "section": "Appendix D Fixed-Width Temporal Checks and Checkpoint Inventory",
+      "context": "Immediate reference OLMo-2-0425-1B-RLVR1",
+      "url": "https://huggingface.co/allenai/OLMo-2-0425-1B-RLVR1"
+    },
+    {
+      "href": "https://huggingface.co/allenai/OLMo-2-0325-32B-Instruct",
+      "text": "OLMo-2-0325-32B-Instruct",
+      "section": "Appendix D Fixed-Width Temporal Checks and Checkpoint Inventory",
+      "context": "OLMo-2 32B Release OLMo-2-0325-32B-Instruct",
+      "url": "https://huggingface.co/allenai/OLMo-2-0325-32B-Instruct"
+    },
+    {
+      "href": "https://huggingface.co/allenai/OLMo-2-0325-32B-DPO",
+      "text": "OLMo-2-0325-32B-DPO",
+      "section": "Appendix D Fixed-Width Temporal Checks and Checkpoint Inventory",
+      "context": "Immediate reference OLMo-2-0325-32B-DPO",
+      "url": "https://huggingface.co/allenai/OLMo-2-0325-32B-DPO"
+    },
+    {
+      "href": "https://huggingface.co/allenai/OLMoE-1B-7B-0125-Instruct",
+      "text": "OLMoE-1B-7B-0125-Instruct",
+      "section": "Appendix D Fixed-Width Temporal Checks and Checkpoint Inventory",
+      "context": "OLMoE 1B active / 7B Release OLMoE-1B-7B-0125-Instruct",
+      "url": "https://huggingface.co/allenai/OLMoE-1B-7B-0125-Instruct"
+    },
+    {
+      "href": "https://huggingface.co/allenai/OLMoE-1B-7B-0125-DPO",
+      "text": "OLMoE-1B-7B-0125-DPO",
+      "section": "Appendix D Fixed-Width Temporal Checks and Checkpoint Inventory",
+      "context": "Immediate reference OLMoE-1B-7B-0125-DPO",
+      "url": "https://huggingface.co/allenai/OLMoE-1B-7B-0125-DPO"
+    },
+    {
+      "href": "https://huggingface.co/allenai/Olmo-3-7B-Instruct",
+      "text": "Olmo-3-7B-Instruct",
+      "section": "Appendix D Fixed-Width Temporal Checks and Checkpoint Inventory",
+      "context": "Olmo-3 7B Release Olmo-3-7B-Instruct",
+      "url": "https://huggingface.co/allenai/Olmo-3-7B-Instruct"
+    },
+    {
+      "href": "https://huggingface.co/allenai/Olmo-3-7B-Instruct-DPO",
+      "text": "Olmo-3-7B-Instruct-DPO",
+      "section": "Appendix D Fixed-Width Temporal Checks and Checkpoint Inventory",
+      "context": "Immediate reference Olmo-3-7B-Instruct-DPO",
+      "url": "https://huggingface.co/allenai/Olmo-3-7B-Instruct-DPO"
+    },
+    {
+      "href": "#A5.T13",
+      "text": "13",
+      "section": "Appendix E Full-SVD Validation",
+      "context": "For subspaces, let U 0 , U T U_{0},U_{T} contain the leading 64 left singular vectors of the reference and endpoint weight matrices. We compute the largest principal angle as arcsin ⁡ ‖ ( I − U 0 ​ U 0 ⊤ ) ​ U T ‖ 2 \\arcsin\\|(I-U_{0}U_{0}^{\\top})U_{T}\\|_{2} using orthonormal FP64 bases. This avoids the small-angle floor of an arccos calculation. We separately reproduce the original FP32 arccos calculation. Table 13",
+      "url": "https://arxiv.org/html/2611.11752v1#A5.T13"
+    },
+    {
+      "href": "#A5.T13",
+      "text": "13",
+      "section": "Appendix E Full-SVD Validation",
+      "context": "Here σ ^ i \\widehat{\\sigma}_{i} are the rank-512 randomized-SVD singular values, E 512 full E_{512}^{\\mathrm{full}} comes from the full decomposition, and both fractions use the same FP64 squared Frobenius norm. Table 13",
+      "url": "https://arxiv.org/html/2611.11752v1#A5.T13"
+    },
+    {
+      "href": "#S2.E3",
+      "text": "3",
+      "section": "Appendix E Full-SVD Validation",
+      "context": "Table 13: Baseline numerical audit on the fourteen selected matrices. The stable-rank error isolates singular-value error with an FP64 Frobenius norm. Energy error is absolute error in E 512 E_{512} . Here E 512 = E k ​ ( Δ ) E_{512}=E_{k}(\\Delta) from Equation 3",
+      "url": "https://arxiv.org/html/2611.11752v1#S2.E3"
+    },
+    {
+      "href": "#S3.SS2",
+      "text": "3.2",
+      "section": "Appendix F Corrections and Disposition of Earlier Analyses",
+      "context": "The Qwen ablations had unequal optimizer-update counts, unset critic seeds, and post-EOS padding entering losses. We replace them with the shared, paired implementation in Section 3.2",
+      "url": "https://arxiv.org/html/2611.11752v1#S3.SS2"
+    },
+    {
+      "href": "#S4.SS4",
+      "text": "4.4",
+      "section": "Appendix F Corrections and Disposition of Earlier Analyses",
+      "context": "The original local 7B GRPO run started from SFT, not DPO, and its requested 60-step reconstruction is unavailable in the retained inventory. We remove the matched-initialization claim. The paired 1B experiment supplies the controlled comparison in the revised analysis. Energy-rank and angle claims follow Section 4.4",
+      "url": "https://arxiv.org/html/2611.11752v1#S4.SS4"
+    },
+    {
+      "href": "#S2.E1",
+      "text": "1",
+      "section": "G.1 Shared training and measurement protocol",
+      "context": "The cross-family study extends the OLMo-2-7B comparison to meta-llama/Llama-3.2-3B , Qwen/Qwen2.5-3B , and mistralai/Mistral-7B-v0.3 . All runs train on allenai/tulu-3-sft-olmo-2-mixture with the same plain-text system, user, and assistant role formatting. The causal language-model loss supervises all retained non-padding conversation tokens with a preceding token, as specified in Equation 1",
+      "url": "https://arxiv.org/html/2611.11752v1#S2.E1"
+    },
+    {
+      "href": "#A7.T14",
+      "text": "14",
+      "section": "G.1 Shared training and measurement protocol",
+      "context": "0, 500, …, 5,000, we record the full parameter vector. The checkpoint-based and in-memory implementations both form displacements in FP64 before accumulating their full-coordinate Gram matrix. For tied parameters, each independent parameter is counted once. The in-memory method avoids retaining another complete checkpoint series on disk. A comparison on Mistral seed 43 at steps 0, 500, and 1,000 gives a maximum absolute Gram-entry discrepancy of 1.28 × 10 − 13 1.28\\times 10^{-13} and relative discrepancy of 1.75 × 10 − 15 1.75\\times 10^{-15} across 7,248,023,552 parameter coordinates. Table 14",
+      "url": "https://arxiv.org/html/2611.11752v1#A7.T14"
+    },
+    {
+      "href": "#A7.T16",
+      "text": "16",
+      "section": "G.1 Shared training and measurement protocol",
+      "context": "The extensions were sequential. Three Llama seeds formed the initial cross-family test; Mistral and Qwen were added subsequently. The negative Mistral outcome motivated a second Mistral seed and the Llama precision follow-ups. A 2,000-step FP32 seed-42 pilot preceded a fresh 5,000-step run with the same seed and schedule. Its first three cosines, + 0.1766 +0.1766 , + 0.0678 +0.0678 , and + 0.0233 +0.0233 , agree closely with the corresponding values in Table 16",
+      "url": "https://arxiv.org/html/2611.11752v1#A7.T16"
+    },
+    {
+      "href": "#A4",
+      "text": "D",
+      "section": "G.1 Shared training and measurement protocol",
+      "context": "Table 14: SFT comparisons at width 500 optimizer steps through step 5,000. Precision denotes trainable parameters and Adam states. Each run contains nine adjacent displacement pairs. OLMo rows reproduce the seed summary in Appendix D",
+      "url": "https://arxiv.org/html/2611.11752v1#A4"
+    },
+    {
+      "href": "#A7.T15",
+      "text": "15",
+      "section": "G.2 Family and precision dependence",
+      "context": "The temporal summaries retain this contrast at larger widths. Table 15",
+      "url": "https://arxiv.org/html/2611.11752v1#A7.T15"
+    },
+    {
+      "href": "#A7.T16",
+      "text": "16",
+      "section": "G.2 Family and precision dependence",
+      "context": "Within Llama, changing the numerical training configuration substantially lowers alignment. The FP32 seed-42 and seed-43 full-grid means are + 0.0206 +0.0206 and + 0.0209 +0.0209 , with four positive and five negative pairs each. Table 16",
+      "url": "https://arxiv.org/html/2611.11752v1#A7.T16"
+    }
+  ],
+  "note": "Extracted HTML text; equations and table formatting may be imperfect. No PDF extraction was attempted."
+}

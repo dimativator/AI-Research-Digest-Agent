@@ -1,0 +1,332 @@
+{
+  "run_id": "27327f94cd6d48dda529fb346207585a",
+  "status": "completed",
+  "user_id": "dmitrii",
+  "profile_fingerprint": "a2480e0075ad9cdf236d40e30f74f9bfd87a08dd948530b42e6b57e4a123bfc0",
+  "pipeline_version": "react-v2",
+  "categories": [
+    "cs.LG",
+    "cs.CL",
+    "stat.ML",
+    "cs.AI",
+    "cs.IR"
+  ],
+  "date_from": "2026-09-28",
+  "date_to": "2026-11-15",
+  "papers": [
+    {
+      "paper_id": "2610.11730",
+      "summary": "Spectral weight decay applies additive singular-value shrinkage. At 500M parameters and a 4% validation-loss distortion budget, the paper reports 1.89× compression and 1.18× GPU inference speedup, versus 1.14× and 1.01× with standard weight decay.",
+      "relevance": "Directly addresses spectral regularization, low-rank compressibility, and noisy-label generalization. The reported inference speedup is for batch size 256, not small-batch decoding.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "For the 500 500 M model and a 4 % 4\\% distortion budget, it supports 1.89 × 1.89\\times compression, compared with 1.14 × 1.14\\times after standard weight decay."
+        },
+        {
+          "source": "inspection",
+          "quote": "The factorized models outperform their dense counterparts only at large batch sizes, so we measure forward-pass latency with a batch size of 256 256 on a single GPU."
+        }
+      ],
+      "title": "Spectral Weight Decay: Inducing Low-Rank Structure in Neural Network Weights",
+      "url": "https://arxiv.org/abs/2610.11730v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.06116",
+      "summary": "ORCA applies soft orthogonality regularization early in LLM training and then removes it. The paper reports lower final validation loss than Muon across LLaMA, Qwen3, and MoE experiments, including a 100B-token MoE run.",
+      "relevance": "Tests whether temporary spectral shaping improves training quality without constraining the final spectrum.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "Across these MoE experiments, ORCA reduces final validation loss by 0.020 0.020 – 0.025 0.025 relative to Muon."
+        },
+        {
+          "source": "inspection",
+          "quote": "Within each model scale, all methods share the same common hyperparameters."
+        }
+      ],
+      "title": "ORCA: The Annealed Spectral Conditioning Optimizer for Faster, Better LLM Training",
+      "url": "https://arxiv.org/abs/2610.06116v2",
+      "version": 2,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2609.40127",
+      "summary": "Learnable Subspace Projections jointly optimize low-rank compression projectors against a model-level objective while freezing pretrained weights. At 70% compression of Llama-2-7B linear-layer parameters, the paper reports WikiText-2 perplexity of 10.9 versus 13.3 for SVD-LLM.",
+      "relevance": "Provides a post-training comparison for the question of which subspaces preserve model quality, with reported inference and compression-cost measurements.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "A compression ratio is the fraction of the parameters of the linear layers (no embeddings, no head) that is removed."
+        },
+        {
+          "source": "inspection",
+          "quote": "SVD-LLM 187.6 36.0 22.5 13.3 LSP T (Ours) 42.4 23.3 19.4 13.0 LSP (Ours) 48.9 22.4 16.2 10.9"
+        },
+        {
+          "source": "inspection",
+          "quote": "LSP is Pareto-optimal at higher budgets: at every model–ratio setting, one of its two objectives gives the lowest perplexity, within 0.5 0.5 – 10 10 wall-clock hours."
+        }
+      ],
+      "title": "Learning Functional Subspaces for Neural Network Compression",
+      "url": "https://arxiv.org/abs/2609.40127v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.23571",
+      "summary": "BMuon changes Muon’s geometry to favor structured MLP-channel compressibility. On a 1B-parameter LLaMA-style model, it preserves its own unpruned perplexity through 80% channel pruning, but starts with worse perplexity than Muon: 12.84 versus 10.92.",
+      "relevance": "A pertinent counterpoint to low-rank compression work: improving post-training compressibility can sacrifice dense-model quality.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "On the unpruned models, Muon achieves lower perplexity ( 10.92 10.92 versus 12.84 12.84 for BMuon), but its performance degrades rapidly under pruning."
+        },
+        {
+          "source": "inspection",
+          "quote": "BMuon preserves its unpruned performance up to 80 % 80\\% pruning, reaching 12.86 12.86 with activation ranking and 12.85 12.85 with μ \\mu ranking."
+        }
+      ],
+      "title": "BMuon: Budgeting Muon's Spectral Geometry for Structured Compressibility",
+      "url": "https://arxiv.org/abs/2610.23571v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.08924",
+      "summary": "ResQAdam retains a residual sign update outside a low-rank optimizer subspace for quantization-aware LLM training. In its reported H200 measurements, optimizer-state memory falls 71.3–73.2% relative to AdamW, total peak memory falls 15.3–19.5%, and throughput falls less than 2%.",
+      "relevance": "Directly informs the quality, memory, and throughput tradeoffs of low-rank optimizer-state compression, albeit in QAT rather than ordinary pretraining.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "Total Peak Memory (GB) 33.33 / 28.24 ( ↓ \\downarrow 15.3%) 43.93 / 37.19 ( ↓ \\downarrow 15.3%) 99.14 / 79.77 ( ↓ \\downarrow 19.5%)"
+        },
+        {
+          "source": "inspection",
+          "quote": "The training throughput decreases by less than 2% compared to standard AdamW in all evaluated cases."
+        },
+        {
+          "source": "inspection",
+          "quote": "In fine-tuning the picture depends on the bit width."
+        }
+      ],
+      "title": "ResQAdam: Residual-Preserving Adaptive Optimization for Memory-Efficient Quantization Aware Training",
+      "url": "https://arxiv.org/abs/2611.08924v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.17429",
+      "summary": "Monarch–Muon applies matrix-aware optimization to structured weights. Its separate 6.89B-parameter systems benchmark reports peak memory of 52.94 versus 68.87 GB and full-step time of 1638.6 versus 2986.9 ms against dense Muon; complete quality runs are at smaller scales.",
+      "relevance": "Measures how representation and optimizer structure jointly affect pretraining quality, memory, and speed across scale.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "Quality runs train a 257M dense reference and a 1B MoE reference on FineWeb-Edu ( Penedo et al., 2024 ) . Systems benchmarks cover dense reference sizes up to 6.89B on an H100."
+        },
+        {
+          "source": "inspection",
+          "quote": "Dense Muon 146.5 (26.2) 428.2 (88.9) 650.4 (156.7) 1473.0 (505.2) 2986.9 (1288.3) Monarch–Muon 165.8 (8.0) 399.8 (29.2) 535.7 (50.5) 997.9 (140.5) 1638.6 (304.4)"
+        },
+        {
+          "source": "inspection",
+          "quote": "For GaLore, APOLLO, FRUGAL and Fira the projection is rebuilt every 200 steps; the rebuild is timed separately and excluded from the step time."
+        }
+      ],
+      "title": "Monarch-Muon: Structure-Aware Muon for Fast and Memory-Efficient Pretraining",
+      "url": "https://arxiv.org/abs/2610.17429v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.08049",
+      "summary": "Proposes Riemannian preconditioning for LoRA and evaluates it on GPT-2-medium generation and LLaMA2-7B commonsense fine-tuning. On the latter, reported mean top-1 accuracy is 82.34 with the proposed AdamW preconditioner versus 81.68 for AdamW.",
+      "relevance": "Combines LoRA optimization geometry with practical language-model fine-tuning comparisons at fixed rank and training setup.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "AdamW 73.33 83.41 79.38 92.36 83.74 85.77 72.87 82.60 81.68 w/ 4 74.31 84.17 77.99 93.12 83.43 86.28 74.23 82.20 81.97 w/ 5 (Ours) 73.55 83.62 79.02 92.95 85.48 86.41 74.32 83.40 82.34"
+        },
+        {
+          "source": "inspection",
+          "quote": "We also fixed the rank to r = 32 r=32 , the scaling factor of B ​ A ⊤ BA^{\\top} to 64 64 , the batch size to 16 16 , the weight decay to zero, the dropout to 0.05 0.05 , and the train epoch to 3 3 with a linear learning-rate schedule."
+        }
+      ],
+      "title": "A Riemannian Geometry for Low-rank Adaptation",
+      "url": "https://arxiv.org/abs/2610.08049v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.04249",
+      "summary": "Derives optimizer-dependent singular-mode birth, saturation, and decay laws for deep matrix factorization and validates phase behavior in controlled factorization and regression experiments.",
+      "relevance": "Directly informs how update geometry may affect effective rank. Its balance and alignment assumptions and simplified setting limit transfer to LLM pretraining.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "Under explicit balance and alignment assumptions, we derive birth, saturation, and decay laws for Euclidean GD, coordinate-wise updates of SignGD and an instantaneous Adam approximation, spectral updates of Muon and cumulative Shampoo, and a block curvature model of K-FAC."
+        },
+        {
+          "source": "inspection",
+          "quote": "Controlled experiments in deep matrix factorization and regression verify the derived phase laws."
+        }
+      ],
+      "title": "Optimizer Geometry Sets the Pace: Spectral Learning Dynamics in Matrix Factorization",
+      "url": "https://arxiv.org/abs/2610.04249v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.07859",
+      "summary": "CORE is a training-free deep-research harness that retrieves passages but returns selected snippets, with source expansion and duplicate suppression. The paper reports higher answer accuracy and evidence recall than two harness baselines across three agent models and three closed-search benchmarks.",
+      "relevance": "Directly applicable to evidence retrieval and context management in a handwritten research-digest harness; results are on deep-research benchmarks, not digest ranking.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "CORE’s context manager lets the agent expand the context around previously retrieved sources and deduplicates snippets across searches."
+        },
+        {
+          "source": "inspection",
+          "quote": "Across three agent models and three benchmarks, CORE achieves higher answer accuracy and evidence recall than Tongyi DeepResearch and OpenResearcher in every model–benchmark comparison, while returning substantially fewer tokens per search than Tongyi DeepResearch."
+        }
+      ],
+      "title": "CORE: Coarse-to-Fine Search with Context Management for Deep Research",
+      "url": "https://arxiv.org/abs/2611.07859v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.20857",
+      "summary": "Idea2Prior combines discovery, identity checks, facet-based assessment, citation expansion, and ranking for idea-to-paper retrieval. Its historical 30-query comparison reports 53.3% Hit@5 versus 43.3% and 36.7% for web Deep Research baselines, with important protocol limitations.",
+      "relevance": "Closely matches the digest agent’s paper-retrieval and relevance-ranking workflow. The historical, overlapping query set does not establish broad superiority.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "Tier Idea2Prior ChatGPT web DR Gemini web DR EASY 90% (9/10) 70% (7/10) † 70% (7/10) MEDIUM 50% (5/10) 30% (3/10) 30% (3/10) HARD 20% (2/10) 30% (3/10) 10% (1/10) All query cases 53.3% (16/30) 43.3% (13/30) † 36.7% (11/30)"
+        },
+        {
+          "source": "inspection",
+          "quote": "The small, overlapping target set and historical protocol do not support a broad or statistically established superiority claim."
+        }
+      ],
+      "title": "Idea2Prior: Auditable Paper Retrieval and Ranking from Research Ideas",
+      "url": "https://arxiv.org/abs/2610.20857v2",
+      "version": 2,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    }
+  ],
+  "x_feature": null,
+  "limitations": [
+    "These are paper-reported results, not independent replications.",
+    "BMuon’s language-model comparison is not matched for unpruned perplexity.",
+    "Monarch–Muon’s 6.89B systems measurements are separate from its smaller-scale quality runs; projection-refresh costs are excluded from several comparator step timings.",
+    "CORE’s benchmarks do not directly evaluate a research digest, and Idea2Prior’s historical comparison has control and accounting limitations.",
+    "No X attention analysis was available or used.",
+    "inspect:2610.11730: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.23571: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2611.08924: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.23343: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.06116: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.04249: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2611.07859: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2609.35297: full-text inspection unavailable; only abstract evidence was available.",
+    "inspect:2610.20857: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.17429: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.08049: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2609.40127: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.31897: only question-relevant HTML passages were inspected, not the whole paper."
+  ],
+  "stats": {
+    "fetched_count": 1000,
+    "candidate_count": 1000,
+    "llm_calls": 23,
+    "steps": 18,
+    "inspections": 16,
+    "expansions": 1,
+    "screened": 49,
+    "usage": {
+      "recorded_calls": 23,
+      "llm_latency_seconds": 368.4808270819194,
+      "input_tokens": 1173896,
+      "output_tokens": 11323,
+      "estimated_api_cost_usd": null,
+      "calls_without_usage": 0,
+      "cost_note": "API-equivalent estimate using standard GPT-5.6-Luna rates checked 2026-11-17: $0.20/M input, $1.20/M output; above 272K input, $0.40/M and $1.80/M. Assumes all input is uncached; excludes cache writes and external tools. Not actual Codex subscription billing. Unknown usage/model yields null cost.",
+      "price_source": "https://developers.openai.com/api/docs/models/gpt-5.6-luna"
+    },
+    "tool_calls": 17,
+    "tool_latency_seconds": 35.7216738750285
+  }
+}

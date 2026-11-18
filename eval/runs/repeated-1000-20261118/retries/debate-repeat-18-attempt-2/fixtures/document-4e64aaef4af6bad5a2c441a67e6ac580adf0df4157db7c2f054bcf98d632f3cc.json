@@ -1,0 +1,1368 @@
+{
+  "status": "ok",
+  "source": "https://arxiv.org/html/2611.08924v1",
+  "extractor_version": "article-v1",
+  "chunks": [
+    {
+      "chunk_id": "chunk-0001",
+      "section": "ResQAdam: Residual-Preserving Adaptive Optimization for Memory-Efficient Quantization Aware Training",
+      "text": "Liqun Ma † † thanks: Work done during internship at AMD. Affiliation: Mohamed bin Zayed University of Artificial Intelligence (MBZUAI) Email: liqun.ma@mbzuai.ac.ae Shengkun Tang Affiliation: Mohamed bin Zayed University of Artificial Intelligence (MBZUAI) Email: shengkun.tang@mbzuai.ac.ae Liangyu Wang Affiliation: King Abdullah University of Science and Technology (KAUST) Email: kun.zhang@mbzuai.ac.ae Lin Zhao Affiliation: Advanced Micro Devices, Inc. (AMD) Email: zhiqiang.shen@mbzuai.ac.ae Wei Luo Affiliation: Advanced Micro Devices, Inc. (AMD) Email: liangyu.wang@kaust.edu.sa Xinjun Niu Affiliation: Advanced Micro Devices, Inc. (AMD) Email: lin.zhao@amd.com Spandan Tiwari Affiliation: Advanced Micro Devices, Inc. (AMD) Email: wei.luo@amd.com Ashish Sirasao Affiliation: Advanced Micro Devices, Inc. (AMD) Email: xinjun.niu@amd.com Kun Zhang Affiliation: Mohamed bin Zayed University of Artificial Intelligence (MBZUAI) Affiliation: Carnegie Mellon University (CMU) Email: spandan.tiwari@amd.com Zhiqiang Shen Affiliation: Mohamed bin Zayed University of Artificial Intelligence (MBZUAI) Email: ashish.sirasao@amd.com",
+      "source": "https://arxiv.org/html/2611.08924v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0002",
+      "section": "Abstract",
+      "text": "Quantization-aware training (QAT) is the most reliable way to obtain accurate low-bit large language models (LLMs), but training with AdamW keeps two dense FP32 states for every weight matrix. We find that low-rank memory-efficient optimizers such as GaLore and LDAdam degrade substantially in QAT. A considerable part of the QAT momentum lies outside its top- r r singular subspace, and projection-based methods discard this part at every step. We further observe that this residual remains useful when only its sign is kept. Based on these observations, we propose ResQAdam. It keeps a single BF16 momentum, applies Adam only to the r × r r\\times r coordinates of the principal subspace, and adds a normalized sign update computed from the residual. We evaluate ResQAdam with two from-scratch QAT methods and three QAT fine-tuning pipelines, with weights quantized down to 2 bits. It reduces optimizer-state memory by 71% to 74% relative to AdamW, stays close to AdamW in most settings, and lowers training throughput by less than 2%. Our code is available at https://github.com/LiqunMa/ResQAdam .",
+      "source": "https://arxiv.org/html/2611.08924v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0003",
+      "section": "1 Introduction",
+      "text": "Quantization-aware training (QAT) inserts the quantizer into the forward pass and updates latent full-precision weights through the straight-through estimator (STE) ( Bengio et al., 2013 ) . At low bit widths it recovers much of the accuracy lost by post-training quantization (PTQ) ( Frantar et al., 2022 ; Xiao et al., 2023 ) , both when fine-tuning a pretrained checkpoint ( Liu et al., 2024 ; Chen et al., 2025 ; Liu et al., 2026 ) and when training from scratch ( Panferov et al., 2025 ; Tabesh et al., 2025 ) . This accuracy comes at a memory cost. QAT keeps full-precision weights and gradients, and most recipes rely on AdamW ( Loshchilov and Hutter, 2017 ) , which stores two FP32 moments and adds 8 ​ n ​ m 8nm bytes for each n × m n\\times m weight matrix. A natural remedy is to borrow memory-efficient optimizers from full-precision training. GaLore ( Zhao et al., 2024 ) and LDAdam ( Robert et al., 2024 ) project the gradient onto a rank- r r subspace, keep Adam states only in that subspace, and map the update back to the full space. This works well when the optimization signal is concentrated in a few directions. Figure 1 shows that the same strategy does not carry over to QAT. With rank 64 and tuned learning rates, both methods are clearly worse than AdamW, in from-scratch training as well as in fine-tuning. We hypothesize that this is a property of the QAT update itself. Under the STE, the gradient has to compensate for element-wise quantization errors, which are spread over individual entries rather than aligned with a few directions of the weight matrix. If these corrections are less concentrated in the top- r r subspace than the rest of the update, a projection-based optimizer discards them at every step, and no amount of tuning inside the subspace recovers them.",
+      "source": "https://arxiv.org/html/2611.08924v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0004",
+      "section": "1 Introduction",
+      "text": "Figure 1: WikiText-2 perplexity versus optimizer state memory for different optimizers under two QAT paradigms. The x-axis reports the total optimizer state size of the full model (in GB). All experiments use W2A16 quantization with group size 128, and projection-based optimizers use rank 64. For a fair comparison, the learning rate of each optimizer is tuned via grid search and the best result is reported. To address this limitation, we decompose the QAT optimization signal according to its geometric structure. We apply Singular Value Decomposition (SVD) to the dense global momentum, retaining the top- r r singular vectors to form the orthonormal bases U t ∈ ℝ n × r U_{t}\\in\\mathbb{R}^{n\\times r} and V t ∈ ℝ m × r V_{t}\\in\\mathbb{R}^{m\\times r} . These bases induce a principal matrix subspace 𝒮 t = { U t ​ A ​ V t ⊤ : A ∈ ℝ r × r } \\mathcal{S}_{t}=\\left\\{U_{t}AV_{t}^{\\top}:A\\in\\mathbb{R}^{r\\times r}\\right\\} . The momentum can then be exactly decomposed into its projection onto 𝒮 t \\mathcal{S}_{t} and an orthogonal residual lying in 𝒮 t ⟂ \\mathcal{S}_{t}^{\\perp} . The principal projection captures the dominant low-rank structure of the optimization trajectory, whereas the orthogonal residual retains dispersed signals outside the principal subspace. Our empirical results show that these residual signals become particularly important under QAT. Their magnitude matters little: keeping only their sign, with no second-moment state, recovers most of the lost quality (Section 5.1 ).",
+      "source": "https://arxiv.org/html/2611.08924v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0005",
+      "section": "1 Introduction",
+      "text": "Motivated by this insight, we propose ResQAdam ( Res idual-Preserving Q uantization-Aware Adam ), a geometrically decoupled optimizer that applies distinct update rules based on subspace characteristics. It stores one dense momentum in BF16 and refreshes its top- r r singular vectors every τ \\tau steps. Adam runs on the r × r r\\times r coordinates of the gradient in this subspace, and the residual of the momentum contributes a sign update whose norm matches the Adam update. Since no dense second moment is kept, persistent optimizer memory falls to roughly a quarter of AdamW, and the SVD cost is spread over τ \\tau steps. By eliminating dense second-moment tracking, ResQAdam limits the persistent optimizer memory footprint to only the BF16 momentum and negligible low-rank components. For a weight matrix W ∈ ℝ n × m W\\in\\mathbb{R}^{n\\times m} with projection rank r r , the persistent memory ratio compared to standard AdamW is: 2 ​ n ​ m + 𝒪 ⁡ ( ( n + m ) ​ r + r 2 ) / 8 ​ n ​ m ≈ 25 % 2nm+\\mathcal{O}((n+m)r+r^{2})/{8nm}\\approx 25\\% . The measured saving is 71% to 74%. Furthermore, while the required SVD introduces computational overhead, refreshing the bases only once every few hundred steps effectively amortizes this cost, resulting in minimal training-speed degradation.",
+      "source": "https://arxiv.org/html/2611.08924v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0006",
+      "section": "1 Introduction",
+      "text": "To evaluate our approach, we conduct extensive experiments across both from-scratch QAT and QAT fine-tuning paradigms. Across multiple LLM architectures, quantization configurations, and QAT methods, our empirical results demonstrate that ResQAdam closely tracks the optimization trajectory and largely preserves AdamW-level final performance across the evaluated settings. It achieves this by reducing around 75% of AdamW’s average memory footprint, while introducing negligible computational overhead for training.",
+      "source": "https://arxiv.org/html/2611.08924v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0007",
+      "section": "2 Related Work",
+      "text": "From-scratch QAT. Learnable quantizers such as PACT ( Choi et al., 2018 ) and LSQ ( Esser et al., 2019 ) were later scaled to LLMs by BitNet ( Wang et al., 2023 ) and BitNet b1.58 ( Ma et al., 2024 ) . Recent work improves the gradient estimate. QuEST ( Panferov et al., 2025 ) applies Hadamard transforms and down-weights gradients of entries with large quantization error, and CAGE ( Tabesh et al., 2025 ) adds a curvature-aware correction to the STE. Both quantize only the forward pass and keep gradients and optimizer states in high precision, which is the setting we target. QAT Fine-Tuning. A complementary paradigm adapts a converged full-precision checkpoint to recover its compressed representation. LLM-QAT ( Liu et al., 2024 ) performs data-free QAT by distilling from the pretrained model’s own generations, jointly quantizing weights, activations, and the KV cache. EfficientQAT ( Chen et al., 2025 ) reduces QAT cost via two stages: block-wise all-parameter training (Block-AP) for a strong low-bit initialization, followed by end-to-end training of only the quantization step sizes (E2E-QP). ParetoQ ( Liu et al., 2026 ) unifies 1-to-4-bit QAT under a single framework and identifies a sharp representation transition between 2 and 3 bits. Unlike parameter-efficient alternatives such as PEQA ( Kim et al., 2023 ) , which shrinks optimizer memory by training only the quantization scales, or QLoRA ( Dettmers et al., 2023 ) , which fine-tunes high-precision adapters over a frozen quantized base, our method retains full-parameter updates while still reducing optimizer memory. Algorithm 1 ResQAdam: Main Flow",
+      "source": "https://arxiv.org/html/2611.08924v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0008",
+      "section": "2 Related Work",
+      "text": "Require: Weights W 0 ∈ ℝ n × m W_{0}\\in\\mathbb{R}^{n\\times m} , learning rate η \\eta , weight decay λ \\lambda , rank r r , interval τ \\tau , Adam parameters β 1 , β 2 , ϵ \\beta_{1},\\beta_{2},\\epsilon Initialize: M 0 ← 0 M_{0}\\leftarrow 0 , m 0 ∥ , v 0 ∥ ← 0 m_{0}^{\\parallel},v_{0}^{\\parallel}\\leftarrow 0 for t = 1 , 2 , … t=1,2,\\dots do Obtain STE gradient G t G_{t} M t ← β 1 ​ M t − 1 + ( 1 − β 1 ) ​ G t M_{t}\\leftarrow\\beta_{1}M_{t-1}+(1-\\beta_{1})G_{t} if t mod τ = 1 t\\bmod\\tau=1 then U t , V t ← SVD ( M t , rank = r ) U_{t},V_{t}\\leftarrow\\operatorname{SVD}(M_{t},\\operatorname{rank}=r) Transport m t − 1 ∥ , v t − 1 ∥ m_{t-1}^{\\parallel},v_{t-1}^{\\parallel} to new bases end if M t ∥ ← U t ​ U t ⊤ ​ M t ​ V t ​ V t ⊤ M_{t}^{\\parallel}\\leftarrow U_{t}U_{t}^{\\top}M_{t}V_{t}V_{t}^{\\top} M t ⟂ ← M t − M t ∥ M_{t}^{\\perp}\\leftarrow M_{t}-M_{t}^{\\parallel} Δ t ∥ ← ProjectedAdamUpdate ​ ( G t , U t , V t ) \\Delta_{t}^{\\parallel}\\leftarrow\\textsc{ProjectedAdamUpdate}(G_{t},U_{t},V_{t}) Δ t ⟂ ← ResidualSignUpdate ​ ( M t ⟂ , Δ t ∥ ) \\Delta_{t}^{\\perp}\\leftarrow\\textsc{ResidualSignUpdate}(M_{t}^{\\perp},\\Delta_{t}^{\\parallel}) Compute energy ratio ρ t ∥ , ρ t ⟂ ← CalcEnergyWeights ​ ( M t , M t ∥ , M t ⟂ ) \\rho_{t}^{\\parallel},\\rho_{t}^{\\perp}\\leftarrow\\textsc{CalcEnergyWeights}(M_{t},M_{t}^{\\parallel},M_{t}^{\\perp}) Fuse principal and residual directions Δ t ← ρ t ∥ ​ Δ t ∥ + ρ t ⟂ ​ Δ t ⟂ \\Delta_{t}\\leftarrow\\rho_{t}^{\\parallel}\\Delta_{t}^{\\parallel}+\\rho_{t}^{\\perp}\\Delta_{t}^{\\perp} W t ← ( 1 − η ​ λ ) ​ W t − 1 − η ​ Δ t W_{t}\\leftarrow(1-\\eta\\lambda)W_{t-1}-\\eta\\Delta_{t} end for Low-rank Projection Optimization. Low-rank projection methods take a different route: GaLore ( Zhao et al., 2024 ) periodically computes an SVD of the gradient, runs Adam within the resulting",
+      "source": "https://arxiv.org/html/2611.08924v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0009",
+      "section": "2 Related Work",
+      "text": " end for Low-rank Projection Optimization. Low-rank projection methods take a different route: GaLore ( Zhao et al., 2024 ) periodically computes an SVD of the gradient, runs Adam within the resulting compact subspace, and projects the update back, while LDAdam ( Robert et al., 2024 ) performs adaptive optimization inside dynamically shifting subspaces with a projection-aware transport rule and error feedback. These methods are most effective when optimization signals are strongly concentrated in a dominant low-rank subspace. Our experiments show that this assumption becomes substantially less effective under QAT: projection-only optimizers degrade markedly, while preserving the discarded residual restores much of the lost optimization quality. While recent works like Fira ( Chen et al., 2026 ) and FRUGAL ( Zmushko et al., 2024 ) also update the component outside the projected subspace with a state-free rule. ResQAdam differs in the residual is taken from the momentum rather than the current gradient, the bases are computed from the momentum, and the two updates are weighted by their momentum energy.",
+      "source": "https://arxiv.org/html/2611.08924v1",
+      "offset": 1595
+    },
+    {
+      "chunk_id": "chunk-0010",
+      "section": "3 ResQAdam",
+      "text": "Based on the explicit orthogonal decomposition of optimization signals, we propose ResQAdam, a geometrically decoupled optimizer for QAT. ResQAdam applies different update rules to two parts of the optimization space: a compact coordinate space in ℝ r × r \\mathbb{R}^{r\\times r} , where Adam-style preconditioning is performed, and the full parameter space ℝ n × m \\mathbb{R}^{n\\times m} , where the orthogonal residual provides a sign-based correction for dispersed quantization-compensation signals. This decomposition substantially reduces the optimizer memory footprint while retaining the residual correction signals required for QAT. The overall training flow is summarized in Algorithm 2 .",
+      "source": "https://arxiv.org/html/2611.08924v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0011",
+      "section": "3.1 Principal Subspace and Residual",
+      "text": "ResQAdam keeps no dense second moment. It keeps one dense momentum: M t = β 1 ​ M t − 1 + ( 1 − β 1 ) ​ G t ∈ ℝ n × m . M_{t}=\\beta_{1}M_{t-1}+(1-\\beta_{1})G_{t}\\in\\mathbb{R}^{n\\times m}. (1) which is used to estimate the subspace and the residual direction but never to normalize the update. We store M t M_{t} in BF16. Every τ \\tau steps, the top- r r left and right singular vectors of M t M_{t} give U t ∈ ℝ n × r U_{t}\\in\\mathbb{R}^{n\\times r} and V t ∈ ℝ m × r V_{t}\\in\\mathbb{R}^{m\\times r} . They span the principal subspace 𝒮 t = { U t ​ A ​ V t ⊤ : A ∈ ℝ r × r } \\mathcal{S}_{t}=\\{U_{t}AV_{t}^{\\top}:A\\in\\mathbb{R}^{r\\times r}\\} , which has dimension r 2 r^{2} . With the orthogonal projector Π t ​ ( X ) = U t ​ U t ⊤ ​ X ​ V t ​ V t ⊤ \\Pi_{t}(X)=U_{t}U_{t}^{\\top}XV_{t}V_{t}^{\\top} , the momentum splits into M t ∥ = Π t ​ ( M t ) M_{t}^{\\parallel}=\\Pi_{t}(M_{t}) and M t ⟂ = M t − M t ∥ M_{t}^{\\perp}=M_{t}-M_{t}^{\\parallel} , which are orthogonal under the Frobenius inner product.",
+      "source": "https://arxiv.org/html/2611.08924v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0012",
+      "section": "3.2 Space-Specific Optimization Strategies",
+      "text": "Adam in the principal subspace. We project the gradient to G t ∥ = U t ⊤ ​ G t ​ V t G_{t}^{\\parallel}=U_{t}^{\\top}G_{t}V_{t} and apply Adam to it, which gives preconditioned coordinates A ^ t ∥ \\hat{A}_{t}^{\\parallel} (Algorithm 3.2 ). The update in parameter space is: Δ t ∥ = α r ​ U t ​ A ^ t ∥ ​ V t ⊤ \\Delta_{t}^{\\parallel}=\\alpha_{r}U_{t}\\hat{A}_{t}^{\\parallel}V_{t}^{\\top} (2) with α r = n ​ m / r \\alpha_{r}=\\sqrt{nm}/r . The back-projection preserves the Frobenius norm, so an r × r r\\times r update with entries of order one has norm O ⁡ ( r ) O(r) , whereas a dense update of the same entry scale has norm O ⁡ ( n ​ m ) O(\\sqrt{nm}) . The factor α r \\alpha_{r} removes this dependence on r r . Sign update from the residual. A second moment for M t ⟂ M_{t}^{\\perp} would bring back dense memory. We use only its sign and rescale it to the norm of the principal update: Δ t ⟂ = ‖ Δ t ∥ ‖ F ​ sign ​ ( M t ⟂ ) / ‖ sign ⁡ ( M t ⟂ ) ‖ F \\Delta_{t}^{\\perp}=\\|\\Delta_{t}^{\\parallel}\\|_{F}\\,\\mathrm{sign}(M_{t}^{\\perp})/\\|\\mathrm{sign}(M_{t}^{\\perp})\\|_{F} (3) Because the sign acts element-wise, Δ t ⟂ \\Delta_{t}^{\\perp} is in general not orthogonal to 𝒮 t \\mathcal{S}_{t} . We therefore view it as a direction derived from the residual rather than an update restricted to 𝒮 t ⟂ \\mathcal{S}_{t}^{\\perp} . Algorithm 2 Projected Adam Update",
+      "source": "https://arxiv.org/html/2611.08924v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0013",
+      "section": "3.2 Space-Specific Optimization Strategies",
+      "text": "Require: G t G_{t} , U t , V t U_{t},V_{t} , m t − 1 ∥ , v t − 1 ∥ m_{t-1}^{\\parallel},v_{t-1}^{\\parallel} Project gradient to the r × r r\\times r coordinate space G t ∥ ← U t ⊤ ​ G t ​ V t G_{t}^{\\parallel}\\leftarrow U_{t}^{\\top}G_{t}V_{t} m t ∥ ← β 1 ​ m t − 1 ∥ + ( 1 − β 1 ) ​ G t ∥ m_{t}^{\\parallel}\\leftarrow\\beta_{1}m_{t-1}^{\\parallel}+(1-\\beta_{1})G_{t}^{\\parallel} v t ∥ ← β 2 ​ v t − 1 ∥ + ( 1 − β 2 ) ​ G t ∥ ⊙ G t ∥ v_{t}^{\\parallel}\\leftarrow\\beta_{2}v_{t-1}^{\\parallel}+(1-\\beta_{2})G_{t}^{\\parallel}\\odot G_{t}^{\\parallel} m ^ t ∥ , v ^ t ∥ ← BiasCorrect ​ ( m t ∥ , v t ∥ ) \\hat{m}_{t}^{\\parallel},\\hat{v}_{t}^{\\parallel}\\leftarrow\\text{BiasCorrect}(m_{t}^{\\parallel},v_{t}^{\\parallel}) Adam preconditioning in coordinate space A ^ t ∥ ← m ^ t ∥ / ( v ^ t ∥ + ϵ ) \\hat{A}_{t}^{\\parallel}\\leftarrow\\hat{m}_{t}^{\\parallel}/(\\sqrt{\\hat{v}_{t}^{\\parallel}}+\\epsilon) α r ← n ​ m / r \\alpha_{r}\\leftarrow\\sqrt{nm}/r Map update back to full space Δ t ∥ = α r ​ U t ​ A ^ t ∥ ​ V t ⊤ \\Delta_{t}^{\\parallel}=\\alpha_{r}U_{t}\\hat{A}_{t}^{\\parallel}V_{t}^{\\top} Return: Δ t ∥ \\Delta_{t}^{\\parallel} Algorithm 3 residual-sign Update Require: M t ⟂ , Δ t ∥ M_{t}^{\\perp},\\ \\Delta_{t}^{\\parallel} Use only the residual direction D t ⟂ ← sign ⁡ ( M t ⟂ ) D_{t}^{\\perp}\\leftarrow\\operatorname{sign}(M_{t}^{\\perp}) Align residual magnitude with the principal update Δ t ⟂ ← ‖ Δ t ∥ ‖ F ⋅ D t ⟂ ‖ D t ⟂ ‖ F + ϵ \\Delta_{t}^{\\perp}\\leftarrow\\|\\Delta_{t}^{\\parallel}\\|_{F}\\cdot\\frac{D_{t}^{\\perp}}{\\|D_{t}^{\\perp}\\|_{F}+\\epsilon} Return: Δ t ⟂ \\Delta_{t}^{\\perp}",
+      "source": "https://arxiv.org/html/2611.08924v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0014",
+      "section": "3.3 Energy-Aware Geometric Fusion",
+      "text": "The principal and residual components capture complementary structures of the optimization signal. To combine them in the full parameter space, we adapt their contributions according to the relative momentum energy carried by the two components. Because M t ∥ M_{t}^{\\parallel} and M t ⟂ M_{t}^{\\perp} form an orthogonal decomposition of the momentum M t M_{t} , their squared Frobenius norms satisfy: ‖ M t ‖ F 2 = ‖ M t ∥ ‖ F 2 + ‖ M t ⟂ ‖ F 2 . \\|M_{t}\\|_{F}^{2}=\\|M_{t}^{\\parallel}\\|_{F}^{2}+\\|M_{t}^{\\perp}\\|_{F}^{2}. (4) We therefore define the energy ratio as: ρ t ∥ = ‖ M t ∥ ‖ F ‖ M t ‖ F + ϵ , ρ t ⟂ = ‖ M t ⟂ ‖ F ‖ M t ‖ F + ϵ . \\rho_{t}^{\\parallel}=\\frac{\\|M_{t}^{\\parallel}\\|_{F}}{\\|M_{t}\\|_{F}+\\epsilon},\\qquad\\rho_{t}^{\\perp}=\\frac{\\|M_{t}^{\\perp}\\|_{F}}{\\|M_{t}\\|_{F}+\\epsilon}. (5) As described in Section 3.2 , the residual update is normalized to match the Frobenius norm of the principal update. We then combine the two directions using the momentum-derived energy ratio: Δ t = ρ t ∥ ​ Δ t ∥ + ρ t ⟂ ​ Δ t ⟂ \\Delta_{t}=\\rho_{t}^{\\parallel}\\Delta_{t}^{\\parallel}+\\rho_{t}^{\\perp}\\Delta_{t}^{\\perp} (6) Although M t ∥ M_{t}^{\\parallel} and M t ⟂ M_{t}^{\\perp} are orthogonal by construction, the element-wise sign transformation does not preserve this orthogonality. Therefore, the resulting update directions Δ t ∥ \\Delta_{t}^{\\parallel} and Δ t ⟂ \\Delta_{t}^{\\perp} are generally not orthogonal. We consequently interpret ρ t ∥ \\rho_{t}^{\\parallel} and ρ t ⟂ \\rho_{t}^{\\perp} as energy-derived balancing coefficients rather than as weights that preserve an exact orthogonal norm decomposition. Finally, applying weight decay λ \\lambda and learning rate η \\eta , the parameter update at step t t is:",
+      "source": "https://arxiv.org/html/2611.08924v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0015",
+      "section": "3.3 Energy-Aware Geometric Fusion",
+      "text": "W t = ( 1 − η ​ λ ) ​ W t − 1 − η ​ Δ t W_{t}=(1-\\eta\\lambda)W_{t-1}-\\eta\\Delta_{t} (7)",
+      "source": "https://arxiv.org/html/2611.08924v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0016",
+      "section": "3.4 Subspace Refresh and Memory",
+      "text": "The SVD is computed only every τ \\tau steps to amortize the computational cost. After each refresh, the principal states m ∥ m^{\\parallel} and v ∥ v^{\\parallel} are rewritten in the new basis with the transport rule of LDAdam ( Robert et al., 2024 ) (Appendix A ). Only these r × r r\\times r states need transport, because M t M_{t} and its residual are defined in the original parameter space. By storing the momentum M t M_{t} in BF16 and confining adaptive states to the compact coordinate representation, the dominant persistent-state cost of ResQAdam is 2 ​ n ​ m 2nm bytes, with an additional O ⁡ ( ( n + m ) ​ r + r 2 ) O((n+m)r+r^{2}) overhead for the bases and principal states. For r ≪ min ⁡ ( n , m ) r\\ll\\min(n,m) this approaches 25% of AdamW. The measured reduction is 71% to 74% (Section 4 ), mainly because the bases are not negligible for the smaller matrices. Figure 2: Training loss trajectories of ResQAdam and AdamW during from-scratch QAT under various quantization configurations on the 430M-parameter LLM. The values following the optimizer names in the legend indicate the average memory footprint of the optimizer states.",
+      "source": "https://arxiv.org/html/2611.08924v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0017",
+      "section": "4 Experiments",
+      "text": "We compare ResQAdam with AdamW in from-scratch QAT and QAT fine-tuning, in terms of training loss, final perplexity and accuracy, and optimizer-state memory.",
+      "source": "https://arxiv.org/html/2611.08924v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0018",
+      "section": "4.1 Experimental Setup",
+      "text": "From-scratch QAT. We consider QuEST ( Panferov et al., 2025 ) and CAGE ( Tabesh et al., 2025 ) , which represent two recent low-precision training frameworks with distinct gradient-estimation and optimization strategies. We pretrain Llama-style models at the 200M and 430M scales under W2A2, W2A16, and W4A4 settings. QAT fine-tuning. We use Basic QAT (end-to-end next-token loss with LSQ scales on 2B RedPajama tokens), LLM-QAT ( Liu et al., 2024 ) (data-free distillation), and the Block-AP stage of EfficientQAT ( Chen et al., 2025 ) , on Llama 3.2-1B, Qwen3 4B-Base and Llama 2-7B under multiple quantization configurations.. Appendix C gives the details. Table 1: Language modeling performance comparison across different from-scratch QAT methods. Values in each cell are formatted as AdamW / ResQAdam (Ours). Q-Cfg denotes the quantizer configuration, where W x x and A x x indicate x x -bit weight and activation quantization, respectively. Opt. State Size reports average optimizer state size for each optimizer during the training, computed only over non-embedding and non-LM-head parameters.",
+      "source": "https://arxiv.org/html/2611.08924v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0019",
+      "section": "4.1 Experimental Setup",
+      "text": "Methods Size Q-Cfg WikiText-2 PPL (AdamW / Ours) C4 PPL (AdamW / Ours) Avg. PPL (AdamW / Ours) Opt. State Size (AdamW / Ours) QuEST 200M W2A2 50.56 / 50.98 26.99 / 27.41 38.78 / 39.20 1.63 / 0.44 GB ↓ \\downarrow 73.0% W2A16 44.04 / 42.80 22.92 / 23.41 33.48 / 33.11 W4A4 40.87 / 41.93 22.06 / 22.46 31.46 / 32.20 CAGE W2A2 51.15 / 52.32 27.19 / 27.65 39.17 / 39.99 W2A16 44.80 / 44.44 23.18 / 23.73 33.99 / 34.09 W4A4 41.22 / 42.68 22.21 / 22.61 31.71 / 32.66 QuEST 430M W2A2 39.12 / 41.48 21.69 / 22.11 30.40 / 31.80 3.54 / 0.94 GB ↓ \\downarrow 73.4% W2A16 34.74 / 34.66 18.79 / 19.18 26.77 / 26.92 W4A4 34.00 / 34.13 18.16 / 18.39 26.08 / 26.26 CAGE W2A2 40.49 / 41.24 21.81 / 22.25 31.15 / 31.75 W2A16 35.93 / 35.29 19.08 / 19.42 27.50 / 27.36 W4A4 34.55 / 34.13 18.30 / 18.57 26.43 / 26.35 Hyperparameters and evaluation. For from-scratch QAT, ResQAdam uses rank r = 32 r=32 and refresh interval τ = 400 \\tau=400 . As an implementation detail of Algorithm 2 , the bases are initialized from the first gradient and the periodic refresh is suspended during the first 10% of training steps, since the momentum of a randomly initialized model changes rapidly and early refreshes only add transport noise; after this warm-up phase, refreshes follow the schedule of Algorithm 2 . For QAT fine-tuning, we set r = 64 r=64 and τ = 200 \\tau=200 and apply no suspension, because the pretrained checkpoint already provides a stable momentum. For QAT fine-tuning, we set r = 64 r=64 and τ = 200 \\tau=200 to accommodate larger model capacities. All other training hyperparameters are kept strictly consistent with the experimental codebases of the respective QAT methods.",
+      "source": "https://arxiv.org/html/2611.08924v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0020",
+      "section": "4.1 Experimental Setup",
+      "text": "We report perplexity on WikiText-2 and C4 to evaluate models pretrained with QAT. For QAT fine-tuning, in addition to perplexity, we evaluate zero-shot accuracy on several standard benchmarks: HellaSwag ( Zellers et al., 2019 ) , PIQA ( Bisk et al., 2020 ) , ARC ( Clark et al., 2018 ) , WinoGrande ( Sakaguchi et al., 2021 ) , and MMLU ( Hendrycks et al., 2021 ) . Table 2: Performance and memory footprint comparison between ResQAdam and standard AdamW across diverse QAT fine-tuning frameworks. Values in each cell are formatted as AdamW / ResQAdam (Ours). Q-Cfg denotes the quantizer configuration: W x x and A x x indicate x x -bit weight and activation quantization, respectively; G128 represents group-wise quantization with a group size of 128; and C denotes channel-wise quantization. Opt. State Size reports average optimizer state size of AdamW / ResQAdam during the training , computed only over non-embedding and non-LM-head parameters.",
+      "source": "https://arxiv.org/html/2611.08924v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0021",
+      "section": "4.1 Experimental Setup",
+      "text": "Method Model Q-Cfg Avg. Task Acc. (AdamW / Ours) Avg. PPL (AdamW / Ours) Opt. State Size (AdamW / Ours) Basic QAT Llama 3.2-1B W2A16G128 47.56 / 47.36 16.92 / 17.73 7.78 / 2.16 GB ↓ 72.2 % \\downarrow 72.2\\% W4A4G128 51.29 / 51.29 15.12 / 14.91 LLM-QAT W2A16C 38.26 / 39.37 43.73 / 35.05 7.78 / 2.16 GB ↓ 72.2 % \\downarrow 72.2\\% W4A16C 51.16 / 52.00 14.03 / 14.30 W4A4C 38.70 / 38.53 40.91 / 39.21 EfficientQAT (Block-AP) W2A16G128 35.14 / 35.43 351.78 / 379.52 494 / 141 MB/block ↓ 71.5 % \\downarrow 71.5\\% W3A16G128 49.93 / 49.31 16.73 / 16.79 W4A16G128 54.43 / 54.56 12.78 / 12.81 Basic QAT Qwen3 4B-Base W2A16G128 61.29 / 61.94 12.76 / 12.88 29.07 / 7.78 GB ↓ 73.2 % \\downarrow 73.2\\% W4A4G128 68.21 / 67.91 12.27 / 12.20 LLM-QAT W2A16C 40.85 / 38.02 33.84 / 46.72 29.07 / 7.78 GB ↓ 73.2 % \\downarrow 73.2\\% W4A16C 68.07 / 66.81 11.68 / 11.93 W4A4C 45.70 / 45.19 35.46 / 31.32 EfficientQAT (Block-AP) W2A16G128 45.89 / 43.09 34.92 / 51.25 820 / 220 MB/block ↓ 72.0 % \\downarrow 72.0\\% W3A16G128 66.69 / 66.88 12.06 / 12.23 W4A16G128 69.29 / 69.49 10.88 / 10.94 LLM-QAT Llama 2-7B W2A16C 43.03 / 42.31 12.25 / 13.93 51.81 / 13.28 GB ↓ 74.4 % \\downarrow 74.4\\% W4A16C 63.11 / 61.68 6.82 / 6.89 W4A4C 47.12 / 46.87 14.12 / 12.58 EfficientQAT (Block-AP) W2A16G128 49.10 / 47.95 24.61 / 12.91 1644 / 451 MB/block ↓ 72.6 % \\downarrow 72.6\\% W3A16G128 61.37 / 61.28 6.98 / 6.99 W4A16G128 63.77 / 63.76 6.49 / 6.49",
+      "source": "https://arxiv.org/html/2611.08924v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0022",
+      "section": "4.2 Main Results on From-Scratch QAT",
+      "text": "Optimization Trajectory and Convergence Alignment. As illustrated in Figure 2 , ResQAdam closely tracks the training-loss trajectory of the dense AdamW baseline. Across all evaluated bit-width configurations and both frameworks, the training loss curves of ResQAdam closely overlap with the baseline from initialization through to the final iterations. The zoomed-in callouts at the end of the training horizons further highlight that ResQAdam maintains stable convergence without divergence. This confirms that our geometry-decoupled and space-specific update strategies sufficiently capture the quantization errors to stabilize the low-bit pretraining process. Curves for the 200M model are in Appendix B . Language Modeling Quality. Table 1 reports the final validation perplexity across model scales and quantization settings. For both QuEST and CAGE, ResQAdam achieves perplexities close to full-state AdamW, with several cases where ResQAdam is slightly better. These results show that ResQAdam largely preserves AdamW-level language modeling quality in from-scratch QAT while substantially reducing optimizer-state memory.",
+      "source": "https://arxiv.org/html/2611.08924v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0023",
+      "section": "4.3 Main Results on QAT Fine-Tuning",
+      "text": "Table 2 compares ResQAdam with AdamW across the three fine-tuning recipes, which differ in data source, training objective and optimization granularity. Across these settings, ResQAdam generally achieves performance close to AdamW in both perplexity and zero-shot accuracy, while reducing optimizer-state memory by 71% to 74%. Although some aggressive W2A16 block-wise settings show larger metric fluctuations, the overall results indicate that ResQAdam can serve as a memory-efficient alternative to AdamW for diverse QAT fine-tuning pipelines.",
+      "source": "https://arxiv.org/html/2611.08924v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0024",
+      "section": "5.1 Component Ablation and Subspace Design",
+      "text": "We ablate the main components of ResQAdam on a 297M model under W2A2, W2A16, and W4A4 from-scratch QAT. To keep the ablation aligned with the goal of memory-efficient QAT, we restrict the comparison to lightweight variants that do not introduce substantial extra computation or optimizer-state memory. Variants whose added cost would eliminate the memory or throughput advantage over AdamW are excluded, since they would not be practical alternatives to AdamW. Principal Update Only: Uses only the Adam-preconditioned update in the principal subspace, i.e., Δ t = Δ t ∥ \\Delta_{t}=\\Delta_{t}^{\\parallel} , and removes the sign correction from the orthogonal residual. Residual-Sign Only: Uses only the normalized sign direction derived from the orthogonal residual M t ⟂ M_{t}^{\\perp} , and removes the Adam-preconditioned principal update. Gradient-SVD Bases: Computes the projection bases U t , V t U_{t},V_{t} from the instantaneous gradient G t G_{t} instead of the momentum M t M_{t} , while keeping the remaining update rule unchanged. Global-Momentum Sign: Applies a sign update directly to the momentum M t M_{t} without decomposing it into the principal component and the orthogonal residual. ResQAdam: Uses the full design: Adam-style preconditioning in the r × r r\\times r coordinate representation, residual-sign correction from M t ⟂ M_{t}^{\\perp} , and momentum energy-weighting to fuse the two updates. Figure 3: Component ablation of ResQAdam across different quantization configurations. The y-axis reports the average perplexity on C4 and WikiText-2.",
+      "source": "https://arxiv.org/html/2611.08924v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0025",
+      "section": "5.1 Component Ablation and Subspace Design",
+      "text": "Figure 3 reports the average perplexity on C4 and WikiText-2. The Principal Update Only variant performs poorly across all quantization settings, showing that updates restricted to the principal subspace are not sufficient for QAT. The Residual-Sign Only variant performs much better, especially under W2A2 and W2A16, which indicates that the orthogonal residual contains useful correction signals. However, it is not consistently better than the full method, suggesting that the Adam-preconditioned principal update still provides important low-rank structural information. The Gradient-SVD Bases variant underperforms ResQAdam, particularly under W2A2, validating the extraction of projection bases from the time-smoothed momentum rather than instantaneous gradients. Similarly, the Global-Momentum Sign variant falls short, demonstrating that applying a monolithic sign update negates the benefits of separating the principal component from the residual. Overall, the full ResQAdam consistently achieves the best perplexity across the evaluated settings, supporting the effectiveness of combining principal-subspace Adam preconditioning with a residual-derived sign correction.",
+      "source": "https://arxiv.org/html/2611.08924v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0026",
+      "section": "5.2 Hardware Efficiency and Overhead",
+      "text": "Table 3: Comparison of optimizer-state memory, total peak memory, and training throughput across different models. Values in each cell are formatted as AdamW / ResQAdam , with relative changes in parentheses. AdamW / ResQAdam Llama 3.2-1B Qwen2.5-1.5B Qwen3 4B-Base Opt. State Memory (GB) 7.78 / 2.16 ( ↓ \\downarrow 72.2%) 10.48 / 3.01( ↓ \\downarrow 71.3%) 29.07 / 7.78 ( ↓ \\downarrow 73.2%) Total Peak Memory (GB) 33.33 / 28.24 ( ↓ \\downarrow 15.3%) 43.93 / 37.19 ( ↓ \\downarrow 15.3%) 99.14 / 79.77 ( ↓ \\downarrow 19.5%) Throughput (# token/s) 29.36k / 28.94k ( ↓ \\downarrow 1.4%) 18.31k / 18.19k ( ↓ \\downarrow 0.6%) 9.64k / 9.56k ( ↓ \\downarrow 0.8%) To evaluate hardware efficiency, we compare ResQAdam against AdamW in terms of optimizer-state memory, total peak memory, and training throughput. Total peak memory is defined as the maximum GPU memory consumed during training, encompassing weights, activations, gradients, and optimizer states. All experiments utilize the Basic QAT framework with a W4A4G128 quantization configuration and a context length of 4096. Training is conducted on a single NVIDIA H200 GPU. The micro-batch size is set to 1 with 128 gradient accumulation steps. ResQAdam uses a uniform projection rank of r = 64 r=64 . The reported optimizer-state memory strictly accounts for the transformer backbone and excludes the embedding and language modeling head layers.",
+      "source": "https://arxiv.org/html/2611.08924v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0027",
+      "section": "5.2 Hardware Efficiency and Overhead",
+      "text": "As detailed in Table 3 , ResQAdam consistently reduces the optimizer state footprint by over 71% across 3 different LLMs. This efficiency directly translates to a 15.3% to 19.5% reduction in total peak memory. This substantial memory reduction incurs minimal computational overhead. The training throughput decreases by less than 2% compared to standard AdamW in all evaluated cases. These results show that our amortized update strategy substantially alleviates the optimizer-state memory bottleneck of QAT while maintaining competitive training throughput.",
+      "source": "https://arxiv.org/html/2611.08924v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0028",
+      "section": "5.3 Comparison with Alternative Memory-Efficient Optimizers",
+      "text": "Table 4: Perplexity comparison of memory-efficient optimizers under diverse QAT paradigms and quantization configurations. Projection-based optimizers use rank 64. For a fair comparison, all optimizers are tuned with a grid search over learning rates, and the best result is reported. Training Paradigm Q-Cfg ResQAdam GaLore-AdamW GaLore-AdamW8bit LDAdam AdaFactor From-Scratch QAT W2A16G128 20.05 30.61 30.39 28.57 33.01 W4A4G128 18.89 32.93 32.45 28.23 32.84 QAT Fine-Tuning W2A16G128 16.89 19.25 20.32 19.59 27.79 W4A4G128 15.05 15.30 15.64 15.42 14.80 We further compare ResQAdam with two families of memory-efficient optimizers. Low-rank projection methods such as GaLore ( Zhao et al., 2024 ) and LDAdam ( Robert et al., 2024 ) restrict adaptive states to a rank- r r subspace obtained from the gradient, with LDAdam adding state transport across changing subspaces and error feedback. Structural factorization methods such as AdaFactor ( Shazeer and Stern, 2018 ) keep the full parameter dimensionality but approximate the second moment by row and column statistics. Table 4 reports the average perplexity on WikiText-2 and C4. In from-scratch QAT, every baseline is far behind ResQAdam in both quantization settings, by a margin much larger than the differences we observe between ResQAdam and AdamW in Table 1 . This is consistent with our hypothesis that confining the update to a low-rank subspace, or replacing the second moment by a factorized approximation, loses part of the correction that QAT relies on. In fine-tuning the picture depends on the bit width. At W2A16G128 the projection-based methods remain clearly behind, whereas at W4A4G128, where quantization error is small, all optimizers land within a narrow range and the choice of optimizer matters little.",
+      "source": "https://arxiv.org/html/2611.08924v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0029",
+      "section": "5.4 Sensitivity to r r and τ \\tau",
+      "text": "The rank r r sets the dimension of the principal subspace, and the refresh interval τ \\tau sets how many steps a subspace is used before the bases are recomputed. We vary one of them while fixing the other at r = 64 r=64 or τ = 400 \\tau=400 , using the 297M model trained from scratch with Basic QAT under W2A16, W4A16 and W4A4 (Figure 4 ). Rank. A rank of 4 gives the highest perplexity in all three settings. The effect is largest at W2A16, where perplexity reaches 25.2 compared with 19.8 at r = 64 r=64 . For r ≥ 16 r\\geq 16 , perplexity no longer decreases monotonically with r r . Within each setting it varies by at most 1.8 over r ∈ { 16 , 32 , 64 , 128 , 256 } r\\in\\{16,32,64,128,256\\} , and r = 256 r=256 gives the lowest value in all three settings. A very small subspace therefore hurts clearly, while above r = 16 r=16 the effect of r r is small and not monotonic. The main from-scratch experiments use r = 32 r=32 , which is 1.2 higher than r = 64 r=64 at W2A16 and 0.4 to 0.5 lower at W4A16 and W4A4. Refresh interval. Training converges for every τ \\tau from 50 to 2000. The best interval differs across settings, namely τ = 400 \\tau=400 at W2A16 (19.8), τ = 100 \\tau=100 at W4A16 (18.8), and τ = 50 \\tau=50 at W4A4 (18.3). Within each setting, perplexity varies by about 1 over the whole range, and it shows no consistent trend with τ \\tau . Refreshing more often than every 400 steps therefore does not give a consistent gain, so the SVD cost can be spread over hundreds of steps. We use τ = 400 \\tau=400 for from-scratch QAT, which is within 0.9 of the best interval in every setting. (a) Rank r r ( τ = 400 \\tau=400 ). (b) Refresh interval τ \\tau ( r = 64 r=64 ).",
+      "source": "https://arxiv.org/html/2611.08924v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0030",
+      "section": "5.4 Sensitivity to r r and τ \\tau",
+      "text": "Figure 4: Sensitivity of ResQAdam to the rank r r and the SVD refresh interval τ \\tau on a 297M model trained from scratch. The y-axis is the average of WikiText-2 and C4 perplexity. Figure 5: Energy ratio of the principal subspace ( ρ t ∥ \\rho_{t}^{\\parallel} ) during from-scratch QAT on a 297M Llama-style model. The curves represent different weight matrices within a middle transformer layer across W2A16, W4A4, and W2A2 quantization configurations.",
+      "source": "https://arxiv.org/html/2611.08924v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0031",
+      "section": "5.5 Dynamics of Momentum Energy Distribution",
+      "text": "We track the energy ratio of the principal subspace, ρ t ∥ = ‖ M t ∥ ‖ F / ( ‖ M t ‖ F + ϵ ) \\rho_{t}^{\\parallel}=\\|M_{t}^{\\parallel}\\|_{F}/(\\|M_{t}\\|_{F}+\\epsilon) , for the seven weight matrices of a middle layer in the 297M model pretrained with ResQAdam. We record it only at refresh steps, right after the bases are recomputed from M t M_{t} . At these points ρ t ∥ \\rho_{t}^{\\parallel} is at its highest, so any residual energy we observe is a lower bound on the energy that a projection-based optimizer discards during the following τ \\tau steps. The result is shown in Figure 5 . ρ t ∥ \\rho_{t}^{\\parallel} starts high, decreases, and settles at a level that depends on the matrix. It remains relatively high for attention K and V and is lowest for the MLP down projection, while the bit-width setting has a smaller effect. Even immediately after a refresh, a substantial share of the momentum lies outside 𝒮 t \\mathcal{S}_{t} , and projection-based optimizers discard this share. Overall, the principal subspace consistently captures a meaningful but incomplete fraction of the momentum. This supports ResQAdam’s selective-adaptivity design: Adam-style preconditioning is beneficial for the structured principal component, while a full-space residual correction remains necessary to preserve the substantial optimization signal outside the low-rank subspace.",
+      "source": "https://arxiv.org/html/2611.08924v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0032",
+      "section": "6 Conclusion",
+      "text": "In this paper, we proposed ResQAdam, a memory-efficient optimizer tailored for LLM QAT. We demonstrated that standard low-rank optimizers struggle in QAT because they discard important residual optimization signals outside the dominant principal subspace. ResQAdam leveraged Adam within this subspace and adds a sign update from the residual. Extensive experiments across from-scratch QAT and fine-tuning show that ResQAdam closely tracks AdamW’s convergence behavior and largely preserves its final performance, while reducing persistent optimizer-state memory by 71% to 74%, respectively.",
+      "source": "https://arxiv.org/html/2611.08924v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0033",
+      "section": "AI use statement",
+      "text": "In this work, we used generative AI tools for polishing the writing, correcting grammar, assisting with literature search and figure plotting, and locating code bugs. We have not used generative AI tools for developing the core ideas, methods, or contributions of this work. We have reviewed all AI-assisted work: polished text was checked for accuracy, retrieved literature was verified against the original sources, figures were checked against the experimental data, and suggested bug fixes were manually tested before adoption. We take responsibility for the final content of this work, including text, claims or artifacts produced with the aid of generative AI.",
+      "source": "https://arxiv.org/html/2611.08924v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0034",
+      "section": "Ethics Statement",
+      "text": "This work focuses on methodological improvements and does not involve human subjects, personally identifiable information, or the collection of new data. All datasets and models used in our experiments are publicly available and were used in accordance with their respective licenses. We do not foresee any direct negative societal impact or ethical concerns arising from this work. The authors declare no conflicts of interest.",
+      "source": "https://arxiv.org/html/2611.08924v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0035",
+      "section": "Reproducibility statement",
+      "text": "We have made efforts to ensure the reproducibility of this work. The details of proposed method are described in Section 3 . Implementation details, including hyperparameters, training settings, and hardware configurations, are provided in Section 4.1 and Appendix C . The datasets and models used in our experiments are publicly available. Our code is available at https://github.com/LiqunMa/ResQAdam .",
+      "source": "https://arxiv.org/html/2611.08924v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0036",
+      "section": "References",
+      "text": "AI@Meta (2024) AI@Meta Llama 3 model card . External Links: Link Cited by: §C.2 . Bengio et al. (2013) Y. Bengio, N. Léonard, and A. Courville Estimating or propagating gradients through stochastic neurons for conditional computation . arXiv preprint arXiv:1308.3432 . Cited by: §1 . Bisk et al. (2020) Y. Bisk, R. Zellers, J. Gao, Y. Choi, et al. Piqa: reasoning about physical commonsense in natural language . In Proceedings of the AAAI conference on artificial intelligence , Vol. 34 , pp. 7432–7439 . Cited by: §4.1 . Chen et al. (2025) M. Chen, W. Shao, P. Xu, J. Wang, P. Gao, K. Zhang, and P. Luo Efficientqat: efficient quantization-aware training for large language models . In Proceedings of the 63rd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) , pp. 10081–10100 . Cited by: §C.2 , §1 , §2 , §4.1 . Chen et al. (2026) X. Chen, K. Feng, C. Li, X. Lai, X. Yue, Y. Yuan, and G. Wang Fira: can we achieve full-rank training of llms under low-rank constraint? . Advances in Neural Information Processing Systems 38 , pp. 120680–120712 . Cited by: §2 . Choi et al. (2018) J. Choi, Z. Wang, S. Venkataramani, P. I. Chuang, V. Srinivasan, and K. Gopalakrishnan Pact: parameterized clipping activation for quantized neural networks . arXiv preprint arXiv:1805.06085 . Cited by: §2 . Clark et al. (2018) P. Clark, I. Cowhey, O. Etzioni, T. Khot, A. Sabharwal, C. Schoenick, and O. Tafjord Think you have solved question answering? try arc, the ai2 reasoning challenge . arXiv preprint arXiv:1803.05457 . Cited by: §4.1 . Computer (2023) RedPajama: an open source recipe to reproduce llama training dataset External Links: Link Cited by: §C.2 .",
+      "source": "https://arxiv.org/html/2611.08924v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0037",
+      "section": "References",
+      "text": "Dettmers et al. (2023) T. Dettmers, A. Pagnoni, A. Holtzman, and L. Zettlemoyer Qlora: efficient finetuning of quantized llms . Advances in neural information processing systems 36 , pp. 10088–10115 . Cited by: §2 . Esser et al. (2019) S. K. Esser, J. L. McKinstry, D. Bablani, R. Appuswamy, and D. S. Modha Learned step size quantization . arXiv preprint arXiv:1902.08153 . Cited by: §C.2 , §2 . Frantar et al. (2022) E. Frantar, S. Ashkboos, T. Hoefler, and D. Alistarh Gptq: accurate post-training quantization for generative pre-trained transformers . arXiv preprint arXiv:2210.17323 . Cited by: §1 . Hendrycks et al. (2021) D. Hendrycks, C. Burns, S. Basart, A. Zou, M. Mazeika, D. Song, and J. Steinhardt Measuring massive multitask language understanding . Proceedings of the International Conference on Learning Representations (ICLR) . Cited by: §4.1 . Kim et al. (2023) J. Kim, J. H. Lee, S. Kim, J. Park, K. M. Yoo, S. J. Kwon, and D. Lee Memory-efficient fine-tuning of compressed large language models via sub-4-bit integer quantization . Advances in Neural Information Processing Systems 36 , pp. 36187–36207 . Cited by: §2 . Liu et al. (2024) Z. Liu, B. Oguz, C. Zhao, E. Chang, P. Stock, Y. Mehdad, Y. Shi, R. Krishnamoorthi, and V. Chandra Llm-qat: data-free quantization aware training for large language models . In Findings of the Association for Computational Linguistics: ACL 2024 , pp. 467–484 . Cited by: §C.2 , §1 , §2 , §4.1 . Liu et al. (2026) Z. Liu, C. Zhao, H. Huang, S. Chen, J. Zhang, J. Zhao, S. Roy, L. Jin, Y. Xiong, Y. Shi, et al. ParetoQ: improving scaling laws in extremely low-bit llm quantization . Advances in Neural Information Processing Systems 38 , pp. 91311–91336 . Cited by: §1 , §2 .",
+      "source": "https://arxiv.org/html/2611.08924v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0038",
+      "section": "References",
+      "text": "Loshchilov and Hutter (2017) I. Loshchilov and F. Hutter Decoupled weight decay regularization . arXiv preprint arXiv:1711.05101 . Cited by: §1 . Ma et al. (2024) S. Ma, H. Wang, L. Ma, L. Wang, W. Wang, S. Huang, L. Dong, R. Wang, J. Xue, and F. Wei The era of 1-bit llms: all large language models are in 1.58 bits . arXiv preprint arXiv:2402.17764 . Cited by: §2 . Panferov et al. (2025) A. Panferov, J. Chen, S. Tabesh, R. L. Castro, M. Nikdan, and D. Alistarh Quest: stable training of llms with 1-bit weights and activations . arXiv preprint arXiv:2502.05003 . Cited by: §C.1 , §1 , §2 , §4.1 . Robert et al. (2024) T. Robert, M. Safaryan, I. Modoranu, and D. Alistarh Ldadam: adaptive optimization from low-dimensional gradient statistics . arXiv preprint arXiv:2410.16103 . Cited by: Appendix A , Appendix A , §1 , §2 , §3.4 , §5.3 . Sakaguchi et al. (2021) K. Sakaguchi, R. L. Bras, C. Bhagavatula, and Y. Choi Winogrande: an adversarial winograd schema challenge at scale . Communications of the ACM 64 ( 9 ), pp. 99–106 . Cited by: §4.1 . Shazeer and Stern (2018) N. Shazeer and M. Stern Adafactor: adaptive learning rates with sublinear memory cost . In International conference on machine learning , pp. 4596–4604 . Cited by: §5.3 . Tabesh et al. (2025) S. Tabesh, M. Safaryan, A. Panferov, A. Volkova, and D. Alistarh CAGE: curvature-aware gradient estimation for accurate quantization-aware training . arXiv preprint arXiv:2510.18784 . Cited by: §C.1 , §1 , §2 , §4.1 . Team (2025) Q. Team Qwen3 technical report . External Links: 2505.09388 , Link Cited by: §C.2 .",
+      "source": "https://arxiv.org/html/2611.08924v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0039",
+      "section": "References",
+      "text": "Touvron et al. (2023) H. Touvron, L. Martin, K. Stone, P. Albert, A. Almahairi, Y. Babaei, N. Bashlykov, S. Batra, P. Bhargava, S. Bhosale, et al. Llama 2: open foundation and fine-tuned chat models . arXiv preprint arXiv:2307.09288 . Cited by: §C.2 . Wang et al. (2023) H. Wang, S. Ma, L. Dong, S. Huang, H. Wang, L. Ma, F. Yang, R. Wang, Y. Wu, and F. Wei Bitnet: scaling 1-bit transformers for large language models . arXiv preprint arXiv:2310.11453 . Cited by: §2 . Xiao et al. (2023) G. Xiao, J. Lin, M. Seznec, H. Wu, J. Demouth, and S. Han Smoothquant: accurate and efficient post-training quantization for large language models . In International conference on machine learning , pp. 38087–38099 . Cited by: §1 . Zellers et al. (2019) R. Zellers, A. Holtzman, Y. Bisk, A. Farhadi, and Y. Choi Hellaswag: can a machine really finish your sentence? . In Proceedings of the 57th annual meeting of the association for computational linguistics , pp. 4791–4800 . Cited by: §4.1 . Zhao et al. (2024) J. Zhao, Z. Zhang, B. Chen, Z. Wang, A. Anandkumar, and Y. Tian Galore: memory-efficient llm training by gradient low-rank projection . arXiv preprint arXiv:2403.03507 . Cited by: §1 , §2 , §5.3 . Zmushko et al. (2024) P. Zmushko, A. Beznosikov, M. Takáč, and S. Horváth FRUGAL: memory-efficient optimization by reducing state overhead for scalable training . arXiv preprint arXiv:2411.07837 . Cited by: §2 .",
+      "source": "https://arxiv.org/html/2611.08924v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0040",
+      "section": "Appendix A Estimating the Statistics of Projected Gradients",
+      "text": "When the projection bases are refreshed, the coordinate representation of the principal subspace changes from ( U t − 1 , V t − 1 ) (U_{t-1},V_{t-1}) to ( U t , V t ) (U_{t},V_{t}) , where t − 1 t-1 denotes the last step before the refresh. Since Adam-style preconditioning is anisotropic, directly reusing the old principal moments m t − 1 ∥ m_{t-1}^{\\parallel} and v t − 1 ∥ v_{t-1}^{\\parallel} in the new coordinate system would mix statistics computed under different bases. To address this, we adopt the statistical state transport mechanism introduced by LDAdam ( Robert et al., 2024 ) , which estimates the first- and second-order statistics of the newly projected gradients. As noted in Section 3.4 , only the compact principal states are transported. We treat this transport as a lightweight heuristic that maintains the continuity of the Adam-preconditioned principal update across refreshes. Recall that ResQAdam projects the full-space gradient G t ∈ ℝ n × m G_{t}\\in\\mathbb{R}^{n\\times m} into the r × r r\\times r coordinate representation of the principal subspace as G t ∥ = U t ⊤ ​ G t ​ V t ∈ ℝ r × r . G_{t}^{\\parallel}=U_{t}^{\\top}G_{t}V_{t}\\in\\mathbb{R}^{r\\times r}. (8) Let the old and new bases define the transition matrices P t = U t ⊤ ​ U t − 1 ∈ ℝ r × r , Q t = V t − 1 ⊤ ​ V t ∈ ℝ r × r . P_{t}=U_{t}^{\\top}U_{t-1}\\in\\mathbb{R}^{r\\times r},\\qquad Q_{t}=V_{t-1}^{\\top}V_{t}\\in\\mathbb{R}^{r\\times r}. (9) Under the rank- r r truncation induced by the old bases, the projection of any past gradient G k G_{k} ( k < t k<t ) into the new coordinate representation can be approximated by",
+      "source": "https://arxiv.org/html/2611.08924v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0041",
+      "section": "Appendix A Estimating the Statistics of Projected Gradients",
+      "text": "U t ⊤ ​ G k ​ V t ≈ ( U t ⊤ ​ U t − 1 ) ​ ( U t − 1 ⊤ ​ G k ​ V t − 1 ) ​ ( V t − 1 ⊤ ​ V t ) = P t ​ G k ∥ ​ Q t . U_{t}^{\\top}G_{k}V_{t}\\approx\\left(U_{t}^{\\top}U_{t-1}\\right)\\left(U_{t-1}^{\\top}G_{k}V_{t-1}\\right)\\left(V_{t-1}^{\\top}V_{t}\\right)=P_{t}G_{k}^{\\parallel}Q_{t}. (10) Because the optimizer states are essentially exponentially moving averages (EMAs) of these past gradients, this transformation forms the basis for transporting their statistics.",
+      "source": "https://arxiv.org/html/2611.08924v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0042",
+      "section": "First-order statistic.",
+      "text": "The transport must be performed on the bias-corrected statistical moments rather than the raw EMAs. This ensures that the first and second moments are on the same true scale when estimating the variance. Because the first moment is linear in the gradient, the transported first-order statistic is obtained by applying the coordinate rotation to the bias-corrected old first moment: m ^ t − 1 2 ∥ = P t ​ m ^ t − 1 ∥ ​ Q t . \\widehat{m}_{t-\\frac{1}{2}}^{\\parallel}=P_{t}\\widehat{m}_{t-1}^{\\parallel}Q_{t}. (11) Equivalently, the raw transported first moment is m t − 1 2 ∥ = ( 1 − β 1 t − 1 ) ​ m ^ t − 1 2 ∥ . m_{t-\\frac{1}{2}}^{\\parallel}=\\left(1-\\beta_{1}^{\\,t-1}\\right)\\widehat{m}_{t-\\frac{1}{2}}^{\\parallel}. (12)",
+      "source": "https://arxiv.org/html/2611.08924v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0043",
+      "section": "Second-order statistic.",
+      "text": "The second moment v ∥ v^{\\parallel} is an element-wise squared-gradient EMA rather than a true covariance matrix, so it is not linear under a change of coordinates. For each new coordinate ( a , b ) (a,b) , the corresponding projected gradient is approximated as ( G k ∥ , new ) a ​ b ≈ ∑ i = 1 r ∑ j = 1 r ( P t ) a ​ i ( Q t ) j ​ b ( G k ∥ , old ) i ​ j . \\left(G_{k}^{\\parallel,\\mathrm{new}}\\right)_{ab}\\approx\\sum_{i=1}^{r}\\sum_{j=1}^{r}(P_{t})_{ai}(Q_{t})_{jb}\\left(G_{k}^{\\parallel,\\mathrm{old}}\\right)_{ij}. (13) Assuming coordinate-wise independence as a heuristic, its second-order statistic can be estimated by transporting the variance via the squared transition matrices and re-adding the squared transported mean: ( v ^ t − 1 2 ∥ ) a ​ b \\displaystyle\\left(\\widehat{v}_{t-\\frac{1}{2}}^{\\parallel}\\right)_{ab} ≈ ∑ i = 1 r ∑ j = 1 r ( P t ) a ​ i 2 ​ ( Q t ) j ​ b 2 ​ [ ( v ^ t − 1 ∥ ) i ​ j − ( m ^ t − 1 ∥ ) i ​ j 2 ] + ( m ^ t − 1 2 ∥ ) a ​ b 2 . \\displaystyle\\approx\\sum_{i=1}^{r}\\sum_{j=1}^{r}(P_{t})_{ai}^{2}(Q_{t})_{jb}^{2}\\left[\\left(\\widehat{v}_{t-1}^{\\parallel}\\right)_{ij}-\\left(\\widehat{m}_{t-1}^{\\parallel}\\right)_{ij}^{2}\\right]+\\left(\\widehat{m}_{t-\\frac{1}{2}}^{\\parallel}\\right)_{ab}^{2}. (14) The first term estimates the transformed coordinate-wise variance, while the second term accounts for the squared transformed mean. In practice, to avoid numerical artifacts caused by this independence approximation, we clip the transported second-order estimate to be non-negative: v ^ t − 1 2 ∥ ← max ⁡ ( v ^ t − 1 2 ∥ , 0 ) . \\widehat{v}_{t-\\frac{1}{2}}^{\\parallel}\\leftarrow\\max\\left(\\widehat{v}_{t-\\frac{1}{2}}^{\\parallel},0\\right). (15) The raw transported second moment is then recovered by reapplying the bias term:",
+      "source": "https://arxiv.org/html/2611.08924v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0044",
+      "section": "Second-order statistic.",
+      "text": "v t − 1 2 ∥ = ( 1 − β 2 t − 1 ) ​ v ^ t − 1 2 ∥ . v_{t-\\frac{1}{2}}^{\\parallel}=\\left(1-\\beta_{2}^{\\,t-1}\\right)\\widehat{v}_{t-\\frac{1}{2}}^{\\parallel}. (16) After this transport step, ResQAdam continues the principal Adam update in the refreshed coordinate representation: G t ∥ \\displaystyle G_{t}^{\\parallel} = U t ⊤ ​ G t ​ V t , \\displaystyle=U_{t}^{\\top}G_{t}V_{t}, (17) m t ∥ \\displaystyle m_{t}^{\\parallel} = β 1 ​ m t − 1 2 ∥ + ( 1 − β 1 ) ​ G t ∥ , \\displaystyle=\\beta_{1}m_{t-\\frac{1}{2}}^{\\parallel}+(1-\\beta_{1})G_{t}^{\\parallel}, (18) v t ∥ \\displaystyle v_{t}^{\\parallel} = β 2 ​ v t − 1 2 ∥ + ( 1 − β 2 ) ​ ( G t ∥ ⊙ G t ∥ ) . \\displaystyle=\\beta_{2}v_{t-\\frac{1}{2}}^{\\parallel}+(1-\\beta_{2})\\left(G_{t}^{\\parallel}\\odot G_{t}^{\\parallel}\\right). (19)",
+      "source": "https://arxiv.org/html/2611.08924v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0045",
+      "section": "Difference in Application Scope.",
+      "text": "While the statistical transport equations strictly follow LDAdam ( Robert et al., 2024 ) , our application differs in scope. LDAdam relies on this transport to perform adaptive optimization entirely within the compressed principal subspace, using generalized error feedback to reintroduce projection errors. In contrast, ResQAdam restricts this transport solely to the compact principal states m t ∥ , v t ∥ ∈ ℝ r × r m_{t}^{\\parallel},v_{t}^{\\parallel}\\in\\mathbb{R}^{r\\times r} . We maintain a dense momentum M t M_{t} in the original parameter space (stored in BF16) and explicitly preserve the discarded orthogonal residual M t ⟂ M_{t}^{\\perp} through a full-space sign correction. Thus, our use of the projected-gradient statistic estimation serves purely as a continuity mechanism for the principal update, deliberately avoiding the compression of residual QAT compensations into LDAdam-style dense second-moment tracking.",
+      "source": "https://arxiv.org/html/2611.08924v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0046",
+      "section": "Appendix B Training loss trajectories on 200M-parameter LLM",
+      "text": "Figure 6 shows the optimization trajectory and convergence alignment during training for a 200M-parameter LLM, comparing ResQAdam and AdamW under two from-scratch QAT methods, QuEST and CAGE. For the 200M-scale model, ResQAdam exhibits a training-loss trajectory that closely tracks that of AdamW. Figure 6: Training loss trajectories of ResQAdam and AdamW during from-scratch QAT under various quantization configurations on the 200M-parameter LLM. The values following the optimizer names in the legend indicate the average memory footprint of the optimizer states.",
+      "source": "https://arxiv.org/html/2611.08924v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0047",
+      "section": "Appendix C QAT Frameworks and Experimental Configurations",
+      "text": "We evaluate ResQAdam across both from-scratch QAT and post-pretraining QAT fine-tuning, covering substantially different optimization objectives, training schemes, and quantization settings.",
+      "source": "https://arxiv.org/html/2611.08924v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0048",
+      "section": "C.1 From-Scratch QAT",
+      "text": "We consider two recent low-precision pretraining frameworks.",
+      "source": "https://arxiv.org/html/2611.08924v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0049",
+      "section": "QuEST.",
+      "text": "QuEST ( Panferov et al., 2025 ) applies Hadamard transformations to weights and activations before quantization and uses a trust-based gradient estimator to reduce gradient bias from large quantization errors. We replace its original optimizer with ResQAdam while keeping the remaining training pipeline unchanged.",
+      "source": "https://arxiv.org/html/2611.08924v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0050",
+      "section": "CAGE.",
+      "text": "CAGE ( Tabesh et al., 2025 ) augments the STE with a curvature-aware correction derived from a multi-objective formulation that jointly considers task loss and quantization error. ResQAdam is integrated without modifying its quantization or gradient-correction scheme. For both frameworks, we pretrain Llama-style models with 200M and 430M parameters on C4 under W2A2, W2A16, and W4A4 quantization. The training-token budget is set to 40 × 40\\times the model size.",
+      "source": "https://arxiv.org/html/2611.08924v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0051",
+      "section": "C.2 QAT Fine-Tuning",
+      "text": "We further evaluate ResQAdam under three QAT fine-tuning frameworks with different optimization objectives and data sources.",
+      "source": "https://arxiv.org/html/2611.08924v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0052",
+      "section": "Basic QAT.",
+      "text": "Our Basic QAT baseline performs end-to-end next-token training with learnable asymmetric quantization, where quantization scales are optimized following LSQ ( Esser et al., 2019 ) . All parameters are jointly fine-tuned on a 2B-token subset of RedPajama ( Computer, 2023 ) .",
+      "source": "https://arxiv.org/html/2611.08924v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0053",
+      "section": "EfficientQAT (Block-AP).",
+      "text": "EfficientQAT ( Chen et al., 2025 ) first performs block-wise all-parameter training (Block-AP), followed by an E2E-QP stage that updates only quantization parameters. Since ResQAdam operates on weight-matrix updates, we evaluate it only in the Block-AP stage.",
+      "source": "https://arxiv.org/html/2611.08924v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0054",
+      "section": "LLM-QAT.",
+      "text": "LLM-QAT ( Liu et al., 2024 ) uses data-free knowledge distillation, generating training sequences from the full-precision teacher and optimizing the quantized student to match it. It jointly quantizes weights, activations, and the KV cache using symmetric MinMax quantization. For fine-tuning experiments, we use Llama 3.2-1B ( AI@Meta, 2024 ) , Qwen 3-4B-Base ( Team, 2025 ) , and Llama 2-7B ( Touvron et al., 2023 ) under multiple low-bit quantization configurations. Exact configurations are reported with the corresponding experimental results.",
+      "source": "https://arxiv.org/html/2611.08924v1",
+      "offset": 0
+    }
+  ],
+  "links": [
+    {
+      "href": "mailto:liqun.ma@mbzuai.ac.ae",
+      "text": "liqun.ma@mbzuai.ac.ae",
+      "section": "ResQAdam: Residual-Preserving Adaptive Optimization for Memory-Efficient Quantization Aware Training",
+      "context": "Liqun Ma † † thanks: Work done during internship at AMD. Affiliation: Mohamed bin Zayed University of Artificial Intelligence (MBZUAI) Email: liqun.ma@mbzuai.ac.ae",
+      "url": "mailto:liqun.ma@mbzuai.ac.ae"
+    },
+    {
+      "href": "mailto:shengkun.tang@mbzuai.ac.ae",
+      "text": "shengkun.tang@mbzuai.ac.ae",
+      "section": "ResQAdam: Residual-Preserving Adaptive Optimization for Memory-Efficient Quantization Aware Training",
+      "context": "Liqun Ma † † thanks: Work done during internship at AMD. Affiliation: Mohamed bin Zayed University of Artificial Intelligence (MBZUAI) Email: liqun.ma@mbzuai.ac.ae Shengkun Tang Affiliation: Mohamed bin Zayed University of Artificial Intelligence (MBZUAI) Email: shengkun.tang@mbzuai.ac.ae",
+      "url": "mailto:shengkun.tang@mbzuai.ac.ae"
+    },
+    {
+      "href": "mailto:kun.zhang@mbzuai.ac.ae",
+      "text": "kun.zhang@mbzuai.ac.ae",
+      "section": "ResQAdam: Residual-Preserving Adaptive Optimization for Memory-Efficient Quantization Aware Training",
+      "context": "Liqun Ma † † thanks: Work done during internship at AMD. Affiliation: Mohamed bin Zayed University of Artificial Intelligence (MBZUAI) Email: liqun.ma@mbzuai.ac.ae Shengkun Tang Affiliation: Mohamed bin Zayed University of Artificial Intelligence (MBZUAI) Email: shengkun.tang@mbzuai.ac.ae Liangyu Wang Affiliation: King Abdullah University of Science and Technology (KAUST) Email: kun.zhang@mbzuai.ac.ae",
+      "url": "mailto:kun.zhang@mbzuai.ac.ae"
+    },
+    {
+      "href": "mailto:zhiqiang.shen@mbzuai.ac.ae",
+      "text": "zhiqiang.shen@mbzuai.ac.ae",
+      "section": "ResQAdam: Residual-Preserving Adaptive Optimization for Memory-Efficient Quantization Aware Training",
+      "context": "Liqun Ma † † thanks: Work done during internship at AMD. Affiliation: Mohamed bin Zayed University of Artificial Intelligence (MBZUAI) Email: liqun.ma@mbzuai.ac.ae Shengkun Tang Affiliation: Mohamed bin Zayed University of Artificial Intelligence (MBZUAI) Email: shengkun.tang@mbzuai.ac.ae Liangyu Wang Affiliation: King Abdullah University of Science and Technology (KAUST) Email: kun.zhang@mbzuai.ac.ae Lin Zhao Affiliation: Advanced Micro Devices, Inc. (AMD) Email: zhiqiang.shen@mbzuai.ac.ae",
+      "url": "mailto:zhiqiang.shen@mbzuai.ac.ae"
+    },
+    {
+      "href": "mailto:liangyu.wang@kaust.edu.sa",
+      "text": "liangyu.wang@kaust.edu.sa",
+      "section": "ResQAdam: Residual-Preserving Adaptive Optimization for Memory-Efficient Quantization Aware Training",
+      "context": "Liqun Ma † † thanks: Work done during internship at AMD. Affiliation: Mohamed bin Zayed University of Artificial Intelligence (MBZUAI) Email: liqun.ma@mbzuai.ac.ae Shengkun Tang Affiliation: Mohamed bin Zayed University of Artificial Intelligence (MBZUAI) Email: shengkun.tang@mbzuai.ac.ae Liangyu Wang Affiliation: King Abdullah University of Science and Technology (KAUST) Email: kun.zhang@mbzuai.ac.ae Lin Zhao Affiliation: Advanced Micro Devices, Inc. (AMD) Email: zhiqiang.shen@mbzuai.ac.ae Wei Luo Affiliation: Advanced Micro Devices, Inc. (AMD) Email: liangyu.wang@kaust.edu.sa",
+      "url": "mailto:liangyu.wang@kaust.edu.sa"
+    },
+    {
+      "href": "mailto:lin.zhao@amd.com",
+      "text": "lin.zhao@amd.com",
+      "section": "ResQAdam: Residual-Preserving Adaptive Optimization for Memory-Efficient Quantization Aware Training",
+      "context": "n: Mohamed bin Zayed University of Artificial Intelligence (MBZUAI) Email: liqun.ma@mbzuai.ac.ae Shengkun Tang Affiliation: Mohamed bin Zayed University of Artificial Intelligence (MBZUAI) Email: shengkun.tang@mbzuai.ac.ae Liangyu Wang Affiliation: King Abdullah University of Science and Technology (KAUST) Email: kun.zhang@mbzuai.ac.ae Lin Zhao Affiliation: Advanced Micro Devices, Inc. (AMD) Email: zhiqiang.shen@mbzuai.ac.ae Wei Luo Affiliation: Advanced Micro Devices, Inc. (AMD) Email: liangyu.wang@kaust.edu.sa Xinjun Niu Affiliation: Advanced Micro Devices, Inc. (AMD) Email: lin.zhao@amd.com",
+      "url": "mailto:lin.zhao@amd.com"
+    },
+    {
+      "href": "mailto:wei.luo@amd.com",
+      "text": "wei.luo@amd.com",
+      "section": "ResQAdam: Residual-Preserving Adaptive Optimization for Memory-Efficient Quantization Aware Training",
+      "context": "zuai.ac.ae Shengkun Tang Affiliation: Mohamed bin Zayed University of Artificial Intelligence (MBZUAI) Email: shengkun.tang@mbzuai.ac.ae Liangyu Wang Affiliation: King Abdullah University of Science and Technology (KAUST) Email: kun.zhang@mbzuai.ac.ae Lin Zhao Affiliation: Advanced Micro Devices, Inc. (AMD) Email: zhiqiang.shen@mbzuai.ac.ae Wei Luo Affiliation: Advanced Micro Devices, Inc. (AMD) Email: liangyu.wang@kaust.edu.sa Xinjun Niu Affiliation: Advanced Micro Devices, Inc. (AMD) Email: lin.zhao@amd.com Spandan Tiwari Affiliation: Advanced Micro Devices, Inc. (AMD) Email: wei.luo@amd.com",
+      "url": "mailto:wei.luo@amd.com"
+    },
+    {
+      "href": "mailto:xinjun.niu@amd.com",
+      "text": "xinjun.niu@amd.com",
+      "section": "ResQAdam: Residual-Preserving Adaptive Optimization for Memory-Efficient Quantization Aware Training",
+      "context": "ence (MBZUAI) Email: shengkun.tang@mbzuai.ac.ae Liangyu Wang Affiliation: King Abdullah University of Science and Technology (KAUST) Email: kun.zhang@mbzuai.ac.ae Lin Zhao Affiliation: Advanced Micro Devices, Inc. (AMD) Email: zhiqiang.shen@mbzuai.ac.ae Wei Luo Affiliation: Advanced Micro Devices, Inc. (AMD) Email: liangyu.wang@kaust.edu.sa Xinjun Niu Affiliation: Advanced Micro Devices, Inc. (AMD) Email: lin.zhao@amd.com Spandan Tiwari Affiliation: Advanced Micro Devices, Inc. (AMD) Email: wei.luo@amd.com Ashish Sirasao Affiliation: Advanced Micro Devices, Inc. (AMD) Email: xinjun.niu@amd.com",
+      "url": "mailto:xinjun.niu@amd.com"
+    },
+    {
+      "href": "mailto:spandan.tiwari@amd.com",
+      "text": "spandan.tiwari@amd.com",
+      "section": "ResQAdam: Residual-Preserving Adaptive Optimization for Memory-Efficient Quantization Aware Training",
+      "context": "in Zhao Affiliation: Advanced Micro Devices, Inc. (AMD) Email: zhiqiang.shen@mbzuai.ac.ae Wei Luo Affiliation: Advanced Micro Devices, Inc. (AMD) Email: liangyu.wang@kaust.edu.sa Xinjun Niu Affiliation: Advanced Micro Devices, Inc. (AMD) Email: lin.zhao@amd.com Spandan Tiwari Affiliation: Advanced Micro Devices, Inc. (AMD) Email: wei.luo@amd.com Ashish Sirasao Affiliation: Advanced Micro Devices, Inc. (AMD) Email: xinjun.niu@amd.com Kun Zhang Affiliation: Mohamed bin Zayed University of Artificial Intelligence (MBZUAI) Affiliation: Carnegie Mellon University (CMU) Email: spandan.tiwari@amd.com",
+      "url": "mailto:spandan.tiwari@amd.com"
+    },
+    {
+      "href": "mailto:ashish.sirasao@amd.com",
+      "text": "ashish.sirasao@amd.com",
+      "section": "ResQAdam: Residual-Preserving Adaptive Optimization for Memory-Efficient Quantization Aware Training",
+      "context": "cro Devices, Inc. (AMD) Email: liangyu.wang@kaust.edu.sa Xinjun Niu Affiliation: Advanced Micro Devices, Inc. (AMD) Email: lin.zhao@amd.com Spandan Tiwari Affiliation: Advanced Micro Devices, Inc. (AMD) Email: wei.luo@amd.com Ashish Sirasao Affiliation: Advanced Micro Devices, Inc. (AMD) Email: xinjun.niu@amd.com Kun Zhang Affiliation: Mohamed bin Zayed University of Artificial Intelligence (MBZUAI) Affiliation: Carnegie Mellon University (CMU) Email: spandan.tiwari@amd.com Zhiqiang Shen Affiliation: Mohamed bin Zayed University of Artificial Intelligence (MBZUAI) Email: ashish.sirasao@amd.com",
+      "url": "mailto:ashish.sirasao@amd.com"
+    },
+    {
+      "href": "https://github.com/LiqunMa/ResQAdam",
+      "text": "https://github.com/LiqunMa/ResQAdam",
+      "section": "Abstract",
+      "context": "l when only its sign is kept. Based on these observations, we propose ResQAdam. It keeps a single BF16 momentum, applies Adam only to the r × r r\\times r coordinates of the principal subspace, and adds a normalized sign update computed from the residual. We evaluate ResQAdam with two from-scratch QAT methods and three QAT fine-tuning pipelines, with weights quantized down to 2 bits. It reduces optimizer-state memory by 71% to 74% relative to AdamW, stays close to AdamW in most settings, and lowers training throughput by less than 2%. Our code is available at https://github.com/LiqunMa/ResQAdam",
+      "url": "https://github.com/LiqunMa/ResQAdam"
+    },
+    {
+      "href": "#bib.bib12",
+      "text": "Bengio et al., 2013",
+      "section": "1 Introduction",
+      "context": "Quantization-aware training (QAT) inserts the quantizer into the forward pass and updates latent full-precision weights through the straight-through estimator (STE) ( Bengio et al., 2013",
+      "url": "https://arxiv.org/html/2611.08924v1#bib.bib12"
+    },
+    {
+      "href": "#bib.bib1",
+      "text": "Frantar et al., 2022",
+      "section": "1 Introduction",
+      "context": "Quantization-aware training (QAT) inserts the quantizer into the forward pass and updates latent full-precision weights through the straight-through estimator (STE) ( Bengio et al., 2013 ) . At low bit widths it recovers much of the accuracy lost by post-training quantization (PTQ) ( Frantar et al., 2022",
+      "url": "https://arxiv.org/html/2611.08924v1#bib.bib1"
+    },
+    {
+      "href": "#bib.bib2",
+      "text": "Xiao et al., 2023",
+      "section": "1 Introduction",
+      "context": "Quantization-aware training (QAT) inserts the quantizer into the forward pass and updates latent full-precision weights through the straight-through estimator (STE) ( Bengio et al., 2013 ) . At low bit widths it recovers much of the accuracy lost by post-training quantization (PTQ) ( Frantar et al., 2022 ; Xiao et al., 2023",
+      "url": "https://arxiv.org/html/2611.08924v1#bib.bib2"
+    },
+    {
+      "href": "#bib.bib3",
+      "text": "Liu et al., 2024",
+      "section": "1 Introduction",
+      "context": "Quantization-aware training (QAT) inserts the quantizer into the forward pass and updates latent full-precision weights through the straight-through estimator (STE) ( Bengio et al., 2013 ) . At low bit widths it recovers much of the accuracy lost by post-training quantization (PTQ) ( Frantar et al., 2022 ; Xiao et al., 2023 ) , both when fine-tuning a pretrained checkpoint ( Liu et al., 2024",
+      "url": "https://arxiv.org/html/2611.08924v1#bib.bib3"
+    },
+    {
+      "href": "#bib.bib4",
+      "text": "Chen et al., 2025",
+      "section": "1 Introduction",
+      "context": "Quantization-aware training (QAT) inserts the quantizer into the forward pass and updates latent full-precision weights through the straight-through estimator (STE) ( Bengio et al., 2013 ) . At low bit widths it recovers much of the accuracy lost by post-training quantization (PTQ) ( Frantar et al., 2022 ; Xiao et al., 2023 ) , both when fine-tuning a pretrained checkpoint ( Liu et al., 2024 ; Chen et al., 2025",
+      "url": "https://arxiv.org/html/2611.08924v1#bib.bib4"
+    },
+    {
+      "href": "#bib.bib7",
+      "text": "Liu et al., 2026",
+      "section": "1 Introduction",
+      "context": "Quantization-aware training (QAT) inserts the quantizer into the forward pass and updates latent full-precision weights through the straight-through estimator (STE) ( Bengio et al., 2013 ) . At low bit widths it recovers much of the accuracy lost by post-training quantization (PTQ) ( Frantar et al., 2022 ; Xiao et al., 2023 ) , both when fine-tuning a pretrained checkpoint ( Liu et al., 2024 ; Chen et al., 2025 ; Liu et al., 2026",
+      "url": "https://arxiv.org/html/2611.08924v1#bib.bib7"
+    },
+    {
+      "href": "#bib.bib6",
+      "text": "Panferov et al., 2025",
+      "section": "1 Introduction",
+      "context": "Quantization-aware training (QAT) inserts the quantizer into the forward pass and updates latent full-precision weights through the straight-through estimator (STE) ( Bengio et al., 2013 ) . At low bit widths it recovers much of the accuracy lost by post-training quantization (PTQ) ( Frantar et al., 2022 ; Xiao et al., 2023 ) , both when fine-tuning a pretrained checkpoint ( Liu et al., 2024 ; Chen et al., 2025 ; Liu et al., 2026 ) and when training from scratch ( Panferov et al., 2025",
+      "url": "https://arxiv.org/html/2611.08924v1#bib.bib6"
+    },
+    {
+      "href": "#bib.bib14",
+      "text": "Tabesh et al., 2025",
+      "section": "1 Introduction",
+      "context": "Quantization-aware training (QAT) inserts the quantizer into the forward pass and updates latent full-precision weights through the straight-through estimator (STE) ( Bengio et al., 2013 ) . At low bit widths it recovers much of the accuracy lost by post-training quantization (PTQ) ( Frantar et al., 2022 ; Xiao et al., 2023 ) , both when fine-tuning a pretrained checkpoint ( Liu et al., 2024 ; Chen et al., 2025 ; Liu et al., 2026 ) and when training from scratch ( Panferov et al., 2025 ; Tabesh et al., 2025",
+      "url": "https://arxiv.org/html/2611.08924v1#bib.bib14"
+    },
+    {
+      "href": "#bib.bib9",
+      "text": "Loshchilov and Hutter, 2017",
+      "section": "1 Introduction",
+      "context": "e forward pass and updates latent full-precision weights through the straight-through estimator (STE) ( Bengio et al., 2013 ) . At low bit widths it recovers much of the accuracy lost by post-training quantization (PTQ) ( Frantar et al., 2022 ; Xiao et al., 2023 ) , both when fine-tuning a pretrained checkpoint ( Liu et al., 2024 ; Chen et al., 2025 ; Liu et al., 2026 ) and when training from scratch ( Panferov et al., 2025 ; Tabesh et al., 2025 ) . This accuracy comes at a memory cost. QAT keeps full-precision weights and gradients, and most recipes rely on AdamW ( Loshchilov and Hutter, 2017",
+      "url": "https://arxiv.org/html/2611.08924v1#bib.bib9"
+    },
+    {
+      "href": "#bib.bib8",
+      "text": "Zhao et al., 2024",
+      "section": "1 Introduction",
+      "context": "A natural remedy is to borrow memory-efficient optimizers from full-precision training. GaLore ( Zhao et al., 2024",
+      "url": "https://arxiv.org/html/2611.08924v1#bib.bib8"
+    },
+    {
+      "href": "#bib.bib5",
+      "text": "Robert et al., 2024",
+      "section": "1 Introduction",
+      "context": "A natural remedy is to borrow memory-efficient optimizers from full-precision training. GaLore ( Zhao et al., 2024 ) and LDAdam ( Robert et al., 2024",
+      "url": "https://arxiv.org/html/2611.08924v1#bib.bib5"
+    },
+    {
+      "href": "#S1.F1",
+      "text": "1",
+      "section": "1 Introduction",
+      "context": "A natural remedy is to borrow memory-efficient optimizers from full-precision training. GaLore ( Zhao et al., 2024 ) and LDAdam ( Robert et al., 2024 ) project the gradient onto a rank- r r subspace, keep Adam states only in that subspace, and map the update back to the full space. This works well when the optimization signal is concentrated in a few directions. Figure 1",
+      "url": "https://arxiv.org/html/2611.08924v1#S1.F1"
+    },
+    {
+      "href": "#S5.SS1",
+      "text": "5.1",
+      "section": "1 Introduction",
+      "context": "The principal projection captures the dominant low-rank structure of the optimization trajectory, whereas the orthogonal residual retains dispersed signals outside the principal subspace. Our empirical results show that these residual signals become particularly important under QAT. Their magnitude matters little: keeping only their sign, with no second-moment state, recovers most of the lost quality (Section 5.1",
+      "url": "https://arxiv.org/html/2611.08924v1#S5.SS1"
+    },
+    {
+      "href": "#bib.bib22",
+      "text": "Choi et al., 2018",
+      "section": "2 Related Work",
+      "context": "From-scratch QAT. Learnable quantizers such as PACT ( Choi et al., 2018",
+      "url": "https://arxiv.org/html/2611.08924v1#bib.bib22"
+    },
+    {
+      "href": "#bib.bib13",
+      "text": "Esser et al., 2019",
+      "section": "2 Related Work",
+      "context": "From-scratch QAT. Learnable quantizers such as PACT ( Choi et al., 2018 ) and LSQ ( Esser et al., 2019",
+      "url": "https://arxiv.org/html/2611.08924v1#bib.bib13"
+    },
+    {
+      "href": "#bib.bib20",
+      "text": "Wang et al., 2023",
+      "section": "2 Related Work",
+      "context": "From-scratch QAT. Learnable quantizers such as PACT ( Choi et al., 2018 ) and LSQ ( Esser et al., 2019 ) were later scaled to LLMs by BitNet ( Wang et al., 2023",
+      "url": "https://arxiv.org/html/2611.08924v1#bib.bib20"
+    },
+    {
+      "href": "#bib.bib21",
+      "text": "Ma et al., 2024",
+      "section": "2 Related Work",
+      "context": "From-scratch QAT. Learnable quantizers such as PACT ( Choi et al., 2018 ) and LSQ ( Esser et al., 2019 ) were later scaled to LLMs by BitNet ( Wang et al., 2023 ) and BitNet b1.58 ( Ma et al., 2024",
+      "url": "https://arxiv.org/html/2611.08924v1#bib.bib21"
+    },
+    {
+      "href": "#bib.bib6",
+      "text": "Panferov et al., 2025",
+      "section": "2 Related Work",
+      "context": "From-scratch QAT. Learnable quantizers such as PACT ( Choi et al., 2018 ) and LSQ ( Esser et al., 2019 ) were later scaled to LLMs by BitNet ( Wang et al., 2023 ) and BitNet b1.58 ( Ma et al., 2024 ) . Recent work improves the gradient estimate. QuEST ( Panferov et al., 2025",
+      "url": "https://arxiv.org/html/2611.08924v1#bib.bib6"
+    },
+    {
+      "href": "#bib.bib14",
+      "text": "Tabesh et al., 2025",
+      "section": "2 Related Work",
+      "context": "From-scratch QAT. Learnable quantizers such as PACT ( Choi et al., 2018 ) and LSQ ( Esser et al., 2019 ) were later scaled to LLMs by BitNet ( Wang et al., 2023 ) and BitNet b1.58 ( Ma et al., 2024 ) . Recent work improves the gradient estimate. QuEST ( Panferov et al., 2025 ) applies Hadamard transforms and down-weights gradients of entries with large quantization error, and CAGE ( Tabesh et al., 2025",
+      "url": "https://arxiv.org/html/2611.08924v1#bib.bib14"
+    },
+    {
+      "href": "#bib.bib3",
+      "text": "Liu et al., 2024",
+      "section": "2 Related Work",
+      "context": "QAT Fine-Tuning. A complementary paradigm adapts a converged full-precision checkpoint to recover its compressed representation. LLM-QAT ( Liu et al., 2024",
+      "url": "https://arxiv.org/html/2611.08924v1#bib.bib3"
+    },
+    {
+      "href": "#bib.bib4",
+      "text": "Chen et al., 2025",
+      "section": "2 Related Work",
+      "context": "QAT Fine-Tuning. A complementary paradigm adapts a converged full-precision checkpoint to recover its compressed representation. LLM-QAT ( Liu et al., 2024 ) performs data-free QAT by distilling from the pretrained model’s own generations, jointly quantizing weights, activations, and the KV cache. EfficientQAT ( Chen et al., 2025",
+      "url": "https://arxiv.org/html/2611.08924v1#bib.bib4"
+    },
+    {
+      "href": "#bib.bib7",
+      "text": "Liu et al., 2026",
+      "section": "2 Related Work",
+      "context": "QAT Fine-Tuning. A complementary paradigm adapts a converged full-precision checkpoint to recover its compressed representation. LLM-QAT ( Liu et al., 2024 ) performs data-free QAT by distilling from the pretrained model’s own generations, jointly quantizing weights, activations, and the KV cache. EfficientQAT ( Chen et al., 2025 ) reduces QAT cost via two stages: block-wise all-parameter training (Block-AP) for a strong low-bit initialization, followed by end-to-end training of only the quantization step sizes (E2E-QP). ParetoQ ( Liu et al., 2026",
+      "url": "https://arxiv.org/html/2611.08924v1#bib.bib7"
+    },
+    {
+      "href": "#bib.bib23",
+      "text": "Kim et al., 2023",
+      "section": "2 Related Work",
+      "context": "al., 2024 ) performs data-free QAT by distilling from the pretrained model’s own generations, jointly quantizing weights, activations, and the KV cache. EfficientQAT ( Chen et al., 2025 ) reduces QAT cost via two stages: block-wise all-parameter training (Block-AP) for a strong low-bit initialization, followed by end-to-end training of only the quantization step sizes (E2E-QP). ParetoQ ( Liu et al., 2026 ) unifies 1-to-4-bit QAT under a single framework and identifies a sharp representation transition between 2 and 3 bits. Unlike parameter-efficient alternatives such as PEQA ( Kim et al., 2023",
+      "url": "https://arxiv.org/html/2611.08924v1#bib.bib23"
+    },
+    {
+      "href": "#bib.bib11",
+      "text": "Dettmers et al., 2023",
+      "section": "2 Related Work",
+      "context": "ng weights, activations, and the KV cache. EfficientQAT ( Chen et al., 2025 ) reduces QAT cost via two stages: block-wise all-parameter training (Block-AP) for a strong low-bit initialization, followed by end-to-end training of only the quantization step sizes (E2E-QP). ParetoQ ( Liu et al., 2026 ) unifies 1-to-4-bit QAT under a single framework and identifies a sharp representation transition between 2 and 3 bits. Unlike parameter-efficient alternatives such as PEQA ( Kim et al., 2023 ) , which shrinks optimizer memory by training only the quantization scales, or QLoRA ( Dettmers et al., 2023",
+      "url": "https://arxiv.org/html/2611.08924v1#bib.bib11"
+    },
+    {
+      "href": "#bib.bib8",
+      "text": "Zhao et al., 2024",
+      "section": "2 Related Work",
+      "context": "ta_{t}^{\\parallel}) Compute energy ratio ρ t ∥ , ρ t ⟂ ← CalcEnergyWeights ​ ( M t , M t ∥ , M t ⟂ ) \\rho_{t}^{\\parallel},\\rho_{t}^{\\perp}\\leftarrow\\textsc{CalcEnergyWeights}(M_{t},M_{t}^{\\parallel},M_{t}^{\\perp}) Fuse principal and residual directions Δ t ← ρ t ∥ ​ Δ t ∥ + ρ t ⟂ ​ Δ t ⟂ \\Delta_{t}\\leftarrow\\rho_{t}^{\\parallel}\\Delta_{t}^{\\parallel}+\\rho_{t}^{\\perp}\\Delta_{t}^{\\perp} W t ← ( 1 − η ​ λ ) ​ W t − 1 − η ​ Δ t W_{t}\\leftarrow(1-\\eta\\lambda)W_{t-1}-\\eta\\Delta_{t} end for Low-rank Projection Optimization. Low-rank projection methods take a different route: GaLore ( Zhao et al., 2024",
+      "url": "https://arxiv.org/html/2611.08924v1#bib.bib8"
+    },
+    {
+      "href": "#bib.bib5",
+      "text": "Robert et al., 2024",
+      "section": "2 Related Work",
+      "context": "ergyWeights}(M_{t},M_{t}^{\\parallel},M_{t}^{\\perp}) Fuse principal and residual directions Δ t ← ρ t ∥ ​ Δ t ∥ + ρ t ⟂ ​ Δ t ⟂ \\Delta_{t}\\leftarrow\\rho_{t}^{\\parallel}\\Delta_{t}^{\\parallel}+\\rho_{t}^{\\perp}\\Delta_{t}^{\\perp} W t ← ( 1 − η ​ λ ) ​ W t − 1 − η ​ Δ t W_{t}\\leftarrow(1-\\eta\\lambda)W_{t-1}-\\eta\\Delta_{t} end for Low-rank Projection Optimization. Low-rank projection methods take a different route: GaLore ( Zhao et al., 2024 ) periodically computes an SVD of the gradient, runs Adam within the resulting compact subspace, and projects the update back, while LDAdam ( Robert et al., 2024",
+      "url": "https://arxiv.org/html/2611.08924v1#bib.bib5"
+    },
+    {
+      "href": "#bib.bib24",
+      "text": "Chen et al., 2026",
+      "section": "2 Related Work",
+      "context": "mpact subspace, and projects the update back, while LDAdam ( Robert et al., 2024 ) performs adaptive optimization inside dynamically shifting subspaces with a projection-aware transport rule and error feedback. These methods are most effective when optimization signals are strongly concentrated in a dominant low-rank subspace. Our experiments show that this assumption becomes substantially less effective under QAT: projection-only optimizers degrade markedly, while preserving the discarded residual restores much of the lost optimization quality. While recent works like Fira ( Chen et al., 2026",
+      "url": "https://arxiv.org/html/2611.08924v1#bib.bib24"
+    },
+    {
+      "href": "#bib.bib25",
+      "text": "Zmushko et al., 2024",
+      "section": "2 Related Work",
+      "context": "ate back, while LDAdam ( Robert et al., 2024 ) performs adaptive optimization inside dynamically shifting subspaces with a projection-aware transport rule and error feedback. These methods are most effective when optimization signals are strongly concentrated in a dominant low-rank subspace. Our experiments show that this assumption becomes substantially less effective under QAT: projection-only optimizers degrade markedly, while preserving the discarded residual restores much of the lost optimization quality. While recent works like Fira ( Chen et al., 2026 ) and FRUGAL ( Zmushko et al., 2024",
+      "url": "https://arxiv.org/html/2611.08924v1#bib.bib25"
+    },
+    {
+      "href": "#S2",
+      "text": "2",
+      "section": "3 ResQAdam",
+      "context": " geometrically decoupled optimizer for QAT. ResQAdam applies different update rules to two parts of the optimization space: a compact coordinate space in ℝ r × r \\mathbb{R}^{r\\times r} , where Adam-style preconditioning is performed, and the full parameter space ℝ n × m \\mathbb{R}^{n\\times m} , where the orthogonal residual provides a sign-based correction for dispersed quantization-compensation signals. This decomposition substantially reduces the optimizer memory footprint while retaining the residual correction signals required for QAT. The overall training flow is summarized in Algorithm 2",
+      "url": "https://arxiv.org/html/2611.08924v1#S2"
+    },
+    {
+      "href": "#S3.SS2",
+      "text": "3.2",
+      "section": "3.2 Space-Specific Optimization Strategies",
+      "context": "Adam in the principal subspace. We project the gradient to G t ∥ = U t ⊤ ​ G t ​ V t G_{t}^{\\parallel}=U_{t}^{\\top}G_{t}V_{t} and apply Adam to it, which gives preconditioned coordinates A ^ t ∥ \\hat{A}_{t}^{\\parallel} (Algorithm 3.2",
+      "url": "https://arxiv.org/html/2611.08924v1#S3.SS2"
+    },
+    {
+      "href": "#S3.SS2",
+      "text": "3.2",
+      "section": "3.3 Energy-Aware Geometric Fusion",
+      "context": "As described in Section 3.2",
+      "url": "https://arxiv.org/html/2611.08924v1#S3.SS2"
+    },
+    {
+      "href": "#bib.bib5",
+      "text": "Robert et al., 2024",
+      "section": "3.4 Subspace Refresh and Memory",
+      "context": "The SVD is computed only every τ \\tau steps to amortize the computational cost. After each refresh, the principal states m ∥ m^{\\parallel} and v ∥ v^{\\parallel} are rewritten in the new basis with the transport rule of LDAdam ( Robert et al., 2024",
+      "url": "https://arxiv.org/html/2611.08924v1#bib.bib5"
+    },
+    {
+      "href": "#A1",
+      "text": "A",
+      "section": "3.4 Subspace Refresh and Memory",
+      "context": "The SVD is computed only every τ \\tau steps to amortize the computational cost. After each refresh, the principal states m ∥ m^{\\parallel} and v ∥ v^{\\parallel} are rewritten in the new basis with the transport rule of LDAdam ( Robert et al., 2024 ) (Appendix A",
+      "url": "https://arxiv.org/html/2611.08924v1#A1"
+    },
+    {
+      "href": "#S4",
+      "text": "4",
+      "section": "3.4 Subspace Refresh and Memory",
+      "context": "By storing the momentum M t M_{t} in BF16 and confining adaptive states to the compact coordinate representation, the dominant persistent-state cost of ResQAdam is 2 ​ n ​ m 2nm bytes, with an additional O ⁡ ( ( n + m ) ​ r + r 2 ) O((n+m)r+r^{2}) overhead for the bases and principal states. For r ≪ min ⁡ ( n , m ) r\\ll\\min(n,m) this approaches 25% of AdamW. The measured reduction is 71% to 74% (Section 4",
+      "url": "https://arxiv.org/html/2611.08924v1#S4"
+    },
+    {
+      "href": "#bib.bib6",
+      "text": "Panferov et al., 2025",
+      "section": "4.1 Experimental Setup",
+      "context": "From-scratch QAT. We consider QuEST ( Panferov et al., 2025",
+      "url": "https://arxiv.org/html/2611.08924v1#bib.bib6"
+    },
+    {
+      "href": "#bib.bib14",
+      "text": "Tabesh et al., 2025",
+      "section": "4.1 Experimental Setup",
+      "context": "From-scratch QAT. We consider QuEST ( Panferov et al., 2025 ) and CAGE ( Tabesh et al., 2025",
+      "url": "https://arxiv.org/html/2611.08924v1#bib.bib14"
+    },
+    {
+      "href": "#bib.bib3",
+      "text": "Liu et al., 2024",
+      "section": "4.1 Experimental Setup",
+      "context": "QAT fine-tuning. We use Basic QAT (end-to-end next-token loss with LSQ scales on 2B RedPajama tokens), LLM-QAT ( Liu et al., 2024",
+      "url": "https://arxiv.org/html/2611.08924v1#bib.bib3"
+    },
+    {
+      "href": "#bib.bib4",
+      "text": "Chen et al., 2025",
+      "section": "4.1 Experimental Setup",
+      "context": "QAT fine-tuning. We use Basic QAT (end-to-end next-token loss with LSQ scales on 2B RedPajama tokens), LLM-QAT ( Liu et al., 2024 ) (data-free distillation), and the Block-AP stage of EfficientQAT ( Chen et al., 2025",
+      "url": "https://arxiv.org/html/2611.08924v1#bib.bib4"
+    },
+    {
+      "href": "#A3",
+      "text": "C",
+      "section": "4.1 Experimental Setup",
+      "context": "QAT fine-tuning. We use Basic QAT (end-to-end next-token loss with LSQ scales on 2B RedPajama tokens), LLM-QAT ( Liu et al., 2024 ) (data-free distillation), and the Block-AP stage of EfficientQAT ( Chen et al., 2025 ) , on Llama 3.2-1B, Qwen3 4B-Base and Llama 2-7B under multiple quantization configurations.. Appendix C",
+      "url": "https://arxiv.org/html/2611.08924v1#A3"
+    },
+    {
+      "href": "#S2",
+      "text": "2",
+      "section": "4.1 Experimental Setup",
+      "context": "Hyperparameters and evaluation. For from-scratch QAT, ResQAdam uses rank r = 32 r=32 and refresh interval τ = 400 \\tau=400 . As an implementation detail of Algorithm 2",
+      "url": "https://arxiv.org/html/2611.08924v1#S2"
+    },
+    {
+      "href": "#S2",
+      "text": "2",
+      "section": "4.1 Experimental Setup",
+      "context": "Hyperparameters and evaluation. For from-scratch QAT, ResQAdam uses rank r = 32 r=32 and refresh interval τ = 400 \\tau=400 . As an implementation detail of Algorithm 2 , the bases are initialized from the first gradient and the periodic refresh is suspended during the first 10% of training steps, since the momentum of a randomly initialized model changes rapidly and early refreshes only add transport noise; after this warm-up phase, refreshes follow the schedule of Algorithm 2",
+      "url": "https://arxiv.org/html/2611.08924v1#S2"
+    },
+    {
+      "href": "#bib.bib15",
+      "text": "Zellers et al., 2019",
+      "section": "4.1 Experimental Setup",
+      "context": "We report perplexity on WikiText-2 and C4 to evaluate models pretrained with QAT. For QAT fine-tuning, in addition to perplexity, we evaluate zero-shot accuracy on several standard benchmarks: HellaSwag ( Zellers et al., 2019",
+      "url": "https://arxiv.org/html/2611.08924v1#bib.bib15"
+    },
+    {
+      "href": "#bib.bib16",
+      "text": "Bisk et al., 2020",
+      "section": "4.1 Experimental Setup",
+      "context": "We report perplexity on WikiText-2 and C4 to evaluate models pretrained with QAT. For QAT fine-tuning, in addition to perplexity, we evaluate zero-shot accuracy on several standard benchmarks: HellaSwag ( Zellers et al., 2019 ) , PIQA ( Bisk et al., 2020",
+      "url": "https://arxiv.org/html/2611.08924v1#bib.bib16"
+    },
+    {
+      "href": "#bib.bib17",
+      "text": "Clark et al., 2018",
+      "section": "4.1 Experimental Setup",
+      "context": "We report perplexity on WikiText-2 and C4 to evaluate models pretrained with QAT. For QAT fine-tuning, in addition to perplexity, we evaluate zero-shot accuracy on several standard benchmarks: HellaSwag ( Zellers et al., 2019 ) , PIQA ( Bisk et al., 2020 ) , ARC ( Clark et al., 2018",
+      "url": "https://arxiv.org/html/2611.08924v1#bib.bib17"
+    },
+    {
+      "href": "#bib.bib18",
+      "text": "Sakaguchi et al., 2021",
+      "section": "4.1 Experimental Setup",
+      "context": "We report perplexity on WikiText-2 and C4 to evaluate models pretrained with QAT. For QAT fine-tuning, in addition to perplexity, we evaluate zero-shot accuracy on several standard benchmarks: HellaSwag ( Zellers et al., 2019 ) , PIQA ( Bisk et al., 2020 ) , ARC ( Clark et al., 2018 ) , WinoGrande ( Sakaguchi et al., 2021",
+      "url": "https://arxiv.org/html/2611.08924v1#bib.bib18"
+    },
+    {
+      "href": "#bib.bib19",
+      "text": "Hendrycks et al., 2021",
+      "section": "4.1 Experimental Setup",
+      "context": "We report perplexity on WikiText-2 and C4 to evaluate models pretrained with QAT. For QAT fine-tuning, in addition to perplexity, we evaluate zero-shot accuracy on several standard benchmarks: HellaSwag ( Zellers et al., 2019 ) , PIQA ( Bisk et al., 2020 ) , ARC ( Clark et al., 2018 ) , WinoGrande ( Sakaguchi et al., 2021 ) , and MMLU ( Hendrycks et al., 2021",
+      "url": "https://arxiv.org/html/2611.08924v1#bib.bib19"
+    },
+    {
+      "href": "#S3.F2",
+      "text": "2",
+      "section": "4.2 Main Results on From-Scratch QAT",
+      "context": "Optimization Trajectory and Convergence Alignment. As illustrated in Figure 2",
+      "url": "https://arxiv.org/html/2611.08924v1#S3.F2"
+    },
+    {
+      "href": "#A2",
+      "text": "B",
+      "section": "4.2 Main Results on From-Scratch QAT",
+      "context": "e training-loss trajectory of the dense AdamW baseline. Across all evaluated bit-width configurations and both frameworks, the training loss curves of ResQAdam closely overlap with the baseline from initialization through to the final iterations. The zoomed-in callouts at the end of the training horizons further highlight that ResQAdam maintains stable convergence without divergence. This confirms that our geometry-decoupled and space-specific update strategies sufficiently capture the quantization errors to stabilize the low-bit pretraining process. Curves for the 200M model are in Appendix B",
+      "url": "https://arxiv.org/html/2611.08924v1#A2"
+    },
+    {
+      "href": "#S4.T1",
+      "text": "1",
+      "section": "4.2 Main Results on From-Scratch QAT",
+      "context": "Language Modeling Quality. Table 1",
+      "url": "https://arxiv.org/html/2611.08924v1#S4.T1"
+    },
+    {
+      "href": "#S4.T2",
+      "text": "2",
+      "section": "4.3 Main Results on QAT Fine-Tuning",
+      "context": "Table 2",
+      "url": "https://arxiv.org/html/2611.08924v1#S4.T2"
+    },
+    {
+      "href": "#S5.F3",
+      "text": "3",
+      "section": "5.1 Component Ablation and Subspace Design",
+      "context": "Figure 3",
+      "url": "https://arxiv.org/html/2611.08924v1#S5.F3"
+    },
+    {
+      "href": "#S5.T3",
+      "text": "3",
+      "section": "5.2 Hardware Efficiency and Overhead",
+      "context": "As detailed in Table 3",
+      "url": "https://arxiv.org/html/2611.08924v1#S5.T3"
+    },
+    {
+      "href": "#bib.bib8",
+      "text": "Zhao et al., 2024",
+      "section": "5.3 Comparison with Alternative Memory-Efficient Optimizers",
+      "context": "We further compare ResQAdam with two families of memory-efficient optimizers. Low-rank projection methods such as GaLore ( Zhao et al., 2024",
+      "url": "https://arxiv.org/html/2611.08924v1#bib.bib8"
+    },
+    {
+      "href": "#bib.bib5",
+      "text": "Robert et al., 2024",
+      "section": "5.3 Comparison with Alternative Memory-Efficient Optimizers",
+      "context": "We further compare ResQAdam with two families of memory-efficient optimizers. Low-rank projection methods such as GaLore ( Zhao et al., 2024 ) and LDAdam ( Robert et al., 2024",
+      "url": "https://arxiv.org/html/2611.08924v1#bib.bib5"
+    },
+    {
+      "href": "#bib.bib10",
+      "text": "Shazeer and Stern, 2018",
+      "section": "5.3 Comparison with Alternative Memory-Efficient Optimizers",
+      "context": "We further compare ResQAdam with two families of memory-efficient optimizers. Low-rank projection methods such as GaLore ( Zhao et al., 2024 ) and LDAdam ( Robert et al., 2024 ) restrict adaptive states to a rank- r r subspace obtained from the gradient, with LDAdam adding state transport across changing subspaces and error feedback. Structural factorization methods such as AdaFactor ( Shazeer and Stern, 2018",
+      "url": "https://arxiv.org/html/2611.08924v1#bib.bib10"
+    },
+    {
+      "href": "#S5.T4",
+      "text": "4",
+      "section": "5.3 Comparison with Alternative Memory-Efficient Optimizers",
+      "context": "Table 4",
+      "url": "https://arxiv.org/html/2611.08924v1#S5.T4"
+    },
+    {
+      "href": "#S4.T1",
+      "text": "1",
+      "section": "5.3 Comparison with Alternative Memory-Efficient Optimizers",
+      "context": "Table 4 reports the average perplexity on WikiText-2 and C4. In from-scratch QAT, every baseline is far behind ResQAdam in both quantization settings, by a margin much larger than the differences we observe between ResQAdam and AdamW in Table 1",
+      "url": "https://arxiv.org/html/2611.08924v1#S4.T1"
+    },
+    {
+      "href": "#S5.F4",
+      "text": "4",
+      "section": "5.4 Sensitivity to r r and τ \\tau",
+      "context": "The rank r r sets the dimension of the principal subspace, and the refresh interval τ \\tau sets how many steps a subspace is used before the bases are recomputed. We vary one of them while fixing the other at r = 64 r=64 or τ = 400 \\tau=400 , using the 297M model trained from scratch with Basic QAT under W2A16, W4A16 and W4A4 (Figure 4",
+      "url": "https://arxiv.org/html/2611.08924v1#S5.F4"
+    },
+    {
+      "href": "#S5.F5",
+      "text": "5",
+      "section": "5.5 Dynamics of Momentum Energy Distribution",
+      "context": "The result is shown in Figure 5",
+      "url": "https://arxiv.org/html/2611.08924v1#S5.F5"
+    },
+    {
+      "href": "#S3",
+      "text": "3",
+      "section": "Reproducibility statement",
+      "context": "We have made efforts to ensure the reproducibility of this work. The details of proposed method are described in Section 3",
+      "url": "https://arxiv.org/html/2611.08924v1#S3"
+    },
+    {
+      "href": "#S4.SS1",
+      "text": "4.1",
+      "section": "Reproducibility statement",
+      "context": "We have made efforts to ensure the reproducibility of this work. The details of proposed method are described in Section 3 . Implementation details, including hyperparameters, training settings, and hardware configurations, are provided in Section 4.1",
+      "url": "https://arxiv.org/html/2611.08924v1#S4.SS1"
+    },
+    {
+      "href": "#A3",
+      "text": "C",
+      "section": "Reproducibility statement",
+      "context": "We have made efforts to ensure the reproducibility of this work. The details of proposed method are described in Section 3 . Implementation details, including hyperparameters, training settings, and hardware configurations, are provided in Section 4.1 and Appendix C",
+      "url": "https://arxiv.org/html/2611.08924v1#A3"
+    },
+    {
+      "href": "https://github.com/LiqunMa/ResQAdam",
+      "text": "https://github.com/LiqunMa/ResQAdam",
+      "section": "Reproducibility statement",
+      "context": "We have made efforts to ensure the reproducibility of this work. The details of proposed method are described in Section 3 . Implementation details, including hyperparameters, training settings, and hardware configurations, are provided in Section 4.1 and Appendix C . The datasets and models used in our experiments are publicly available. Our code is available at https://github.com/LiqunMa/ResQAdam",
+      "url": "https://github.com/LiqunMa/ResQAdam"
+    },
+    {
+      "href": "https://github.com/meta-llama/llama3/blob/main/MODEL_CARD.md",
+      "text": "Link",
+      "section": "References",
+      "context": "AI@Meta (2024) AI@Meta Llama 3 model card . External Links: Link",
+      "url": "https://github.com/meta-llama/llama3/blob/main/MODEL_CARD.md"
+    },
+    {
+      "href": "#A3.SS2.SSS0.Px3.p1.1",
+      "text": "§C.2",
+      "section": "References",
+      "context": "AI@Meta (2024) AI@Meta Llama 3 model card . External Links: Link Cited by: §C.2",
+      "url": "https://arxiv.org/html/2611.08924v1#A3.SS2.SSS0.Px3.p1.1"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Bengio et al. (2013) Y. Bengio, N. Léonard, and A. Courville Estimating or propagating gradients through stochastic neurons for conditional computation . arXiv preprint arXiv:1308.3432 . Cited by: §1",
+      "url": "https://arxiv.org/html/2611.08924v1#S1.p1.1"
+    },
+    {
+      "href": "#S4.SS1.p4.1",
+      "text": "§4.1",
+      "section": "References",
+      "context": "Bisk et al. (2020) Y. Bisk, R. Zellers, J. Gao, Y. Choi, et al. Piqa: reasoning about physical commonsense in natural language . In Proceedings of the AAAI conference on artificial intelligence , Vol. 34 , pp. 7432–7439 . Cited by: §4.1",
+      "url": "https://arxiv.org/html/2611.08924v1#S4.SS1.p4.1"
+    },
+    {
+      "href": "#A3.SS2.SSS0.Px2.p1.1",
+      "text": "§C.2",
+      "section": "References",
+      "context": "Chen et al. (2025) M. Chen, W. Shao, P. Xu, J. Wang, P. Gao, K. Zhang, and P. Luo Efficientqat: efficient quantization-aware training for large language models . In Proceedings of the 63rd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) , pp. 10081–10100 . Cited by: §C.2",
+      "url": "https://arxiv.org/html/2611.08924v1#A3.SS2.SSS0.Px2.p1.1"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Chen et al. (2025) M. Chen, W. Shao, P. Xu, J. Wang, P. Gao, K. Zhang, and P. Luo Efficientqat: efficient quantization-aware training for large language models . In Proceedings of the 63rd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) , pp. 10081–10100 . Cited by: §C.2 , §1",
+      "url": "https://arxiv.org/html/2611.08924v1#S1.p1.1"
+    },
+    {
+      "href": "#S2.p2.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Chen et al. (2025) M. Chen, W. Shao, P. Xu, J. Wang, P. Gao, K. Zhang, and P. Luo Efficientqat: efficient quantization-aware training for large language models . In Proceedings of the 63rd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) , pp. 10081–10100 . Cited by: §C.2 , §1 , §2",
+      "url": "https://arxiv.org/html/2611.08924v1#S2.p2.1"
+    },
+    {
+      "href": "#S4.SS1.p2.1",
+      "text": "§4.1",
+      "section": "References",
+      "context": "Chen et al. (2025) M. Chen, W. Shao, P. Xu, J. Wang, P. Gao, K. Zhang, and P. Luo Efficientqat: efficient quantization-aware training for large language models . In Proceedings of the 63rd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) , pp. 10081–10100 . Cited by: §C.2 , §1 , §2 , §4.1",
+      "url": "https://arxiv.org/html/2611.08924v1#S4.SS1.p2.1"
+    },
+    {
+      "href": "#S2.p3.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Chen et al. (2026) X. Chen, K. Feng, C. Li, X. Lai, X. Yue, Y. Yuan, and G. Wang Fira: can we achieve full-rank training of llms under low-rank constraint? . Advances in Neural Information Processing Systems 38 , pp. 120680–120712 . Cited by: §2",
+      "url": "https://arxiv.org/html/2611.08924v1#S2.p3.1"
+    },
+    {
+      "href": "#S2.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Choi et al. (2018) J. Choi, Z. Wang, S. Venkataramani, P. I. Chuang, V. Srinivasan, and K. Gopalakrishnan Pact: parameterized clipping activation for quantized neural networks . arXiv preprint arXiv:1805.06085 . Cited by: §2",
+      "url": "https://arxiv.org/html/2611.08924v1#S2.p1.1"
+    },
+    {
+      "href": "#S4.SS1.p4.1",
+      "text": "§4.1",
+      "section": "References",
+      "context": "Clark et al. (2018) P. Clark, I. Cowhey, O. Etzioni, T. Khot, A. Sabharwal, C. Schoenick, and O. Tafjord Think you have solved question answering? try arc, the ai2 reasoning challenge . arXiv preprint arXiv:1803.05457 . Cited by: §4.1",
+      "url": "https://arxiv.org/html/2611.08924v1#S4.SS1.p4.1"
+    },
+    {
+      "href": "https://github.com/togethercomputer/RedPajama-Data",
+      "text": "Link",
+      "section": "References",
+      "context": "Computer (2023) RedPajama: an open source recipe to reproduce llama training dataset External Links: Link",
+      "url": "https://github.com/togethercomputer/RedPajama-Data"
+    },
+    {
+      "href": "#A3.SS2.SSS0.Px1.p1.1",
+      "text": "§C.2",
+      "section": "References",
+      "context": "Computer (2023) RedPajama: an open source recipe to reproduce llama training dataset External Links: Link Cited by: §C.2",
+      "url": "https://arxiv.org/html/2611.08924v1#A3.SS2.SSS0.Px1.p1.1"
+    },
+    {
+      "href": "#S2.p2.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Dettmers et al. (2023) T. Dettmers, A. Pagnoni, A. Holtzman, and L. Zettlemoyer Qlora: efficient finetuning of quantized llms . Advances in neural information processing systems 36 , pp. 10088–10115 . Cited by: §2",
+      "url": "https://arxiv.org/html/2611.08924v1#S2.p2.1"
+    },
+    {
+      "href": "#A3.SS2.SSS0.Px1.p1.1",
+      "text": "§C.2",
+      "section": "References",
+      "context": "Esser et al. (2019) S. K. Esser, J. L. McKinstry, D. Bablani, R. Appuswamy, and D. S. Modha Learned step size quantization . arXiv preprint arXiv:1902.08153 . Cited by: §C.2",
+      "url": "https://arxiv.org/html/2611.08924v1#A3.SS2.SSS0.Px1.p1.1"
+    },
+    {
+      "href": "#S2.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Esser et al. (2019) S. K. Esser, J. L. McKinstry, D. Bablani, R. Appuswamy, and D. S. Modha Learned step size quantization . arXiv preprint arXiv:1902.08153 . Cited by: §C.2 , §2",
+      "url": "https://arxiv.org/html/2611.08924v1#S2.p1.1"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Frantar et al. (2022) E. Frantar, S. Ashkboos, T. Hoefler, and D. Alistarh Gptq: accurate post-training quantization for generative pre-trained transformers . arXiv preprint arXiv:2210.17323 . Cited by: §1",
+      "url": "https://arxiv.org/html/2611.08924v1#S1.p1.1"
+    },
+    {
+      "href": "#S4.SS1.p4.1",
+      "text": "§4.1",
+      "section": "References",
+      "context": "Hendrycks et al. (2021) D. Hendrycks, C. Burns, S. Basart, A. Zou, M. Mazeika, D. Song, and J. Steinhardt Measuring massive multitask language understanding . Proceedings of the International Conference on Learning Representations (ICLR) . Cited by: §4.1",
+      "url": "https://arxiv.org/html/2611.08924v1#S4.SS1.p4.1"
+    },
+    {
+      "href": "#S2.p2.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Kim et al. (2023) J. Kim, J. H. Lee, S. Kim, J. Park, K. M. Yoo, S. J. Kwon, and D. Lee Memory-efficient fine-tuning of compressed large language models via sub-4-bit integer quantization . Advances in Neural Information Processing Systems 36 , pp. 36187–36207 . Cited by: §2",
+      "url": "https://arxiv.org/html/2611.08924v1#S2.p2.1"
+    },
+    {
+      "href": "#A3.SS2.SSS0.Px3.p1.1",
+      "text": "§C.2",
+      "section": "References",
+      "context": "Liu et al. (2024) Z. Liu, B. Oguz, C. Zhao, E. Chang, P. Stock, Y. Mehdad, Y. Shi, R. Krishnamoorthi, and V. Chandra Llm-qat: data-free quantization aware training for large language models . In Findings of the Association for Computational Linguistics: ACL 2024 , pp. 467–484 . Cited by: §C.2",
+      "url": "https://arxiv.org/html/2611.08924v1#A3.SS2.SSS0.Px3.p1.1"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Liu et al. (2024) Z. Liu, B. Oguz, C. Zhao, E. Chang, P. Stock, Y. Mehdad, Y. Shi, R. Krishnamoorthi, and V. Chandra Llm-qat: data-free quantization aware training for large language models . In Findings of the Association for Computational Linguistics: ACL 2024 , pp. 467–484 . Cited by: §C.2 , §1",
+      "url": "https://arxiv.org/html/2611.08924v1#S1.p1.1"
+    },
+    {
+      "href": "#S2.p2.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Liu et al. (2024) Z. Liu, B. Oguz, C. Zhao, E. Chang, P. Stock, Y. Mehdad, Y. Shi, R. Krishnamoorthi, and V. Chandra Llm-qat: data-free quantization aware training for large language models . In Findings of the Association for Computational Linguistics: ACL 2024 , pp. 467–484 . Cited by: §C.2 , §1 , §2",
+      "url": "https://arxiv.org/html/2611.08924v1#S2.p2.1"
+    },
+    {
+      "href": "#S4.SS1.p2.1",
+      "text": "§4.1",
+      "section": "References",
+      "context": "Liu et al. (2024) Z. Liu, B. Oguz, C. Zhao, E. Chang, P. Stock, Y. Mehdad, Y. Shi, R. Krishnamoorthi, and V. Chandra Llm-qat: data-free quantization aware training for large language models . In Findings of the Association for Computational Linguistics: ACL 2024 , pp. 467–484 . Cited by: §C.2 , §1 , §2 , §4.1",
+      "url": "https://arxiv.org/html/2611.08924v1#S4.SS1.p2.1"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Liu et al. (2026) Z. Liu, C. Zhao, H. Huang, S. Chen, J. Zhang, J. Zhao, S. Roy, L. Jin, Y. Xiong, Y. Shi, et al. ParetoQ: improving scaling laws in extremely low-bit llm quantization . Advances in Neural Information Processing Systems 38 , pp. 91311–91336 . Cited by: §1",
+      "url": "https://arxiv.org/html/2611.08924v1#S1.p1.1"
+    },
+    {
+      "href": "#S2.p2.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Liu et al. (2026) Z. Liu, C. Zhao, H. Huang, S. Chen, J. Zhang, J. Zhao, S. Roy, L. Jin, Y. Xiong, Y. Shi, et al. ParetoQ: improving scaling laws in extremely low-bit llm quantization . Advances in Neural Information Processing Systems 38 , pp. 91311–91336 . Cited by: §1 , §2",
+      "url": "https://arxiv.org/html/2611.08924v1#S2.p2.1"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Loshchilov and Hutter (2017) I. Loshchilov and F. Hutter Decoupled weight decay regularization . arXiv preprint arXiv:1711.05101 . Cited by: §1",
+      "url": "https://arxiv.org/html/2611.08924v1#S1.p1.1"
+    },
+    {
+      "href": "#S2.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Ma et al. (2024) S. Ma, H. Wang, L. Ma, L. Wang, W. Wang, S. Huang, L. Dong, R. Wang, J. Xue, and F. Wei The era of 1-bit llms: all large language models are in 1.58 bits . arXiv preprint arXiv:2402.17764 . Cited by: §2",
+      "url": "https://arxiv.org/html/2611.08924v1#S2.p1.1"
+    },
+    {
+      "href": "#A3.SS1.SSS0.Px1.p1.1",
+      "text": "§C.1",
+      "section": "References",
+      "context": "Panferov et al. (2025) A. Panferov, J. Chen, S. Tabesh, R. L. Castro, M. Nikdan, and D. Alistarh Quest: stable training of llms with 1-bit weights and activations . arXiv preprint arXiv:2502.05003 . Cited by: §C.1",
+      "url": "https://arxiv.org/html/2611.08924v1#A3.SS1.SSS0.Px1.p1.1"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Panferov et al. (2025) A. Panferov, J. Chen, S. Tabesh, R. L. Castro, M. Nikdan, and D. Alistarh Quest: stable training of llms with 1-bit weights and activations . arXiv preprint arXiv:2502.05003 . Cited by: §C.1 , §1",
+      "url": "https://arxiv.org/html/2611.08924v1#S1.p1.1"
+    },
+    {
+      "href": "#S2.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Panferov et al. (2025) A. Panferov, J. Chen, S. Tabesh, R. L. Castro, M. Nikdan, and D. Alistarh Quest: stable training of llms with 1-bit weights and activations . arXiv preprint arXiv:2502.05003 . Cited by: §C.1 , §1 , §2",
+      "url": "https://arxiv.org/html/2611.08924v1#S2.p1.1"
+    },
+    {
+      "href": "#S4.SS1.p1.1",
+      "text": "§4.1",
+      "section": "References",
+      "context": "Panferov et al. (2025) A. Panferov, J. Chen, S. Tabesh, R. L. Castro, M. Nikdan, and D. Alistarh Quest: stable training of llms with 1-bit weights and activations . arXiv preprint arXiv:2502.05003 . Cited by: §C.1 , §1 , §2 , §4.1",
+      "url": "https://arxiv.org/html/2611.08924v1#S4.SS1.p1.1"
+    },
+    {
+      "href": "#A1.SS0.SSS0.Px3.p1.1",
+      "text": "Appendix A",
+      "section": "References",
+      "context": "Robert et al. (2024) T. Robert, M. Safaryan, I. Modoranu, and D. Alistarh Ldadam: adaptive optimization from low-dimensional gradient statistics . arXiv preprint arXiv:2410.16103 . Cited by: Appendix A",
+      "url": "https://arxiv.org/html/2611.08924v1#A1.SS0.SSS0.Px3.p1.1"
+    },
+    {
+      "href": "#A1.p1.1",
+      "text": "Appendix A",
+      "section": "References",
+      "context": "Robert et al. (2024) T. Robert, M. Safaryan, I. Modoranu, and D. Alistarh Ldadam: adaptive optimization from low-dimensional gradient statistics . arXiv preprint arXiv:2410.16103 . Cited by: Appendix A , Appendix A",
+      "url": "https://arxiv.org/html/2611.08924v1#A1.p1.1"
+    },
+    {
+      "href": "#S1.p2.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Robert et al. (2024) T. Robert, M. Safaryan, I. Modoranu, and D. Alistarh Ldadam: adaptive optimization from low-dimensional gradient statistics . arXiv preprint arXiv:2410.16103 . Cited by: Appendix A , Appendix A , §1",
+      "url": "https://arxiv.org/html/2611.08924v1#S1.p2.1"
+    },
+    {
+      "href": "#S2.p3.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Robert et al. (2024) T. Robert, M. Safaryan, I. Modoranu, and D. Alistarh Ldadam: adaptive optimization from low-dimensional gradient statistics . arXiv preprint arXiv:2410.16103 . Cited by: Appendix A , Appendix A , §1 , §2",
+      "url": "https://arxiv.org/html/2611.08924v1#S2.p3.1"
+    },
+    {
+      "href": "#S3.SS4.p1.1",
+      "text": "§3.4",
+      "section": "References",
+      "context": "Robert et al. (2024) T. Robert, M. Safaryan, I. Modoranu, and D. Alistarh Ldadam: adaptive optimization from low-dimensional gradient statistics . arXiv preprint arXiv:2410.16103 . Cited by: Appendix A , Appendix A , §1 , §2 , §3.4",
+      "url": "https://arxiv.org/html/2611.08924v1#S3.SS4.p1.1"
+    },
+    {
+      "href": "#S5.SS3.p1.1",
+      "text": "§5.3",
+      "section": "References",
+      "context": "Robert et al. (2024) T. Robert, M. Safaryan, I. Modoranu, and D. Alistarh Ldadam: adaptive optimization from low-dimensional gradient statistics . arXiv preprint arXiv:2410.16103 . Cited by: Appendix A , Appendix A , §1 , §2 , §3.4 , §5.3",
+      "url": "https://arxiv.org/html/2611.08924v1#S5.SS3.p1.1"
+    },
+    {
+      "href": "#S4.SS1.p4.1",
+      "text": "§4.1",
+      "section": "References",
+      "context": "Sakaguchi et al. (2021) K. Sakaguchi, R. L. Bras, C. Bhagavatula, and Y. Choi Winogrande: an adversarial winograd schema challenge at scale . Communications of the ACM 64 ( 9 ), pp. 99–106 . Cited by: §4.1",
+      "url": "https://arxiv.org/html/2611.08924v1#S4.SS1.p4.1"
+    },
+    {
+      "href": "#S5.SS3.p1.1",
+      "text": "§5.3",
+      "section": "References",
+      "context": "Shazeer and Stern (2018) N. Shazeer and M. Stern Adafactor: adaptive learning rates with sublinear memory cost . In International conference on machine learning , pp. 4596–4604 . Cited by: §5.3",
+      "url": "https://arxiv.org/html/2611.08924v1#S5.SS3.p1.1"
+    },
+    {
+      "href": "#A3.SS1.SSS0.Px2.p1.1",
+      "text": "§C.1",
+      "section": "References",
+      "context": "Tabesh et al. (2025) S. Tabesh, M. Safaryan, A. Panferov, A. Volkova, and D. Alistarh CAGE: curvature-aware gradient estimation for accurate quantization-aware training . arXiv preprint arXiv:2510.18784 . Cited by: §C.1",
+      "url": "https://arxiv.org/html/2611.08924v1#A3.SS1.SSS0.Px2.p1.1"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Tabesh et al. (2025) S. Tabesh, M. Safaryan, A. Panferov, A. Volkova, and D. Alistarh CAGE: curvature-aware gradient estimation for accurate quantization-aware training . arXiv preprint arXiv:2510.18784 . Cited by: §C.1 , §1",
+      "url": "https://arxiv.org/html/2611.08924v1#S1.p1.1"
+    },
+    {
+      "href": "#S2.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Tabesh et al. (2025) S. Tabesh, M. Safaryan, A. Panferov, A. Volkova, and D. Alistarh CAGE: curvature-aware gradient estimation for accurate quantization-aware training . arXiv preprint arXiv:2510.18784 . Cited by: §C.1 , §1 , §2",
+      "url": "https://arxiv.org/html/2611.08924v1#S2.p1.1"
+    },
+    {
+      "href": "#S4.SS1.p1.1",
+      "text": "§4.1",
+      "section": "References",
+      "context": "Tabesh et al. (2025) S. Tabesh, M. Safaryan, A. Panferov, A. Volkova, and D. Alistarh CAGE: curvature-aware gradient estimation for accurate quantization-aware training . arXiv preprint arXiv:2510.18784 . Cited by: §C.1 , §1 , §2 , §4.1",
+      "url": "https://arxiv.org/html/2611.08924v1#S4.SS1.p1.1"
+    },
+    {
+      "href": "https://arxiv.org/abs/2505.09388",
+      "text": "Link",
+      "section": "References",
+      "context": "Team (2025) Q. Team Qwen3 technical report . External Links: 2505.09388 , Link",
+      "url": "https://arxiv.org/abs/2505.09388"
+    },
+    {
+      "href": "#A3.SS2.SSS0.Px3.p1.1",
+      "text": "§C.2",
+      "section": "References",
+      "context": "Team (2025) Q. Team Qwen3 technical report . External Links: 2505.09388 , Link Cited by: §C.2",
+      "url": "https://arxiv.org/html/2611.08924v1#A3.SS2.SSS0.Px3.p1.1"
+    },
+    {
+      "href": "#A3.SS2.SSS0.Px3.p1.1",
+      "text": "§C.2",
+      "section": "References",
+      "context": "Touvron et al. (2023) H. Touvron, L. Martin, K. Stone, P. Albert, A. Almahairi, Y. Babaei, N. Bashlykov, S. Batra, P. Bhargava, S. Bhosale, et al. Llama 2: open foundation and fine-tuned chat models . arXiv preprint arXiv:2307.09288 . Cited by: §C.2",
+      "url": "https://arxiv.org/html/2611.08924v1#A3.SS2.SSS0.Px3.p1.1"
+    },
+    {
+      "href": "#S2.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Wang et al. (2023) H. Wang, S. Ma, L. Dong, S. Huang, H. Wang, L. Ma, F. Yang, R. Wang, Y. Wu, and F. Wei Bitnet: scaling 1-bit transformers for large language models . arXiv preprint arXiv:2310.11453 . Cited by: §2",
+      "url": "https://arxiv.org/html/2611.08924v1#S2.p1.1"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Xiao et al. (2023) G. Xiao, J. Lin, M. Seznec, H. Wu, J. Demouth, and S. Han Smoothquant: accurate and efficient post-training quantization for large language models . In International conference on machine learning , pp. 38087–38099 . Cited by: §1",
+      "url": "https://arxiv.org/html/2611.08924v1#S1.p1.1"
+    },
+    {
+      "href": "#S4.SS1.p4.1",
+      "text": "§4.1",
+      "section": "References",
+      "context": "Zellers et al. (2019) R. Zellers, A. Holtzman, Y. Bisk, A. Farhadi, and Y. Choi Hellaswag: can a machine really finish your sentence? . In Proceedings of the 57th annual meeting of the association for computational linguistics , pp. 4791–4800 . Cited by: §4.1",
+      "url": "https://arxiv.org/html/2611.08924v1#S4.SS1.p4.1"
+    },
+    {
+      "href": "#S1.p2.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Zhao et al. (2024) J. Zhao, Z. Zhang, B. Chen, Z. Wang, A. Anandkumar, and Y. Tian Galore: memory-efficient llm training by gradient low-rank projection . arXiv preprint arXiv:2403.03507 . Cited by: §1",
+      "url": "https://arxiv.org/html/2611.08924v1#S1.p2.1"
+    },
+    {
+      "href": "#S2.p3.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Zhao et al. (2024) J. Zhao, Z. Zhang, B. Chen, Z. Wang, A. Anandkumar, and Y. Tian Galore: memory-efficient llm training by gradient low-rank projection . arXiv preprint arXiv:2403.03507 . Cited by: §1 , §2",
+      "url": "https://arxiv.org/html/2611.08924v1#S2.p3.1"
+    },
+    {
+      "href": "#S5.SS3.p1.1",
+      "text": "§5.3",
+      "section": "References",
+      "context": "Zhao et al. (2024) J. Zhao, Z. Zhang, B. Chen, Z. Wang, A. Anandkumar, and Y. Tian Galore: memory-efficient llm training by gradient low-rank projection . arXiv preprint arXiv:2403.03507 . Cited by: §1 , §2 , §5.3",
+      "url": "https://arxiv.org/html/2611.08924v1#S5.SS3.p1.1"
+    },
+    {
+      "href": "#S2.p3.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Zmushko et al. (2024) P. Zmushko, A. Beznosikov, M. Takáč, and S. Horváth FRUGAL: memory-efficient optimization by reducing state overhead for scalable training . arXiv preprint arXiv:2411.07837 . Cited by: §2",
+      "url": "https://arxiv.org/html/2611.08924v1#S2.p3.1"
+    },
+    {
+      "href": "#bib.bib5",
+      "text": "Robert et al., 2024",
+      "section": "Appendix A Estimating the Statistics of Projected Gradients",
+      "context": "When the projection bases are refreshed, the coordinate representation of the principal subspace changes from ( U t − 1 , V t − 1 ) (U_{t-1},V_{t-1}) to ( U t , V t ) (U_{t},V_{t}) , where t − 1 t-1 denotes the last step before the refresh. Since Adam-style preconditioning is anisotropic, directly reusing the old principal moments m t − 1 ∥ m_{t-1}^{\\parallel} and v t − 1 ∥ v_{t-1}^{\\parallel} in the new coordinate system would mix statistics computed under different bases. To address this, we adopt the statistical state transport mechanism introduced by LDAdam ( Robert et al., 2024",
+      "url": "https://arxiv.org/html/2611.08924v1#bib.bib5"
+    },
+    {
+      "href": "#S3.SS4",
+      "text": "3.4",
+      "section": "Appendix A Estimating the Statistics of Projected Gradients",
+      "context": "rom ( U t − 1 , V t − 1 ) (U_{t-1},V_{t-1}) to ( U t , V t ) (U_{t},V_{t}) , where t − 1 t-1 denotes the last step before the refresh. Since Adam-style preconditioning is anisotropic, directly reusing the old principal moments m t − 1 ∥ m_{t-1}^{\\parallel} and v t − 1 ∥ v_{t-1}^{\\parallel} in the new coordinate system would mix statistics computed under different bases. To address this, we adopt the statistical state transport mechanism introduced by LDAdam ( Robert et al., 2024 ) , which estimates the first- and second-order statistics of the newly projected gradients. As noted in Section 3.4",
+      "url": "https://arxiv.org/html/2611.08924v1#S3.SS4"
+    },
+    {
+      "href": "#bib.bib5",
+      "text": "Robert et al., 2024",
+      "section": "Difference in Application Scope.",
+      "context": "While the statistical transport equations strictly follow LDAdam ( Robert et al., 2024",
+      "url": "https://arxiv.org/html/2611.08924v1#bib.bib5"
+    },
+    {
+      "href": "#A2.F6",
+      "text": "6",
+      "section": "Appendix B Training loss trajectories on 200M-parameter LLM",
+      "context": "Figure 6",
+      "url": "https://arxiv.org/html/2611.08924v1#A2.F6"
+    },
+    {
+      "href": "#bib.bib6",
+      "text": "Panferov et al., 2025",
+      "section": "QuEST.",
+      "context": "QuEST ( Panferov et al., 2025",
+      "url": "https://arxiv.org/html/2611.08924v1#bib.bib6"
+    },
+    {
+      "href": "#bib.bib14",
+      "text": "Tabesh et al., 2025",
+      "section": "CAGE.",
+      "context": "CAGE ( Tabesh et al., 2025",
+      "url": "https://arxiv.org/html/2611.08924v1#bib.bib14"
+    },
+    {
+      "href": "#bib.bib13",
+      "text": "Esser et al., 2019",
+      "section": "Basic QAT.",
+      "context": "Our Basic QAT baseline performs end-to-end next-token training with learnable asymmetric quantization, where quantization scales are optimized following LSQ ( Esser et al., 2019",
+      "url": "https://arxiv.org/html/2611.08924v1#bib.bib13"
+    },
+    {
+      "href": "#bib.bib29",
+      "text": "Computer, 2023",
+      "section": "Basic QAT.",
+      "context": "Our Basic QAT baseline performs end-to-end next-token training with learnable asymmetric quantization, where quantization scales are optimized following LSQ ( Esser et al., 2019 ) . All parameters are jointly fine-tuned on a 2B-token subset of RedPajama ( Computer, 2023",
+      "url": "https://arxiv.org/html/2611.08924v1#bib.bib29"
+    },
+    {
+      "href": "#bib.bib4",
+      "text": "Chen et al., 2025",
+      "section": "EfficientQAT (Block-AP).",
+      "context": "EfficientQAT ( Chen et al., 2025",
+      "url": "https://arxiv.org/html/2611.08924v1#bib.bib4"
+    },
+    {
+      "href": "#bib.bib3",
+      "text": "Liu et al., 2024",
+      "section": "LLM-QAT.",
+      "context": "LLM-QAT ( Liu et al., 2024",
+      "url": "https://arxiv.org/html/2611.08924v1#bib.bib3"
+    },
+    {
+      "href": "#bib.bib27",
+      "text": "AI@Meta, 2024",
+      "section": "LLM-QAT.",
+      "context": "LLM-QAT ( Liu et al., 2024 ) uses data-free knowledge distillation, generating training sequences from the full-precision teacher and optimizing the quantized student to match it. It jointly quantizes weights, activations, and the KV cache using symmetric MinMax quantization. For fine-tuning experiments, we use Llama 3.2-1B ( AI@Meta, 2024",
+      "url": "https://arxiv.org/html/2611.08924v1#bib.bib27"
+    },
+    {
+      "href": "#bib.bib26",
+      "text": "Team, 2025",
+      "section": "LLM-QAT.",
+      "context": "LLM-QAT ( Liu et al., 2024 ) uses data-free knowledge distillation, generating training sequences from the full-precision teacher and optimizing the quantized student to match it. It jointly quantizes weights, activations, and the KV cache using symmetric MinMax quantization. For fine-tuning experiments, we use Llama 3.2-1B ( AI@Meta, 2024 ) , Qwen 3-4B-Base ( Team, 2025",
+      "url": "https://arxiv.org/html/2611.08924v1#bib.bib26"
+    },
+    {
+      "href": "#bib.bib28",
+      "text": "Touvron et al., 2023",
+      "section": "LLM-QAT.",
+      "context": "LLM-QAT ( Liu et al., 2024 ) uses data-free knowledge distillation, generating training sequences from the full-precision teacher and optimizing the quantized student to match it. It jointly quantizes weights, activations, and the KV cache using symmetric MinMax quantization. For fine-tuning experiments, we use Llama 3.2-1B ( AI@Meta, 2024 ) , Qwen 3-4B-Base ( Team, 2025 ) , and Llama 2-7B ( Touvron et al., 2023",
+      "url": "https://arxiv.org/html/2611.08924v1#bib.bib28"
+    }
+  ],
+  "note": "Extracted HTML text; equations and table formatting may be imperfect. No PDF extraction was attempted."
+}

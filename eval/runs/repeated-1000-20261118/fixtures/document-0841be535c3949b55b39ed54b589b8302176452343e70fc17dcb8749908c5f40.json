@@ -1,0 +1,1641 @@
+{
+  "status": "ok",
+  "source": "https://arxiv.org/html/2610.19700v1",
+  "extractor_version": "article-v1",
+  "chunks": [
+    {
+      "chunk_id": "chunk-0001",
+      "section": "ReGRA: Residual-Gradient Adaptation for Complementary Low-Rank Fine-Tuning",
+      "text": "Fanyao Li † † thanks: Equal contribution. Yuxi Liu 1 1 footnotemark: 1 Xiaohao Liu He Chang Zhaoxin Wang Zhulin Tao † † thanks: Corresponding author. Affiliation: Communication University of China, National University of Singapore, Xidian University Affiliation: fanyao.li@mails.cuc.edu.cn, liuyuxi@cuc.edu.cn Affiliation: xiaohao.liu@u.nus.edu, hechangcuc@cuc.edu.cn Affiliation: wangzhaoxin@stu.xidian.edu.cn, taozhulin@gmail.com",
+      "source": "https://arxiv.org/html/2610.19700v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0002",
+      "section": "Abstract",
+      "text": "Low-rank adaptation (LoRA) enables parameter-efficient fine-tuning by learning low-rank weight updates. Increasing rank expands adaptation capacity, but does not guarantee that all learned directions improve downstream performance. In a diagnostic experiment with rank-16 LoRA, we show that retaining only the top singular components achieves the best performance, whereas adding further components degrades it. Motivated by this, we propose Residual-Gradient Adaptation (ReGRA), a two-stage method for making more effective use of a fixed rank budget. After the first stage, ReGRA estimates task gradients on a calibration set and removes their projections onto the two-sided subspace induced by the first-stage update. It then aggregates the residual-gradient directions to initialize a second-stage adapter without changing the first-stage update. An orthogonality regularizer encourages the two updates to capture complementary directions. Both updates can be merged into the pretrained weights, incurring no additional inference overhead. Across diverse benchmark sets, ReGRA achieves stronger performance than alternatives with the same total rank and even matches LoRA adapters with twice the rank. Ablation studies and further analysis support the contribution of its core design choices. Code is available at https://github.com/Fanyao-Li/ReGRA .",
+      "source": "https://arxiv.org/html/2610.19700v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0003",
+      "section": "1 Introduction",
+      "text": "Large pretrained models have achieved strong performance across a wide range of downstream tasks, alongside scaling parameters and training corpus ( Brown et al., 2020 ; Chen et al., 2021 ) . Efficient generation has also been explored through leap multi-token prediction ( Liu et al., 2025b ) . In deployment, however, full-parameter fine-tuning for particular tasks or domains typically necessitates updating and storing full set of weights, motivating parameter-efficient fine-tuning (PEFT) ( Houlsby et al., 2019 ; He et al., 2021 ) . By optimizing only a small set of task-specific parameters, it significantly reduces the adaptation cost. Among PEFT methods, low-rank adaptation (LoRA) has become a widely used and effective choice, learning compact task-specific updates that can be merged into pretrained weights for inference ( Hu et al., 2021 ) .",
+      "source": "https://arxiv.org/html/2610.19700v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0004",
+      "section": "1 Introduction",
+      "text": "The principle behind LoRA is to leverage low-rank trainable factors to approximate dense weight updates ( Aghajanyan et al., 2021 ; Hu et al., 2021 ) . Specifically, for a pretrained weight 𝑾 0 {\\bm{W}}_{0} , LoRA parameterizes the task-specific update as Δ ​ 𝑾 = 𝑩 ​ 𝑨 \\Delta{\\bm{W}}={\\bm{B}}{\\bm{A}} , which satisfies r = rank ​ ( 𝑩 ​ 𝑨 ) ≪ d r=\\text{rank}({\\bm{B}}{\\bm{A}})\\ll d , where d d denotes the dimension of 𝑾 {\\bm{W}} . 𝑾 0 {\\bm{W}}_{0} remains frozen during the fine-tuning phase. Therefore, it substantially reduces the number of trainable parameters, and the learned update can be merged into W 0 W_{0} without additional inference overhead. This balance of parameter efficiency and effective task specialization has kept LoRA widely used in resource-constrained settings. Recent advances continue to refine its low-rank principle through adaptive rank allocation ( Zhang et al., 2023b ) , initialization informed by pretrained weights or task gradients ( Meng et al., 2024 ; Wang et al., 2024 ; Zhang et al., 2025 ) , optimization strategies tailored to its factorized parameterization ( Hayou et al., 2024 ; Wang et al., 2025b ) and adaptive adapter selection and placement ( Hayou et al., 2026 ; Veprikov et al., 2026 ) . Despite different methods to improve LoRA, they leave a fundamental question unanswered: does the learned update make effective use of its allocated rank?",
+      "source": "https://arxiv.org/html/2610.19700v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0005",
+      "section": "1 Introduction",
+      "text": "To this end, we train a LoRA model with rank r = 16 r=16 for diagnosis and decompose each learned update Δ ​ 𝑾 \\Delta{\\bm{W}} using singular value decomposition (SVD). Without retraining, we evaluate rank- k k approximations formed by retaining the top k k singular components. As shown in Figure 1 , we find that k = 3 k=3 yields the best downstream performance, whereas retaining additional components degrades it. This suggests that the full learned update is less effective than a lower-rank approximation of itself. A larger rank budget does not necessarily produce a more useful task-specific update. Figure 1: Effect of retained rank on accuracy. Model performance does not improve monotonically with increasing retained rank.",
+      "source": "https://arxiv.org/html/2610.19700v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0006",
+      "section": "1 Introduction",
+      "text": "Motivated by this observation, we propose Residual-Gradient Adaptation ( ReGRA ), which helps the learned LoRA update make more effective use of its available rank. ReGRA first trains a standard LoRA adapter and then estimates task gradients with a small subset of the training data. To exhaust the allocated rank, we initialize a second-stage adapter with task gradients projected onto the two-sided complement of the first-stage update. With this first-stage estimation, we are able to leave the previously learned components unchanged, yet continually fulfil the update within the allocated rank. During second-stage training, we apply orthogonal regularization to maintain decorrelation between the two stages. After training, both updates can be merged into the base model, introducing no additional inference cost. We evaluate ReGRA using standard LoRA evaluation following ( Hu et al., 2023 ) and expand it to natural language understanding, mathematical reasoning, and code generation. Under the same total-rank budget, ReGRA consistently achieves stronger overall performance across the evaluated benchmarks and even reaches the performance of the double-rank model. Ablation studies and further analysis support the effectiveness of residual-gradient initialization and update decorrelation. Our contributions are summarized as follows: • We reveal that standard LoRA training does not always make effective use of its allocated rank. We approach this problem from a task-gradient perspective, targeting directions not captured by the initial update.",
+      "source": "https://arxiv.org/html/2610.19700v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0007",
+      "section": "1 Introduction",
+      "text": "• We propose ReGRA to exhaust the allocated rank. ReGRA is a two-stage adaptation method that estimates task gradients after standard LoRA training, projects out the components captured by the first-stage update, and uses the residual gradients to initialize a second-stage adapter. An orthogonal regularization maintains the decorrelation between the two updates. • We evaluate ReGRA on diverse benchmark sets, showing that it outperforms representative baselines and, in some settings, matches the performance of a model with twice the rank. Ablation studies support the efficacy and rationale of our design.",
+      "source": "https://arxiv.org/html/2610.19700v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0008",
+      "section": "2 Related Work",
+      "text": "Low-rank parameter-efficient fine-tuning. Low-rank adaptation (LoRA) represents task-specific weight updates using two trainable low-rank factors, reducing the number of trainable parameters while retaining mergeability at inference ( Hu et al., 2021 ) . Subsequent variants improve its memory and parameter efficiency through quantization, factor freezing, or shared random projections ( Dettmers et al., 2023 ; Liu et al., 2026 ; Zhang et al., 2023a ; Kopiczko et al., 2024 ) . Other methods explore adaptive rank allocation and rank-dependent scaling ( Zhang et al., 2023b ; Valipour et al., 2023 ; Kalajdzievski, 2023 ) . LoRA+, DoRA, and LoRA-Pro instead improve the optimization or parameterization of low-rank updates ( Hayou et al., 2024 ; Liu et al., 2024 ; Wang et al., 2025b ) . Recent works also explore adaptive adapter selection and placement to determine where low-rank adaptation is most effective ( Hayou et al., 2026 ; Veprikov et al., 2026 ) . Although these methods improve LoRA from different perspectives, they do not explicitly investigate redundancy among rank components within a learned update matrix.",
+      "source": "https://arxiv.org/html/2610.19700v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0009",
+      "section": "2 Related Work",
+      "text": "Spectral and gradient-informed initialization. Several methods initialize LoRA using information from pretrained weights, activations, or downstream data. PiSSA initializes adapters from the principal singular components of pretrained weights, whereas MiLoRA adapts their minor singular components ( Meng et al., 2024 ; Wang et al., 2025a ) . CorDA constructs context-aware adaptation subspaces from weight and activation statistics, while EVA selects initialization directions according to activation variance ( Yang et al., 2024 ; Paischer et al., 2026 ) . Gradient-based methods use the task gradient at the start of fine-tuning to guide adapter initialization ( Wang et al., 2024 ; Zhang et al., 2025 ; Ponkshe et al., 2024 ) . These approaches determine the adaptation subspace before fine-tuning, whereas ReGRA estimates residual task gradients after a first-stage update has been learned.",
+      "source": "https://arxiv.org/html/2610.19700v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0010",
+      "section": "2 Related Work",
+      "text": "Sequential and subspace-aware adaptation. ReLoRA and Chain of LoRA (COLA) construct higher-rank effective updates by repeatedly training, merging, and reinitializing low-rank adapters ( Lialin et al., 2024 ; Xia et al., 2024 ) . LoRA-based adaptation has also been studied in continual learning. CoLoR applies LoRA to domain-incremental learning ( Wistuba et al., 2023 ) , while O-LoRA assigns sequential tasks to orthogonal low-rank subspaces and InfLoRA constructs adaptation subspaces that reduce interference with prior tasks ( Wang et al., 2023 ; Liang and Li, 2024 ) . KeepLoRA further uses residual-gradient information to balance knowledge retention and plasticity across tasks ( Luo et al., 2026 ) . CMCL uses dual-sided gradient projection to reduce forgetting in continual learning ( Liu et al., 2025a ) . Unlike these methods, ReGRA considers two-stage adaptation to the same downstream objective and combines residual-gradient initialization with update decorrelation to encourage complementary stage-wise updates. Figure 2: Overall framework of Residual-Gradient Adaptation (ReGRA). ReGRA first trains Adapter 1 to learn an initial task-specific update. It then projects the task gradient away from the subspace already captured by Adapter 1 and extracts the dominant residual directions via SVD. These residual directions are used to initialize and guide Adapter 2 toward complementary task-relevant information. The two adapters are finally combined with the frozen backbone to form the final model.",
+      "source": "https://arxiv.org/html/2610.19700v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0011",
+      "section": "3 Preliminaries",
+      "text": "Low-rank adaptation (LoRA). LoRA adapts a frozen pretrained weight 𝑾 0 ∈ ℝ d out × d in {\\bm{W}}_{0}\\in\\mathbb{R}^{d_{\\mathrm{out}}\\times d_{\\mathrm{in}}} , as shown in Figure 3 , by adding a trainable low-rank update ( Hu et al., 2021 ) : 𝑾 = 𝑾 0 + Δ ​ 𝑾 , Δ ​ 𝑾 = s ​ 𝑩 ​ 𝑨 . {\\bm{W}}={\\bm{W}}_{0}+\\Delta{\\bm{W}},\\quad\\Delta{\\bm{W}}=s{\\bm{B}}{\\bm{A}}. (1) Figure 3: Illustration of the standard LoRA. Here, 𝑨 ∈ ℝ r × d in {\\bm{A}}\\in\\mathbb{R}^{r\\times d_{\\mathrm{in}}} and 𝑩 ∈ ℝ d out × r {\\bm{B}}\\in\\mathbb{R}^{d_{\\mathrm{out}}\\times r} are trainable factors, r r is the adapter rank, and s s is the LoRA scaling coefficient. The pretrained weight 𝑾 0 {\\bm{W}}_{0} remains frozen during adaptation. Several extensions modify how LoRA updates are trained or initialized. QLoRA reduces memory use by quantizing the frozen backbone ( Dettmers et al., 2023 ) , while AdaLoRA and DyLoRA explore flexible rank allocation ( Zhang et al., 2023b ; Valipour et al., 2023 ) . LoRA-GA uses the initial task gradient to guide adapter initialization ( Wang et al., 2024 ) . Our method focuses on learning a second-stage subspace that complements the subspace learned in the first stage. Singular value decomposition (SVD). For a learned low-rank update Δ ​ 𝑾 \\Delta{\\bm{W}} with k = rank ⁡ ( Δ ​ 𝑾 ) ≤ r k=\\operatorname{rank}(\\Delta{\\bm{W}})\\leq r , its compact singular value decomposition is Δ ​ 𝑾 = 𝑼 ​ 𝚺 ​ 𝑽 ⊤ . \\Delta{\\bm{W}}={\\bm{U}}{\\bm{\\Sigma}}{\\bm{V}}^{\\top}. (2)",
+      "source": "https://arxiv.org/html/2610.19700v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0012",
+      "section": "3 Preliminaries",
+      "text": "The matrices 𝑼 ∈ ℝ d out × k {\\bm{U}}\\in\\mathbb{R}^{d_{\\mathrm{out}}\\times k} and 𝑽 ∈ ℝ d in × k {\\bm{V}}\\in\\mathbb{R}^{d_{\\mathrm{in}}\\times k} contain the left and right singular vectors, respectively, while 𝚺 = diag ⁡ ( σ 1 , … , σ k ) {\\bm{\\Sigma}}=\\operatorname{diag}(\\sigma_{1},\\ldots,\\sigma_{k}) contains the positive singular values in descending order. The columns of 𝑼 {\\bm{U}} span the output-side directions represented by the update, whereas the columns of 𝑽 {\\bm{V}} span its input-side directions. These singular subspaces are used to identify which components of a task gradient are already represented by a learned low-rank update. Spectral information has also been used to initialize LoRA adapters: PiSSA selects the principal singular components of the pretrained weights ( Meng et al., 2024 ) , while MiLoRA selects the minor components ( Wang et al., 2025a ) . Here, we apply SVD to the first-stage update Δ ​ 𝑾 \\Delta{\\bm{W}} to identify the components of the task gradient already captured by the update.",
+      "source": "https://arxiv.org/html/2610.19700v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0013",
+      "section": "4 Residual-Gradient Adaptation",
+      "text": "We briefly introduce ReGRA to provide an overall understanding. ReGRA decomposes adaptation into two sequential low-rank updates: 𝑾 = 𝑾 0 + Δ ​ 𝑾 1 + Δ ​ 𝑾 2 , Δ ​ 𝑾 i = s i ​ 𝑩 i ​ 𝑨 i , i ∈ { 1 , 2 } . {\\bm{W}}={\\bm{W}}_{0}+\\Delta{\\bm{W}}_{1}+\\Delta{\\bm{W}}_{2},\\qquad\\Delta{\\bm{W}}_{i}=s_{i}{\\bm{B}}_{i}{\\bm{A}}_{i},\\quad i\\in\\{1,2\\}. (3) We describe ReGRA for a single adapted weight and omit the layer index. The same procedure is applied independently to all target weights. As demonstrated in Figure 2 , the first stage follows standard LoRA training, optimizing a rank- r 1 r_{1} adapter with the objective ℒ stage1 = ℒ task ​ ( 𝑾 0 + Δ ​ 𝑾 1 , 𝒟 train ) \\mathcal{L}_{\\mathrm{stage1}}=\\mathcal{L}_{\\mathrm{task}}\\left({\\bm{W}}_{0}+\\Delta{\\bm{W}}_{1};{\\mathcal{D}}_{\\mathrm{train}}\\right) . ReGRA estimates task gradients and removes the component associated with the first stage, as characterized by the left and right singular subspaces of Δ ​ 𝑾 1 \\Delta{\\bm{W}}_{1} . The residual gradient is used to initialize a rank- r 2 r_{2} second stage adapter while preserving the function defined by 𝑾 0 + Δ ​ 𝑾 1 {\\bm{W}}_{0}+\\Delta{\\bm{W}}_{1} . During second-stage training, we apply an update-level regularizer to promote orthogonality between the first- and second-stage updates. After training, both updates can be merged into the pretrained weight without introducing an additional inference-time branch. The full procedure is listed in Appendix B.5 .",
+      "source": "https://arxiv.org/html/2610.19700v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0014",
+      "section": "4.1 Residual-Guided Initialization",
+      "text": "To help the second stage learn complementary components, we first examine the first-stage update. Applying the compact SVD to the fixed first-stage update gives Δ ​ 𝑾 1 = 𝑼 1 ​ 𝚺 1 ​ 𝑽 1 ⊤ \\Delta{\\bm{W}}_{1}={\\bm{U}}_{1}{\\bm{\\Sigma}}_{1}{\\bm{V}}_{1}^{\\top} . We define the projectors onto its output- and input-side subspaces as 𝑷 U = 𝑼 1 ​ 𝑼 1 ⊤ {\\bm{P}}_{U}={\\bm{U}}_{1}{\\bm{U}}_{1}^{\\top} and 𝑷 V = 𝑽 1 ​ 𝑽 1 ⊤ {\\bm{P}}_{V}={\\bm{V}}_{1}{\\bm{V}}_{1}^{\\top} , respectively. Let { 𝒞 b } b = 1 M \\{{\\mathcal{C}}_{b}\\}_{b=1}^{M} be calibration batches taken from the training data. At the first-stage solution, we compute the task gradient with respect to the adapted weight: 𝑮 = ∇ 𝑾 ℒ task ​ ( 𝑾 0 + Δ ​ 𝑾 1 , 𝒞 b ) . {\\bm{G}}=\\nabla_{{\\bm{W}}}\\mathcal{L}_{\\mathrm{task}}({\\bm{W}}_{0}+\\Delta{\\bm{W}}_{1};{\\mathcal{C}}_{b}). We remove its component in the two-sided subspace represented by the first-stage update, as derived in Appendix A.1 : 𝑮 res = 𝑮 − 𝑷 U ​ 𝑮 b ​ 𝑷 V . {\\bm{G}}_{\\mathrm{res}}={\\bm{G}}-{\\bm{P}}_{U}{\\bm{G}}_{b}{\\bm{P}}_{V}. (4) Let 𝑮 ^ res , q = 𝑼 ¯ ​ 𝚺 ¯ ​ 𝑽 ¯ ⊤ \\widehat{{\\bm{G}}}_{\\mathrm{res},q}=\\overline{{\\bm{U}}}\\overline{{\\bm{\\Sigma}}}\\overline{{\\bm{V}}}^{\\top} denote the rank- q q truncated SVD approximation of 𝑮 ^ res \\widehat{{\\bm{G}}}_{\\mathrm{res}} , , obtained by batchwise low-rank aggregation as detailed in Appendix A.2 . The calibration procedure is described in Appendix B.2 . For a rank- r 2 r_{2} second-stage adapter with r 2 ≤ q r_{2}\\leq q , define 𝑽 r = 𝑽 ¯ : , 1 : r 2 {\\bm{V}}_{r}=\\overline{{\\bm{V}}}_{:,1:r_{2}} , 𝑼 r = 𝑼 ¯ : , 1 : r 2 {\\bm{U}}_{r}=\\overline{{\\bm{U}}}_{:,1:r_{2}} , and 𝚺 r = 𝚺 ¯ 1 : r 2 , 1 : r 2 {\\bm{\\Sigma}}_{r}=\\overline{{\\bm{\\Sigma}}}_{1:r_{2},1:r_{2}} . ReGRA initializes the adapter as",
+      "source": "https://arxiv.org/html/2610.19700v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0015",
+      "section": "4.1 Residual-Guided Initialization",
+      "text": "𝑨 2 ( 0 ) = 𝑽 r ⊤ , 𝑩 2 ( 0 ) = 𝟎 . {\\bm{A}}_{2}^{(0)}={\\bm{V}}_{r}^{\\top},\\qquad{\\bm{B}}_{2}^{(0)}=\\mathbf{0}. (5) This initialization specifies the adapter’s input-side subspace using the leading right singular vectors of the residual-gradient estimate. The following theorem characterizes its initial effect on the model and its first task-gradient update.",
+      "source": "https://arxiv.org/html/2610.19700v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0016",
+      "section": "Proposition 1 (Residual-guided first-step update) .",
+      "text": "Consider Δ ​ 𝐖 2 = s 2 ​ 𝐁 2 ​ 𝐀 2 \\Delta{\\bm{W}}_{2}=s_{2}{\\bm{B}}_{2}{\\bm{A}}_{2} initialized as in Equation equation 5 . The initialization preserves the Stage-1 model function. After one simultaneous gradient-descent step on the task loss, the effective update lies in the input-side subspace spanned by 𝐕 r {\\bm{V}}_{r} . If the initial task gradient equals 𝐆 ^ res , q \\widehat{{\\bm{G}}}_{\\mathrm{res},q} , this update is proportional to its negative leading rank- r 2 r_{2} component. The proof is given in Appendix A.3 . Remark. Since 𝑩 2 ( 0 ) = 𝟎 {\\bm{B}}_{2}^{(0)}=\\mathbf{0} , we have Δ ​ 𝑾 2 ( 0 ) = 𝟎 \\Delta{\\bm{W}}_{2}^{(0)}=\\mathbf{0} . Let 𝑮 ( 0 ) {\\bm{G}}^{(0)} be the task gradient at 𝑾 0 + Δ ​ 𝑾 1 {\\bm{W}}_{0}+\\Delta{\\bm{W}}_{1} . One simultaneous gradient-descent step with learning rate η \\eta gives Δ ​ 𝑾 2 ( 1 ) = − η ​ 𝑮 ( 0 ) ​ 𝑽 r ​ 𝑽 r ⊤ . \\Delta{\\bm{W}}_{2}^{(1)}=-\\eta{\\bm{G}}^{(0)}{\\bm{V}}_{r}{\\bm{V}}_{r}^{\\top}. In the special case 𝑮 ( 0 ) = 𝑮 ^ res , q {\\bm{G}}^{(0)}=\\widehat{{\\bm{G}}}_{\\mathrm{res},q} , this reduces to Δ ​ 𝑾 2 ( 1 ) = − η ​ 𝑼 r ​ 𝚺 r ​ 𝑽 r ⊤ . \\Delta{\\bm{W}}_{2}^{(1)}=-\\eta{\\bm{U}}_{r}{\\bm{\\Sigma}}_{r}{\\bm{V}}_{r}^{\\top}. These expressions describe the first plain gradient-descent step, not the entire Stage-2 trajectory. Both factors are subsequently optimized, and the residual-gradient projection is not applied to later task gradients.",
+      "source": "https://arxiv.org/html/2610.19700v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0017",
+      "section": "4.2 Stage-Wise Orthogonality Regularization",
+      "text": "Residual-gradient initialization guides the second-stage adapter toward directions associated with the remaining task gradient. As training proceeds, the second-stage update can move away from these initial directions. ReGRA therefore applies an update-level regularizer to promote orthogonality between the two stage-wise updates. For each adapted weight, let 𝑫 1 = 𝑩 1 ​ 𝑨 1 {\\bm{D}}_{1}={\\bm{B}}_{1}{\\bm{A}}_{1} and 𝑫 2 = 𝑩 2 ​ 𝑨 2 {\\bm{D}}_{2}={\\bm{B}}_{2}{\\bm{A}}_{2} denote the unscaled first- and second-stage updates. We define the orthogonality penalty as Ω = ⟨ 𝑫 1 , 𝑫 2 ⟩ F 2 ∥ 𝑫 1 ∥ F 2 ​ ∥ 𝑫 2 ∥ F 2 + ε , \\Omega=\\frac{\\langle{\\bm{D}}_{1},{\\bm{D}}_{2}\\rangle_{F}^{2}}{\\lVert{\\bm{D}}_{1}\\rVert_{F}^{2}\\lVert{\\bm{D}}_{2}\\rVert_{F}^{2}+\\varepsilon}, (6) where ε > 0 \\varepsilon>0 ensures numerical stability. Squaring the inner product penalizes deviations from orthogonality in either direction. The penalty promotes orthogonal updates. For L L adapted weights, we average the penalties: ℝ decorr = 1 L ​ ∑ ℓ = 1 L Ω ℓ . \\mathbb{R}_{\\mathrm{decorr}}=\\frac{1}{L}\\sum_{\\ell=1}^{L}\\Omega_{\\ell}. The inner products and norms can be computed from the LoRA factors without forming dense update matrices. The derivation is given in Appendix A.4 . During second-stage training, Δ ​ 𝑾 1 \\Delta{\\bm{W}}_{1} remains fixed, while 𝑨 2 {\\bm{A}}_{2} and 𝑩 2 {\\bm{B}}_{2} are optimized using ℒ stage2 = ℒ task ​ ( 𝑾 0 + Δ ​ 𝑾 1 + Δ ​ 𝑾 2 , 𝒟 train ) + λ t ​ ℝ decorr . \\mathcal{L}_{\\mathrm{stage2}}=\\mathcal{L}_{\\mathrm{task}}\\left({\\bm{W}}_{0}+\\Delta{\\bm{W}}_{1}+\\Delta{\\bm{W}}_{2};{\\mathcal{D}}_{\\mathrm{train}}\\right)+\\lambda_{t}\\mathbb{R}_{\\mathrm{decorr}}. (7) We set λ t = 0.1 \\lambda_{t}=0.1 throughout the second stage in all experiments.",
+      "source": "https://arxiv.org/html/2610.19700v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0018",
+      "section": "4.2 Stage-Wise Orthogonality Regularization",
+      "text": "Computation and inference. Residual-gradient calibration introduces a one-time cost between the two training stages. Each dense task gradient is formed only transiently, projected, compressed to rank q q , and then discarded, while cross-batch aggregation and update decorrelation operate on low-rank factors. After training, the two learned updates are merged into the pretrained weight as 𝑾 merged = 𝑾 0 + s 1 ​ 𝑩 1 ​ 𝑨 1 + s 2 ​ 𝑩 2 ​ 𝑨 2 {\\bm{W}}_{\\mathrm{merged}}={\\bm{W}}_{0}+s_{1}{\\bm{B}}_{1}{\\bm{A}}_{1}+s_{2}{\\bm{B}}_{2}{\\bm{A}}_{2} . The Stage-2 procedure is detailed in Appendix B.4 . ReGRA therefore introduces neither an additional adapter branch nor extra computation during inference, storage and computation bounds are given in Appendix B.6 .",
+      "source": "https://arxiv.org/html/2610.19700v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0019",
+      "section": "5 Experiments",
+      "text": "To validate the efficacy and rationale of our design, we conduct experiments to address the following research questions (RQs): • RQ1: How does ReGRA compare with baselines across diverse benchmark sets, and how does it compare with LoRA with larger rank capacity ( i.e. , r = 8 r=8 v.s. r = 16 r=16 )? • RQ2: What are the separate and combined effects of residual-gradient initialization and update decorrelation? • RQ3: Which singular components of a trained LoRA update affect performance when removed, and what do isolated components of ReGRA’s second-stage update contribute? • RQ4: How does performance change as rank-2 stages are progressively added?",
+      "source": "https://arxiv.org/html/2610.19700v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0020",
+      "section": "5.1 Experimental Setup",
+      "text": "Tasks and datasets. We evaluate ReGRA on natural language understanding ( Wang et al., 2018 ) , mathematical reasoning ( Hu et al., 2023 ; Cobbe et al., 2021 ) ,and code generation ( Chen et al., 2021 ; Austin et al., 2021 ) . For natural language understanding, we fine-tune RoBERTa-base and RoBERTa-large ( Liu et al., 2019 ) separately on the eight GLUE tasks: CoLA, SST-2, MRPC, STS-B, QQP, MNLI, QNLI, and RTE. We evaluate all tasks on their labeled validation sets, with the matched validation split used for MNLI. For mathematical reasoning ( Hu et al., 2023 ) , we fine-tune Llama-3-8B ( Grattafiori et al., 2024 ) and Qwen3-8B-Base ( Yang et al., 2025 ) on Math-7K training set released with LLM-Adapters ( Hu et al., 2023 ) . We evaluate on AddSub, MultiArith, SingleEq, GSM8K, AQuA, and SVAMP. For code generation, we fine-tune Llama-3-8B on CodeFeedback-Filtered-Instruction ( Zheng et al., 2024 ) and evaluate on MBPP ( Austin et al., 2021 ) and its enhanced MBPP+ test suite using EvalPlus ( Liu et al., 2023 ) . Implementation details. Adapters are applied to the query, key, and value projections while the pretrained backbones remain frozen, details are provided in Appendix B.1 . Each ReGRA stage uses rank 8, α = 16 \\alpha=16 , and dropout 0.05; the GLUE classification head is trained in the first stage and frozen in the second stage. Generative losses are computed only on response tokens. We use zero weight decay, and λ t = 0.1 \\lambda_{\\mathrm{t}}=0.1 , whose contribution is warmed up over the first 100 second-stage steps. The training schedules for GLUE, mathematics, and code generation comprise 20, 2, and 1 epochs, respectively, full settings are tabulated in Appendix B.3 .",
+      "source": "https://arxiv.org/html/2610.19700v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0021",
+      "section": "5.1 Experimental Setup",
+      "text": "Baselines and evaluation. We compare ReGRA with LoRA ( Hu et al., 2021 ) , DoRA ( Liu et al., 2024 ) , PiSSA ( Meng et al., 2024 ) , LoRA-One ( Zhang et al., 2025 ) , and KeepLoRA ( Luo et al., 2026 ) . LoRA is evaluated at ranks 8 and 16, while the other baselines use rank 8. For ReGRA, r = 8 r=8 refers to the rank of each stage. GLUE uses the standard task-specific metrics: Matthews correlation for CoLA, the mean of Pearson and Spearman correlations for STS-B, the mean of accuracy and F 1 F_{1} for MRPC and QQP, and accuracy otherwise. Mathematical reasoning uses answer accuracy, and code generation uses pass@1. All scores are reported as percentages.",
+      "source": "https://arxiv.org/html/2610.19700v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0022",
+      "section": "5.2 Main Results (RQ1)",
+      "text": "Table 1: Performance (%) on eight GLUE natural language understanding tasks using RoBERTa-base and RoBERTa-large. Avg. is the unweighted mean across tasks. We calculate the performance gain of ReGRA against the rank-8 LoRA on the same backbone. For ReGRA, r = 8 r=8 denotes the rank of each stage. The best average for each backbone is marked in bold. Method CoLA MNLI MRPC QNLI QQP RTE SST-2 STS-B Avg. RoBERTa-base LoRA ( r = 16 r=16 ) 60.24 85.75 87.25 91.45 87.94 75.09 93.69 90.31 83.97 LoRA ( r = 8 r=8 ) 58.04 85.11 87.50 90.99 87.16 72.92 93.92 90.07 83.21 DoRA ( r = 8 r=8 ) 56.53 86.20 88.23 91.21 85.43 74.36 93.92 90.05 83.24 PiSSA ( r = 8 r=8 ) 56.01 84.16 89.12 90.49 87.43 72.56 93.23 89.56 82.82 LoRA-One ( r = 8 r=8 ) 58.39 85.28 89.12 91.15 85.51 75.81 94.38 90.54 83.77 KeepLoRA ( r = 8 r=8 ) 58.55 84.76 90.35 90.93 84.98 67.87 93.69 90.42 82.69 ReGRA ( r = 8 r=8 ) 61.60 +3.56 85.96 +0.85 89.43 +1.93 91.95 +0.96 88.15 +0.99 75.81 +2.89 94.38 +0.46 90.66 +0.59 84.74 +1.53 RoBERTa-large LoRA ( r = 16 r=16 ) 64.55 90.59 90.33 94.58 87.57 85.92 96.22 92.20 87.75 LoRA ( r = 8 r=8 ) 66.02 90.39 89.70 94.60 88.93 84.12 96.22 91.83 87.73 DoRA ( r = 8 r=8 ) 65.53 90.52 91.04 94.34 87.53 84.11 96.10 91.90 87.63 PiSSA ( r = 8 r=8 ) 60.59 89.89 90.91 94.08 86.88 83.75 96.33 91.72 86.77 LoRA-One ( r = 8 r=8 ) 65.30 90.35 91.34 94.63 87.41 85.19 95.98 92.30 87.81 KeepLoRA ( r = 8 r=8 ) 60.72 89.35 91.71 92.62 86.04 85.19 94.61 91.67 86.49 ReGRA ( r = 8 r=8 ) 68.82 +2.80 90.45 +0.06 91.76 +2.06 94.60 0.00 87.77 -1.16 85.92 +1.80 96.22 0.00 91.85 +0.02 88.42 +0.69",
+      "source": "https://arxiv.org/html/2610.19700v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0023",
+      "section": "5.2 Main Results (RQ1)",
+      "text": "Table 2: Accuracy (%) on six mathematical reasoning benchmarks using Llama-3-8B and Qwen3-8B-Base. Avg. is the unweighted mean across tasks. Subscript values beside ReGRA scores show percentage-point differences from rank-8 LoRA on the same backbone. For ReGRA, r = 8 r=8 denotes the rank of each stage. The best average for each backbone is marked in bold. Method AddSub MultiArith SingleEq SVAMP GSM8K AQuA Avg. Llama-3-8B LoRA ( r = 16 r=16 ) 79.74 92.83 87.59 69.80 60.50 39.37 71.64 LoRA ( r = 8 r=8 ) 76.20 92.66 87.99 69.30 61.41 37.40 70.83 DoRA ( r = 8 r=8 ) 77.72 94.16 86.41 72.10 60.34 39.76 71.75 PiSSA ( r = 8 r=8 ) 74.93 89.00 85.23 67.80 58.07 43.30 69.72 LoRA-One ( r = 8 r=8 ) 79.24 91.33 87.99 70.30 60.65 40.15 71.61 KeepLoRA ( r = 8 r=8 ) 80.50 87.33 88.18 70.50 60.80 37.79 70.85 ReGRA ( r = 8 r=8 ) 79.24 +3.04 89.50 -3.16 88.19 +0.20 72.40 +3.10 62.55 +1.14 40.94 +3.54 72.14 +1.31 Qwen3-8B-Base LoRA ( r = 16 r=16 ) 91.65 98.50 95.08 85.90 77.41 61.42 84.99 LoRA ( r = 8 r=8 ) 91.39 98.50 94.09 86.00 75.28 59.84 84.18 DoRA ( r = 8 r=8 ) 91.65 98.83 94.29 84.80 75.97 62.99 84.76 PiSSA ( r = 8 r=8 ) 89.37 98.33 94.29 85.40 76.19 61.02 84.10 LoRA-One ( r = 8 r=8 ) 92.15 99.00 94.88 84.90 76.12 60.63 84.61 KeepLoRA ( r = 8 r=8 ) 86.84 97.50 94.09 81.90 77.48 62.99 83.47 ReGRA ( r = 8 r=8 ) 92.91 +1.52 98.67 +0.17 95.28 +1.19 85.70 -0.30 75.51 +0.23 63.30 +3.46 85.23 +1.05",
+      "source": "https://arxiv.org/html/2610.19700v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0024",
+      "section": "5.2 Main Results (RQ1)",
+      "text": "As shown in Table 1 , ReGRA achieves the highest average score on both backbones. Increasing the rank of standard LoRA from 8 to 16 also improves its average score, confirming that additional low-rank capacity is useful. ReGRA obtains a further improvement at the same maximum update rank by guiding how that capacity is used. After learning the first-stage update, ReGRA initializes the second adapter from task-gradient directions outside the subspace associated with that update. Update-level decorrelation then discourages the two stage-wise updates from aligning during training. Standard rank-16 LoRA optimizes all rank components jointly without this explicit guidance toward complementary updates. The comparison supports the benefit of directing added capacity toward optimization directions left insufficiently covered by the first stage. Gains on CoLA, MRPC, and RTE further support this pattern.",
+      "source": "https://arxiv.org/html/2610.19700v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0025",
+      "section": "5.3 Results on Specialized Capabilities",
+      "text": "Table 3: Pass@1 (%) on the MBPP and enhanced MBPP+ tests using Llama-3-8B. For ReGRA, r = 8 r=8 denotes the rank of each stage. The best result in each column is marked in bold. Backbone Method MBPP MBPP+ Llama-3-8B LoRA ( r = 16 r=16 ) 67.98 57.14 LoRA ( r = 8 r=8 ) 65.87 55.02 DoRA ( r = 8 r=8 ) 66.40 55.55 PiSSA ( r = 8 r=8 ) 66.93 54.49 LoRA-One ( r = 8 r=8 ) 66.13 54.76 KeepLoRA ( r = 8 r=8 ) 67.46 56.35 ReGRA ( r = 8 r=8 ) 68.78 +2.91 57.41 +2.39 Figure 4: Component ablation of ReGRA. Llama-3-8B gains in six-task average accuracy, in percentage points, relative to LoRA ( r = 8 r=8 ). Each configuration used one seed. Mathematical reasoning (RQ1). Table 2 shows that ReGRA achieves the highest six-task average on both Llama-3-8B and Qwen3-8B-Base. The task-level pattern differs between the backbones. On Llama-3-8B, the gains over rank-8 LoRA are concentrated on AddSub, SVAMP, and AQuA, while MultiArith declines. On Qwen3-8B-Base, AddSub, SingleEq, and AQuA benefit most, whereas ReGRA does not lead on every task. Its average also exceeds rank-16 LoRA on both backbones, though the margin is small on Qwen3-8B-Base. These results show that the overall mathematical-reasoning benefit carries across two generative backbones, with different task-level patterns. Code generation (RQ1). Table 4 shows that ReGRA obtains the highest pass@1 on both the base and enhanced MBPP+ tests. All methods score lower on the enhanced tests, but ReGRA retains its lead under the stricter evaluation. Its advantage over rank-16 LoRA is modest on both test variants, so the code result supports a consistent improvement within this benchmark rather than a large gain in code generation. The commonsense comparison is reported in Appendix C.1 .",
+      "source": "https://arxiv.org/html/2610.19700v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0026",
+      "section": "5.4 Ablation Analysis (RQ2)",
+      "text": "To disentangle the effects of the two key design components of ReGRA, we conduct a controlled 2 × 2 2\\times 2 ablation study on the mathematical reasoning benchmarks. All variants share the same rank-8 first-stage adapter and train an additional rank-8 Stage-2 adapter under identical optimization settings. When residual-gradient initialization is removed, the second-stage adapter adopts the standard LoRA initialization, with a randomly initialized input-side factor and a zero-initialized output-side factor. When update-level decorrelation is removed, the corresponding regularization term is omitted from the Stage-2 objective. Performance is measured by the unweighted average accuracy across the six mathematical reasoning datasets. As shown in Figure 4 , residual-gradient initialization provides the dominant improvement, supporting the motivation of directing second-stage adaptation toward gradient information insufficiently captured by the first-stage. Update-level decorrelation provides a smaller additional benefit by discouraging redundancy between the two updates. The full model achieves the strongest overall performance, suggesting that the two components play complementary roles: the former determines informative adaptation directions, while the latter encourages the resulting update to remain distinct from the first-stage.",
+      "source": "https://arxiv.org/html/2610.19700v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0027",
+      "section": "5.5 More Analysis",
+      "text": "Figure 5: Functional importance of LoRA singular components. For rank-16 LoRA, we apply SVD to each learned update Δ ​ 𝑾 \\Delta{\\bm{W}} and remove one component at a time. Bars show performance changes relative to the full update (dashed zero line) for Llama-3-8B on MBPP (a) and MBPP+ (b), and Qwen3-8B-Base on Math (c). Removing the leading component reduces performance by 3.97 percentage points on both code tasks and 8.03 percentage points on Math. Red and blue indicate gains and losses, respectively; broken axes display the larger leading-component effect. Unequal Functional Contributions of LoRA Singular Components (RQ3). We further examine how individual directions in a trained rank-16 LoRA update affect downstream performance. We decompose each learned update using SVD, remove one singular component at a time, and evaluate the resulting model. As shown in Figure 5 , removing the leading singular component produces the largest performance drop in all three evaluations: 3.97 percentage points on both MBPP and MBPP+, and 8.03 percentage points on Math. Removing most of the remaining components has a much smaller effect, and removing some even improves performance slightly. These leave-one-component-out results measure the functional effect of each removal, beyond the magnitude of its singular value. Together with the top- k k analysis in Figure 1 , they indicate that the learned LoRA directions do not contribute uniformly to task performance. This observation motivates ReGRA to seek complementary directions from the residual gradient after the first-stage update has been learned.",
+      "source": "https://arxiv.org/html/2610.19700v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0028",
+      "section": "5.5 More Analysis",
+      "text": "Figure 6: Effects of isolated Stage-2 SVD components on Llama-3-8B. Each C i C_{i} retains only the i i th rank-one component of every Stage-2 update matrix on a fixed Stage-1 model; components are evaluated independently, not cumulatively. Full retains all eight components. Bars show percentage-point changes from Stage 1-only in (a) mean accuracy across six math benchmarks and (b) MBPP+ pass1 on 378 problems. Positive and negative bars indicate gains and losses, respectively. Results are from one deterministic evaluation per condition. Functional diversity of Stage-2 components (RQ3). To examine the functional contribution of the learned Stage-2 update, we decompose each trained Stage-2 update matrix by SVD and evaluate eight independent variants. Variant C i C_{i} retains only the i i th rank-one component in each adapted matrix while keeping Stage 1 fixed; the variants are not cumulative. As shown in Figure 6 , their effects differ across task families. On the six mathematical reasoning benchmarks, only C 3 C_{3} , C 4 C_{4} , and C 6 C_{6} improve mean accuracy over Stage 1-only, by 2.91, 1.27, and 0.56 percentage points, respectively; the other five components produce small decreases. The full Stage-2 update gains 1.27 points, below C 3 C_{3} alone. On MBPP+, seven components improve pass@1 by 0.79–1.85 points, while C 6 C_{6} leaves it unchanged; the full update gains 2.65 points. These results show heterogeneous and task-dependent component effects. The full update’s benchmark performance is not a sum of its isolated component effects, although these independent evaluations do not identify each component’s marginal contribution within the full update, example-level error analyses are reported in Appendix C.2 .",
+      "source": "https://arxiv.org/html/2610.19700v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0029",
+      "section": "5.5 More Analysis",
+      "text": "Figure 7: Progressive rank expansion on LLaMA-3-8B. At each stage, previously learned adapters are frozen and a new rank-2 adapter is trained. Progressive Rank Expansion (RQ4). We further evaluate our method on LLaMA-3-8B under a multi-stage training setting. Starting from the base model, we iteratively train a new rank-2 adapter at each stage while freezing all previously learned adapters. Therefore, the effective adaptation rank increases progressively as more adapters are accumulated. As shown in Fig. 7 , the overall performance consistently improves with the increasing cumulative rank, rising from 69.20% at rank 2 to 71.81% at rank 16. Although minor fluctuations are observed at intermediate ranks, the overall trend demonstrates that newly introduced adapters continue to provide complementary adaptation capacity rather than merely duplicating previously learned directions. These results support the effectiveness of our additive multi-stage training strategy for progressively expanding the model’s adaptation capacity.",
+      "source": "https://arxiv.org/html/2610.19700v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0030",
+      "section": "6 Conclusion",
+      "text": "In this work, we introduced ReGRA, a two-stage adaptation method that makes more effective use of a fixed total-rank budget. Motivated by the observation that additional LoRA singular components do not always improve performance, ReGRA uses residual task gradients to initialize a second adapter while preserving the first-stage solution. An orthogonality regularizer helps maintain separation between the two updates, which can be merged without additional inference overhead. Experiments on natural language understanding, mathematical reasoning, and code generation demonstrate improvements over rank-matched LoRA, while ablations support both design choices. These findings suggest that effective low-rank adaptation depends not only on increasing rank, but also on learning useful additional components relative to an existing update. Future work may investigate more principled ways to identify and allocate useful residual directions under a fixed rank budget.",
+      "source": "https://arxiv.org/html/2610.19700v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0031",
+      "section": "References",
+      "text": "Aghajanyan et al. (2021) A. Aghajanyan, S. Gupta, and L. Zettlemoyer Intrinsic dimensionality explains the effectiveness of language model fine-tuning . In Proceedings of the 59th annual meeting of the association for computational linguistics and the 11th international joint conference on natural language processing (volume 1: long papers) , pp. 7319–7328 . Cited by: §1 . Austin et al. (2021) J. Austin, A. Odena, M. Nye, M. Bosma, H. Michalewski, D. Dohan, E. Jiang, C. Cai, M. Terry, Q. Le, et al. Program synthesis with large language models . arXiv preprint arXiv:2108.07732 . Cited by: §5.1 . Brown et al. (2020) T. Brown, B. Mann, N. Ryder, M. Subbiah, J. D. Kaplan, P. Dhariwal, A. Neelakantan, P. Shyam, G. Sastry, A. Askell, et al. Language models are few-shot learners . Advances in neural information processing systems 33 , pp. 1877–1901 . Cited by: §1 . Chen et al. (2021) M. Chen, J. Tworek, H. Jun, Q. Yuan, H. P. D. O. Pinto, J. Kaplan, H. Edwards, Y. Burda, N. Joseph, G. Brockman, et al. Evaluating large language models trained on code . arXiv preprint arXiv:2107.03374 . Cited by: §1 , §5.1 . Cobbe et al. (2021) K. Cobbe, V. Kosaraju, M. Bavarian, M. Chen, H. Jun, L. Kaiser, M. Plappert, J. Tworek, J. Hilton, R. Nakano, et al. Training verifiers to solve math word problems . arXiv preprint arXiv:2110.14168 . Cited by: §5.1 . Dettmers et al. (2023) T. Dettmers, A. Pagnoni, A. Holtzman, and L. Zettlemoyer Qlora: efficient finetuning of quantized llms . Advances in neural information processing systems 36 , pp. 10088–10115 . Cited by: §2 , §3 .",
+      "source": "https://arxiv.org/html/2610.19700v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0032",
+      "section": "References",
+      "text": "Grattafiori et al. (2024) A. Grattafiori, A. Dubey, A. Jauhri, A. Pandey, A. Kadian, A. Al-Dahle, A. Letman, A. Mathur, A. Schelten, A. Vaughan, et al. The llama 3 herd of models . arXiv preprint arXiv:2407.21783 . Cited by: §5.1 . Hayou et al. (2024) S. Hayou, N. Ghosh, and B. Yu Lora+: efficient low rank adaptation of large models . arXiv preprint arXiv:2402.12354 . Cited by: §1 , §2 . Hayou et al. (2026) S. Hayou, N. Ghosh, and B. Yu Plop: precise lora placement for efficient finetuning of large models . In International Conference on Learning Representations , Vol. 2026 , pp. 65166–65191 . Cited by: §1 , §2 . He et al. (2021) J. He, C. Zhou, X. Ma, T. Berg-Kirkpatrick, and G. Neubig Towards a unified view of parameter-efficient transfer learning . arXiv preprint arXiv:2110.04366 . Cited by: §1 . Houlsby et al. (2019) N. Houlsby, A. Giurgiu, S. Jastrzebski, B. Morrone, Q. De Laroussilhe, A. Gesmundo, M. Attariyan, and S. Gelly Parameter-efficient transfer learning for nlp . In International conference on machine learning , pp. 2790–2799 . Cited by: §1 . Hu et al. (2021) E. J. Hu, Y. Shen, P. Wallis, Z. Allen-Zhu, Y. Li, S. Wang, L. Wang, and W. Chen Lora: low-rank adaptation of large language models . arXiv preprint arXiv:2106.09685 . Cited by: §1 , §1 , §2 , §3 , §5.1 . Hu et al. (2023) Z. Hu, L. Wang, Y. Lan, W. Xu, E. Lim, L. Bing, X. Xu, S. Poria, and R. Lee Llm-adapters: an adapter family for parameter-efficient fine-tuning of large language models . In Proceedings of the 2023 conference on empirical methods in natural language processing , pp. 5254–5276 . Cited by: §1 , §5.1 . Kalajdzievski (2023) D. Kalajdzievski A rank stabilization scaling factor for fine-tuning with lora . arXiv preprint arXiv:2312.03732 . Cited by: §2 .",
+      "source": "https://arxiv.org/html/2610.19700v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0033",
+      "section": "References",
+      "text": "Kopiczko et al. (2024) D. Kopiczko, T. Blankevoort, and Y. Asano Vera: vector-based random matrix adaptation . In International Conference on Learning Representations , Vol. 2024 , pp. 6815–6835 . Cited by: §2 . Lialin et al. (2024) V. Lialin, S. Muckatira, N. Shivagunde, and A. Rumshisky Relora: high-rank training through low-rank updates . In International Conference on Learning Representations , Vol. 2024 , pp. 49405–49421 . Cited by: §2 . Liang and Li (2024) Y. Liang and W. Li Inflora: interference-free low-rank adaptation for continual learning . In 2024 IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR) , pp. 23638–23647 . Cited by: §2 . Liu et al. (2023) J. Liu, C. S. Xia, Y. Wang, and L. Zhang Is your code generated by chatgpt really correct? rigorous evaluation of large language models for code generation . Advances in neural information processing systems 36 , pp. 21558–21572 . Cited by: §5.1 . Liu et al. (2024) S. Liu, C. Wang, H. Yin, P. Molchanov, Y. F. Wang, K. Cheng, and M. Chen Dora: weight-decomposed low-rank adaptation . arXiv preprint arXiv:2402.09353 . Cited by: §2 , §5.1 . Liu et al. (2025a) X. Liu, X. Xia, S. Ng, and T. Chua Continual multimodal contrastive learning . Advances in Neural Information Processing Systems 38 , pp. 48414–48455 . Cited by: §2 . Liu et al. (2026) X. Liu, X. Xia, M. Zhang, J. Li, X. Yu, F. Shen, X. Su, S. Ng, and T. Chua Freeact: freeing activations for llm quantization . arXiv preprint arXiv:2603.01776 . Cited by: §2 . Liu et al. (2025b) X. Liu, X. Xia, W. Zhao, M. Zhang, X. Yu, X. Su, S. Yang, S. Ng, and T. Chua L-mtp: leap multi-token prediction beyond adjacent context for large language models . Advances in Neural Information Processing Systems 38 , pp. 102569–102600 . Cited by: §1 .",
+      "source": "https://arxiv.org/html/2610.19700v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0034",
+      "section": "References",
+      "text": "Liu et al. (2019) Y. Liu, M. Ott, N. Goyal, J. Du, M. Joshi, D. Chen, O. Levy, M. Lewis, L. Zettlemoyer, and V. Stoyanov Roberta: a robustly optimized bert pretraining approach . arXiv preprint arXiv:1907.11692 . Cited by: §5.1 . Luo et al. (2026) M. Luo, Z. Zhou, Y. Zhang, Y. Wan, M. Zhang, and T. Wei KeeploRA: continual learning with residual gradient adaptation . In International Conference on Learning Representations , Vol. 2026 , pp. 136017–136040 . Cited by: §2 , §5.1 . Meng et al. (2024) F. Meng, Z. Wang, and M. Zhang Pissa: principal singular values and singular vectors adaptation of large language models . Advances in Neural Information Processing Systems 37 , pp. 121038–121072 . Cited by: §1 , §2 , §3 , §5.1 . Paischer et al. (2026) F. Paischer, L. Hauzenberger, T. Schmied, B. Alkin, M. Deisenroth, and S. Hochreiter Parameter efficient fine-tuning via explained variance adaptation . Advances in Neural Information Processing Systems 38 , pp. 46215–46267 . Cited by: §2 . Ponkshe et al. (2024) K. Ponkshe, R. Singhal, E. Gorbunov, A. Tumanov, S. Horvath, and P. Vepakomma Initialization using update approximation is a silver bullet for extremely efficient low-rank fine-tuning . arXiv preprint arXiv:2411.19557 . Cited by: §2 . Valipour et al. (2023) M. Valipour, M. Rezagholizadeh, I. Kobyzev, and A. Ghodsi DyLoRA: parameter-efficient tuning of pre-trained models using dynamic search-free low-rank adaptation . In Proceedings of the 17th Conference of the European Chapter of the Association for Computational Linguistics , pp. 3274–3287 . Cited by: §2 , §3 .",
+      "source": "https://arxiv.org/html/2610.19700v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0035",
+      "section": "References",
+      "text": "Veprikov et al. (2026) A. Veprikov, V. Solodkin, Z. Alexander, A. Savchenko, and A. Beznosikov WeightLoRA: keep only necessary adapters . In Proceedings of the 64th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) , pp. 12419–12437 . Cited by: §1 , §2 . Wang et al. (2018) A. Wang, A. Singh, J. Michael, F. Hill, O. Levy, and S. R. Bowman GLUE: a multi-task benchmark and analysis platform for natural language understanding . In Proceedings of the 2018 EMNLP workshop BlackboxNLP: Analyzing and interpreting neural networks for NLP , pp. 353–355 . Cited by: §5.1 . Wang et al. (2025a) H. Wang, Y. Li, S. Wang, G. Chen, and Y. Chen Milora: harnessing minor singular components for parameter-efficient llm finetuning . In Proceedings of the 2025 Conference of the Nations of the Americas Chapter of the Association for Computational Linguistics: Human Language Technologies (Volume 1: Long Papers) , pp. 4823–4836 . Cited by: §2 , §3 . Wang et al. (2024) S. Wang, L. Yu, and J. Li Lora-ga: low-rank adaptation with gradient approximation . Advances in Neural Information Processing Systems 37 , pp. 54905–54931 . Cited by: §1 , §2 , §3 . Wang et al. (2023) X. Wang, T. Chen, Q. Ge, H. Xia, R. Bao, R. Zheng, Q. Zhang, T. Gui, and X. Huang Orthogonal subspace learning for language model continual learning . In Findings of the Association for Computational Linguistics: EMNLP 2023 , pp. 10658–10671 . Cited by: §2 . Wang et al. (2025b) Z. Wang, J. Liang, R. He, Z. Wang, and T. Tan Lora-pro: are low-rank adapters properly optimized? . In International Conference on Learning Representations , Vol. 2025 , pp. 93787–93808 . Cited by: §1 , §2 .",
+      "source": "https://arxiv.org/html/2610.19700v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0036",
+      "section": "References",
+      "text": "Wistuba et al. (2023) M. Wistuba, P. T. Sivaprasad, L. Balles, and G. Zappella Continual learning with low rank adaptation . arXiv preprint arXiv:2311.17601 . Cited by: §2 . Xia et al. (2024) W. Xia, C. Qin, and E. Hazan Chain of LoRA: efficient fine-tuning of language models via residual learning . In Proceedings of the 41st International Conference on Machine Learning , Cited by: §2 . Yang et al. (2025) A. Yang, A. Li, B. Yang, B. Zhang, B. Hui, B. Zheng, B. Yu, C. Gao, C. Huang, C. Lv, et al. Qwen3 technical report . arXiv preprint arXiv:2505.09388 . Cited by: §5.1 . Yang et al. (2024) Y. Yang, X. Li, Z. Zhou, S. L. Song, J. Wu, L. Nie, and B. Ghanem Corda: context-oriented decomposition adaptation of large language models for task-aware parameter-efficient fine-tuning . Advances in neural information processing systems 37 , pp. 71768–71791 . Cited by: §2 . Zhang et al. (2023a) L. Zhang, L. Zhang, S. Shi, X. Chu, and B. Li Lora-fa: memory-efficient low-rank adaptation for large language models fine-tuning . arXiv e-prints , pp. arXiv–2308 . Cited by: §2 . Zhang et al. (2023b) Q. Zhang, M. Chen, A. Bukharin, N. Karampatziakis, P. He, Y. Cheng, W. Chen, and T. Zhao Adalora: adaptive budget allocation for parameter-efficient fine-tuning . arXiv preprint arXiv:2303.10512 . Cited by: §1 , §2 , §3 . Zhang et al. (2025) Y. Zhang, F. Liu, and Y. Chen Lora-one: one-step full gradient could suffice for fine-tuning large language models, provably and efficiently . arXiv preprint arXiv:2502.01235 . Cited by: §1 , §2 , §5.1 .",
+      "source": "https://arxiv.org/html/2610.19700v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0037",
+      "section": "References",
+      "text": "Zheng et al. (2024) T. Zheng, G. Zhang, T. Shen, X. Liu, B. Y. Lin, J. Fu, W. Chen, and X. Yue Opencodeinterpreter: integrating code generation with execution and refinement . In Findings of the Association for Computational Linguistics: ACL 2024 , pp. 12834–12859 . Cited by: §5.1 . Appendix",
+      "source": "https://arxiv.org/html/2610.19700v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0038",
+      "section": "Appendix A Theoretical Analysis",
+      "text": "In this section, we analyze the residual-gradient projection (Appendix A.1 ), its low-rank aggregation (Appendix A.2 ), the initial Stage-2 update (Appendix A.3 ), and the factorized decorrelation penalty (Appendix A.4 ).",
+      "source": "https://arxiv.org/html/2610.19700v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0039",
+      "section": "A.1 Residual-Gradient Projection and Orthogonality",
+      "text": "Consider an adapted weight 𝑾 0 ∈ ℝ d out × d in {\\bm{W}}_{0}\\in\\mathbb{R}^{d_{\\mathrm{out}}\\times d_{\\mathrm{in}}} . For the fixed first-stage update, define Δ ​ 𝑾 1 \\displaystyle\\Delta{\\bm{W}}_{1} = s 1 ​ 𝑩 1 ​ 𝑨 1 = 𝑼 1 ​ 𝚺 1 ​ 𝑽 1 ⊤ , \\displaystyle=s_{1}{\\bm{B}}_{1}{\\bm{A}}_{1}={\\bm{U}}_{1}{\\bm{\\Sigma}}_{1}{\\bm{V}}_{1}^{\\top}, (8) 𝑷 U \\displaystyle{\\bm{P}}_{U} = 𝑼 1 𝑼 1 ⊤ , 𝑷 V = 𝑽 1 𝑽 1 ⊤ . \\displaystyle={\\bm{U}}_{1}{\\bm{U}}_{1}^{\\top},\\qquad{\\bm{P}}_{V}={\\bm{V}}_{1}{\\bm{V}}_{1}^{\\top}. For a calibration batch 𝒞 b {\\mathcal{C}}_{b} , the gradient and its residual are 𝑮 b \\displaystyle{\\bm{G}}_{b} = ∇ 𝑾 ℒ task ​ ( 𝑾 0 + Δ ​ 𝑾 1 , 𝒞 b ) , \\displaystyle=\\nabla_{{\\bm{W}}}\\mathcal{L}_{\\mathrm{task}}({\\bm{W}}_{0}+\\Delta{\\bm{W}}_{1};{\\mathcal{C}}_{b}), (9) 𝑮 res , b \\displaystyle{\\bm{G}}_{\\mathrm{res},b} = 𝑮 b − 𝑷 U ​ 𝑮 b ​ 𝑷 V \\displaystyle={\\bm{G}}_{b}-{\\bm{P}}_{U}{\\bm{G}}_{b}{\\bm{P}}_{V} = 𝑮 b − 𝑼 1 ​ 𝑼 1 ⊤ ​ 𝑮 b ​ 𝑽 1 ​ 𝑽 1 ⊤ . \\displaystyle={\\bm{G}}_{b}-{\\bm{U}}_{1}{\\bm{U}}_{1}^{\\top}{\\bm{G}}_{b}{\\bm{V}}_{1}{\\bm{V}}_{1}^{\\top}. The residual is orthogonal to every matrix in the two-sided subspace represented by the first-stage update. Indeed, for any compatible 𝒁 {\\bm{Z}} ,",
+      "source": "https://arxiv.org/html/2610.19700v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0040",
+      "section": "A.1 Residual-Gradient Projection and Orthogonality",
+      "text": "⟨ 𝑮 res , b , 𝑼 1 ​ 𝒁 ​ 𝑽 1 ⊤ ⟩ F \\displaystyle\\left\\langle{\\bm{G}}_{\\mathrm{res},b},{\\bm{U}}_{1}{\\bm{Z}}{\\bm{V}}_{1}^{\\top}\\right\\rangle_{F} = ⟨ 𝑼 1 ⊤ ​ 𝑮 res , b ​ 𝑽 1 , 𝒁 ⟩ F \\displaystyle=\\left\\langle{\\bm{U}}_{1}^{\\top}{\\bm{G}}_{\\mathrm{res},b}{\\bm{V}}_{1},{\\bm{Z}}\\right\\rangle_{F} (10) = ⟨ 𝑼 1 ⊤ ​ ( 𝑮 b − 𝑷 U ​ 𝑮 b ​ 𝑷 V ) ​ 𝑽 1 , 𝒁 ⟩ F \\displaystyle=\\left\\langle{\\bm{U}}_{1}^{\\top}\\bigl({\\bm{G}}_{b}-{\\bm{P}}_{U}{\\bm{G}}_{b}{\\bm{P}}_{V}\\bigr){\\bm{V}}_{1},{\\bm{Z}}\\right\\rangle_{F} = ⟨ 𝑼 1 ⊤ ​ 𝑮 b ​ 𝑽 1 − 𝑼 1 ⊤ ​ 𝑮 b ​ 𝑽 1 , 𝒁 ⟩ F \\displaystyle=\\left\\langle{\\bm{U}}_{1}^{\\top}{\\bm{G}}_{b}{\\bm{V}}_{1}-{\\bm{U}}_{1}^{\\top}{\\bm{G}}_{b}{\\bm{V}}_{1},{\\bm{Z}}\\right\\rangle_{F} = 0 . \\displaystyle=0. Thus, the projection removes components jointly aligned with the left and right first-stage subspaces. Unlike ( 𝑰 − 𝑷 U ) ​ 𝑮 b ​ ( 𝑰 − 𝑷 V ) ({\\bm{I}}-{\\bm{P}}_{U}){\\bm{G}}_{b}({\\bm{I}}-{\\bm{P}}_{V}) , it retains components aligned with only one of these subspaces.",
+      "source": "https://arxiv.org/html/2610.19700v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0041",
+      "section": "A.2 Low-Rank Calibration and Gradient Aggregation",
+      "text": "For each calibration batch, we truncate the residual gradient immediately after projection. Let 𝒯 q ​ ( ⋅ ) \\mathcal{T}_{q}(\\cdot) denote the rank-at-most- q q matrix returned by the low-rank SVD routine. Then 𝑮 res , b \\displaystyle{\\bm{G}}_{\\mathrm{res},b} = 𝑮 b − 𝑷 U ​ 𝑮 b ​ 𝑷 V , \\displaystyle={\\bm{G}}_{b}-{\\bm{P}}_{U}{\\bm{G}}_{b}{\\bm{P}}_{V}, (11) 𝑮 ~ res , b \\displaystyle\\widetilde{{\\bm{G}}}_{\\mathrm{res},b} : = 𝒯 q ​ ( 𝑮 res , b ) \\displaystyle:=\\mathcal{T}_{q}\\bigl({\\bm{G}}_{\\mathrm{res},b}\\bigr) = 𝑼 b ( g ) ​ 𝚺 b ( g ) ​ ( 𝑽 b ( g ) ) ⊤ , \\displaystyle={\\bm{U}}_{b}^{(g)}{\\bm{\\Sigma}}_{b}^{(g)}\\bigl({\\bm{V}}_{b}^{(g)}\\bigr)^{\\top}, 𝑮 ^ res \\displaystyle\\widehat{{\\bm{G}}}_{\\mathrm{res}} : = 1 M ​ ∑ b = 1 M 𝑮 ~ res , b \\displaystyle:=\\frac{1}{M}\\sum_{b=1}^{M}\\widetilde{{\\bm{G}}}_{\\mathrm{res},b} = 1 M ​ ∑ b = 1 M 𝑼 b ( g ) ​ 𝚺 b ( g ) ​ ( 𝑽 b ( g ) ) ⊤ . \\displaystyle=\\frac{1}{M}\\sum_{b=1}^{M}{\\bm{U}}_{b}^{(g)}{\\bm{\\Sigma}}_{b}^{(g)}\\bigl({\\bm{V}}_{b}^{(g)}\\bigr)^{\\top}. The superscript ( g ) (g) distinguishes the batch-gradient singular vectors from those of the first-stage update. The mean can be aggregated without constructing a dense matrix. Define the concatenated factors 𝐋 \\displaystyle\\mathbf{L} = [ 𝑼 1 ( g ) ​ 𝚺 1 ( g ) M , … , 𝑼 M ( g ) ​ 𝚺 M ( g ) M ] , \\displaystyle=\\left[\\frac{{\\bm{U}}_{1}^{(g)}{\\bm{\\Sigma}}_{1}^{(g)}}{M},\\ldots,\\frac{{\\bm{U}}_{M}^{(g)}{\\bm{\\Sigma}}_{M}^{(g)}}{M}\\right], (12) 𝐑 \\displaystyle\\mathbf{R} = [ 𝑽 1 ( g ) , … , 𝑽 M ( g ) ] . \\displaystyle=\\left[{\\bm{V}}_{1}^{(g)},\\ldots,{\\bm{V}}_{M}^{(g)}\\right]. Using thin QR factorizations 𝐋 = 𝐐 L ​ 𝐑 L \\mathbf{L}=\\mathbf{Q}_{L}\\mathbf{R}_{L} and 𝐑 = 𝐐 R ​ 𝐑 R \\mathbf{R}=\\mathbf{Q}_{R}\\mathbf{R}_{R} , we obtain",
+      "source": "https://arxiv.org/html/2610.19700v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0042",
+      "section": "A.2 Low-Rank Calibration and Gradient Aggregation",
+      "text": "𝑮 ^ res \\displaystyle\\widehat{{\\bm{G}}}_{\\mathrm{res}} = 𝐋𝐑 ⊤ \\displaystyle=\\mathbf{L}\\mathbf{R}^{\\top} (13) = ( 𝐐 L ​ 𝐑 L ) ​ ( 𝐐 R ​ 𝐑 R ) ⊤ \\displaystyle=(\\mathbf{Q}_{L}\\mathbf{R}_{L})(\\mathbf{Q}_{R}\\mathbf{R}_{R})^{\\top} = 𝐐 L ​ ( 𝐑 L ​ 𝐑 R ⊤ ) ​ 𝐐 R ⊤ . \\displaystyle=\\mathbf{Q}_{L}(\\mathbf{R}_{L}\\mathbf{R}_{R}^{\\top})\\mathbf{Q}_{R}^{\\top}. Thus, the SVD can be performed on the smaller core matrix 𝐊 = 𝐑 L ​ 𝐑 R ⊤ \\mathbf{K}=\\mathbf{R}_{L}\\mathbf{R}_{R}^{\\top} . Let 𝐊 q \\mathbf{K}_{q} be its rank- q q truncated SVD. The corresponding truncated aggregate and Stage-2 initialization are 𝑮 ^ res , q \\displaystyle\\widehat{{\\bm{G}}}_{\\mathrm{res},q} : = 𝐐 L ​ 𝐊 q ​ 𝐐 R ⊤ \\displaystyle:=\\mathbf{Q}_{L}\\mathbf{K}_{q}\\mathbf{Q}_{R}^{\\top} (14) = 𝑼 ¯ ​ 𝚺 ¯ ​ 𝑽 ¯ ⊤ , \\displaystyle=\\overline{{\\bm{U}}}\\overline{{\\bm{\\Sigma}}}\\overline{{\\bm{V}}}^{\\top}, 𝑨 2 ( 0 ) \\displaystyle{\\bm{A}}_{2}^{(0)} = ( 𝑽 ¯ : , 1 : r 2 ) ⊤ , 𝑩 2 ( 0 ) = 𝟎 , \\displaystyle=\\bigl(\\overline{{\\bm{V}}}_{:,1:r_{2}}\\bigr)^{\\top},\\qquad{\\bm{B}}_{2}^{(0)}=\\mathbf{0}, where r 2 ≤ q r_{2}\\leq q . This procedure obtains the initialization directions without explicitly forming the dense aggregate 𝑮 ^ res \\widehat{{\\bm{G}}}_{\\mathrm{res}} . The orthogonality in Equation equation 10 applies to each residual gradient before truncation.",
+      "source": "https://arxiv.org/html/2610.19700v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0043",
+      "section": "A.3 Proof of the Residual-Guided First-Step Update",
+      "text": "We prove Theorem 1 for one adapted weight. Write Δ ​ 𝑾 2 ( 0 ) \\displaystyle\\Delta{\\bm{W}}_{2}^{(0)} = s 2 ​ 𝑩 2 ( 0 ) ​ 𝑨 2 ( 0 ) \\displaystyle=s_{2}{\\bm{B}}_{2}^{(0)}{\\bm{A}}_{2}^{(0)} (15) = s 2 ​ 𝟎 ​ 𝑽 r ⊤ \\displaystyle=s_{2}\\mathbf{0}{\\bm{V}}_{r}^{\\top} = 𝟎 , \\displaystyle=\\mathbf{0}, so the initial Stage-2 model represents exactly 𝑾 0 + Δ ​ 𝑾 1 {\\bm{W}}_{0}+\\Delta{\\bm{W}}_{1} . Let 𝑮 ( 0 ) {\\bm{G}}^{(0)} be the task-loss gradient with respect to the adapted weight at this initial model. The chain rule gives ∇ 𝑩 2 ℒ task \\displaystyle\\nabla_{{\\bm{B}}_{2}}\\mathcal{L}_{\\mathrm{task}} = s 2 ​ 𝑮 ​ 𝑨 2 ⊤ , \\displaystyle=s_{2}{\\bm{G}}{\\bm{A}}_{2}^{\\top}, (16) ∇ 𝑨 2 ℒ task \\displaystyle\\nabla_{{\\bm{A}}_{2}}\\mathcal{L}_{\\mathrm{task}} = s 2 ​ 𝑩 2 ⊤ ​ 𝑮 . \\displaystyle=s_{2}{\\bm{B}}_{2}^{\\top}{\\bm{G}}. Because 𝑩 2 ( 0 ) = 𝟎 {\\bm{B}}_{2}^{(0)}=\\mathbf{0} , one simultaneous gradient-descent step with learning rate η \\eta gives 𝑨 2 ( 1 ) \\displaystyle{\\bm{A}}_{2}^{(1)} = 𝑨 2 ( 0 ) − η ​ s 2 ​ ( 𝑩 2 ( 0 ) ) ⊤ ​ 𝑮 ( 0 ) = 𝑽 r ⊤ , \\displaystyle={\\bm{A}}_{2}^{(0)}-\\eta s_{2}\\bigl({\\bm{B}}_{2}^{(0)}\\bigr)^{\\top}{\\bm{G}}^{(0)}={\\bm{V}}_{r}^{\\top}, (17) 𝑩 2 ( 1 ) \\displaystyle{\\bm{B}}_{2}^{(1)} = 𝑩 2 ( 0 ) − η ​ s 2 ​ 𝑮 ( 0 ) ​ ( 𝑨 2 ( 0 ) ) ⊤ \\displaystyle={\\bm{B}}_{2}^{(0)}-\\eta s_{2}{\\bm{G}}^{(0)}\\bigl({\\bm{A}}_{2}^{(0)}\\bigr)^{\\top} = − η ​ s 2 ​ 𝑮 ( 0 ) ​ 𝑽 r . \\displaystyle=-\\eta s_{2}{\\bm{G}}^{(0)}{\\bm{V}}_{r}. Therefore,",
+      "source": "https://arxiv.org/html/2610.19700v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0044",
+      "section": "A.3 Proof of the Residual-Guided First-Step Update",
+      "text": "Δ ​ 𝑾 2 ( 1 ) \\displaystyle\\Delta{\\bm{W}}_{2}^{(1)} = s 2 ​ 𝑩 2 ( 1 ) ​ 𝑨 2 ( 1 ) \\displaystyle=s_{2}{\\bm{B}}_{2}^{(1)}{\\bm{A}}_{2}^{(1)} (18) = s 2 ​ ( − η ​ s 2 ​ 𝑮 ( 0 ) ​ 𝑽 r ) ​ 𝑽 r ⊤ \\displaystyle=s_{2}\\bigl(-\\eta s_{2}{\\bm{G}}^{(0)}{\\bm{V}}_{r}\\bigr){\\bm{V}}_{r}^{\\top} = − η ​ s 2 2 ​ 𝑮 ( 0 ) ​ 𝑽 r ​ 𝑽 r ⊤ . \\displaystyle=-\\eta s_{2}^{2}{\\bm{G}}^{(0)}{\\bm{V}}_{r}{\\bm{V}}_{r}^{\\top}. In the special case 𝑮 ( 0 ) = 𝑮 ^ res , q {\\bm{G}}^{(0)}=\\widehat{{\\bm{G}}}_{\\mathrm{res},q} , the SVD definition of 𝑽 r {\\bm{V}}_{r} further yields Δ ​ 𝑾 2 ( 1 ) \\displaystyle\\Delta{\\bm{W}}_{2}^{(1)} = − η ​ s 2 2 ​ 𝑮 ^ res , q ​ 𝑽 r ​ 𝑽 r ⊤ \\displaystyle=-\\eta s_{2}^{2}\\widehat{{\\bm{G}}}_{\\mathrm{res},q}{\\bm{V}}_{r}{\\bm{V}}_{r}^{\\top} (19) = − η ​ s 2 2 ​ 𝑼 ¯ ​ 𝚺 ¯ ​ 𝑽 ¯ ⊤ ​ 𝑽 r ​ 𝑽 r ⊤ \\displaystyle=-\\eta s_{2}^{2}\\overline{{\\bm{U}}}\\overline{{\\bm{\\Sigma}}}\\overline{{\\bm{V}}}^{\\top}{\\bm{V}}_{r}{\\bm{V}}_{r}^{\\top} = − η ​ s 2 2 ​ 𝑼 r ​ 𝚺 r ​ 𝑽 r ⊤ . \\displaystyle=-\\eta s_{2}^{2}{\\bm{U}}_{r}{\\bm{\\Sigma}}_{r}{\\bm{V}}_{r}^{\\top}. This result describes one plain gradient-descent step. It does not assume that later mini-batch gradients equal the calibration estimate or that subsequent updates remain in the initialized subspace.",
+      "source": "https://arxiv.org/html/2610.19700v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0045",
+      "section": "A.4 Update Orthogonality Regularization",
+      "text": "Let 𝑫 1 = 𝑩 1 ​ 𝑨 1 {\\bm{D}}_{1}={\\bm{B}}_{1}{\\bm{A}}_{1} and 𝑫 2 = 𝑩 2 ​ 𝑨 2 {\\bm{D}}_{2}={\\bm{B}}_{2}{\\bm{A}}_{2} be the unscaled stage-wise updates. Their Frobenius inner product satisfies ⟨ 𝑫 1 , 𝑫 2 ⟩ F \\displaystyle\\langle{\\bm{D}}_{1},{\\bm{D}}_{2}\\rangle_{F} = tr ⁡ ( 𝑫 1 ⊤ ​ 𝑫 2 ) \\displaystyle=\\operatorname{tr}({\\bm{D}}_{1}^{\\top}{\\bm{D}}_{2}) (20) = tr ⁡ ( 𝑨 1 ⊤ ​ 𝑩 1 ⊤ ​ 𝑩 2 ​ 𝑨 2 ) \\displaystyle=\\operatorname{tr}({\\bm{A}}_{1}^{\\top}{\\bm{B}}_{1}^{\\top}{\\bm{B}}_{2}{\\bm{A}}_{2}) = tr ⁡ [ ( 𝑩 1 ⊤ ​ 𝑩 2 ) ⊤ ​ ( 𝑨 1 ​ 𝑨 2 ⊤ ) ] \\displaystyle=\\operatorname{tr}\\bigl[({\\bm{B}}_{1}^{\\top}{\\bm{B}}_{2})^{\\top}({\\bm{A}}_{1}{\\bm{A}}_{2}^{\\top})\\bigr] = ⟨ 𝑩 1 ⊤ ​ 𝑩 2 , 𝑨 1 ​ 𝑨 2 ⊤ ⟩ F . \\displaystyle=\\left\\langle{\\bm{B}}_{1}^{\\top}{\\bm{B}}_{2},\\,{\\bm{A}}_{1}{\\bm{A}}_{2}^{\\top}\\right\\rangle_{F}. Similarly, ‖ 𝑫 1 ‖ F 2 \\displaystyle\\|{\\bm{D}}_{1}\\|_{F}^{2} = tr ⁡ ( 𝑫 1 ⊤ ​ 𝑫 1 ) = ⟨ 𝑩 1 ⊤ ​ 𝑩 1 , 𝑨 1 ​ 𝑨 1 ⊤ ⟩ F , \\displaystyle=\\operatorname{tr}({\\bm{D}}_{1}^{\\top}{\\bm{D}}_{1})=\\left\\langle{\\bm{B}}_{1}^{\\top}{\\bm{B}}_{1},\\,{\\bm{A}}_{1}{\\bm{A}}_{1}^{\\top}\\right\\rangle_{F}, (21) ‖ 𝑫 2 ‖ F 2 \\displaystyle\\|{\\bm{D}}_{2}\\|_{F}^{2} = tr ⁡ ( 𝑫 2 ⊤ ​ 𝑫 2 ) = ⟨ 𝑩 2 ⊤ ​ 𝑩 2 , 𝑨 2 ​ 𝑨 2 ⊤ ⟩ F . \\displaystyle=\\operatorname{tr}({\\bm{D}}_{2}^{\\top}{\\bm{D}}_{2})=\\left\\langle{\\bm{B}}_{2}^{\\top}{\\bm{B}}_{2},\\,{\\bm{A}}_{2}{\\bm{A}}_{2}^{\\top}\\right\\rangle_{F}. Substitution into Equation equation 6 gives a factor-only expression:",
+      "source": "https://arxiv.org/html/2610.19700v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0046",
+      "section": "A.4 Update Orthogonality Regularization",
+      "text": "Ω = ⟨ 𝑩 1 ⊤ ​ 𝑩 2 , 𝑨 1 ​ 𝑨 2 ⊤ ⟩ F 2 ⟨ 𝑩 1 ⊤ ​ 𝑩 1 , 𝑨 1 ​ 𝑨 1 ⊤ ⟩ F ​ ⟨ 𝑩 2 ⊤ ​ 𝑩 2 , 𝑨 2 ​ 𝑨 2 ⊤ ⟩ F + ε . \\Omega=\\frac{\\left\\langle{\\bm{B}}_{1}^{\\top}{\\bm{B}}_{2},\\,{\\bm{A}}_{1}{\\bm{A}}_{2}^{\\top}\\right\\rangle_{F}^{\\,2}}{\\left\\langle{\\bm{B}}_{1}^{\\top}{\\bm{B}}_{1},\\,{\\bm{A}}_{1}{\\bm{A}}_{1}^{\\top}\\right\\rangle_{F}\\left\\langle{\\bm{B}}_{2}^{\\top}{\\bm{B}}_{2},\\,{\\bm{A}}_{2}{\\bm{A}}_{2}^{\\top}\\right\\rangle_{F}+\\varepsilon}. (22) Thus, the penalty can be evaluated without explicitly forming either dense update matrix. It helps maintain orthogonality between 𝑫 1 {\\bm{D}}_{1} and 𝑫 2 {\\bm{D}}_{2} during Stage-2 training; it does not require their left or right singular subspaces to be separately orthogonal.",
+      "source": "https://arxiv.org/html/2610.19700v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0047",
+      "section": "Appendix B Supplementary Implementation Details",
+      "text": "This section specifies the model setup, residual-gradient calibration, training hyperparameters, algorithm flow, and computational cost of ReGRA.",
+      "source": "https://arxiv.org/html/2610.19700v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0048",
+      "section": "B.1 Model and Training Setup",
+      "text": "We apply LoRA adapters to the query, key, and value projections. The pretrained backbone remains fixed during both training stages. Each ReGRA stage uses rank 8 8 , LoRA scaling parameter α = 16 \\alpha=16 , and dropout 0.05 0.05 . Stage 1 trains a standard LoRA adapter on the task training data. Its learned update is then fixed during calibration and Stage-2 training. For GLUE, the task-specific classification head is trained in Stage 1 and retained without further updates in Stage 2. For generative tasks, the language-modeling loss is computed only on response tokens. Experiments use seed 42 42 , bfloat16 precision, and zero weight decay. The training runs were conducted on an NVIDIA GeForce RTX 3090.",
+      "source": "https://arxiv.org/html/2610.19700v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0049",
+      "section": "B.2 Residual-Gradient Calibration",
+      "text": "Calibration is performed once after Stage 1 and before Stage 2. We load the pretrained backbone together with the fixed Stage-1 adapter and evaluate task gradients on batches drawn from the training data. The selected calibration records are processed without data-loader shuffling. For each adapted weight, a gradient with respect to the underlying weight is computed without applying an optimizer update. Each gradient is projected using the first-stage left and right subspaces, as described in Appendix A.1 . The residual is immediately compressed to rank at most q q , and the dense gradient is discarded. Batchwise low-rank factors are aggregated using the procedure in Appendix A.2 . The leading right singular vectors of the aggregate initialize 𝑨 2 {\\bm{A}}_{2} , while 𝑩 2 {\\bm{B}}_{2} is initialized to zero. Consequently, the initialized Stage-2 adapter does not change the function represented by the Stage-1 model. For commonsense reasoning, the calibration subset contains 64 64 examples, with eight selected from each of the eight tasks. This task balancing applies only to calibration; it does not change the order of subsequent Stage-2 training.",
+      "source": "https://arxiv.org/html/2610.19700v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0050",
+      "section": "B.3 Hyperparameter Settings",
+      "text": "Both stages use fused AdamW with a linear learning-rate schedule and 100 optimizer-step learning-rate warmup. The effective training batch sizes, maximum sequence lengths, epoch counts, and peak learning rates are listed in Table 4 . Both stages use the same epoch count within a given task. Table 4: Training settings for ReGRA. The Stage-2 learning rate for RoBERTa-large RTE is 10 − 4 10^{-4} rather than 5 × 10 − 5 5\\times 10^{-5} . Setting Epochs Stage-1 LR Stage-2 LR Batch size Max. length RoBERTa-base, GLUE Task-specific 2 × 10 − 4 2\\times 10^{-4} 2 × 10 − 4 2\\times 10^{-4} 32 128 RoBERTa-large, GLUE Task-specific 2 × 10 − 4 2\\times 10^{-4} 5 × 10 − 5 5\\times 10^{-5} * 32 128 Llama-3-8B, math 2 10 − 4 10^{-4} 10 − 4 10^{-4} 2 256 Qwen3-8B-Base, math 2 10 − 4 10^{-4} 10 − 5 10^{-5} 2 256 Llama-3-8B, code 1 2 × 10 − 5 2\\times 10^{-5} 5 × 10 − 6 5\\times 10^{-6} 4 1024 Llama-3-8B, commonsense 1 10 − 4 10^{-4} 2 × 10 − 5 2\\times 10^{-5} 4 256 * Except RTE, which uses 10 − 4 10^{-4} . For both RoBERTa backbones, CoLA, MNLI, MRPC, QNLI, QQP, RTE, SST-2, and STS-B are trained for 10 10 , 3 3 , 20 20 , 3 3 , 3 3 , 20 20 , 5 5 , and 10 10 epochs, respectively. Table 5 gives the calibration settings. Here, M M is the number of calibration batches, b b is their batch size, and q q is the gradient compression rank. The low-rank SVD routine uses four iterations in all listed configurations. Table 5: Residual-gradient calibration settings for ReGRA. Setting M M b b q q GLUE, both backbones 8 32 16 Llama-3-8B, math 1 1 8 Qwen3-8B-Base, math 4 2 8 Llama-3-8B, code 16 1 16 Llama-3-8B, commonsense 16 4 32",
+      "source": "https://arxiv.org/html/2610.19700v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0051",
+      "section": "B.4 Stage-2 Optimization and Merging",
+      "text": "During Stage 2, the backbone and Stage-1 adapter remain fixed. Only the Stage-2 LoRA factors are optimized. Training uses ordinary task gradients; the residual-gradient projection is used for initialization rather than applied to every training step. The task objective is augmented with the update-level orthogonality regularizer in Equation equation 6 . We linearly warm up the regularization coefficient over the first 100 Stage-2 optimization steps: λ t = 0.1 ​ min ⁡ { 1 , t 100 } , \\lambda_{t}=0.1\\min\\left\\{1,\\frac{t}{100}\\right\\}, (23) where t t denotes the Stage-2 optimization step. This regularizer warmup is separate from the learning-rate warmup. After training, the effective updates from both stages are merged into each adapted pretrained weight: 𝑾 merged = 𝑾 0 + Δ ​ 𝑾 1 + Δ ​ 𝑾 2 . {\\bm{W}}_{\\mathrm{merged}}={\\bm{W}}_{0}+\\Delta{\\bm{W}}_{1}+\\Delta{\\bm{W}}_{2}. (24) The merged model requires no additional adapter branch or adapter-specific computation during inference.",
+      "source": "https://arxiv.org/html/2610.19700v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0052",
+      "section": "B.5 Algorithm Flow",
+      "text": "Algorithm 1 summarizes the complete procedure. Stage 1 supplies a fixed task-specific update. Calibration constructs a low-rank estimate of the residual gradient at that solution. Stage 2 is initialized from this estimate, optimized with update-orthogonality regularization, and finally merged with Stage 1. Algorithm 1 ReGRA: two-stage residual-gradient adaptation",
+      "source": "https://arxiv.org/html/2610.19700v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0053",
+      "section": "B.5 Algorithm Flow",
+      "text": "1: Pretrained weights { 𝑾 0 , ℓ } ℓ = 1 L \\{{\\bm{W}}_{0,\\ell}\\}_{\\ell=1}^{L} ; training data 𝒟 train {\\mathcal{D}}_{\\mathrm{train}} ; calibration batches { 𝒞 b } b = 1 M \\{{\\mathcal{C}}_{b}\\}_{b=1}^{M} ; stage ranks r 1 , r 2 r_{1},r_{2} ; compression rank q ≥ r 2 q\\geq r_{2} 2: Adapted weights { 𝑾 ℓ ∗ } ℓ = 1 L \\{{\\bm{W}}_{\\ell}^{*}\\}_{\\ell=1}^{L} 3: Train a rank- r 1 r_{1} Stage-1 LoRA adapter on 𝒟 train {\\mathcal{D}}_{\\mathrm{train}} 4: Fix its updates { Δ ​ 𝑾 1 , ℓ } ℓ = 1 L \\{\\Delta{\\bm{W}}_{1,\\ell}\\}_{\\ell=1}^{L} 5: for each adapted weight ℓ \\ell do 6: Obtain the first-stage subspace projectors 𝑷 U , ℓ {\\bm{P}}_{U,\\ell} and 𝑷 V , ℓ {\\bm{P}}_{V,\\ell} 7: for each calibration batch 𝒞 b {\\mathcal{C}}_{b} do 8: Compute the task gradient 𝑮 ℓ , b {\\bm{G}}_{\\ell,b} at 𝑾 0 + Δ ​ 𝑾 1 {\\bm{W}}_{0}+\\Delta{\\bm{W}}_{1} 9: Form 𝑮 res , ℓ , b ← 𝑮 ℓ , b − 𝑷 U , ℓ ​ 𝑮 ℓ , b ​ 𝑷 V , ℓ {\\bm{G}}_{\\mathrm{res},\\ell,b}\\leftarrow{\\bm{G}}_{\\ell,b}-{\\bm{P}}_{U,\\ell}{\\bm{G}}_{\\ell,b}{\\bm{P}}_{V,\\ell} 10: Store its rank- q q compressed factors and discard the dense gradient 11: end for 12: Aggregate the compressed factors and extract the leading r 2 r_{2} right singular vectors 𝑽 ℓ , r {\\bm{V}}_{\\ell,r} 13: Initialize 𝑨 2 , ℓ ← 𝑽 ℓ , r ⊤ {\\bm{A}}_{2,\\ell}\\leftarrow{\\bm{V}}_{\\ell,r}^{\\top} , 𝑩 2 , ℓ ← 𝟎 {\\bm{B}}_{2,\\ell}\\leftarrow\\mathbf{0} 14: end for 15: Fix Stage 1 and optimize only the Stage-2 factors using the task loss and orthogonality regularizer 16: for each adapted weight ℓ \\ell do 17: Merge 𝑾 ℓ ∗ ← 𝑾 0 , ℓ + Δ ​ 𝑾 1 , ℓ + Δ ​ 𝑾 2 , ℓ {\\bm{W}}_{\\ell}^{*}\\leftarrow{\\bm{W}}_{0,\\ell}+\\Delta{\\bm{W}}_{1,\\ell}+\\Delta{\\bm{W}}_{2,\\ell} 18: end for 19: return { 𝑾 ℓ ∗ } ℓ = 1 L \\{{\\bm{W}}_{\\ell}^{*}\\}_{\\ell=1}^{L}",
+      "source": "https://arxiv.org/html/2610.19700v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0054",
+      "section": "B.6 Computational Cost",
+      "text": "For an adapted weight of size d out × d in d_{\\mathrm{out}}\\times d_{\\mathrm{in}} , each dense calibration gradient is held only transiently. Storing rank- q q factors for M M batches requires O ⁡ ( M ​ q ​ ( d out + d in ) ) O\\!\\left(Mq(d_{\\mathrm{out}}+d_{\\mathrm{in}})\\right) numbers per adapted weight. Factorized aggregation uses QR factorizations and an SVD of a core matrix of size at most M ​ q × M ​ q Mq\\times Mq ; it does not explicitly form the dense aggregate gradient. Calibration is performed only once between the training stages. The orthogonality penalty is computed from LoRA factors rather than dense update matrices. Its per-weight cost is O ⁡ ( ( d out + d in ) ​ ( r 1 2 + r 2 2 + r 1 ​ r 2 ) ) . O\\!\\left((d_{\\mathrm{out}}+d_{\\mathrm{in}})(r_{1}^{2}+r_{2}^{2}+r_{1}r_{2})\\right). (25) Across the two stages, the LoRA factors contain ( r 1 + r 2 ) ​ ( d out + d in ) (r_{1}+r_{2})(d_{\\mathrm{out}}+d_{\\mathrm{in}}) parameters per adapted weight, excluding any task-specific output head. Once both updates are merged, inference uses the same dense weight multiplication as the pretrained model.",
+      "source": "https://arxiv.org/html/2610.19700v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0055",
+      "section": "C.1 Commonsense Reasoning",
+      "text": "Table 6: Accuracy (%) on eight commonsense reasoning benchmarks using Llama-3-8B. Avg. is the unweighted mean across tasks. Subscript values beside ReGRA scores show percentage-point differences from rank-8 LoRA. The best average is marked in bold. Method OBQA ARC-C Wino. PIQA SIQA ARC-E BoolQ Hella. Avg. Llama-3-8B LoRA ( r = 16 r=16 ) 88.40 81.10 87.29 88.74 81.63 93.14 74.19 93.35 85.98 LoRA ( r = 8 r=8 ) 86.80 81.31 87.61 88.57 81.12 93.10 69.93 92.73 85.15 DoRA ( r = 8 r=8 ) 86.40 81.14 87.21 89.28 81.57 93.43 73.82 92.57 85.68 PiSSA ( r = 8 r=8 ) 81.00 77.90 86.02 88.46 80.80 92.38 73.18 91.55 83.91 LoRA-One ( r = 8 r=8 ) 88.20 81.05 87.37 88.84 81.67 93.22 74.31 92.81 85.93 ReGRA ( r = 8 r=8 ) 88.20 +1.40 82.00 +0.69 86.90 -0.71 89.34 +0.77 81.93 +0.81 92.30 -0.80 74.22 +4.29 93.07 +0.34 86.00 +0.85 Table 6 shows that ReGRA achieves the highest eight-task average on Llama-3-8B, improving upon rank-8 LoRA by 0.85 percentage points. The largest task-level gains occur on BoolQ and OBQA, while Wino. and ARC-E decline. Increasing standard LoRA to rank 16 also improves the average and nearly matches ReGRA (85.98% versus 86.00%). These results extend the average gain over rank-8 LoRA to commonsense reasoning.",
+      "source": "https://arxiv.org/html/2610.19700v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0056",
+      "section": "C.2.1 Unique Error Corrections",
+      "text": "Figure 8: Stage 1 errors uniquely corrected by isolated Stage-2 components. Each cell counts cases answered incorrectly by Stage 1, corrected by the indicated component, and not corrected by any of the other seven isolated components. Math counts task–example pairs across six benchmarks; Code counts MBPP+ problems. Figure 8 compares the Stage-1 errors corrected by each isolated Stage-2 component. On Math, all eight components uniquely corrected errors, with 19–38 task–example pairs per component. On MBPP+, only components 1, 2, and 7 had unique corrections, with 1, 3, and 1 problems, respectively. The isolated components therefore showed distinct correction patterns on Math, while this distinction was less evident on MBPP+.",
+      "source": "https://arxiv.org/html/2610.19700v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0057",
+      "section": "C.2.2 Overlap with Full-Model Gains",
+      "text": "Figure 9: Coverage of the full Stage-2 model’s newly solved cases. For each case answered incorrectly by Stage 1 and correctly by the full Stage-2 model, the bars show how many isolated components also answer it correctly. Math includes 391 task–example pairs; Code includes 15 MBPP+ problems. Figure 9 examines cases newly solved by the full Stage-2 model. At least one isolated component also solved 359 of 391 Math cases and 9 of 15 MBPP+ problems. The remaining 32 Math cases and 6 MBPP+ problems were not solved by any isolated component. These results show that isolated components recover many full-model gains, while some gains appear only with the combined update. The analysis does not measure each component’s marginal contribution within that update.",
+      "source": "https://arxiv.org/html/2610.19700v1",
+      "offset": 0
+    }
+  ],
+  "links": [
+    {
+      "href": "https://github.com/Fanyao-Li/ReGRA",
+      "text": "https://github.com/Fanyao-Li/ReGRA",
+      "section": "Abstract",
+      "context": "-gradient directions to initialize a second-stage adapter without changing the first-stage update. An orthogonality regularizer encourages the two updates to capture complementary directions. Both updates can be merged into the pretrained weights, incurring no additional inference overhead. Across diverse benchmark sets, ReGRA achieves stronger performance than alternatives with the same total rank and even matches LoRA adapters with twice the rank. Ablation studies and further analysis support the contribution of its core design choices. Code is available at https://github.com/Fanyao-Li/ReGRA",
+      "url": "https://github.com/Fanyao-Li/ReGRA"
+    },
+    {
+      "href": "#bib.bib1",
+      "text": "Brown et al., 2020",
+      "section": "1 Introduction",
+      "context": "Large pretrained models have achieved strong performance across a wide range of downstream tasks, alongside scaling parameters and training corpus ( Brown et al., 2020",
+      "url": "https://arxiv.org/html/2610.19700v1#bib.bib1"
+    },
+    {
+      "href": "#bib.bib2",
+      "text": "Chen et al., 2021",
+      "section": "1 Introduction",
+      "context": "Large pretrained models have achieved strong performance across a wide range of downstream tasks, alongside scaling parameters and training corpus ( Brown et al., 2020 ; Chen et al., 2021",
+      "url": "https://arxiv.org/html/2610.19700v1#bib.bib2"
+    },
+    {
+      "href": "#bib.bib42",
+      "text": "Liu et al., 2025b",
+      "section": "1 Introduction",
+      "context": "Large pretrained models have achieved strong performance across a wide range of downstream tasks, alongside scaling parameters and training corpus ( Brown et al., 2020 ; Chen et al., 2021 ) . Efficient generation has also been explored through leap multi-token prediction ( Liu et al., 2025b",
+      "url": "https://arxiv.org/html/2610.19700v1#bib.bib42"
+    },
+    {
+      "href": "#bib.bib3",
+      "text": "Houlsby et al., 2019",
+      "section": "1 Introduction",
+      "context": "Large pretrained models have achieved strong performance across a wide range of downstream tasks, alongside scaling parameters and training corpus ( Brown et al., 2020 ; Chen et al., 2021 ) . Efficient generation has also been explored through leap multi-token prediction ( Liu et al., 2025b ) . In deployment, however, full-parameter fine-tuning for particular tasks or domains typically necessitates updating and storing full set of weights, motivating parameter-efficient fine-tuning (PEFT) ( Houlsby et al., 2019",
+      "url": "https://arxiv.org/html/2610.19700v1#bib.bib3"
+    },
+    {
+      "href": "#bib.bib4",
+      "text": "He et al., 2021",
+      "section": "1 Introduction",
+      "context": "Large pretrained models have achieved strong performance across a wide range of downstream tasks, alongside scaling parameters and training corpus ( Brown et al., 2020 ; Chen et al., 2021 ) . Efficient generation has also been explored through leap multi-token prediction ( Liu et al., 2025b ) . In deployment, however, full-parameter fine-tuning for particular tasks or domains typically necessitates updating and storing full set of weights, motivating parameter-efficient fine-tuning (PEFT) ( Houlsby et al., 2019 ; He et al., 2021",
+      "url": "https://arxiv.org/html/2610.19700v1#bib.bib4"
+    },
+    {
+      "href": "#bib.bib6",
+      "text": "Hu et al., 2021",
+      "section": "1 Introduction",
+      "context": "ti-token prediction ( Liu et al., 2025b ) . In deployment, however, full-parameter fine-tuning for particular tasks or domains typically necessitates updating and storing full set of weights, motivating parameter-efficient fine-tuning (PEFT) ( Houlsby et al., 2019 ; He et al., 2021 ) . By optimizing only a small set of task-specific parameters, it significantly reduces the adaptation cost. Among PEFT methods, low-rank adaptation (LoRA) has become a widely used and effective choice, learning compact task-specific updates that can be merged into pretrained weights for inference ( Hu et al., 2021",
+      "url": "https://arxiv.org/html/2610.19700v1#bib.bib6"
+    },
+    {
+      "href": "#bib.bib5",
+      "text": "Aghajanyan et al., 2021",
+      "section": "1 Introduction",
+      "context": "The principle behind LoRA is to leverage low-rank trainable factors to approximate dense weight updates ( Aghajanyan et al., 2021",
+      "url": "https://arxiv.org/html/2610.19700v1#bib.bib5"
+    },
+    {
+      "href": "#bib.bib6",
+      "text": "Hu et al., 2021",
+      "section": "1 Introduction",
+      "context": "The principle behind LoRA is to leverage low-rank trainable factors to approximate dense weight updates ( Aghajanyan et al., 2021 ; Hu et al., 2021",
+      "url": "https://arxiv.org/html/2610.19700v1#bib.bib6"
+    },
+    {
+      "href": "#bib.bib7",
+      "text": "Zhang et al., 2023b",
+      "section": "1 Introduction",
+      "context": "} , which satisfies r = rank ​ ( 𝑩 ​ 𝑨 ) ≪ d r=\\text{rank}({\\bm{B}}{\\bm{A}})\\ll d , where d d denotes the dimension of 𝑾 {\\bm{W}} . 𝑾 0 {\\bm{W}}_{0} remains frozen during the fine-tuning phase. Therefore, it substantially reduces the number of trainable parameters, and the learned update can be merged into W 0 W_{0} without additional inference overhead. This balance of parameter efficiency and effective task specialization has kept LoRA widely used in resource-constrained settings. Recent advances continue to refine its low-rank principle through adaptive rank allocation ( Zhang et al., 2023b",
+      "url": "https://arxiv.org/html/2610.19700v1#bib.bib7"
+    },
+    {
+      "href": "#bib.bib8",
+      "text": "Meng et al., 2024",
+      "section": "1 Introduction",
+      "context": "e d d denotes the dimension of 𝑾 {\\bm{W}} . 𝑾 0 {\\bm{W}}_{0} remains frozen during the fine-tuning phase. Therefore, it substantially reduces the number of trainable parameters, and the learned update can be merged into W 0 W_{0} without additional inference overhead. This balance of parameter efficiency and effective task specialization has kept LoRA widely used in resource-constrained settings. Recent advances continue to refine its low-rank principle through adaptive rank allocation ( Zhang et al., 2023b ) , initialization informed by pretrained weights or task gradients ( Meng et al., 2024",
+      "url": "https://arxiv.org/html/2610.19700v1#bib.bib8"
+    },
+    {
+      "href": "#bib.bib9",
+      "text": "Wang et al., 2024",
+      "section": "1 Introduction",
+      "context": "mension of 𝑾 {\\bm{W}} . 𝑾 0 {\\bm{W}}_{0} remains frozen during the fine-tuning phase. Therefore, it substantially reduces the number of trainable parameters, and the learned update can be merged into W 0 W_{0} without additional inference overhead. This balance of parameter efficiency and effective task specialization has kept LoRA widely used in resource-constrained settings. Recent advances continue to refine its low-rank principle through adaptive rank allocation ( Zhang et al., 2023b ) , initialization informed by pretrained weights or task gradients ( Meng et al., 2024 ; Wang et al., 2024",
+      "url": "https://arxiv.org/html/2610.19700v1#bib.bib9"
+    },
+    {
+      "href": "#bib.bib10",
+      "text": "Zhang et al., 2025",
+      "section": "1 Introduction",
+      "context": " . 𝑾 0 {\\bm{W}}_{0} remains frozen during the fine-tuning phase. Therefore, it substantially reduces the number of trainable parameters, and the learned update can be merged into W 0 W_{0} without additional inference overhead. This balance of parameter efficiency and effective task specialization has kept LoRA widely used in resource-constrained settings. Recent advances continue to refine its low-rank principle through adaptive rank allocation ( Zhang et al., 2023b ) , initialization informed by pretrained weights or task gradients ( Meng et al., 2024 ; Wang et al., 2024 ; Zhang et al., 2025",
+      "url": "https://arxiv.org/html/2610.19700v1#bib.bib10"
+    },
+    {
+      "href": "#bib.bib12",
+      "text": "Hayou et al., 2024",
+      "section": "1 Introduction",
+      "context": "reduces the number of trainable parameters, and the learned update can be merged into W 0 W_{0} without additional inference overhead. This balance of parameter efficiency and effective task specialization has kept LoRA widely used in resource-constrained settings. Recent advances continue to refine its low-rank principle through adaptive rank allocation ( Zhang et al., 2023b ) , initialization informed by pretrained weights or task gradients ( Meng et al., 2024 ; Wang et al., 2024 ; Zhang et al., 2025 ) , optimization strategies tailored to its factorized parameterization ( Hayou et al., 2024",
+      "url": "https://arxiv.org/html/2610.19700v1#bib.bib12"
+    },
+    {
+      "href": "#bib.bib24",
+      "text": "Wang et al., 2025b",
+      "section": "1 Introduction",
+      "context": " trainable parameters, and the learned update can be merged into W 0 W_{0} without additional inference overhead. This balance of parameter efficiency and effective task specialization has kept LoRA widely used in resource-constrained settings. Recent advances continue to refine its low-rank principle through adaptive rank allocation ( Zhang et al., 2023b ) , initialization informed by pretrained weights or task gradients ( Meng et al., 2024 ; Wang et al., 2024 ; Zhang et al., 2025 ) , optimization strategies tailored to its factorized parameterization ( Hayou et al., 2024 ; Wang et al., 2025b",
+      "url": "https://arxiv.org/html/2610.19700v1#bib.bib24"
+    },
+    {
+      "href": "#bib.bib37",
+      "text": "Hayou et al., 2026",
+      "section": "1 Introduction",
+      "context": " W_{0} without additional inference overhead. This balance of parameter efficiency and effective task specialization has kept LoRA widely used in resource-constrained settings. Recent advances continue to refine its low-rank principle through adaptive rank allocation ( Zhang et al., 2023b ) , initialization informed by pretrained weights or task gradients ( Meng et al., 2024 ; Wang et al., 2024 ; Zhang et al., 2025 ) , optimization strategies tailored to its factorized parameterization ( Hayou et al., 2024 ; Wang et al., 2025b ) and adaptive adapter selection and placement ( Hayou et al., 2026",
+      "url": "https://arxiv.org/html/2610.19700v1#bib.bib37"
+    },
+    {
+      "href": "#bib.bib38",
+      "text": "Veprikov et al., 2026",
+      "section": "1 Introduction",
+      "context": "l inference overhead. This balance of parameter efficiency and effective task specialization has kept LoRA widely used in resource-constrained settings. Recent advances continue to refine its low-rank principle through adaptive rank allocation ( Zhang et al., 2023b ) , initialization informed by pretrained weights or task gradients ( Meng et al., 2024 ; Wang et al., 2024 ; Zhang et al., 2025 ) , optimization strategies tailored to its factorized parameterization ( Hayou et al., 2024 ; Wang et al., 2025b ) and adaptive adapter selection and placement ( Hayou et al., 2026 ; Veprikov et al., 2026",
+      "url": "https://arxiv.org/html/2610.19700v1#bib.bib38"
+    },
+    {
+      "href": "#S1.F1",
+      "text": "1",
+      "section": "1 Introduction",
+      "context": "To this end, we train a LoRA model with rank r = 16 r=16 for diagnosis and decompose each learned update Δ ​ 𝑾 \\Delta{\\bm{W}} using singular value decomposition (SVD). Without retraining, we evaluate rank- k k approximations formed by retaining the top k k singular components. As shown in Figure 1",
+      "url": "https://arxiv.org/html/2610.19700v1#S1.F1"
+    },
+    {
+      "href": "#bib.bib39",
+      "text": "Hu et al., 2023",
+      "section": "1 Introduction",
+      "context": "e allocated rank, we initialize a second-stage adapter with task gradients projected onto the two-sided complement of the first-stage update. With this first-stage estimation, we are able to leave the previously learned components unchanged, yet continually fulfil the update within the allocated rank. During second-stage training, we apply orthogonal regularization to maintain decorrelation between the two stages. After training, both updates can be merged into the base model, introducing no additional inference cost. We evaluate ReGRA using standard LoRA evaluation following ( Hu et al., 2023",
+      "url": "https://arxiv.org/html/2610.19700v1#bib.bib39"
+    },
+    {
+      "href": "#bib.bib6",
+      "text": "Hu et al., 2021",
+      "section": "2 Related Work",
+      "context": "Low-rank parameter-efficient fine-tuning. Low-rank adaptation (LoRA) represents task-specific weight updates using two trainable low-rank factors, reducing the number of trainable parameters while retaining mergeability at inference ( Hu et al., 2021",
+      "url": "https://arxiv.org/html/2610.19700v1#bib.bib6"
+    },
+    {
+      "href": "#bib.bib11",
+      "text": "Dettmers et al., 2023",
+      "section": "2 Related Work",
+      "context": "Low-rank parameter-efficient fine-tuning. Low-rank adaptation (LoRA) represents task-specific weight updates using two trainable low-rank factors, reducing the number of trainable parameters while retaining mergeability at inference ( Hu et al., 2021 ) . Subsequent variants improve its memory and parameter efficiency through quantization, factor freezing, or shared random projections ( Dettmers et al., 2023",
+      "url": "https://arxiv.org/html/2610.19700v1#bib.bib11"
+    },
+    {
+      "href": "#bib.bib40",
+      "text": "Liu et al., 2026",
+      "section": "2 Related Work",
+      "context": "Low-rank parameter-efficient fine-tuning. Low-rank adaptation (LoRA) represents task-specific weight updates using two trainable low-rank factors, reducing the number of trainable parameters while retaining mergeability at inference ( Hu et al., 2021 ) . Subsequent variants improve its memory and parameter efficiency through quantization, factor freezing, or shared random projections ( Dettmers et al., 2023 ; Liu et al., 2026",
+      "url": "https://arxiv.org/html/2610.19700v1#bib.bib40"
+    },
+    {
+      "href": "#bib.bib25",
+      "text": "Zhang et al., 2023a",
+      "section": "2 Related Work",
+      "context": "Low-rank parameter-efficient fine-tuning. Low-rank adaptation (LoRA) represents task-specific weight updates using two trainable low-rank factors, reducing the number of trainable parameters while retaining mergeability at inference ( Hu et al., 2021 ) . Subsequent variants improve its memory and parameter efficiency through quantization, factor freezing, or shared random projections ( Dettmers et al., 2023 ; Liu et al., 2026 ; Zhang et al., 2023a",
+      "url": "https://arxiv.org/html/2610.19700v1#bib.bib25"
+    },
+    {
+      "href": "#bib.bib26",
+      "text": "Kopiczko et al., 2024",
+      "section": "2 Related Work",
+      "context": "Low-rank parameter-efficient fine-tuning. Low-rank adaptation (LoRA) represents task-specific weight updates using two trainable low-rank factors, reducing the number of trainable parameters while retaining mergeability at inference ( Hu et al., 2021 ) . Subsequent variants improve its memory and parameter efficiency through quantization, factor freezing, or shared random projections ( Dettmers et al., 2023 ; Liu et al., 2026 ; Zhang et al., 2023a ; Kopiczko et al., 2024",
+      "url": "https://arxiv.org/html/2610.19700v1#bib.bib26"
+    },
+    {
+      "href": "#bib.bib7",
+      "text": "Zhang et al., 2023b",
+      "section": "2 Related Work",
+      "context": "Low-rank parameter-efficient fine-tuning. Low-rank adaptation (LoRA) represents task-specific weight updates using two trainable low-rank factors, reducing the number of trainable parameters while retaining mergeability at inference ( Hu et al., 2021 ) . Subsequent variants improve its memory and parameter efficiency through quantization, factor freezing, or shared random projections ( Dettmers et al., 2023 ; Liu et al., 2026 ; Zhang et al., 2023a ; Kopiczko et al., 2024 ) . Other methods explore adaptive rank allocation and rank-dependent scaling ( Zhang et al., 2023b",
+      "url": "https://arxiv.org/html/2610.19700v1#bib.bib7"
+    },
+    {
+      "href": "#bib.bib27",
+      "text": "Valipour et al., 2023",
+      "section": "2 Related Work",
+      "context": "Low-rank parameter-efficient fine-tuning. Low-rank adaptation (LoRA) represents task-specific weight updates using two trainable low-rank factors, reducing the number of trainable parameters while retaining mergeability at inference ( Hu et al., 2021 ) . Subsequent variants improve its memory and parameter efficiency through quantization, factor freezing, or shared random projections ( Dettmers et al., 2023 ; Liu et al., 2026 ; Zhang et al., 2023a ; Kopiczko et al., 2024 ) . Other methods explore adaptive rank allocation and rank-dependent scaling ( Zhang et al., 2023b ; Valipour et al., 2023",
+      "url": "https://arxiv.org/html/2610.19700v1#bib.bib27"
+    },
+    {
+      "href": "#bib.bib28",
+      "text": "Kalajdzievski, 2023",
+      "section": "2 Related Work",
+      "context": "ficient fine-tuning. Low-rank adaptation (LoRA) represents task-specific weight updates using two trainable low-rank factors, reducing the number of trainable parameters while retaining mergeability at inference ( Hu et al., 2021 ) . Subsequent variants improve its memory and parameter efficiency through quantization, factor freezing, or shared random projections ( Dettmers et al., 2023 ; Liu et al., 2026 ; Zhang et al., 2023a ; Kopiczko et al., 2024 ) . Other methods explore adaptive rank allocation and rank-dependent scaling ( Zhang et al., 2023b ; Valipour et al., 2023 ; Kalajdzievski, 2023",
+      "url": "https://arxiv.org/html/2610.19700v1#bib.bib28"
+    },
+    {
+      "href": "#bib.bib12",
+      "text": "Hayou et al., 2024",
+      "section": "2 Related Work",
+      "context": ", reducing the number of trainable parameters while retaining mergeability at inference ( Hu et al., 2021 ) . Subsequent variants improve its memory and parameter efficiency through quantization, factor freezing, or shared random projections ( Dettmers et al., 2023 ; Liu et al., 2026 ; Zhang et al., 2023a ; Kopiczko et al., 2024 ) . Other methods explore adaptive rank allocation and rank-dependent scaling ( Zhang et al., 2023b ; Valipour et al., 2023 ; Kalajdzievski, 2023 ) . LoRA+, DoRA, and LoRA-Pro instead improve the optimization or parameterization of low-rank updates ( Hayou et al., 2024",
+      "url": "https://arxiv.org/html/2610.19700v1#bib.bib12"
+    },
+    {
+      "href": "#bib.bib13",
+      "text": "Liu et al., 2024",
+      "section": "2 Related Work",
+      "context": "er of trainable parameters while retaining mergeability at inference ( Hu et al., 2021 ) . Subsequent variants improve its memory and parameter efficiency through quantization, factor freezing, or shared random projections ( Dettmers et al., 2023 ; Liu et al., 2026 ; Zhang et al., 2023a ; Kopiczko et al., 2024 ) . Other methods explore adaptive rank allocation and rank-dependent scaling ( Zhang et al., 2023b ; Valipour et al., 2023 ; Kalajdzievski, 2023 ) . LoRA+, DoRA, and LoRA-Pro instead improve the optimization or parameterization of low-rank updates ( Hayou et al., 2024 ; Liu et al., 2024",
+      "url": "https://arxiv.org/html/2610.19700v1#bib.bib13"
+    },
+    {
+      "href": "#bib.bib24",
+      "text": "Wang et al., 2025b",
+      "section": "2 Related Work",
+      "context": "eters while retaining mergeability at inference ( Hu et al., 2021 ) . Subsequent variants improve its memory and parameter efficiency through quantization, factor freezing, or shared random projections ( Dettmers et al., 2023 ; Liu et al., 2026 ; Zhang et al., 2023a ; Kopiczko et al., 2024 ) . Other methods explore adaptive rank allocation and rank-dependent scaling ( Zhang et al., 2023b ; Valipour et al., 2023 ; Kalajdzievski, 2023 ) . LoRA+, DoRA, and LoRA-Pro instead improve the optimization or parameterization of low-rank updates ( Hayou et al., 2024 ; Liu et al., 2024 ; Wang et al., 2025b",
+      "url": "https://arxiv.org/html/2610.19700v1#bib.bib24"
+    },
+    {
+      "href": "#bib.bib37",
+      "text": "Hayou et al., 2026",
+      "section": "2 Related Work",
+      "context": "ation, factor freezing, or shared random projections ( Dettmers et al., 2023 ; Liu et al., 2026 ; Zhang et al., 2023a ; Kopiczko et al., 2024 ) . Other methods explore adaptive rank allocation and rank-dependent scaling ( Zhang et al., 2023b ; Valipour et al., 2023 ; Kalajdzievski, 2023 ) . LoRA+, DoRA, and LoRA-Pro instead improve the optimization or parameterization of low-rank updates ( Hayou et al., 2024 ; Liu et al., 2024 ; Wang et al., 2025b ) . Recent works also explore adaptive adapter selection and placement to determine where low-rank adaptation is most effective ( Hayou et al., 2026",
+      "url": "https://arxiv.org/html/2610.19700v1#bib.bib37"
+    },
+    {
+      "href": "#bib.bib38",
+      "text": "Veprikov et al., 2026",
+      "section": "2 Related Work",
+      "context": "or shared random projections ( Dettmers et al., 2023 ; Liu et al., 2026 ; Zhang et al., 2023a ; Kopiczko et al., 2024 ) . Other methods explore adaptive rank allocation and rank-dependent scaling ( Zhang et al., 2023b ; Valipour et al., 2023 ; Kalajdzievski, 2023 ) . LoRA+, DoRA, and LoRA-Pro instead improve the optimization or parameterization of low-rank updates ( Hayou et al., 2024 ; Liu et al., 2024 ; Wang et al., 2025b ) . Recent works also explore adaptive adapter selection and placement to determine where low-rank adaptation is most effective ( Hayou et al., 2026 ; Veprikov et al., 2026",
+      "url": "https://arxiv.org/html/2610.19700v1#bib.bib38"
+    },
+    {
+      "href": "#bib.bib8",
+      "text": "Meng et al., 2024",
+      "section": "2 Related Work",
+      "context": "Spectral and gradient-informed initialization. Several methods initialize LoRA using information from pretrained weights, activations, or downstream data. PiSSA initializes adapters from the principal singular components of pretrained weights, whereas MiLoRA adapts their minor singular components ( Meng et al., 2024",
+      "url": "https://arxiv.org/html/2610.19700v1#bib.bib8"
+    },
+    {
+      "href": "#bib.bib29",
+      "text": "Wang et al., 2025a",
+      "section": "2 Related Work",
+      "context": "Spectral and gradient-informed initialization. Several methods initialize LoRA using information from pretrained weights, activations, or downstream data. PiSSA initializes adapters from the principal singular components of pretrained weights, whereas MiLoRA adapts their minor singular components ( Meng et al., 2024 ; Wang et al., 2025a",
+      "url": "https://arxiv.org/html/2610.19700v1#bib.bib29"
+    },
+    {
+      "href": "#bib.bib30",
+      "text": "Yang et al., 2024",
+      "section": "2 Related Work",
+      "context": "Spectral and gradient-informed initialization. Several methods initialize LoRA using information from pretrained weights, activations, or downstream data. PiSSA initializes adapters from the principal singular components of pretrained weights, whereas MiLoRA adapts their minor singular components ( Meng et al., 2024 ; Wang et al., 2025a ) . CorDA constructs context-aware adaptation subspaces from weight and activation statistics, while EVA selects initialization directions according to activation variance ( Yang et al., 2024",
+      "url": "https://arxiv.org/html/2610.19700v1#bib.bib30"
+    },
+    {
+      "href": "#bib.bib31",
+      "text": "Paischer et al., 2026",
+      "section": "2 Related Work",
+      "context": "Spectral and gradient-informed initialization. Several methods initialize LoRA using information from pretrained weights, activations, or downstream data. PiSSA initializes adapters from the principal singular components of pretrained weights, whereas MiLoRA adapts their minor singular components ( Meng et al., 2024 ; Wang et al., 2025a ) . CorDA constructs context-aware adaptation subspaces from weight and activation statistics, while EVA selects initialization directions according to activation variance ( Yang et al., 2024 ; Paischer et al., 2026",
+      "url": "https://arxiv.org/html/2610.19700v1#bib.bib31"
+    },
+    {
+      "href": "#bib.bib9",
+      "text": "Wang et al., 2024",
+      "section": "2 Related Work",
+      "context": "g information from pretrained weights, activations, or downstream data. PiSSA initializes adapters from the principal singular components of pretrained weights, whereas MiLoRA adapts their minor singular components ( Meng et al., 2024 ; Wang et al., 2025a ) . CorDA constructs context-aware adaptation subspaces from weight and activation statistics, while EVA selects initialization directions according to activation variance ( Yang et al., 2024 ; Paischer et al., 2026 ) . Gradient-based methods use the task gradient at the start of fine-tuning to guide adapter initialization ( Wang et al., 2024",
+      "url": "https://arxiv.org/html/2610.19700v1#bib.bib9"
+    },
+    {
+      "href": "#bib.bib10",
+      "text": "Zhang et al., 2025",
+      "section": "2 Related Work",
+      "context": "etrained weights, activations, or downstream data. PiSSA initializes adapters from the principal singular components of pretrained weights, whereas MiLoRA adapts their minor singular components ( Meng et al., 2024 ; Wang et al., 2025a ) . CorDA constructs context-aware adaptation subspaces from weight and activation statistics, while EVA selects initialization directions according to activation variance ( Yang et al., 2024 ; Paischer et al., 2026 ) . Gradient-based methods use the task gradient at the start of fine-tuning to guide adapter initialization ( Wang et al., 2024 ; Zhang et al., 2025",
+      "url": "https://arxiv.org/html/2610.19700v1#bib.bib10"
+    },
+    {
+      "href": "#bib.bib32",
+      "text": "Ponkshe et al., 2024",
+      "section": "2 Related Work",
+      "context": "ations, or downstream data. PiSSA initializes adapters from the principal singular components of pretrained weights, whereas MiLoRA adapts their minor singular components ( Meng et al., 2024 ; Wang et al., 2025a ) . CorDA constructs context-aware adaptation subspaces from weight and activation statistics, while EVA selects initialization directions according to activation variance ( Yang et al., 2024 ; Paischer et al., 2026 ) . Gradient-based methods use the task gradient at the start of fine-tuning to guide adapter initialization ( Wang et al., 2024 ; Zhang et al., 2025 ; Ponkshe et al., 2024",
+      "url": "https://arxiv.org/html/2610.19700v1#bib.bib32"
+    },
+    {
+      "href": "#bib.bib14",
+      "text": "Lialin et al., 2024",
+      "section": "2 Related Work",
+      "context": "Sequential and subspace-aware adaptation. ReLoRA and Chain of LoRA (COLA) construct higher-rank effective updates by repeatedly training, merging, and reinitializing low-rank adapters ( Lialin et al., 2024",
+      "url": "https://arxiv.org/html/2610.19700v1#bib.bib14"
+    },
+    {
+      "href": "#bib.bib22",
+      "text": "Xia et al., 2024",
+      "section": "2 Related Work",
+      "context": "Sequential and subspace-aware adaptation. ReLoRA and Chain of LoRA (COLA) construct higher-rank effective updates by repeatedly training, merging, and reinitializing low-rank adapters ( Lialin et al., 2024 ; Xia et al., 2024",
+      "url": "https://arxiv.org/html/2610.19700v1#bib.bib22"
+    },
+    {
+      "href": "#bib.bib33",
+      "text": "Wistuba et al., 2023",
+      "section": "2 Related Work",
+      "context": "Sequential and subspace-aware adaptation. ReLoRA and Chain of LoRA (COLA) construct higher-rank effective updates by repeatedly training, merging, and reinitializing low-rank adapters ( Lialin et al., 2024 ; Xia et al., 2024 ) . LoRA-based adaptation has also been studied in continual learning. CoLoR applies LoRA to domain-incremental learning ( Wistuba et al., 2023",
+      "url": "https://arxiv.org/html/2610.19700v1#bib.bib33"
+    },
+    {
+      "href": "#bib.bib15",
+      "text": "Wang et al., 2023",
+      "section": "2 Related Work",
+      "context": "Sequential and subspace-aware adaptation. ReLoRA and Chain of LoRA (COLA) construct higher-rank effective updates by repeatedly training, merging, and reinitializing low-rank adapters ( Lialin et al., 2024 ; Xia et al., 2024 ) . LoRA-based adaptation has also been studied in continual learning. CoLoR applies LoRA to domain-incremental learning ( Wistuba et al., 2023 ) , while O-LoRA assigns sequential tasks to orthogonal low-rank subspaces and InfLoRA constructs adaptation subspaces that reduce interference with prior tasks ( Wang et al., 2023",
+      "url": "https://arxiv.org/html/2610.19700v1#bib.bib15"
+    },
+    {
+      "href": "#bib.bib34",
+      "text": "Liang and Li, 2024",
+      "section": "2 Related Work",
+      "context": "Sequential and subspace-aware adaptation. ReLoRA and Chain of LoRA (COLA) construct higher-rank effective updates by repeatedly training, merging, and reinitializing low-rank adapters ( Lialin et al., 2024 ; Xia et al., 2024 ) . LoRA-based adaptation has also been studied in continual learning. CoLoR applies LoRA to domain-incremental learning ( Wistuba et al., 2023 ) , while O-LoRA assigns sequential tasks to orthogonal low-rank subspaces and InfLoRA constructs adaptation subspaces that reduce interference with prior tasks ( Wang et al., 2023 ; Liang and Li, 2024",
+      "url": "https://arxiv.org/html/2610.19700v1#bib.bib34"
+    },
+    {
+      "href": "#bib.bib23",
+      "text": "Luo et al., 2026",
+      "section": "2 Related Work",
+      "context": "e updates by repeatedly training, merging, and reinitializing low-rank adapters ( Lialin et al., 2024 ; Xia et al., 2024 ) . LoRA-based adaptation has also been studied in continual learning. CoLoR applies LoRA to domain-incremental learning ( Wistuba et al., 2023 ) , while O-LoRA assigns sequential tasks to orthogonal low-rank subspaces and InfLoRA constructs adaptation subspaces that reduce interference with prior tasks ( Wang et al., 2023 ; Liang and Li, 2024 ) . KeepLoRA further uses residual-gradient information to balance knowledge retention and plasticity across tasks ( Luo et al., 2026",
+      "url": "https://arxiv.org/html/2610.19700v1#bib.bib23"
+    },
+    {
+      "href": "#bib.bib41",
+      "text": "Liu et al., 2025a",
+      "section": "2 Related Work",
+      "context": "et al., 2024 ) . LoRA-based adaptation has also been studied in continual learning. CoLoR applies LoRA to domain-incremental learning ( Wistuba et al., 2023 ) , while O-LoRA assigns sequential tasks to orthogonal low-rank subspaces and InfLoRA constructs adaptation subspaces that reduce interference with prior tasks ( Wang et al., 2023 ; Liang and Li, 2024 ) . KeepLoRA further uses residual-gradient information to balance knowledge retention and plasticity across tasks ( Luo et al., 2026 ) . CMCL uses dual-sided gradient projection to reduce forgetting in continual learning ( Liu et al., 2025a",
+      "url": "https://arxiv.org/html/2610.19700v1#bib.bib41"
+    },
+    {
+      "href": "#S3.F3",
+      "text": "3",
+      "section": "3 Preliminaries",
+      "context": "Low-rank adaptation (LoRA). LoRA adapts a frozen pretrained weight 𝑾 0 ∈ ℝ d out × d in {\\bm{W}}_{0}\\in\\mathbb{R}^{d_{\\mathrm{out}}\\times d_{\\mathrm{in}}} , as shown in Figure 3",
+      "url": "https://arxiv.org/html/2610.19700v1#S3.F3"
+    },
+    {
+      "href": "#bib.bib6",
+      "text": "Hu et al., 2021",
+      "section": "3 Preliminaries",
+      "context": "Low-rank adaptation (LoRA). LoRA adapts a frozen pretrained weight 𝑾 0 ∈ ℝ d out × d in {\\bm{W}}_{0}\\in\\mathbb{R}^{d_{\\mathrm{out}}\\times d_{\\mathrm{in}}} , as shown in Figure 3 , by adding a trainable low-rank update ( Hu et al., 2021",
+      "url": "https://arxiv.org/html/2610.19700v1#bib.bib6"
+    },
+    {
+      "href": "#bib.bib11",
+      "text": "Dettmers et al., 2023",
+      "section": "3 Preliminaries",
+      "context": "Here, 𝑨 ∈ ℝ r × d in {\\bm{A}}\\in\\mathbb{R}^{r\\times d_{\\mathrm{in}}} and 𝑩 ∈ ℝ d out × r {\\bm{B}}\\in\\mathbb{R}^{d_{\\mathrm{out}}\\times r} are trainable factors, r r is the adapter rank, and s s is the LoRA scaling coefficient. The pretrained weight 𝑾 0 {\\bm{W}}_{0} remains frozen during adaptation. Several extensions modify how LoRA updates are trained or initialized. QLoRA reduces memory use by quantizing the frozen backbone ( Dettmers et al., 2023",
+      "url": "https://arxiv.org/html/2610.19700v1#bib.bib11"
+    },
+    {
+      "href": "#bib.bib7",
+      "text": "Zhang et al., 2023b",
+      "section": "3 Preliminaries",
+      "context": "Here, 𝑨 ∈ ℝ r × d in {\\bm{A}}\\in\\mathbb{R}^{r\\times d_{\\mathrm{in}}} and 𝑩 ∈ ℝ d out × r {\\bm{B}}\\in\\mathbb{R}^{d_{\\mathrm{out}}\\times r} are trainable factors, r r is the adapter rank, and s s is the LoRA scaling coefficient. The pretrained weight 𝑾 0 {\\bm{W}}_{0} remains frozen during adaptation. Several extensions modify how LoRA updates are trained or initialized. QLoRA reduces memory use by quantizing the frozen backbone ( Dettmers et al., 2023 ) , while AdaLoRA and DyLoRA explore flexible rank allocation ( Zhang et al., 2023b",
+      "url": "https://arxiv.org/html/2610.19700v1#bib.bib7"
+    },
+    {
+      "href": "#bib.bib27",
+      "text": "Valipour et al., 2023",
+      "section": "3 Preliminaries",
+      "context": "Here, 𝑨 ∈ ℝ r × d in {\\bm{A}}\\in\\mathbb{R}^{r\\times d_{\\mathrm{in}}} and 𝑩 ∈ ℝ d out × r {\\bm{B}}\\in\\mathbb{R}^{d_{\\mathrm{out}}\\times r} are trainable factors, r r is the adapter rank, and s s is the LoRA scaling coefficient. The pretrained weight 𝑾 0 {\\bm{W}}_{0} remains frozen during adaptation. Several extensions modify how LoRA updates are trained or initialized. QLoRA reduces memory use by quantizing the frozen backbone ( Dettmers et al., 2023 ) , while AdaLoRA and DyLoRA explore flexible rank allocation ( Zhang et al., 2023b ; Valipour et al., 2023",
+      "url": "https://arxiv.org/html/2610.19700v1#bib.bib27"
+    },
+    {
+      "href": "#bib.bib9",
+      "text": "Wang et al., 2024",
+      "section": "3 Preliminaries",
+      "context": "mathrm{in}}} and 𝑩 ∈ ℝ d out × r {\\bm{B}}\\in\\mathbb{R}^{d_{\\mathrm{out}}\\times r} are trainable factors, r r is the adapter rank, and s s is the LoRA scaling coefficient. The pretrained weight 𝑾 0 {\\bm{W}}_{0} remains frozen during adaptation. Several extensions modify how LoRA updates are trained or initialized. QLoRA reduces memory use by quantizing the frozen backbone ( Dettmers et al., 2023 ) , while AdaLoRA and DyLoRA explore flexible rank allocation ( Zhang et al., 2023b ; Valipour et al., 2023 ) . LoRA-GA uses the initial task gradient to guide adapter initialization ( Wang et al., 2024",
+      "url": "https://arxiv.org/html/2610.19700v1#bib.bib9"
+    },
+    {
+      "href": "#bib.bib8",
+      "text": "Meng et al., 2024",
+      "section": "3 Preliminaries",
+      "context": "Spectral information has also been used to initialize LoRA adapters: PiSSA selects the principal singular components of the pretrained weights ( Meng et al., 2024",
+      "url": "https://arxiv.org/html/2610.19700v1#bib.bib8"
+    },
+    {
+      "href": "#bib.bib29",
+      "text": "Wang et al., 2025a",
+      "section": "3 Preliminaries",
+      "context": "Spectral information has also been used to initialize LoRA adapters: PiSSA selects the principal singular components of the pretrained weights ( Meng et al., 2024 ) , while MiLoRA selects the minor components ( Wang et al., 2025a",
+      "url": "https://arxiv.org/html/2610.19700v1#bib.bib29"
+    },
+    {
+      "href": "#S2.F2",
+      "text": "2",
+      "section": "4 Residual-Gradient Adaptation",
+      "context": "We describe ReGRA for a single adapted weight and omit the layer index. The same procedure is applied independently to all target weights. As demonstrated in Figure 2",
+      "url": "https://arxiv.org/html/2610.19700v1#S2.F2"
+    },
+    {
+      "href": "#A2.SS5",
+      "text": "B.5",
+      "section": "4 Residual-Gradient Adaptation",
+      "context": "ociated with the first stage, as characterized by the left and right singular subspaces of Δ ​ 𝑾 1 \\Delta{\\bm{W}}_{1} . The residual gradient is used to initialize a rank- r 2 r_{2} second stage adapter while preserving the function defined by 𝑾 0 + Δ ​ 𝑾 1 {\\bm{W}}_{0}+\\Delta{\\bm{W}}_{1} . During second-stage training, we apply an update-level regularizer to promote orthogonality between the first- and second-stage updates. After training, both updates can be merged into the pretrained weight without introducing an additional inference-time branch. The full procedure is listed in Appendix B.5",
+      "url": "https://arxiv.org/html/2610.19700v1#A2.SS5"
+    },
+    {
+      "href": "#A1.SS1",
+      "text": "A.1",
+      "section": "4.1 Residual-Guided Initialization",
+      "context": " ​ 𝑼 1 ⊤ {\\bm{P}}_{U}={\\bm{U}}_{1}{\\bm{U}}_{1}^{\\top} and 𝑷 V = 𝑽 1 ​ 𝑽 1 ⊤ {\\bm{P}}_{V}={\\bm{V}}_{1}{\\bm{V}}_{1}^{\\top} , respectively. Let { 𝒞 b } b = 1 M \\{{\\mathcal{C}}_{b}\\}_{b=1}^{M} be calibration batches taken from the training data. At the first-stage solution, we compute the task gradient with respect to the adapted weight: 𝑮 = ∇ 𝑾 ℒ task ​ ( 𝑾 0 + Δ ​ 𝑾 1 , 𝒞 b ) . {\\bm{G}}=\\nabla_{{\\bm{W}}}\\mathcal{L}_{\\mathrm{task}}({\\bm{W}}_{0}+\\Delta{\\bm{W}}_{1};{\\mathcal{C}}_{b}). We remove its component in the two-sided subspace represented by the first-stage update, as derived in Appendix A.1",
+      "url": "https://arxiv.org/html/2610.19700v1#A1.SS1"
+    },
+    {
+      "href": "#A1.SS2",
+      "text": "A.2",
+      "section": "4.1 Residual-Guided Initialization",
+      "context": "Let 𝑮 ^ res , q = 𝑼 ¯ ​ 𝚺 ¯ ​ 𝑽 ¯ ⊤ \\widehat{{\\bm{G}}}_{\\mathrm{res},q}=\\overline{{\\bm{U}}}\\overline{{\\bm{\\Sigma}}}\\overline{{\\bm{V}}}^{\\top} denote the rank- q q truncated SVD approximation of 𝑮 ^ res \\widehat{{\\bm{G}}}_{\\mathrm{res}} , , obtained by batchwise low-rank aggregation as detailed in Appendix A.2",
+      "url": "https://arxiv.org/html/2610.19700v1#A1.SS2"
+    },
+    {
+      "href": "#A2.SS2",
+      "text": "B.2",
+      "section": "4.1 Residual-Guided Initialization",
+      "context": "Let 𝑮 ^ res , q = 𝑼 ¯ ​ 𝚺 ¯ ​ 𝑽 ¯ ⊤ \\widehat{{\\bm{G}}}_{\\mathrm{res},q}=\\overline{{\\bm{U}}}\\overline{{\\bm{\\Sigma}}}\\overline{{\\bm{V}}}^{\\top} denote the rank- q q truncated SVD approximation of 𝑮 ^ res \\widehat{{\\bm{G}}}_{\\mathrm{res}} , , obtained by batchwise low-rank aggregation as detailed in Appendix A.2 . The calibration procedure is described in Appendix B.2",
+      "url": "https://arxiv.org/html/2610.19700v1#A2.SS2"
+    },
+    {
+      "href": "#S4.E5",
+      "text": "5",
+      "section": "Proposition 1 (Residual-guided first-step update) .",
+      "context": "Consider Δ ​ 𝐖 2 = s 2 ​ 𝐁 2 ​ 𝐀 2 \\Delta{\\bm{W}}_{2}=s_{2}{\\bm{B}}_{2}{\\bm{A}}_{2} initialized as in Equation equation 5",
+      "url": "https://arxiv.org/html/2610.19700v1#S4.E5"
+    },
+    {
+      "href": "#A1.SS3",
+      "text": "A.3",
+      "section": "Proposition 1 (Residual-guided first-step update) .",
+      "context": "Consider Δ ​ 𝐖 2 = s 2 ​ 𝐁 2 ​ 𝐀 2 \\Delta{\\bm{W}}_{2}=s_{2}{\\bm{B}}_{2}{\\bm{A}}_{2} initialized as in Equation equation 5 . The initialization preserves the Stage-1 model function. After one simultaneous gradient-descent step on the task loss, the effective update lies in the input-side subspace spanned by 𝐕 r {\\bm{V}}_{r} . If the initial task gradient equals 𝐆 ^ res , q \\widehat{{\\bm{G}}}_{\\mathrm{res},q} , this update is proportional to its negative leading rank- r 2 r_{2} component. The proof is given in Appendix A.3",
+      "url": "https://arxiv.org/html/2610.19700v1#A1.SS3"
+    },
+    {
+      "href": "#A1.SS4",
+      "text": "A.4",
+      "section": "4.2 Stage-Wise Orthogonality Regularization",
+      "context": "where ε > 0 \\varepsilon>0 ensures numerical stability. Squaring the inner product penalizes deviations from orthogonality in either direction. The penalty promotes orthogonal updates. For L L adapted weights, we average the penalties: ℝ decorr = 1 L ​ ∑ ℓ = 1 L Ω ℓ . \\mathbb{R}_{\\mathrm{decorr}}=\\frac{1}{L}\\sum_{\\ell=1}^{L}\\Omega_{\\ell}. The inner products and norms can be computed from the LoRA factors without forming dense update matrices. The derivation is given in Appendix A.4",
+      "url": "https://arxiv.org/html/2610.19700v1#A1.SS4"
+    },
+    {
+      "href": "#A2.SS4",
+      "text": "B.4",
+      "section": "4.2 Stage-Wise Orthogonality Regularization",
+      "context": "Computation and inference. Residual-gradient calibration introduces a one-time cost between the two training stages. Each dense task gradient is formed only transiently, projected, compressed to rank q q , and then discarded, while cross-batch aggregation and update decorrelation operate on low-rank factors. After training, the two learned updates are merged into the pretrained weight as 𝑾 merged = 𝑾 0 + s 1 ​ 𝑩 1 ​ 𝑨 1 + s 2 ​ 𝑩 2 ​ 𝑨 2 {\\bm{W}}_{\\mathrm{merged}}={\\bm{W}}_{0}+s_{1}{\\bm{B}}_{1}{\\bm{A}}_{1}+s_{2}{\\bm{B}}_{2}{\\bm{A}}_{2} . The Stage-2 procedure is detailed in Appendix B.4",
+      "url": "https://arxiv.org/html/2610.19700v1#A2.SS4"
+    },
+    {
+      "href": "#A2.SS6",
+      "text": "B.6",
+      "section": "4.2 Stage-Wise Orthogonality Regularization",
+      "context": " transiently, projected, compressed to rank q q , and then discarded, while cross-batch aggregation and update decorrelation operate on low-rank factors. After training, the two learned updates are merged into the pretrained weight as 𝑾 merged = 𝑾 0 + s 1 ​ 𝑩 1 ​ 𝑨 1 + s 2 ​ 𝑩 2 ​ 𝑨 2 {\\bm{W}}_{\\mathrm{merged}}={\\bm{W}}_{0}+s_{1}{\\bm{B}}_{1}{\\bm{A}}_{1}+s_{2}{\\bm{B}}_{2}{\\bm{A}}_{2} . The Stage-2 procedure is detailed in Appendix B.4 . ReGRA therefore introduces neither an additional adapter branch nor extra computation during inference, storage and computation bounds are given in Appendix B.6",
+      "url": "https://arxiv.org/html/2610.19700v1#A2.SS6"
+    },
+    {
+      "href": "#bib.bib16",
+      "text": "Wang et al., 2018",
+      "section": "5.1 Experimental Setup",
+      "context": "Tasks and datasets. We evaluate ReGRA on natural language understanding ( Wang et al., 2018",
+      "url": "https://arxiv.org/html/2610.19700v1#bib.bib16"
+    },
+    {
+      "href": "#bib.bib39",
+      "text": "Hu et al., 2023",
+      "section": "5.1 Experimental Setup",
+      "context": "Tasks and datasets. We evaluate ReGRA on natural language understanding ( Wang et al., 2018 ) , mathematical reasoning ( Hu et al., 2023",
+      "url": "https://arxiv.org/html/2610.19700v1#bib.bib39"
+    },
+    {
+      "href": "#bib.bib17",
+      "text": "Cobbe et al., 2021",
+      "section": "5.1 Experimental Setup",
+      "context": "Tasks and datasets. We evaluate ReGRA on natural language understanding ( Wang et al., 2018 ) , mathematical reasoning ( Hu et al., 2023 ; Cobbe et al., 2021",
+      "url": "https://arxiv.org/html/2610.19700v1#bib.bib17"
+    },
+    {
+      "href": "#bib.bib2",
+      "text": "Chen et al., 2021",
+      "section": "5.1 Experimental Setup",
+      "context": "Tasks and datasets. We evaluate ReGRA on natural language understanding ( Wang et al., 2018 ) , mathematical reasoning ( Hu et al., 2023 ; Cobbe et al., 2021 ) ,and code generation ( Chen et al., 2021",
+      "url": "https://arxiv.org/html/2610.19700v1#bib.bib2"
+    },
+    {
+      "href": "#bib.bib18",
+      "text": "Austin et al., 2021",
+      "section": "5.1 Experimental Setup",
+      "context": "Tasks and datasets. We evaluate ReGRA on natural language understanding ( Wang et al., 2018 ) , mathematical reasoning ( Hu et al., 2023 ; Cobbe et al., 2021 ) ,and code generation ( Chen et al., 2021 ; Austin et al., 2021",
+      "url": "https://arxiv.org/html/2610.19700v1#bib.bib18"
+    },
+    {
+      "href": "#bib.bib20",
+      "text": "Liu et al., 2019",
+      "section": "5.1 Experimental Setup",
+      "context": "Tasks and datasets. We evaluate ReGRA on natural language understanding ( Wang et al., 2018 ) , mathematical reasoning ( Hu et al., 2023 ; Cobbe et al., 2021 ) ,and code generation ( Chen et al., 2021 ; Austin et al., 2021 ) . For natural language understanding, we fine-tune RoBERTa-base and RoBERTa-large ( Liu et al., 2019",
+      "url": "https://arxiv.org/html/2610.19700v1#bib.bib20"
+    },
+    {
+      "href": "#bib.bib39",
+      "text": "Hu et al., 2023",
+      "section": "5.1 Experimental Setup",
+      "context": "Tasks and datasets. We evaluate ReGRA on natural language understanding ( Wang et al., 2018 ) , mathematical reasoning ( Hu et al., 2023 ; Cobbe et al., 2021 ) ,and code generation ( Chen et al., 2021 ; Austin et al., 2021 ) . For natural language understanding, we fine-tune RoBERTa-base and RoBERTa-large ( Liu et al., 2019 ) separately on the eight GLUE tasks: CoLA, SST-2, MRPC, STS-B, QQP, MNLI, QNLI, and RTE. We evaluate all tasks on their labeled validation sets, with the matched validation split used for MNLI. For mathematical reasoning ( Hu et al., 2023",
+      "url": "https://arxiv.org/html/2610.19700v1#bib.bib39"
+    },
+    {
+      "href": "#bib.bib21",
+      "text": "Grattafiori et al., 2024",
+      "section": "5.1 Experimental Setup",
+      "context": "We evaluate ReGRA on natural language understanding ( Wang et al., 2018 ) , mathematical reasoning ( Hu et al., 2023 ; Cobbe et al., 2021 ) ,and code generation ( Chen et al., 2021 ; Austin et al., 2021 ) . For natural language understanding, we fine-tune RoBERTa-base and RoBERTa-large ( Liu et al., 2019 ) separately on the eight GLUE tasks: CoLA, SST-2, MRPC, STS-B, QQP, MNLI, QNLI, and RTE. We evaluate all tasks on their labeled validation sets, with the matched validation split used for MNLI. For mathematical reasoning ( Hu et al., 2023 ) , we fine-tune Llama-3-8B ( Grattafiori et al., 2024",
+      "url": "https://arxiv.org/html/2610.19700v1#bib.bib21"
+    },
+    {
+      "href": "#bib.bib35",
+      "text": "Yang et al., 2025",
+      "section": "5.1 Experimental Setup",
+      "context": "derstanding ( Wang et al., 2018 ) , mathematical reasoning ( Hu et al., 2023 ; Cobbe et al., 2021 ) ,and code generation ( Chen et al., 2021 ; Austin et al., 2021 ) . For natural language understanding, we fine-tune RoBERTa-base and RoBERTa-large ( Liu et al., 2019 ) separately on the eight GLUE tasks: CoLA, SST-2, MRPC, STS-B, QQP, MNLI, QNLI, and RTE. We evaluate all tasks on their labeled validation sets, with the matched validation split used for MNLI. For mathematical reasoning ( Hu et al., 2023 ) , we fine-tune Llama-3-8B ( Grattafiori et al., 2024 ) and Qwen3-8B-Base ( Yang et al., 2025",
+      "url": "https://arxiv.org/html/2610.19700v1#bib.bib35"
+    },
+    {
+      "href": "#bib.bib39",
+      "text": "Hu et al., 2023",
+      "section": "5.1 Experimental Setup",
+      "context": " 2023 ; Cobbe et al., 2021 ) ,and code generation ( Chen et al., 2021 ; Austin et al., 2021 ) . For natural language understanding, we fine-tune RoBERTa-base and RoBERTa-large ( Liu et al., 2019 ) separately on the eight GLUE tasks: CoLA, SST-2, MRPC, STS-B, QQP, MNLI, QNLI, and RTE. We evaluate all tasks on their labeled validation sets, with the matched validation split used for MNLI. For mathematical reasoning ( Hu et al., 2023 ) , we fine-tune Llama-3-8B ( Grattafiori et al., 2024 ) and Qwen3-8B-Base ( Yang et al., 2025 ) on Math-7K training set released with LLM-Adapters ( Hu et al., 2023",
+      "url": "https://arxiv.org/html/2610.19700v1#bib.bib39"
+    },
+    {
+      "href": "#bib.bib36",
+      "text": "Zheng et al., 2024",
+      "section": "5.1 Experimental Setup",
+      "context": "( Liu et al., 2019 ) separately on the eight GLUE tasks: CoLA, SST-2, MRPC, STS-B, QQP, MNLI, QNLI, and RTE. We evaluate all tasks on their labeled validation sets, with the matched validation split used for MNLI. For mathematical reasoning ( Hu et al., 2023 ) , we fine-tune Llama-3-8B ( Grattafiori et al., 2024 ) and Qwen3-8B-Base ( Yang et al., 2025 ) on Math-7K training set released with LLM-Adapters ( Hu et al., 2023 ) . We evaluate on AddSub, MultiArith, SingleEq, GSM8K, AQuA, and SVAMP. For code generation, we fine-tune Llama-3-8B on CodeFeedback-Filtered-Instruction ( Zheng et al., 2024",
+      "url": "https://arxiv.org/html/2610.19700v1#bib.bib36"
+    },
+    {
+      "href": "#bib.bib18",
+      "text": "Austin et al., 2021",
+      "section": "5.1 Experimental Setup",
+      "context": "GLUE tasks: CoLA, SST-2, MRPC, STS-B, QQP, MNLI, QNLI, and RTE. We evaluate all tasks on their labeled validation sets, with the matched validation split used for MNLI. For mathematical reasoning ( Hu et al., 2023 ) , we fine-tune Llama-3-8B ( Grattafiori et al., 2024 ) and Qwen3-8B-Base ( Yang et al., 2025 ) on Math-7K training set released with LLM-Adapters ( Hu et al., 2023 ) . We evaluate on AddSub, MultiArith, SingleEq, GSM8K, AQuA, and SVAMP. For code generation, we fine-tune Llama-3-8B on CodeFeedback-Filtered-Instruction ( Zheng et al., 2024 ) and evaluate on MBPP ( Austin et al., 2021",
+      "url": "https://arxiv.org/html/2610.19700v1#bib.bib18"
+    },
+    {
+      "href": "#bib.bib19",
+      "text": "Liu et al., 2023",
+      "section": "5.1 Experimental Setup",
+      "context": "luate all tasks on their labeled validation sets, with the matched validation split used for MNLI. For mathematical reasoning ( Hu et al., 2023 ) , we fine-tune Llama-3-8B ( Grattafiori et al., 2024 ) and Qwen3-8B-Base ( Yang et al., 2025 ) on Math-7K training set released with LLM-Adapters ( Hu et al., 2023 ) . We evaluate on AddSub, MultiArith, SingleEq, GSM8K, AQuA, and SVAMP. For code generation, we fine-tune Llama-3-8B on CodeFeedback-Filtered-Instruction ( Zheng et al., 2024 ) and evaluate on MBPP ( Austin et al., 2021 ) and its enhanced MBPP+ test suite using EvalPlus ( Liu et al., 2023",
+      "url": "https://arxiv.org/html/2610.19700v1#bib.bib19"
+    },
+    {
+      "href": "#A2.SS1",
+      "text": "B.1",
+      "section": "5.1 Experimental Setup",
+      "context": "Implementation details. Adapters are applied to the query, key, and value projections while the pretrained backbones remain frozen, details are provided in Appendix B.1",
+      "url": "https://arxiv.org/html/2610.19700v1#A2.SS1"
+    },
+    {
+      "href": "#A2.SS3",
+      "text": "B.3",
+      "section": "5.1 Experimental Setup",
+      "context": "ojections while the pretrained backbones remain frozen, details are provided in Appendix B.1 . Each ReGRA stage uses rank 8, α = 16 \\alpha=16 , and dropout 0.05; the GLUE classification head is trained in the first stage and frozen in the second stage. Generative losses are computed only on response tokens. We use zero weight decay, and λ t = 0.1 \\lambda_{\\mathrm{t}}=0.1 , whose contribution is warmed up over the first 100 second-stage steps. The training schedules for GLUE, mathematics, and code generation comprise 20, 2, and 1 epochs, respectively, full settings are tabulated in Appendix B.3",
+      "url": "https://arxiv.org/html/2610.19700v1#A2.SS3"
+    },
+    {
+      "href": "#bib.bib6",
+      "text": "Hu et al., 2021",
+      "section": "5.1 Experimental Setup",
+      "context": "Baselines and evaluation. We compare ReGRA with LoRA ( Hu et al., 2021",
+      "url": "https://arxiv.org/html/2610.19700v1#bib.bib6"
+    },
+    {
+      "href": "#bib.bib13",
+      "text": "Liu et al., 2024",
+      "section": "5.1 Experimental Setup",
+      "context": "Baselines and evaluation. We compare ReGRA with LoRA ( Hu et al., 2021 ) , DoRA ( Liu et al., 2024",
+      "url": "https://arxiv.org/html/2610.19700v1#bib.bib13"
+    },
+    {
+      "href": "#bib.bib8",
+      "text": "Meng et al., 2024",
+      "section": "5.1 Experimental Setup",
+      "context": "Baselines and evaluation. We compare ReGRA with LoRA ( Hu et al., 2021 ) , DoRA ( Liu et al., 2024 ) , PiSSA ( Meng et al., 2024",
+      "url": "https://arxiv.org/html/2610.19700v1#bib.bib8"
+    },
+    {
+      "href": "#bib.bib10",
+      "text": "Zhang et al., 2025",
+      "section": "5.1 Experimental Setup",
+      "context": "Baselines and evaluation. We compare ReGRA with LoRA ( Hu et al., 2021 ) , DoRA ( Liu et al., 2024 ) , PiSSA ( Meng et al., 2024 ) , LoRA-One ( Zhang et al., 2025",
+      "url": "https://arxiv.org/html/2610.19700v1#bib.bib10"
+    },
+    {
+      "href": "#bib.bib23",
+      "text": "Luo et al., 2026",
+      "section": "5.1 Experimental Setup",
+      "context": "Baselines and evaluation. We compare ReGRA with LoRA ( Hu et al., 2021 ) , DoRA ( Liu et al., 2024 ) , PiSSA ( Meng et al., 2024 ) , LoRA-One ( Zhang et al., 2025 ) , and KeepLoRA ( Luo et al., 2026",
+      "url": "https://arxiv.org/html/2610.19700v1#bib.bib23"
+    },
+    {
+      "href": "#S5.T1",
+      "text": "1",
+      "section": "5.2 Main Results (RQ1)",
+      "context": "As shown in Table 1",
+      "url": "https://arxiv.org/html/2610.19700v1#S5.T1"
+    },
+    {
+      "href": "#S5.T2",
+      "text": "2",
+      "section": "5.3 Results on Specialized Capabilities",
+      "context": "Mathematical reasoning (RQ1). Table 2",
+      "url": "https://arxiv.org/html/2610.19700v1#S5.T2"
+    },
+    {
+      "href": "#S5.F4",
+      "text": "4",
+      "section": "5.3 Results on Specialized Capabilities",
+      "context": "Code generation (RQ1). Table 4",
+      "url": "https://arxiv.org/html/2610.19700v1#S5.F4"
+    },
+    {
+      "href": "#A3.SS1",
+      "text": "C.1",
+      "section": "5.3 Results on Specialized Capabilities",
+      "context": "Code generation (RQ1). Table 4 shows that ReGRA obtains the highest pass@1 on both the base and enhanced MBPP+ tests. All methods score lower on the enhanced tests, but ReGRA retains its lead under the stricter evaluation. Its advantage over rank-16 LoRA is modest on both test variants, so the code result supports a consistent improvement within this benchmark rather than a large gain in code generation. The commonsense comparison is reported in Appendix C.1",
+      "url": "https://arxiv.org/html/2610.19700v1#A3.SS1"
+    },
+    {
+      "href": "#S5.F4",
+      "text": "4",
+      "section": "5.4 Ablation Analysis (RQ2)",
+      "context": "As shown in Figure 4",
+      "url": "https://arxiv.org/html/2610.19700v1#S5.F4"
+    },
+    {
+      "href": "#S5.F5",
+      "text": "5",
+      "section": "5.5 More Analysis",
+      "context": "Unequal Functional Contributions of LoRA Singular Components (RQ3). We further examine how individual directions in a trained rank-16 LoRA update affect downstream performance. We decompose each learned update using SVD, remove one singular component at a time, and evaluate the resulting model. As shown in Figure 5",
+      "url": "https://arxiv.org/html/2610.19700v1#S5.F5"
+    },
+    {
+      "href": "#S1.F1",
+      "text": "1",
+      "section": "5.5 More Analysis",
+      "context": "These leave-one-component-out results measure the functional effect of each removal, beyond the magnitude of its singular value. Together with the top- k k analysis in Figure 1",
+      "url": "https://arxiv.org/html/2610.19700v1#S1.F1"
+    },
+    {
+      "href": "#S5.F6",
+      "text": "6",
+      "section": "5.5 More Analysis",
+      "context": "Functional diversity of Stage-2 components (RQ3). To examine the functional contribution of the learned Stage-2 update, we decompose each trained Stage-2 update matrix by SVD and evaluate eight independent variants. Variant C i C_{i} retains only the i i th rank-one component in each adapted matrix while keeping Stage 1 fixed; the variants are not cumulative. As shown in Figure 6",
+      "url": "https://arxiv.org/html/2610.19700v1#S5.F6"
+    },
+    {
+      "href": "#A3.SS2",
+      "text": "C.2",
+      "section": "5.5 More Analysis",
+      "context": "respectively; the other five components produce small decreases. The full Stage-2 update gains 1.27 points, below C 3 C_{3} alone. On MBPP+, seven components improve pass@1 by 0.79–1.85 points, while C 6 C_{6} leaves it unchanged; the full update gains 2.65 points. These results show heterogeneous and task-dependent component effects. The full update’s benchmark performance is not a sum of its isolated component effects, although these independent evaluations do not identify each component’s marginal contribution within the full update, example-level error analyses are reported in Appendix C.2",
+      "url": "https://arxiv.org/html/2610.19700v1#A3.SS2"
+    },
+    {
+      "href": "#S5.F7",
+      "text": "7",
+      "section": "5.5 More Analysis",
+      "context": "Progressive Rank Expansion (RQ4). We further evaluate our method on LLaMA-3-8B under a multi-stage training setting. Starting from the base model, we iteratively train a new rank-2 adapter at each stage while freezing all previously learned adapters. Therefore, the effective adaptation rank increases progressively as more adapters are accumulated. As shown in Fig. 7",
+      "url": "https://arxiv.org/html/2610.19700v1#S5.F7"
+    },
+    {
+      "href": "#S1.p2.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Aghajanyan et al. (2021) A. Aghajanyan, S. Gupta, and L. Zettlemoyer Intrinsic dimensionality explains the effectiveness of language model fine-tuning . In Proceedings of the 59th annual meeting of the association for computational linguistics and the 11th international joint conference on natural language processing (volume 1: long papers) , pp. 7319–7328 . Cited by: §1",
+      "url": "https://arxiv.org/html/2610.19700v1#S1.p2.1"
+    },
+    {
+      "href": "#S5.SS1.p1.1",
+      "text": "§5.1",
+      "section": "References",
+      "context": "Austin et al. (2021) J. Austin, A. Odena, M. Nye, M. Bosma, H. Michalewski, D. Dohan, E. Jiang, C. Cai, M. Terry, Q. Le, et al. Program synthesis with large language models . arXiv preprint arXiv:2108.07732 . Cited by: §5.1",
+      "url": "https://arxiv.org/html/2610.19700v1#S5.SS1.p1.1"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Brown et al. (2020) T. Brown, B. Mann, N. Ryder, M. Subbiah, J. D. Kaplan, P. Dhariwal, A. Neelakantan, P. Shyam, G. Sastry, A. Askell, et al. Language models are few-shot learners . Advances in neural information processing systems 33 , pp. 1877–1901 . Cited by: §1",
+      "url": "https://arxiv.org/html/2610.19700v1#S1.p1.1"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Chen et al. (2021) M. Chen, J. Tworek, H. Jun, Q. Yuan, H. P. D. O. Pinto, J. Kaplan, H. Edwards, Y. Burda, N. Joseph, G. Brockman, et al. Evaluating large language models trained on code . arXiv preprint arXiv:2107.03374 . Cited by: §1",
+      "url": "https://arxiv.org/html/2610.19700v1#S1.p1.1"
+    },
+    {
+      "href": "#S5.SS1.p1.1",
+      "text": "§5.1",
+      "section": "References",
+      "context": "Chen et al. (2021) M. Chen, J. Tworek, H. Jun, Q. Yuan, H. P. D. O. Pinto, J. Kaplan, H. Edwards, Y. Burda, N. Joseph, G. Brockman, et al. Evaluating large language models trained on code . arXiv preprint arXiv:2107.03374 . Cited by: §1 , §5.1",
+      "url": "https://arxiv.org/html/2610.19700v1#S5.SS1.p1.1"
+    },
+    {
+      "href": "#S5.SS1.p1.1",
+      "text": "§5.1",
+      "section": "References",
+      "context": "Cobbe et al. (2021) K. Cobbe, V. Kosaraju, M. Bavarian, M. Chen, H. Jun, L. Kaiser, M. Plappert, J. Tworek, J. Hilton, R. Nakano, et al. Training verifiers to solve math word problems . arXiv preprint arXiv:2110.14168 . Cited by: §5.1",
+      "url": "https://arxiv.org/html/2610.19700v1#S5.SS1.p1.1"
+    },
+    {
+      "href": "#S2.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Dettmers et al. (2023) T. Dettmers, A. Pagnoni, A. Holtzman, and L. Zettlemoyer Qlora: efficient finetuning of quantized llms . Advances in neural information processing systems 36 , pp. 10088–10115 . Cited by: §2",
+      "url": "https://arxiv.org/html/2610.19700v1#S2.p1.1"
+    },
+    {
+      "href": "#S3.p2.1",
+      "text": "§3",
+      "section": "References",
+      "context": "Dettmers et al. (2023) T. Dettmers, A. Pagnoni, A. Holtzman, and L. Zettlemoyer Qlora: efficient finetuning of quantized llms . Advances in neural information processing systems 36 , pp. 10088–10115 . Cited by: §2 , §3",
+      "url": "https://arxiv.org/html/2610.19700v1#S3.p2.1"
+    },
+    {
+      "href": "#S5.SS1.p1.1",
+      "text": "§5.1",
+      "section": "References",
+      "context": "Grattafiori et al. (2024) A. Grattafiori, A. Dubey, A. Jauhri, A. Pandey, A. Kadian, A. Al-Dahle, A. Letman, A. Mathur, A. Schelten, A. Vaughan, et al. The llama 3 herd of models . arXiv preprint arXiv:2407.21783 . Cited by: §5.1",
+      "url": "https://arxiv.org/html/2610.19700v1#S5.SS1.p1.1"
+    },
+    {
+      "href": "#S1.p2.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Hayou et al. (2024) S. Hayou, N. Ghosh, and B. Yu Lora+: efficient low rank adaptation of large models . arXiv preprint arXiv:2402.12354 . Cited by: §1",
+      "url": "https://arxiv.org/html/2610.19700v1#S1.p2.1"
+    },
+    {
+      "href": "#S2.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Hayou et al. (2024) S. Hayou, N. Ghosh, and B. Yu Lora+: efficient low rank adaptation of large models . arXiv preprint arXiv:2402.12354 . Cited by: §1 , §2",
+      "url": "https://arxiv.org/html/2610.19700v1#S2.p1.1"
+    },
+    {
+      "href": "#S1.p2.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Hayou et al. (2026) S. Hayou, N. Ghosh, and B. Yu Plop: precise lora placement for efficient finetuning of large models . In International Conference on Learning Representations , Vol. 2026 , pp. 65166–65191 . Cited by: §1",
+      "url": "https://arxiv.org/html/2610.19700v1#S1.p2.1"
+    },
+    {
+      "href": "#S2.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Hayou et al. (2026) S. Hayou, N. Ghosh, and B. Yu Plop: precise lora placement for efficient finetuning of large models . In International Conference on Learning Representations , Vol. 2026 , pp. 65166–65191 . Cited by: §1 , §2",
+      "url": "https://arxiv.org/html/2610.19700v1#S2.p1.1"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "He et al. (2021) J. He, C. Zhou, X. Ma, T. Berg-Kirkpatrick, and G. Neubig Towards a unified view of parameter-efficient transfer learning . arXiv preprint arXiv:2110.04366 . Cited by: §1",
+      "url": "https://arxiv.org/html/2610.19700v1#S1.p1.1"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Houlsby et al. (2019) N. Houlsby, A. Giurgiu, S. Jastrzebski, B. Morrone, Q. De Laroussilhe, A. Gesmundo, M. Attariyan, and S. Gelly Parameter-efficient transfer learning for nlp . In International conference on machine learning , pp. 2790–2799 . Cited by: §1",
+      "url": "https://arxiv.org/html/2610.19700v1#S1.p1.1"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Hu et al. (2021) E. J. Hu, Y. Shen, P. Wallis, Z. Allen-Zhu, Y. Li, S. Wang, L. Wang, and W. Chen Lora: low-rank adaptation of large language models . arXiv preprint arXiv:2106.09685 . Cited by: §1",
+      "url": "https://arxiv.org/html/2610.19700v1#S1.p1.1"
+    },
+    {
+      "href": "#S1.p2.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Hu et al. (2021) E. J. Hu, Y. Shen, P. Wallis, Z. Allen-Zhu, Y. Li, S. Wang, L. Wang, and W. Chen Lora: low-rank adaptation of large language models . arXiv preprint arXiv:2106.09685 . Cited by: §1 , §1",
+      "url": "https://arxiv.org/html/2610.19700v1#S1.p2.1"
+    },
+    {
+      "href": "#S2.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Hu et al. (2021) E. J. Hu, Y. Shen, P. Wallis, Z. Allen-Zhu, Y. Li, S. Wang, L. Wang, and W. Chen Lora: low-rank adaptation of large language models . arXiv preprint arXiv:2106.09685 . Cited by: §1 , §1 , §2",
+      "url": "https://arxiv.org/html/2610.19700v1#S2.p1.1"
+    },
+    {
+      "href": "#S3.p1.1",
+      "text": "§3",
+      "section": "References",
+      "context": "Hu et al. (2021) E. J. Hu, Y. Shen, P. Wallis, Z. Allen-Zhu, Y. Li, S. Wang, L. Wang, and W. Chen Lora: low-rank adaptation of large language models . arXiv preprint arXiv:2106.09685 . Cited by: §1 , §1 , §2 , §3",
+      "url": "https://arxiv.org/html/2610.19700v1#S3.p1.1"
+    },
+    {
+      "href": "#S5.SS1.p3.1",
+      "text": "§5.1",
+      "section": "References",
+      "context": "Hu et al. (2021) E. J. Hu, Y. Shen, P. Wallis, Z. Allen-Zhu, Y. Li, S. Wang, L. Wang, and W. Chen Lora: low-rank adaptation of large language models . arXiv preprint arXiv:2106.09685 . Cited by: §1 , §1 , §2 , §3 , §5.1",
+      "url": "https://arxiv.org/html/2610.19700v1#S5.SS1.p3.1"
+    },
+    {
+      "href": "#S1.p4.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Hu et al. (2023) Z. Hu, L. Wang, Y. Lan, W. Xu, E. Lim, L. Bing, X. Xu, S. Poria, and R. Lee Llm-adapters: an adapter family for parameter-efficient fine-tuning of large language models . In Proceedings of the 2023 conference on empirical methods in natural language processing , pp. 5254–5276 . Cited by: §1",
+      "url": "https://arxiv.org/html/2610.19700v1#S1.p4.1"
+    },
+    {
+      "href": "#S5.SS1.p1.1",
+      "text": "§5.1",
+      "section": "References",
+      "context": "Hu et al. (2023) Z. Hu, L. Wang, Y. Lan, W. Xu, E. Lim, L. Bing, X. Xu, S. Poria, and R. Lee Llm-adapters: an adapter family for parameter-efficient fine-tuning of large language models . In Proceedings of the 2023 conference on empirical methods in natural language processing , pp. 5254–5276 . Cited by: §1 , §5.1",
+      "url": "https://arxiv.org/html/2610.19700v1#S5.SS1.p1.1"
+    },
+    {
+      "href": "#S2.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Kalajdzievski (2023) D. Kalajdzievski A rank stabilization scaling factor for fine-tuning with lora . arXiv preprint arXiv:2312.03732 . Cited by: §2",
+      "url": "https://arxiv.org/html/2610.19700v1#S2.p1.1"
+    },
+    {
+      "href": "#S2.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Kopiczko et al. (2024) D. Kopiczko, T. Blankevoort, and Y. Asano Vera: vector-based random matrix adaptation . In International Conference on Learning Representations , Vol. 2024 , pp. 6815–6835 . Cited by: §2",
+      "url": "https://arxiv.org/html/2610.19700v1#S2.p1.1"
+    },
+    {
+      "href": "#S2.p3.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Lialin et al. (2024) V. Lialin, S. Muckatira, N. Shivagunde, and A. Rumshisky Relora: high-rank training through low-rank updates . In International Conference on Learning Representations , Vol. 2024 , pp. 49405–49421 . Cited by: §2",
+      "url": "https://arxiv.org/html/2610.19700v1#S2.p3.1"
+    },
+    {
+      "href": "#S2.p3.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Liang and Li (2024) Y. Liang and W. Li Inflora: interference-free low-rank adaptation for continual learning . In 2024 IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR) , pp. 23638–23647 . Cited by: §2",
+      "url": "https://arxiv.org/html/2610.19700v1#S2.p3.1"
+    },
+    {
+      "href": "#S5.SS1.p1.1",
+      "text": "§5.1",
+      "section": "References",
+      "context": "Liu et al. (2023) J. Liu, C. S. Xia, Y. Wang, and L. Zhang Is your code generated by chatgpt really correct? rigorous evaluation of large language models for code generation . Advances in neural information processing systems 36 , pp. 21558–21572 . Cited by: §5.1",
+      "url": "https://arxiv.org/html/2610.19700v1#S5.SS1.p1.1"
+    },
+    {
+      "href": "#S2.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Liu et al. (2024) S. Liu, C. Wang, H. Yin, P. Molchanov, Y. F. Wang, K. Cheng, and M. Chen Dora: weight-decomposed low-rank adaptation . arXiv preprint arXiv:2402.09353 . Cited by: §2",
+      "url": "https://arxiv.org/html/2610.19700v1#S2.p1.1"
+    },
+    {
+      "href": "#S5.SS1.p3.1",
+      "text": "§5.1",
+      "section": "References",
+      "context": "Liu et al. (2024) S. Liu, C. Wang, H. Yin, P. Molchanov, Y. F. Wang, K. Cheng, and M. Chen Dora: weight-decomposed low-rank adaptation . arXiv preprint arXiv:2402.09353 . Cited by: §2 , §5.1",
+      "url": "https://arxiv.org/html/2610.19700v1#S5.SS1.p3.1"
+    },
+    {
+      "href": "#S2.p3.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Liu et al. (2025a) X. Liu, X. Xia, S. Ng, and T. Chua Continual multimodal contrastive learning . Advances in Neural Information Processing Systems 38 , pp. 48414–48455 . Cited by: §2",
+      "url": "https://arxiv.org/html/2610.19700v1#S2.p3.1"
+    },
+    {
+      "href": "#S2.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Liu et al. (2026) X. Liu, X. Xia, M. Zhang, J. Li, X. Yu, F. Shen, X. Su, S. Ng, and T. Chua Freeact: freeing activations for llm quantization . arXiv preprint arXiv:2603.01776 . Cited by: §2",
+      "url": "https://arxiv.org/html/2610.19700v1#S2.p1.1"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Liu et al. (2025b) X. Liu, X. Xia, W. Zhao, M. Zhang, X. Yu, X. Su, S. Yang, S. Ng, and T. Chua L-mtp: leap multi-token prediction beyond adjacent context for large language models . Advances in Neural Information Processing Systems 38 , pp. 102569–102600 . Cited by: §1",
+      "url": "https://arxiv.org/html/2610.19700v1#S1.p1.1"
+    },
+    {
+      "href": "#S5.SS1.p1.1",
+      "text": "§5.1",
+      "section": "References",
+      "context": "Liu et al. (2019) Y. Liu, M. Ott, N. Goyal, J. Du, M. Joshi, D. Chen, O. Levy, M. Lewis, L. Zettlemoyer, and V. Stoyanov Roberta: a robustly optimized bert pretraining approach . arXiv preprint arXiv:1907.11692 . Cited by: §5.1",
+      "url": "https://arxiv.org/html/2610.19700v1#S5.SS1.p1.1"
+    },
+    {
+      "href": "#S2.p3.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Luo et al. (2026) M. Luo, Z. Zhou, Y. Zhang, Y. Wan, M. Zhang, and T. Wei KeeploRA: continual learning with residual gradient adaptation . In International Conference on Learning Representations , Vol. 2026 , pp. 136017–136040 . Cited by: §2",
+      "url": "https://arxiv.org/html/2610.19700v1#S2.p3.1"
+    },
+    {
+      "href": "#S5.SS1.p3.1",
+      "text": "§5.1",
+      "section": "References",
+      "context": "Luo et al. (2026) M. Luo, Z. Zhou, Y. Zhang, Y. Wan, M. Zhang, and T. Wei KeeploRA: continual learning with residual gradient adaptation . In International Conference on Learning Representations , Vol. 2026 , pp. 136017–136040 . Cited by: §2 , §5.1",
+      "url": "https://arxiv.org/html/2610.19700v1#S5.SS1.p3.1"
+    },
+    {
+      "href": "#S1.p2.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Meng et al. (2024) F. Meng, Z. Wang, and M. Zhang Pissa: principal singular values and singular vectors adaptation of large language models . Advances in Neural Information Processing Systems 37 , pp. 121038–121072 . Cited by: §1",
+      "url": "https://arxiv.org/html/2610.19700v1#S1.p2.1"
+    },
+    {
+      "href": "#S2.p2.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Meng et al. (2024) F. Meng, Z. Wang, and M. Zhang Pissa: principal singular values and singular vectors adaptation of large language models . Advances in Neural Information Processing Systems 37 , pp. 121038–121072 . Cited by: §1 , §2",
+      "url": "https://arxiv.org/html/2610.19700v1#S2.p2.1"
+    },
+    {
+      "href": "#S3.p4.1",
+      "text": "§3",
+      "section": "References",
+      "context": "Meng et al. (2024) F. Meng, Z. Wang, and M. Zhang Pissa: principal singular values and singular vectors adaptation of large language models . Advances in Neural Information Processing Systems 37 , pp. 121038–121072 . Cited by: §1 , §2 , §3",
+      "url": "https://arxiv.org/html/2610.19700v1#S3.p4.1"
+    },
+    {
+      "href": "#S5.SS1.p3.1",
+      "text": "§5.1",
+      "section": "References",
+      "context": "Meng et al. (2024) F. Meng, Z. Wang, and M. Zhang Pissa: principal singular values and singular vectors adaptation of large language models . Advances in Neural Information Processing Systems 37 , pp. 121038–121072 . Cited by: §1 , §2 , §3 , §5.1",
+      "url": "https://arxiv.org/html/2610.19700v1#S5.SS1.p3.1"
+    },
+    {
+      "href": "#S2.p2.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Paischer et al. (2026) F. Paischer, L. Hauzenberger, T. Schmied, B. Alkin, M. Deisenroth, and S. Hochreiter Parameter efficient fine-tuning via explained variance adaptation . Advances in Neural Information Processing Systems 38 , pp. 46215–46267 . Cited by: §2",
+      "url": "https://arxiv.org/html/2610.19700v1#S2.p2.1"
+    },
+    {
+      "href": "#S2.p2.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Ponkshe et al. (2024) K. Ponkshe, R. Singhal, E. Gorbunov, A. Tumanov, S. Horvath, and P. Vepakomma Initialization using update approximation is a silver bullet for extremely efficient low-rank fine-tuning . arXiv preprint arXiv:2411.19557 . Cited by: §2",
+      "url": "https://arxiv.org/html/2610.19700v1#S2.p2.1"
+    },
+    {
+      "href": "#S2.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Valipour et al. (2023) M. Valipour, M. Rezagholizadeh, I. Kobyzev, and A. Ghodsi DyLoRA: parameter-efficient tuning of pre-trained models using dynamic search-free low-rank adaptation . In Proceedings of the 17th Conference of the European Chapter of the Association for Computational Linguistics , pp. 3274–3287 . Cited by: §2",
+      "url": "https://arxiv.org/html/2610.19700v1#S2.p1.1"
+    },
+    {
+      "href": "#S3.p2.1",
+      "text": "§3",
+      "section": "References",
+      "context": "Valipour et al. (2023) M. Valipour, M. Rezagholizadeh, I. Kobyzev, and A. Ghodsi DyLoRA: parameter-efficient tuning of pre-trained models using dynamic search-free low-rank adaptation . In Proceedings of the 17th Conference of the European Chapter of the Association for Computational Linguistics , pp. 3274–3287 . Cited by: §2 , §3",
+      "url": "https://arxiv.org/html/2610.19700v1#S3.p2.1"
+    },
+    {
+      "href": "#S1.p2.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Veprikov et al. (2026) A. Veprikov, V. Solodkin, Z. Alexander, A. Savchenko, and A. Beznosikov WeightLoRA: keep only necessary adapters . In Proceedings of the 64th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) , pp. 12419–12437 . Cited by: §1",
+      "url": "https://arxiv.org/html/2610.19700v1#S1.p2.1"
+    },
+    {
+      "href": "#S2.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Veprikov et al. (2026) A. Veprikov, V. Solodkin, Z. Alexander, A. Savchenko, and A. Beznosikov WeightLoRA: keep only necessary adapters . In Proceedings of the 64th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) , pp. 12419–12437 . Cited by: §1 , §2",
+      "url": "https://arxiv.org/html/2610.19700v1#S2.p1.1"
+    },
+    {
+      "href": "#S5.SS1.p1.1",
+      "text": "§5.1",
+      "section": "References",
+      "context": "Wang et al. (2018) A. Wang, A. Singh, J. Michael, F. Hill, O. Levy, and S. R. Bowman GLUE: a multi-task benchmark and analysis platform for natural language understanding . In Proceedings of the 2018 EMNLP workshop BlackboxNLP: Analyzing and interpreting neural networks for NLP , pp. 353–355 . Cited by: §5.1",
+      "url": "https://arxiv.org/html/2610.19700v1#S5.SS1.p1.1"
+    },
+    {
+      "href": "#S2.p2.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Wang et al. (2025a) H. Wang, Y. Li, S. Wang, G. Chen, and Y. Chen Milora: harnessing minor singular components for parameter-efficient llm finetuning . In Proceedings of the 2025 Conference of the Nations of the Americas Chapter of the Association for Computational Linguistics: Human Language Technologies (Volume 1: Long Papers) , pp. 4823–4836 . Cited by: §2",
+      "url": "https://arxiv.org/html/2610.19700v1#S2.p2.1"
+    },
+    {
+      "href": "#S3.p4.1",
+      "text": "§3",
+      "section": "References",
+      "context": "Wang et al. (2025a) H. Wang, Y. Li, S. Wang, G. Chen, and Y. Chen Milora: harnessing minor singular components for parameter-efficient llm finetuning . In Proceedings of the 2025 Conference of the Nations of the Americas Chapter of the Association for Computational Linguistics: Human Language Technologies (Volume 1: Long Papers) , pp. 4823–4836 . Cited by: §2 , §3",
+      "url": "https://arxiv.org/html/2610.19700v1#S3.p4.1"
+    },
+    {
+      "href": "#S1.p2.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Wang et al. (2024) S. Wang, L. Yu, and J. Li Lora-ga: low-rank adaptation with gradient approximation . Advances in Neural Information Processing Systems 37 , pp. 54905–54931 . Cited by: §1",
+      "url": "https://arxiv.org/html/2610.19700v1#S1.p2.1"
+    },
+    {
+      "href": "#S2.p2.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Wang et al. (2024) S. Wang, L. Yu, and J. Li Lora-ga: low-rank adaptation with gradient approximation . Advances in Neural Information Processing Systems 37 , pp. 54905–54931 . Cited by: §1 , §2",
+      "url": "https://arxiv.org/html/2610.19700v1#S2.p2.1"
+    },
+    {
+      "href": "#S3.p2.1",
+      "text": "§3",
+      "section": "References",
+      "context": "Wang et al. (2024) S. Wang, L. Yu, and J. Li Lora-ga: low-rank adaptation with gradient approximation . Advances in Neural Information Processing Systems 37 , pp. 54905–54931 . Cited by: §1 , §2 , §3",
+      "url": "https://arxiv.org/html/2610.19700v1#S3.p2.1"
+    },
+    {
+      "href": "#S2.p3.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Wang et al. (2023) X. Wang, T. Chen, Q. Ge, H. Xia, R. Bao, R. Zheng, Q. Zhang, T. Gui, and X. Huang Orthogonal subspace learning for language model continual learning . In Findings of the Association for Computational Linguistics: EMNLP 2023 , pp. 10658–10671 . Cited by: §2",
+      "url": "https://arxiv.org/html/2610.19700v1#S2.p3.1"
+    },
+    {
+      "href": "#S1.p2.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Wang et al. (2025b) Z. Wang, J. Liang, R. He, Z. Wang, and T. Tan Lora-pro: are low-rank adapters properly optimized? . In International Conference on Learning Representations , Vol. 2025 , pp. 93787–93808 . Cited by: §1",
+      "url": "https://arxiv.org/html/2610.19700v1#S1.p2.1"
+    },
+    {
+      "href": "#S2.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Wang et al. (2025b) Z. Wang, J. Liang, R. He, Z. Wang, and T. Tan Lora-pro: are low-rank adapters properly optimized? . In International Conference on Learning Representations , Vol. 2025 , pp. 93787–93808 . Cited by: §1 , §2",
+      "url": "https://arxiv.org/html/2610.19700v1#S2.p1.1"
+    },
+    {
+      "href": "#S2.p3.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Wistuba et al. (2023) M. Wistuba, P. T. Sivaprasad, L. Balles, and G. Zappella Continual learning with low rank adaptation . arXiv preprint arXiv:2311.17601 . Cited by: §2",
+      "url": "https://arxiv.org/html/2610.19700v1#S2.p3.1"
+    },
+    {
+      "href": "#S2.p3.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Xia et al. (2024) W. Xia, C. Qin, and E. Hazan Chain of LoRA: efficient fine-tuning of language models via residual learning . In Proceedings of the 41st International Conference on Machine Learning , Cited by: §2",
+      "url": "https://arxiv.org/html/2610.19700v1#S2.p3.1"
+    },
+    {
+      "href": "#S5.SS1.p1.1",
+      "text": "§5.1",
+      "section": "References",
+      "context": "Yang et al. (2025) A. Yang, A. Li, B. Yang, B. Zhang, B. Hui, B. Zheng, B. Yu, C. Gao, C. Huang, C. Lv, et al. Qwen3 technical report . arXiv preprint arXiv:2505.09388 . Cited by: §5.1",
+      "url": "https://arxiv.org/html/2610.19700v1#S5.SS1.p1.1"
+    },
+    {
+      "href": "#S2.p2.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Yang et al. (2024) Y. Yang, X. Li, Z. Zhou, S. L. Song, J. Wu, L. Nie, and B. Ghanem Corda: context-oriented decomposition adaptation of large language models for task-aware parameter-efficient fine-tuning . Advances in neural information processing systems 37 , pp. 71768–71791 . Cited by: §2",
+      "url": "https://arxiv.org/html/2610.19700v1#S2.p2.1"
+    },
+    {
+      "href": "#S2.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Zhang et al. (2023a) L. Zhang, L. Zhang, S. Shi, X. Chu, and B. Li Lora-fa: memory-efficient low-rank adaptation for large language models fine-tuning . arXiv e-prints , pp. arXiv–2308 . Cited by: §2",
+      "url": "https://arxiv.org/html/2610.19700v1#S2.p1.1"
+    },
+    {
+      "href": "#S1.p2.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Zhang et al. (2023b) Q. Zhang, M. Chen, A. Bukharin, N. Karampatziakis, P. He, Y. Cheng, W. Chen, and T. Zhao Adalora: adaptive budget allocation for parameter-efficient fine-tuning . arXiv preprint arXiv:2303.10512 . Cited by: §1",
+      "url": "https://arxiv.org/html/2610.19700v1#S1.p2.1"
+    },
+    {
+      "href": "#S2.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Zhang et al. (2023b) Q. Zhang, M. Chen, A. Bukharin, N. Karampatziakis, P. He, Y. Cheng, W. Chen, and T. Zhao Adalora: adaptive budget allocation for parameter-efficient fine-tuning . arXiv preprint arXiv:2303.10512 . Cited by: §1 , §2",
+      "url": "https://arxiv.org/html/2610.19700v1#S2.p1.1"
+    },
+    {
+      "href": "#S3.p2.1",
+      "text": "§3",
+      "section": "References",
+      "context": "Zhang et al. (2023b) Q. Zhang, M. Chen, A. Bukharin, N. Karampatziakis, P. He, Y. Cheng, W. Chen, and T. Zhao Adalora: adaptive budget allocation for parameter-efficient fine-tuning . arXiv preprint arXiv:2303.10512 . Cited by: §1 , §2 , §3",
+      "url": "https://arxiv.org/html/2610.19700v1#S3.p2.1"
+    },
+    {
+      "href": "#S1.p2.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Zhang et al. (2025) Y. Zhang, F. Liu, and Y. Chen Lora-one: one-step full gradient could suffice for fine-tuning large language models, provably and efficiently . arXiv preprint arXiv:2502.01235 . Cited by: §1",
+      "url": "https://arxiv.org/html/2610.19700v1#S1.p2.1"
+    },
+    {
+      "href": "#S2.p2.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Zhang et al. (2025) Y. Zhang, F. Liu, and Y. Chen Lora-one: one-step full gradient could suffice for fine-tuning large language models, provably and efficiently . arXiv preprint arXiv:2502.01235 . Cited by: §1 , §2",
+      "url": "https://arxiv.org/html/2610.19700v1#S2.p2.1"
+    },
+    {
+      "href": "#S5.SS1.p3.1",
+      "text": "§5.1",
+      "section": "References",
+      "context": "Zhang et al. (2025) Y. Zhang, F. Liu, and Y. Chen Lora-one: one-step full gradient could suffice for fine-tuning large language models, provably and efficiently . arXiv preprint arXiv:2502.01235 . Cited by: §1 , §2 , §5.1",
+      "url": "https://arxiv.org/html/2610.19700v1#S5.SS1.p3.1"
+    },
+    {
+      "href": "#S5.SS1.p1.1",
+      "text": "§5.1",
+      "section": "References",
+      "context": "Zheng et al. (2024) T. Zheng, G. Zhang, T. Shen, X. Liu, B. Y. Lin, J. Fu, W. Chen, and X. Yue Opencodeinterpreter: integrating code generation with execution and refinement . In Findings of the Association for Computational Linguistics: ACL 2024 , pp. 12834–12859 . Cited by: §5.1",
+      "url": "https://arxiv.org/html/2610.19700v1#S5.SS1.p1.1"
+    },
+    {
+      "href": "#A1.SS1",
+      "text": "A.1",
+      "section": "Appendix A Theoretical Analysis",
+      "context": "In this section, we analyze the residual-gradient projection (Appendix A.1",
+      "url": "https://arxiv.org/html/2610.19700v1#A1.SS1"
+    },
+    {
+      "href": "#A1.SS2",
+      "text": "A.2",
+      "section": "Appendix A Theoretical Analysis",
+      "context": "In this section, we analyze the residual-gradient projection (Appendix A.1 ), its low-rank aggregation (Appendix A.2",
+      "url": "https://arxiv.org/html/2610.19700v1#A1.SS2"
+    },
+    {
+      "href": "#A1.SS3",
+      "text": "A.3",
+      "section": "Appendix A Theoretical Analysis",
+      "context": "In this section, we analyze the residual-gradient projection (Appendix A.1 ), its low-rank aggregation (Appendix A.2 ), the initial Stage-2 update (Appendix A.3",
+      "url": "https://arxiv.org/html/2610.19700v1#A1.SS3"
+    },
+    {
+      "href": "#A1.SS4",
+      "text": "A.4",
+      "section": "Appendix A Theoretical Analysis",
+      "context": "In this section, we analyze the residual-gradient projection (Appendix A.1 ), its low-rank aggregation (Appendix A.2 ), the initial Stage-2 update (Appendix A.3 ), and the factorized decorrelation penalty (Appendix A.4",
+      "url": "https://arxiv.org/html/2610.19700v1#A1.SS4"
+    },
+    {
+      "href": "#A1.E10",
+      "text": "10",
+      "section": "A.2 Low-Rank Calibration and Gradient Aggregation",
+      "context": "where r 2 ≤ q r_{2}\\leq q . This procedure obtains the initialization directions without explicitly forming the dense aggregate 𝑮 ^ res \\widehat{{\\bm{G}}}_{\\mathrm{res}} . The orthogonality in Equation equation 10",
+      "url": "https://arxiv.org/html/2610.19700v1#A1.E10"
+    },
+    {
+      "href": "#Thmtheorem1",
+      "text": "1",
+      "section": "A.3 Proof of the Residual-Guided First-Step Update",
+      "context": "We prove Theorem 1",
+      "url": "https://arxiv.org/html/2610.19700v1#Thmtheorem1"
+    },
+    {
+      "href": "#S4.E6",
+      "text": "6",
+      "section": "A.4 Update Orthogonality Regularization",
+      "context": "Substitution into Equation equation 6",
+      "url": "https://arxiv.org/html/2610.19700v1#S4.E6"
+    },
+    {
+      "href": "#A1.SS1",
+      "text": "A.1",
+      "section": "B.2 Residual-Gradient Calibration",
+      "context": "Each gradient is projected using the first-stage left and right subspaces, as described in Appendix A.1",
+      "url": "https://arxiv.org/html/2610.19700v1#A1.SS1"
+    },
+    {
+      "href": "#A1.SS2",
+      "text": "A.2",
+      "section": "B.2 Residual-Gradient Calibration",
+      "context": "Each gradient is projected using the first-stage left and right subspaces, as described in Appendix A.1 . The residual is immediately compressed to rank at most q q , and the dense gradient is discarded. Batchwise low-rank factors are aggregated using the procedure in Appendix A.2",
+      "url": "https://arxiv.org/html/2610.19700v1#A1.SS2"
+    },
+    {
+      "href": "#A2.T4",
+      "text": "4",
+      "section": "B.3 Hyperparameter Settings",
+      "context": "Both stages use fused AdamW with a linear learning-rate schedule and 100 optimizer-step learning-rate warmup. The effective training batch sizes, maximum sequence lengths, epoch counts, and peak learning rates are listed in Table 4",
+      "url": "https://arxiv.org/html/2610.19700v1#A2.T4"
+    },
+    {
+      "href": "#A2.T5",
+      "text": "5",
+      "section": "B.3 Hyperparameter Settings",
+      "context": "Table 5",
+      "url": "https://arxiv.org/html/2610.19700v1#A2.T5"
+    },
+    {
+      "href": "#S4.E6",
+      "text": "6",
+      "section": "B.4 Stage-2 Optimization and Merging",
+      "context": "During Stage 2, the backbone and Stage-1 adapter remain fixed. Only the Stage-2 LoRA factors are optimized. Training uses ordinary task gradients; the residual-gradient projection is used for initialization rather than applied to every training step. The task objective is augmented with the update-level orthogonality regularizer in Equation equation 6",
+      "url": "https://arxiv.org/html/2610.19700v1#S4.E6"
+    },
+    {
+      "href": "#alg1",
+      "text": "1",
+      "section": "B.5 Algorithm Flow",
+      "context": "Algorithm 1",
+      "url": "https://arxiv.org/html/2610.19700v1#alg1"
+    },
+    {
+      "href": "#A3.T6",
+      "text": "6",
+      "section": "C.1 Commonsense Reasoning",
+      "context": "Table 6",
+      "url": "https://arxiv.org/html/2610.19700v1#A3.T6"
+    },
+    {
+      "href": "#A3.F8",
+      "text": "8",
+      "section": "C.2.1 Unique Error Corrections",
+      "context": "Figure 8",
+      "url": "https://arxiv.org/html/2610.19700v1#A3.F8"
+    },
+    {
+      "href": "#A3.F9",
+      "text": "9",
+      "section": "C.2.2 Overlap with Full-Model Gains",
+      "context": "Figure 9",
+      "url": "https://arxiv.org/html/2610.19700v1#A3.F9"
+    }
+  ],
+  "note": "Extracted HTML text; equations and table formatting may be imperfect. No PDF extraction was attempted."
+}

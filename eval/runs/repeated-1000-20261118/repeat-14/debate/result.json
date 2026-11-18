@@ -1,0 +1,320 @@
+{
+  "run_id": "313c4c8fafe0425a90609e7aa4ca1fd3",
+  "status": "completed",
+  "user_id": "dmitrii",
+  "profile_fingerprint": "a2480e0075ad9cdf236d40e30f74f9bfd87a08dd948530b42e6b57e4a123bfc0",
+  "pipeline_version": "react-v2",
+  "categories": [
+    "cs.LG",
+    "cs.CL",
+    "stat.ML",
+    "cs.AI",
+    "cs.IR"
+  ],
+  "date_from": "2026-09-28",
+  "date_to": "2026-11-15",
+  "papers": [
+    {
+      "paper_id": "2610.11730",
+      "summary": "Spectral weight decay applies post-step nuclear-norm shrinkage. In LLaMA models, it lowers effective rank and improves SVD-LLM compression at matched validation loss.",
+      "relevance": "The closest match to spectral regularization, training for low-rank compressibility, and noisy-label generalization.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "Across models with 124 124 M to 500 500 M parameters, it lowers effective rank [ Roy and Vetterli, 2007 ] and improves compression and inference speed at matched validation loss."
+        },
+        {
+          "source": "inspection",
+          "quote": "For the 500 500 M model and a 4 % 4\\% distortion budget, it supports 1.89 × 1.89\\times compression, compared with 1.14 × 1.14\\times after standard weight decay."
+        }
+      ],
+      "title": "Spectral Weight Decay: Inducing Low-Rank Structure in Neural Network Weights",
+      "url": "https://arxiv.org/abs/2610.11730v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.06116",
+      "summary": "ORCA applies temporary soft orthogonality regularization early in LLM training, then removes it. The reported final validation-loss advantage over Muon extends across LLaMA, Qwen3, and MoE settings.",
+      "relevance": "Tests how time-limited spectral regularization changes weight spectra and optimization at scale.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "In most experiments, the reduction is 0.02–0.04, comparable to or greater than Muon’s gain over Adam."
+        },
+        {
+          "source": "inspection",
+          "quote": "Across these MoE experiments, ORCA reduces final validation loss by 0.020 0.020 – 0.025 0.025 relative to Muon."
+        }
+      ],
+      "title": "ORCA: The Annealed Spectral Conditioning Optimizer for Faster, Better LLM Training",
+      "url": "https://arxiv.org/abs/2610.06116v2",
+      "version": 2,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.22794",
+      "summary": "Ori tracks drifting low-rank gradient subspaces during LLM pretraining. Its reported advantage is strongest under restrictive rank budgets; the paper also measures optimizer-step memory and time.",
+      "relevance": "Directly addresses the quality, optimizer-memory, and speed tradeoff in low-rank pretraining.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "when training the 130M model at an aggressively low rank of just 16, Ori achieves a validation perplexity of 43.61, substantially outperforming GaLore (60.29) and OSD (54.05)."
+        },
+        {
+          "source": "inspection",
+          "quote": "at rank 32, Ori requires only 0.2487 GB, which is 12.1% less than OSD (0.2832 GB) and 26.5% less than GaLore (0.3385 GB)."
+        }
+      ],
+      "title": "Ori: Drift-Aware Streaming $k$-PCA for Very Low-Rank LLM Training",
+      "url": "https://arxiv.org/abs/2610.22794v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.17191",
+      "summary": "An SVD-free Rényi-2 regularizer encourages fuller use of LoRA adapter rank. In mixed-domain rank sweeps, it improves a Wiki retention probe relative to unpenalized LoRA, though learning–retention outcomes depend on configuration.",
+      "relevance": "Connects effective-rank regularization with practical language-model LoRA behavior.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "Across the reported mixed-domain rank sweeps on Qwen2.5-0.5B, Qwen2.5-3B-Instruct, and Llama-3.2-3B-Instruct, λ = 0.01 \\lambda=0.01 lowers mean Wiki perplexity relative to unpenalized LoRA at every tested rank of at least 16 16 (Tables 9 , 10 , and 11 )."
+        },
+        {
+          "source": "inspection",
+          "quote": "These results support a consistent Wiki retention benefit in this setting, but not universal improvement on both objectives."
+        }
+      ],
+      "title": "Maximizing Capacity Utilization of LoRA Adapters for Mitigating the Learning-Forgetting Trade-off",
+      "url": "https://arxiv.org/abs/2611.17191v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.04507",
+      "summary": "Module-matched, seed-paired LoRA rank sweeps under label noise find a second descent, but measured parameter-saving post-peak ranks do not match dense fine-tuning risk.",
+      "relevance": "Directly links adapter rank to noisy-label memorization and generalization, including a 7B language-model experiment.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "We quantify this relation under label noise on four vision backbones and a 7 7 B language model with a module-matched rank sweep (MMRS), which extends past full rank and compares every rank with dense fine-tuning of the same modules, paired by seed."
+        },
+        {
+          "source": "inspection",
+          "quote": "Across four vision backbones and a 7 7 B language model, no measured post-peak rank that still saves parameters reaches dense"
+        }
+      ],
+      "title": "LoRA's Second Descent Extends Beyond Parameter Parity",
+      "url": "https://arxiv.org/abs/2610.04507v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.06598",
+      "summary": "Defines behavioral compression rate as the serialized adapter size needed to retain held-out fine-tuning gains. It finds that compressibility depends on both the dataset and frozen base model, while correction spectra rank rates within a receiver.",
+      "relevance": "Provides a behavior-based alternative to adapter rank or reconstruction error for assessing LoRA compressibility.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "the same datasets exhibit substantially different, and even reordered, rates across frozen base models, showing that fine-tuning compressibility is a property of the dataset–receiver pair rather than of the dataset alone."
+        },
+        {
+          "source": "inspection",
+          "quote": "the correction-spectrum statistic is only a proxy for the full receiver-relative geometry and does not transfer reliably across receivers."
+        }
+      ],
+      "title": "The Behavioral Rate of Fine-Tuning: Compression as a Measure of Useful Information",
+      "url": "https://arxiv.org/abs/2611.06598v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.23343",
+      "summary": "Develops bottleneck-rank bounds for trace-norm-regularized LoRA updates without network linearization, alongside a qualified stationary-point result for factorized LoRA with weight decay.",
+      "relevance": "Addresses why low-rank fine-tuning solutions can exist and how regularization and frozen-feature geometry constrain rank.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "we prove that the trace-norm-regularized problem has a global minimizer whose rank is controlled by d Φ d_{\\Phi} ; see Theorem 4.1 ."
+        },
+        {
+          "source": "inspection",
+          "quote": "This is a first-order exclusion theorem, not a no-spurious-local-minima theorem; Proposition 4.9 gives an explicit limitation."
+        }
+      ],
+      "title": "How Finite-Rank Bottlenecks Shape the Low-Rank Adaptation Landscape",
+      "url": "https://arxiv.org/abs/2610.23343v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.10965",
+      "summary": "Spectrally Targeted Muon isolates update singular subspaces with Newton–Schulz projections. NanoGPT diagnostics distinguish spectral flattening from the directions associated with loss reduction.",
+      "relevance": "Directly probes Muon, effective rank, and which singular directions matter during language-model training.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "On language models every momentum singular value is far below one, so targeted orthogonalization can only amplify, and Muon wins by making directions that are too small to train on at their raw scale trainable."
+        },
+        {
+          "source": "inspection",
+          "quote": "the bottom targeted variants keep Muon’s rank without matching its loss, and full-spectrum updates keep the spectrum flat for free."
+        }
+      ],
+      "title": "Spectrally Targeted Muon",
+      "url": "https://arxiv.org/abs/2610.10965v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.07859",
+      "summary": "CORE is a training-free research harness that retrieves broad passages but admits short snippets into agent context, with expansion and duplicate suppression available when needed.",
+      "relevance": "Directly informs evidence retrieval and context management in a handwritten research-digest harness.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "CORE searches at the passage level but returns evidence at the snippet level."
+        },
+        {
+          "source": "inspection",
+          "quote": "Across three agent models and three benchmarks, CORE achieves higher answer accuracy and evidence recall than Tongyi DeepResearch and OpenResearcher in every model–benchmark comparison, while returning substantially fewer tokens per search than Tongyi DeepResearch."
+        }
+      ],
+      "title": "CORE: Coarse-to-Fine Search with Context Management for Deep Research",
+      "url": "https://arxiv.org/abs/2611.07859v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.20857",
+      "summary": "Idea2Prior separates broad candidate assessment from bounded document inspection and preserves identities, filtering reasons, and ranking evidence. Its historical Hit@5 comparison favors it overall, with a HARD-query exception.",
+      "relevance": "Closely matches paper discovery, relevance ranking, and auditable decisions for the user’s digest agent.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "The contribution is an engineering and evaluation framework for inspectable idea-to-paper retrieval: it preserves search queries, candidate identities, assessments, filtering reasons, PDF availability, and the final ranking."
+        },
+        {
+          "source": "inspection",
+          "quote": "Idea2Prior leads both baselines by 20 percentage points on EASY and MEDIUM, but trails ChatGPT by 10 points on HARD."
+        }
+      ],
+      "title": "Idea2Prior: Auditable Paper Retrieval and Ranking from Research Ideas",
+      "url": "https://arxiv.org/abs/2610.20857v2",
+      "version": 2,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    }
+  ],
+  "x_feature": null,
+  "limitations": [
+    "Ori’s reported memory figure measures additional memory during optimizer.step(), not total peak training GPU memory.",
+    "ORCA’s retrieved passages do not quantify training-time or memory overhead; its token-efficiency comparison reuses a checkpoint and is not a matched wall-clock comparison.",
+    "The bottleneck-rank paper’s retrieved experiment adapts only selected query-projection blocks, limiting claims about ordinary all-layer LoRA fine-tuning.",
+    "Idea2Prior’s historical target Hit@5 comparison does not establish broad relevance quality or a matched cost advantage.",
+    "Code links mentioned by papers were not independently checked for completeness or reproducibility. X analysis was disabled.",
+    "inspect:2610.22794: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.11730: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.06116: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2611.17191: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.04507: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.04249: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2609.37027: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.10965: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.31897: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.23343: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2611.07859: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.20857: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2611.06598: only question-relevant HTML passages were inspected, not the whole paper."
+  ],
+  "stats": {
+    "fetched_count": 1000,
+    "candidate_count": 1000,
+    "llm_calls": 23,
+    "steps": 18,
+    "inspections": 13,
+    "expansions": 2,
+    "screened": 45,
+    "usage": {
+      "recorded_calls": 23,
+      "llm_latency_seconds": 442.79753621006967,
+      "input_tokens": 1133163,
+      "output_tokens": 14070,
+      "estimated_api_cost_usd": null,
+      "calls_without_usage": 0,
+      "cost_note": "API-equivalent estimate using standard GPT-5.6-Luna rates checked 2026-11-17: $0.20/M input, $1.20/M output; above 272K input, $0.40/M and $1.80/M. Assumes all input is uncached; excludes cache writes and external tools. Not actual Codex subscription billing. Unknown usage/model yields null cost.",
+      "price_source": "https://developers.openai.com/api/docs/models/gpt-5.6-luna"
+    },
+    "tool_calls": 15,
+    "tool_latency_seconds": 41.690144916967256
+  }
+}

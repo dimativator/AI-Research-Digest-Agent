@@ -1,0 +1,1368 @@
+{
+  "status": "ok",
+  "source": "https://arxiv.org/html/2611.15600v1",
+  "extractor_version": "article-v1",
+  "chunks": [
+    {
+      "chunk_id": "chunk-0001",
+      "section": "MemCredit: From Relevance to Utility for Decision-Time Memory in Long-Horizon Web Agents",
+      "text": "Conference: Proceedings of the ACM Web Conference 2027; 2027; Dublin, Ireland CCS: Computing methodologies Intelligent agents Quanjiang Guo Affiliation: UESTC , China email: guochance1999@163.com , Sijie Wang Affiliation: Nanyang Technological University , Singapore email: wang1679@e.ntu.edu.sg , Qianyang Zhu Affiliation: UESTC , China email: zhuqianyang@std.uestc.edu.cn , Ben Zhang Affiliation: UESTC , China email: zhangben@std.uestc.edu.cn , Jinchuan Zhang Affiliation: UESTC , China email: jc.zhang@uestc.edu.cn , Ke Yan Affiliation: UESTC , China email: kyan@uestc.edu.cn and zhao Kang Note: Corresponding author. Affiliation: UESTC , China email: zkang@uestc.edu.cn © none",
+      "source": "https://arxiv.org/html/2611.15600v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0002",
+      "section": "Abstract.",
+      "text": "Large language model (LLM) agents increasingly operate over long Web interaction histories, making memory management critical for reliable and efficient decision making. Existing methods primarily optimize storage, retrieval, or compression, but the memories most semantically relevant to the current state are not necessarily those that most improve the agent’s action. We introduce MemCredit , a decision-centric memory framework that shifts memory selection from semantic relevance to decision utility . MemCredit estimates the state-, reference-context-, and policy-conditional marginal contribution of individual memories through controlled counterfactual interventions, and distills these intervention-derived credits into a lightweight utility estimator. At inference time, semantic relevance is used only for high-recall candidate generation, while predicted utility arbitrates which memories are retained under a fixed token budget, without modifying the underlying agent policy or requiring additional environment interaction. We evaluate MemCredit on ALFWorld and WebShop against representative memory baselines. On ALFWorld, MemCredit achieves 86.57 % 86.57\\% SR@50 under a 500-token historical-memory budget, compared with 65.67 % 65.67\\% for BM25 retrieval. Counterfactual analysis further shows that memory utility is sparse, strongly state dependent, and poorly captured by semantic relevance. These results suggest that decision utility provides a more effective principle than relevance alone for long-horizon agent memory management.",
+      "source": "https://arxiv.org/html/2611.15600v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0003",
+      "section": "Keywords:",
+      "text": "LLM Agents, Agent Memory, Long-Horizon Decision Making Figure 1. Motivation of MemCredit. Semantic relevance does not necessarily imply decision utility. A memory that appears less related to the current observation may be critical for avoiding an incorrect action, whereas a highly relevant memory can be redundant.",
+      "source": "https://arxiv.org/html/2611.15600v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0004",
+      "section": "1. Introduction",
+      "text": "Large language models (LLMs) are increasingly deployed as autonomous agents that search, browse, invoke tools, and interact with online environments over extended trajectories ( Yao et al., 2023 ; Shinn et al., 2023 ; Zhao et al., 2024 ) . Unlike single-turn generation, such interaction is inherently stateful : a correct decision may depend on an earlier user constraint, previously observed information, or a failed action that should not be repeated. As trajectories grow, retaining the full interaction history becomes increasingly inefficient, making memory management essential for long-horizon agents ( Park et al., 2023 ; Packer et al., 2023 ; Zhong et al., 2024 ) . Moreover, access to long context does not guarantee effective use of its contents, as performance can vary substantially with how relevant information is positioned and organized ( Liu et al., 2024 ) . Existing memory systems address this challenge through recency-based retention, semantic retrieval, trajectory compression, structured memory banks, and learned memory policies ( Xu et al., 2025 ; Zhu et al., 2026 ; Chen et al., 2026 ; Luo et al., 2026 ) . Despite these differences, memory selection is still commonly driven by recency, semantic similarity, salience, or learned retrieval scores. Such signals identify information that is related to the current state, but relatedness does not necessarily imply value for sequential decision making.",
+      "source": "https://arxiv.org/html/2611.15600v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0005",
+      "section": "1. Introduction",
+      "text": "As illustrated in Figure 1 , a recently observed item may be highly similar to the current observation yet contribute little to the next action. Conversely, an earlier constraint, failed attempt, or less similar piece of evidence may be critical for avoiding an incorrect decision. This reveals a fundamental mismatch between information retrieval and agent memory management: semantic relevance measures whether a memory matches the current state, whereas decision utility measures whether it improves the agent’s decision . We therefore ask: would the agent make a worse decision if a particular memory were unavailable? For a decision state s t s_{t} , reference memory context S S , and candidate memory m i m_{i} , we define its policy-conditional marginal decision utility as (1) U π ​ ( m i , s t , S ) = 𝔼 [ Q ∣ s t , S ∪ { m i } , π θ ] − 𝔼 [ Q ∣ s t , S , π θ ] , \\begin{split}U_{\\pi}(m_{i};s_{t},S)&=\\mathbb{E}\\left[Q\\mid s_{t},S\\cup\\{m_{i}\\},\\pi_{\\theta}\\right]\\\\ &\\quad-\\mathbb{E}\\left[Q\\mid s_{t},S,\\pi_{\\theta}\\right],\\end{split} Figure 2. Performance–memory Pareto comparison on WebShop. MemCredit achieves the highest task score while using only 152.1 152.1 memory tokens per decision, about 2.8 × 2.8\\times fewer than MemArbiter and approximately 3.9 × 3.9\\times fewer than retrieval-based alternatives. The desirable region is the upper left: higher task performance with lower memory cost.",
+      "source": "https://arxiv.org/html/2611.15600v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0006",
+      "section": "1. Introduction",
+      "text": "where Q Q measures environment-grounded decision quality. This formulation treats memory value as state-, reference-context-, and policy-dependent, and casts memory management as a fine-grained credit-assignment problem rather than relevance ranking. It is related to recent experience- and skill-based agents that evaluate reusable knowledge through downstream outcomes ( Xia et al., 2026 ; Tu et al., 2026 ) , but operates at the granularity of individual memories. Controlled intervention experiments support this distinction (Sec. 4.3 ; Table 3 and Figure 5 ). Across 1,041 context-conditional interventions from 45 ALFWorld tasks, 86.9 % 86.9\\% produce no measurable behavioral change, indicating that memory utility is highly sparse. Average utility rises to 0.176 0.176 in failure contexts but is only 0.029 0.029 outside failure states, while semantic relevance has almost no overall correlation with counterfactual utility ( ρ = − 0.011 \\rho=-0.011 ). These results suggest that semantic similarity is an unreliable proxy for whether a memory is consequential to the current decision.",
+      "source": "https://arxiv.org/html/2611.15600v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0007",
+      "section": "1. Introduction",
+      "text": "Motivated by these findings, we introduce MemCredit , a framework for decision-time memory arbitration in long-horizon agents. MemCredit decomposes interaction histories into atomic memories and uses controlled counterfactual interventions to estimate their marginal decision contributions. The resulting credits supervise a lightweight utility estimator, amortizing the cost of counterfactual evaluation. At inference time, MemCredit separates candidate recall from memory arbitration : semantic relevance retrieves a broad candidate pool, while predicted utility determines which memories are retained under a fixed token budget. The underlying agent policy remains unchanged and requires no additional environment interaction at deployment. We evaluate MemCredit on ALFWorld ( Shridhar et al., 2021 ) and WebShop ( Yao et al., 2022 ) . On ALFWorld, MemCredit achieves 86.57 % 86.57\\% SR@50 under a 500-token historical-memory budget, outperforming BM25 retrieval by 20.90 20.90 percentage points. With a 750-token budget, it reaches 90.30 % 90.30\\% SR@50, compared with 81.34 % 81.34\\% for BM25, showing larger gains under tighter context constraints. On WebShop, MemCredit achieves the highest task score of 0.612 0.612 while using only 152.1 152.1 memory tokens per decision. Compared with MemArbiter, the strongest non-MemCredit baseline, it improves the score from 0.586 0.586 to 0.612 0.612 while using about 2.8 × 2.8\\times fewer memory tokens; relative to BM25, memory usage is reduced by approximately 3.9 × 3.9\\times . As shown in Figure 2 , MemCredit yields a clear performance–memory Pareto improvement and also reduces repeated searches, invalid actions, and trajectory length. Our contributions are threefold:",
+      "source": "https://arxiv.org/html/2611.15600v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0008",
+      "section": "1. Introduction",
+      "text": "• We formulate decision-time memory credit assignment , distinguishing semantic relevance from the state- and policy-conditional marginal contribution of an individual memory, and show that such utility is sparse, state dependent, and poorly captured by relevance. • We propose MemCredit , which estimates fine-grained memory credit through controlled counterfactual intervention and distills it into an amortized utility estimator for budget-aware memory arbitration. • We demonstrate on ALFWorld and WebShop that separating relevance-based candidate recall from utility-based arbitration improves both task performance and context efficiency, especially under tight historical-memory budgets. Figure 3. Overview of MemCredit. Interaction histories are organized into atomic memories, whose policy-conditional decision utility is estimated through controlled counterfactual interventions and distilled into a lightweight utility estimator. At inference time, semantic relevance provides high-recall candidates, while predicted utility arbitrates memory selection under a fixed token budget for the unchanged agent policy.",
+      "source": "https://arxiv.org/html/2611.15600v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0009",
+      "section": "2.1. Agent Memory Management",
+      "text": "Agent memory supports long-horizon interaction through experience retrieval ( Park et al., 2023 ) , long-term storage ( Zhong et al., 2024 ) , tiered context management ( Packer et al., 2023 ) , and evolving memory structures ( Xu et al., 2025 ) . Recent methods further compress trajectories into structured states ( Zhu et al., 2026 ) , learn bounded memory updates ( Luo et al., 2026 ) , or select compressed blocks using the query and working memory ( Chen et al., 2026 ) . MemArbiter ( Dong et al., 2026 ) addresses the Memory–Action Gap : retrievable information may still fail to guide actions. It organizes history into functional banks and controls memory presentation through demand, relevance, and temporal signals. Its arbitration uses predefined signals rather than intervention-derived memory credits. Closer approaches explicitly evaluate memory utility. CMI ( Srivastava, 2026 ) scores memories through controlled interventions in conversational tasks. CICL ( Guan et al., 2026 ) estimates decision-oriented utility and assembles selected evidence into budgeted memory cards. MeClear ( Yang et al., 2026 ) combines leave-one-out screening with sampled Shapley attribution to capture interactions and suppress harmful memories. MemCredit focuses on state-conditioned, item-level credit assignment for sequential decisions. It collects credits through paired replay from matched environment states under a fixed action policy, then trains a lightweight estimator for token-budgeted selection without additional runtime environment interaction. Single-removal attribution can mask redundancy among interacting memories; Sec. 3.4 discusses how conditional reference contexts mitigate this.",
+      "source": "https://arxiv.org/html/2611.15600v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0010",
+      "section": "2.2. Memory Utilization and Credit Assignment",
+      "text": "Effective memory use requires historical experience to improve downstream behavior. Reflexion ( Shinn et al., 2023 ) stores feedback-derived reflections in episodic memory, ExpeL ( Zhao et al., 2024 ) extracts transferable insights from agent trajectories, and SkillRL ( Xia et al., 2026 ) distills trajectories into reusable skills. More explicitly, D2Skill ( Tu et al., 2026 ) evaluates skills through paired rollouts under the same policy, while memory-augmented RL optimizes memory updates using trajectory-level rewards ( Luo et al., 2026 ) . These approaches connect experience reuse with behavioral improvement, but their credit signals mainly target reusable skills or memory-update trajectories rather than individual memories at a specific decision state. MemCredit instead performs decision-time credit assignment for individual memory items. For memory m i m_{i} at state s t s_{t} , it estimates marginal decision utility by comparing decision quality with and without that memory under the same policy, environment state, and reference context. The resulting counterfactual credits supervise a lightweight utility estimator for budget-aware arbitration, while leaving the agent policy unchanged. Semantic relevance is used for candidate recall, whereas predicted utility determines final memory priority.",
+      "source": "https://arxiv.org/html/2611.15600v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0011",
+      "section": "3. Methodology",
+      "text": "MemCredit learns which historical memories improve a frozen agent’s current decision under a limited context budget. As illustrated in Figure 3 , the framework contains four components: atomic memory construction, counterfactual credit collection, utility estimation, and budget-aware arbitration. The central idea is to estimate a memory’s contribution conditional on the other memories available at the decision . Offline interventions provide these credits; a lightweight estimator then approximates them during context construction without further environment interaction.",
+      "source": "https://arxiv.org/html/2611.15600v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0012",
+      "section": "3.1. Problem Formulation and Memory Representation",
+      "text": "At step t t , an agent receives a task goal g g , observation o t o_{t} , and the previous interaction outcome y t − 1 y_{t-1} . We denote this observable decision context by z t = ( g , o t , y t − 1 ) z_{t}=(g,o_{t},y_{t-1}) , and distinguish it from the underlying environment state e t e_{t} , which is used only for offline replay. The history is represented by atomic memories (2) M t = { m i } i = 1 N t , m i = ( c i , b i , τ i , ξ i ) , M_{t}=\\{m_{i}\\}_{i=1}^{N_{t}},\\qquad m_{i}=(c_{i},b_{i},\\tau_{i},\\xi_{i}), where c i c_{i} is content, b i b_{i} is a functional type, τ i \\tau_{i} is its creation time, and ξ i \\xi_{i} records observable metadata such as source actions, entities, and past outcomes. Following MemArbiter ( Dong et al., 2026 ) , the functional types are Goal , State , Constraint , Episodic , and Reference . These types organize the store without prescribing memory priority. A selected set S ⊆ M t S\\subseteq M_{t} is serialized by a fixed renderer 𝒫 ⁡ ( S ) \\mathcal{P}(S) , and the frozen policy produces (3) a t ∼ π θ ​ ( a ∣ z t , 𝒫 ⁡ ( S ) ) . a_{t}\\sim\\pi_{\\theta}\\!\\left(a\\mid z_{t},\\mathcal{P}(S)\\right). Let L ⁡ ( S ) L(S) be the token count of the complete rendered memory block, including its labels and separators. The historical-memory budget requires L ⁡ ( S ) ≤ B L(S)\\leq B ; the shared task goal, current observation, and previous outcome are outside this budget. Let V θ , H ​ ( e t , S ) V_{\\theta,H}(e_{t},S) denote the expected environment return when the current action is sampled with memory context S S and evaluated over horizon H H under a fixed continuation protocol. Memory selection seeks (4) S t ⋆ ∈ arg ⁡ max S ⊆ C t , L ⁡ ( S ) ≤ B ​ V θ , H ​ ( e t , S ) , S_{t}^{\\star}\\in\\arg\\max_{S\\subseteq C_{t},\\;L(S)\\leq B}V_{\\theta,H}(e_{t},S),",
+      "source": "https://arxiv.org/html/2611.15600v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0013",
+      "section": "3.1. Problem Formulation and Memory Representation",
+      "text": "where C t C_{t} is the retrieved candidate set. This objective is not assumed to decompose into independent item values: a memory may become redundant or useful depending on S S . The environment state and return are unavailable to the online selector; they supply offline supervision only.",
+      "source": "https://arxiv.org/html/2611.15600v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0014",
+      "section": "Conditional memory credit .",
+      "text": "For candidate m i m_{i} and reference context S ⊆ C t ∖ { m i } S\\subseteq C_{t}\\setminus\\{m_{i}\\} , define (5) Δ i , t ​ ( S ) = V θ , H ​ ( e t , S ∪ { m i } ) − V θ , H ​ ( e t , S ) . \\Delta_{i,t}(S)=V_{\\theta,H}(e_{t},S\\cup\\{m_{i}\\})-V_{\\theta,H}(e_{t},S). Positive credit means that exposing m i m_{i} improves the measured outcome relative to the same reference context. The credit is specific to the state, policy, reference context, and evaluation horizon; it is not an intrinsic property of the memory. Single-removal credit from the full candidate set is the special case S = C t ∖ { m i } S=C_{t}\\setminus\\{m_{i}\\} . This case can mask redundancy: when two memories contain the same necessary fact, removing either alone may have zero effect. Conditioning on varied reference contexts exposes when an item adds information and when that information is already represented. Unlike Shapley attribution ( Ghorbani and Zou, 2019 ) , we predict a conditional marginal effect rather than averaging over all coalition orders to assign a global allocation of credit. The intervention-based credit perspective is also related to counterfactual credit assignment ( Foerster et al., 2018 ) and memory attribution ( Yang et al., 2026 ) .",
+      "source": "https://arxiv.org/html/2611.15600v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0015",
+      "section": "Budget-matched reference contexts .",
+      "text": "We collect credits from contexts satisfying L ⁡ ( S ∪ { m i } ) ≤ B L(S\\cup\\{m_{i}\\})\\leq B , matching the online selection constraint. For a sampled target m i m_{i} , let ℓ i = L ⁡ ( { m i } ) \\ell_{i}=L(\\{m_{i}\\}) . We draw an occupancy level α ∈ { 0 , 1 4 , 1 2 , 3 4 , 1 } \\alpha\\in\\{0,\\tfrac{1}{4},\\tfrac{1}{2},\\tfrac{3}{4},1\\} and set (6) b i ​ ( α ) = ℓ i + α ⁡ ( B − ℓ i ) . b_{i}(\\alpha)=\\ell_{i}+\\alpha(B-\\ell_{i}). Starting with m i m_{i} , we randomly permute the remaining candidates and insert each item only if the rendered context remains within b i ​ ( α ) b_{i}(\\alpha) . If the resulting factual context is A A , its reference context is S = A ∖ { m i } S=A\\setminus\\{m_{i}\\} . Items with ℓ i > B \\ell_{i}>B are ineligible. This sampling covers isolated memories, partial contexts, and near-budget contexts without treating the full history as the only reference.",
+      "source": "https://arxiv.org/html/2611.15600v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0016",
+      "section": "Paired environment replay .",
+      "text": "For each ( e t , z t , S , m i ) (e_{t},z_{t},S,m_{i}) , both branches start from the same verified environment snapshot and differ only in the rendered inclusion of m i m_{i} : (7) a t + i \\displaystyle a_{t}^{+i} ∼ π θ ​ ( a ∣ z t , 𝒫 ⁡ ( S ∪ { m i } ) ) , \\displaystyle\\sim\\pi_{\\theta}(a\\mid z_{t},\\mathcal{P}(S\\cup\\{m_{i}\\})), (8) a t − i \\displaystyle a_{t}^{-i} ∼ π θ ​ ( a ∣ z t , 𝒫 ⁡ ( S ) ) . \\displaystyle\\sim\\pi_{\\theta}(a\\mid z_{t},\\mathcal{P}(S)). All other memory contents and their relative ordering are preserved. The target is the effect of including a rendered item, which may include length and position effects, rather than a content-only effect. For a one-step evaluation, the observed credit is (9) Y i , t ( 1 ) ​ ( S ) = r t + i − r t − i , Y_{i,t}^{(1)}(S)=r_{t}^{+i}-r_{t}^{-i}, where r r is the specified environment reward. For a longer horizon, each branch continues with the same fixed policy and continuation protocol, giving (10) Y i , t ( H ) ​ ( S ) = ∑ h = 0 H − 1 γ h ​ ( r t + h + i − r t + h − i ) . Y_{i,t}^{(H)}(S)=\\sum_{h=0}^{H-1}\\gamma^{h}\\left(r_{t+h}^{+i}-r_{t+h}^{-i}\\right). Rewards after termination are zero. The intervention changes the current decision prompt; the continuation protocol is shared across branches and fixed before collection. Repeated paired runs, when used, are averaged to estimate Δ i , t ​ ( S ) \\Delta_{i,t}(S) ; matched seeds control specified randomness but do not imply deterministic GPU execution. A factual rollout can be reused for multiple removals from the same A A . We sample states across ordinary progress, failures, repeated-action risks, and subgoal transitions, and candidates across relevance levels and functional types. The resulting supervision is",
+      "source": "https://arxiv.org/html/2611.15600v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0017",
+      "section": "Paired environment replay .",
+      "text": "(11) 𝒟 credit = { ( z t , m i , S , B , Y i , t ( H ) ​ ( S ) ) } . \\mathcal{D}_{\\mathrm{credit}}=\\{(z_{t},m_{i},S,B,Y_{i,t}^{(H)}(S))\\}. The collection protocol requires task-disjoint training, development, and test sets. Test-task outcomes are excluded from estimator fitting and threshold selection.",
+      "source": "https://arxiv.org/html/2611.15600v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0018",
+      "section": "3.3. Learning Context-Conditional Memory Utility",
+      "text": "We amortize offline interventions with a lightweight estimator (12) Δ ^ i , t ​ ( S , B ) = f ϕ ​ ( x ⁡ ( z t , m i , S , B ) ) . \\widehat{\\Delta}_{i,t}(S,B)=f_{\\phi}\\!\\left(x(z_{t},m_{i},S,B)\\right). The features combine state–memory descriptors with descriptors of the already available context: (13) x = [ x sm ​ ( z t , m i ) , x ctx ​ ( m i , S , B ) ] . x=\\left[x_{\\mathrm{sm}}(z_{t},m_{i}),x_{\\mathrm{ctx}}(m_{i},S,B)\\right]. The first group includes relevance, age, functional type, source, entity overlap, observable progress, and history statistics. The second includes maximum token-level Jaccard overlap with an item in S S , candidate-entity coverage by S S , per-type context counts, and budget occupancy L ⁡ ( S ) / B L(S)/B . Overlap and coverage are zero for the empty context. These features expose whether a candidate contributes information already present in the selected memories. We retain an ExtraTrees regressor ( Geurts et al., 2006 ) and fit the signed intervention targets with squared error: (14) ℒ ⁡ ( ϕ ) = 1 | 𝒟 credit | ​ ∑ d ∈ 𝒟 credit ( f ϕ ​ ( x d ) − Y d ) 2 , \\mathcal{L}(\\phi)=\\frac{1}{|\\mathcal{D}_{\\mathrm{credit}}|}\\sum_{d\\in\\mathcal{D}_{\\mathrm{credit}}}\\left(f_{\\phi}(x_{d})-Y_{d}\\right)^{2}, where x d x_{d} and Y d Y_{d} are the features and observed credit of sample d d . Positive, zero, and negative credits remain distinct training targets. The predictor receives only information available before the decision: reconstructed hidden states, future rewards, and intervention outcomes are excluded from its inputs. The estimator is frozen before evaluation.",
+      "source": "https://arxiv.org/html/2611.15600v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0019",
+      "section": "3.3. Learning Context-Conditional Memory Utility",
+      "text": "At inference time, the same candidate can receive a different score as S S changes. The model therefore approximates the marginal value of adding a memory to the current context rather than assigning it a fixed global rank. Its fidelity is evaluated with task-grouped splits and relevance-only, failure-only, context-blind, and shuffled-label controls.",
+      "source": "https://arxiv.org/html/2611.15600v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0020",
+      "section": "Candidate recall .",
+      "text": "A lightweight relevance function retrieves a candidate pool (15) q i , t = Rel ⁡ ( m i , z t ) , C t = TopM m i ∈ M t ​ q i , t . q_{i,t}=\\mathrm{Rel}(m_{i},z_{t}),\\qquad C_{t}=\\mathrm{TopM}_{m_{i}\\in M_{t}}\\,q_{i,t}. Relevance limits the search space; it is not interpolated into the final utility score. Because omitted memories cannot be recovered during arbitration, candidate-pool size is selected on development tasks and recall is evaluated separately from final selection.",
+      "source": "https://arxiv.org/html/2611.15600v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0021",
+      "section": "Conditional budgeted selection .",
+      "text": "Starting from S t ( 0 ) = ∅ S_{t}^{(0)}=\\varnothing , MemCredit repeatedly predicts candidate credits conditional on the current selected set. At iteration k k , the eligible candidates are (16) ℱ t ( k ) = { m i ∈ C t ∖ S t ( k ) L ⁡ ( S t ( k ) ∪ { m i } ) ≤ B , Δ ^ i , t ​ ( S t ( k ) , B ) > δ } , \\mathcal{F}_{t}^{(k)}=\\left\\{\\begin{array}[]{l|l}m_{i}\\in C_{t}\\setminus S_{t}^{(k)}&\\begin{array}[]{l}L(S_{t}^{(k)}\\cup\\{m_{i}\\})\\leq B,\\\\ \\widehat{\\Delta}_{i,t}(S_{t}^{(k)},B)>\\delta\\end{array}\\end{array}\\right\\}, where the nonnegative threshold δ \\delta is selected using development tasks. For each eligible item, let d i ​ ( S ) = max ⁡ { 1 , L ⁡ ( S ∪ { m i } ) − L ⁡ ( S ) } d_{i}(S)=\\max\\{1,L(S\\cup\\{m_{i}\\})-L(S)\\} . The next item maximizes predicted credit per added token: (17) i k = arg ⁡ max m i ∈ ℱ t ( k ) ⁡ Δ ^ i , t ​ ( S t ( k ) , B ) d i ​ ( S t ( k ) ) , \\displaystyle i_{k}=\\arg\\max_{m_{i}\\in\\mathcal{F}_{t}^{(k)}}\\frac{\\widehat{\\Delta}_{i,t}(S_{t}^{(k)},B)}{d_{i}(S_{t}^{(k)})}, S t ( k + 1 ) = S t ( k ) ∪ { m i k } . \\displaystyle S_{t}^{(k+1)}=S_{t}^{(k)}\\cup\\{m_{i_{k}}\\}. Scores are recomputed after each insertion, allowing a candidate’s priority to decrease when related information has already been selected. Selection stops when ℱ t ( k ) \\mathcal{F}_{t}^{(k)} is empty, so the budget is a ceiling rather than a requirement to fill the context. This procedure approximates Eq. 4 ; it does not assume additive utilities or guarantee a globally optimal subset. It can model local redundancy when covered by the training contexts, but may miss complementary memories that are useful only jointly. The final set M ~ t \\widetilde{M}_{t} is serialized in a fixed chronological order and passed to the unchanged action policy:",
+      "source": "https://arxiv.org/html/2611.15600v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0022",
+      "section": "Conditional budgeted selection .",
+      "text": "(18) a t ∼ π θ ​ ( a ∣ z t , 𝒫 ⁡ ( M ~ t ) ) . a_{t}\\sim\\pi_{\\theta}(a\\mid z_{t},\\mathcal{P}(\\widetilde{M}_{t})). All online rescoring uses the frozen estimator, with at most O ⁡ ( | C t | 2 ) O(|C_{t}|^{2}) candidate evaluations and no counterfactual rollouts or additional environment calls.",
+      "source": "https://arxiv.org/html/2611.15600v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0023",
+      "section": "Benchmarks .",
+      "text": "We evaluate MemCredit on ALFWorld and WebShop . For ALFWorld, following the evaluation protocol of MemArbiter ( Dong et al., 2026 ) , we use all 134 tasks from the out-of-distribution evaluation split, with a maximum of 50 interaction steps per episode. Its deterministic dynamics allow factual and counterfactual decisions to be replayed from the same reconstructed environment state. WebShop evaluates long-horizon Web interaction, where agents must preserve user constraints, product attributes, and previous search outcomes. We use a 50-task development set and report final evaluation on 200 tasks over a 10K-product catalog.",
+      "source": "https://arxiv.org/html/2611.15600v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0024",
+      "section": "Models and Agent Protocol .",
+      "text": "All main experiments use Qwen3.6-27B-FP8 with deterministic decoding. The primary Qwen policy is served with vLLM ( Kwon et al., 2023 ) . At each step, every method receives the same task goal, current observation, previous interaction outcome, and method-specific memory context. The current observation is excluded from the memory budget, which constrains historical information only. For ALFWorld, admissible actions are provided to all methods, and we evaluate historical-memory budgets of 500 and 750 tokens. The agent policy, action parser, environment interface, and interaction limits are kept fixed across methods. For cross-model evaluation, we replace only the action-generation model with Qwen2.5-7B-Instruct , DeepSeek-V3 , or GPT-5.4 , while retaining the same memory construction, state parsing, prompts, and 500-token memory budget. Additional implementation and prompting details are provided in the Appendix.",
+      "source": "https://arxiv.org/html/2611.15600v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0025",
+      "section": "Compared Methods .",
+      "text": "We compare MemCredit with Flat Recency ( Dong et al., 2026 ) , which retains recent history; BM25 Retrieval ( Robertson and Zaragoza, 2009 ) , which ranks memories by lexical relevance; Dense Retrieval ( Karpukhin et al., 2020 ) , which uses semantic similarity; Failure-Aware Retrieval , a heuristic that prioritizes recent failure-related memories, inspired by failure-aware experience reuse ( Shinn et al., 2023 ; Li et al., 2026 ) ; and State-Aware Retrieval , a heuristic that selects memories aligned with the current interaction state ( Wang et al., 2026 ) . We also evaluate MemArbiter ( Dong et al., 2026 ) , which controls memory presentation through functional banks, dynamic signals, and a temporal gate. Utility-only and relevance–utility hybrid variants of MemCredit are evaluated in the ablation study.",
+      "source": "https://arxiv.org/html/2611.15600v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0026",
+      "section": "Counterfactual Credit Collection .",
+      "text": "For ALFWorld, we collect 1,041 valid context-conditional interventions from 45 tasks , following the protocol of the Methodology section: reference contexts are sampled at occupancy levels α ∈ { 0 , 1 4 , 1 2 , 3 4 , 1 } \\alpha\\in\\{0,\\tfrac{1}{4},\\tfrac{1}{2},\\tfrac{3}{4},1\\} under the 500-token budget, and both branches are replayed from the same reconstructed environment state with a fixed continuation protocol; every retained sample passes the reconstruction check. Supervision comes from task-disjoint training and development splits, and test-task outcomes are excluded from estimator fitting and threshold selection, as required by the collection protocol. For WebShop, we apply the same protocol to a disjoint training set of trajectories. The resulting memory–state–utility triples train the utility estimator, which is frozen before evaluation on the 200-task test set. Further details are provided in the Appendix.",
+      "source": "https://arxiv.org/html/2611.15600v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0027",
+      "section": "Metrics and Evaluation .",
+      "text": "For ALFWorld, we report SR@50 overall and by task category, together with post-failure recovery and failed-action repetition. For WebShop, we report task performance, redundant interactions, and average memory usage. Counterfactual analysis measures utility sparsity, state dependence, and relevance–utility correlation. Utility prediction is evaluated with task-disjoint 5-fold GroupKFold using Spearman correlation, AUPRC, and AUROC. Confidence intervals are obtained by task- or episode-level bootstrap where appropriate. Additional details are provided in the Appendix. Table 1. Performance on 134 unseen ALFWorld tasks under two historical-memory budgets. We report SR@50 (%) overall and across six task categories, with category sizes shown in parentheses. Recovery and failed-action repetition characterize post-failure behavior.",
+      "source": "https://arxiv.org/html/2611.15600v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0028",
+      "section": "Metrics and Evaluation .",
+      "text": "Memory Budget Method Task-wise SR@50 (%) Overall ↑ \\uparrow Recovery ↑ \\uparrow Failed Rep. ↓ \\downarrow Pick (24) Look (18) Clean (31) Heat (23) Cool (21) Pick Two (17) 500 Flat Recency 70.83 61.11 58.06 52.17 57.14 41.18 57.46 40.8 43.2 BM25 87.50 83.33 74.19 47.83 57.14 35.29 65.67 46.3 38.5 Dense Retrieval 87.50 83.33 77.42 60.87 66.67 47.06 71.64 53.7 32.1 Failure-Aware 83.33 88.89 74.19 56.52 66.67 47.06 70.15 59.6 27.6 State-Aware Retrieval 91.67 88.89 80.65 65.22 71.43 52.94 76.12 63.4 24.5 MemArbiter 95.83 94.44 83.87 73.91 80.95 64.71 82.84 68.2 22.4 MemCredit (hybrid) 91.67 88.89 80.65 69.57 76.19 58.82 78.36 69.7 20.6 MemCredit (utility-only) 95.83 94.44 83.87 73.91 85.71 70.59 84.33 72.8 18.5 MemCredit 95.83 100.00 87.10 78.26 85.71 70.59 86.57 75.9 16.4 750 Flat Recency 79.17 72.22 64.52 60.87 66.67 47.06 65.67 44.5 38.0 BM25 95.83 94.44 83.87 65.22 90.48 52.94 81.34 55.8 31.0 Dense Retrieval 100.00 94.44 83.87 69.57 90.48 58.82 83.58 61.5 27.3 Failure-Aware 95.83 94.44 83.87 69.57 85.71 58.82 82.09 64.4 24.3 State-Aware Retrieval 100.00 94.44 87.10 73.91 90.48 58.82 85.07 67.1 22.1 MemArbiter 95.83 94.44 87.10 73.91 95.24 64.71 85.82 71.4 19.1 MemCredit (hybrid) 100.00 100.00 87.10 73.91 95.24 70.59 88.06 72.8 17.9 MemCredit (utility-only) 100.00 94.44 90.32 78.26 95.24 70.59 88.81 74.7 16.5 MemCredit 100.00 100.00 90.32 82.61 95.24 70.59 90.30 77.4 14.5",
+      "source": "https://arxiv.org/html/2611.15600v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0029",
+      "section": "4.2. Overall Performance",
+      "text": "Table 2. Overall performance on WebShop. Score denotes the official WebShop task score, and memory tokens are averaged over decision steps. Lower memory usage, repeated-search rate, invalid-action rate, and trajectory length are better. Method Score ↑ \\uparrow Mem. Tokens ↓ \\downarrow Repeat Search ↓ \\downarrow Invalid Act. ↓ \\downarrow Steps ↓ \\downarrow History-based Full / Truncated History 0.356 599.1 0.278 0.353 12.9 Flat Recency 0.328 490.3 0.292 0.357 13.0 Relevance-based Retrieval BM25 0.407 597.0 0.260 0.352 12.8 Dense Retrieval 0.451 596.8 0.252 0.346 12.7 State-aware / Structured Memory Failure-Aware Retrieval 0.486 596.3 0.257 0.348 12.7 State-Aware Retrieval 0.524 578.4 0.240 0.335 12.5 MemArbiter 0.586 427.6 0.227 0.324 12.3 Decision-Utility-based MemCredit 0.612 152.1 0.213 0.316 12.0",
+      "source": "https://arxiv.org/html/2611.15600v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0030",
+      "section": "ALFWorld .",
+      "text": "Table 1 compares memory-management strategies under the same Qwen3.6-27B-FP8 policy on 134 unseen ALFWorld tasks. Under the tighter 500-token budget, MemCredit achieves 86.57% SR@50, outperforming BM25, State-Aware Retrieval, and MemArbiter. This corresponds to a 20.90 20.90 -point gain over BM25. The improvement spans all six task categories and is particularly pronounced on Heat , Cool , and Pick Two , where MemCredit improves over BM25 by 30.43 30.43 , 28.57 28.57 , and 35.30 35.30 points, respectively, indicating the benefit of utility-aware arbitration for tasks with stronger historical dependencies. The advantage persists as the memory budget increases. At 750 tokens, MemCredit reaches 90.30% SR@50, compared with 81.34 % 81.34\\% for BM25, 85.07 % 85.07\\% for State-Aware Retrieval, and 85.82 % 85.82\\% for MemArbiter. The margin over BM25 decreases from 20.90 20.90 points at 500 tokens to 8.96 8.96 points at 750 tokens, suggesting that explicit memory arbitration is particularly valuable under tighter context constraints. Behavioral metrics show the same pattern: at 500 tokens, MemCredit achieves the highest recovery rate and the lowest failed-action repetition rate. Overall, these results show that MemCredit improves both task success and post-failure behavior through decision-aware memory selection.",
+      "source": "https://arxiv.org/html/2611.15600v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0031",
+      "section": "WebShop .",
+      "text": "Table 2 evaluates task performance and interaction efficiency on 200 WebShop tasks over a 10K-product catalog. MemCredit achieves the highest task score of 0.612 , outperforming BM25, Dense Retrieval, State-Aware Retrieval, and the strongest structured-memory baseline, MemArbiter. At the same time, MemCredit uses only 152.1 historical memory tokens per decision, compared with 427.6 427.6 for MemArbiter and 597.0 597.0 for BM25, corresponding to reductions of 64.4% and 74.5% , respectively. MemCredit also yields more efficient interaction behavior. Compared with MemArbiter, repeated searches decrease from 0.227 0.227 to 0.213 0.213 , invalid actions from 0.324 0.324 to 0.316 0.316 , and average trajectory length from 12.3 12.3 to 12.0 12.0 steps. Similar improvements are observed over relevance-based retrieval methods. As visualized in Figure 2 , MemCredit therefore shifts the agent toward a more favorable performance–memory frontier, improving task quality while substantially reducing the historical context required at each decision step. Figure 4. Cross-model generalization on ALFWorld. Cross-model comparison under a fixed 500-token memory budget for (a) SR@15 and (b) SR@50. Only the action-generation model is changed; all other agent components and evaluation settings remain fixed.",
+      "source": "https://arxiv.org/html/2611.15600v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0032",
+      "section": "Cross-model generalization .",
+      "text": "We further examine whether MemCredit depends on the underlying action-generation model. We replace only the action model while keeping memory construction, state parsing, prompts, interaction limits, and the 500-token memory budget fixed. As shown in Figure 4 , MemCredit outperforms Flat Recency, BM25, and MemArbiter in almost all model and step-limit settings across Qwen2.5-7B-Instruct , Qwen3.6-27B-FP8 , DeepSeek-V3 , and GPT-5.4 : the single exception is SR@50 under GPT-5.4, where BM25 scores marginally higher. Although absolute performance varies across backbones and interaction horizons, the advantage of utility-aware memory arbitration holds across nearly all settings, indicating that MemCredit is not tied to a specific LLM. Table 3. Summary of counterfactual memory-utility analysis. Confidence intervals are obtained by task-clustered bootstrap. Quantity Estimate [95% CI] Relevance–utility alignment Combined Spearman ρ \\rho − 0.011 ​ [ − 0.073 , + 0.077 ] -0.011~[-0.073,\\,+0.077] Dense-only Spearman ρ \\rho − 0.191 -0.191 Broad-only Spearman ρ \\rho + 0.135 ​ [ + 0.062 , + 0.209 ] +0.135~[+0.062,\\,+0.209] Utility concentration Mean memory credit + 0.054 ​ [ + 0.030 , + 0.080 ] +0.054~[+0.030,\\,+0.080] Zero-utility share 86.9 % 86.9\\% Failure-context utility + 0.176 ​ [ + 0.077 , + 0.257 ] +0.176~[+0.077,\\,+0.257] Non-failure utility + 0.029 ​ [ + 0.005 , + 0.057 ] +0.029~[+0.005,\\,+0.057]",
+      "source": "https://arxiv.org/html/2611.15600v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0033",
+      "section": "4.3. Understanding Decision Utility",
+      "text": "We next examine what counterfactual interventions reveal about the value of individual memories at decision time. Our causal set contains 1,041 valid context-conditional interventions from 45 ALFWorld tasks, all passing deterministic state reconstruction. For each memory m i m_{i} at state s t s_{t} with reference context S S , the observed credit is U ⁡ ( m i , s t , S ) = V ⁡ ( s t , S ∪ { m i } ) − V ⁡ ( s t , S ) , U(m_{i};s_{t},S)=V(s_{t},S\\cup\\{m_{i}\\})-V(s_{t},S), where positive credit indicates that exposing the memory improves the decision; the removal-based statistics reported below are the single-removal special case S = C t ∖ { m i } S=C_{t}\\setminus\\{m_{i}\\} . Table 3 summarizes the main statistics, and Figure 5 visualizes the corresponding trends.",
+      "source": "https://arxiv.org/html/2611.15600v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0034",
+      "section": "Relevance is not a stable proxy for decision utility .",
+      "text": "Across the combined intervention set, semantic relevance has essentially no overall association with marginal utility. Moreover, the relationship changes with task coverage: the dense subset yields ρ = − 0.191 \\rho=-0.191 , whereas the broader 44-task subset yields ρ = + 0.135 \\rho=+0.135 . Thus, semantic similarity is not a stable estimate of a memory’s marginal decision value.",
+      "source": "https://arxiv.org/html/2611.15600v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0035",
+      "section": "Decision utility is sparse but consequential .",
+      "text": "Mean credit is 0.054 0.054 , yet 86.9 % 86.9\\% of interventions produce no measurable change. Most memories therefore have little effect at a given step, while a small subset accounts for most of the observed impact.",
+      "source": "https://arxiv.org/html/2611.15600v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0036",
+      "section": "Utility is strongly state dependent .",
+      "text": "Failure-context interventions have a mean utility of 0.176 0.176 , compared with 0.029 0.029 outside failure states. As shown in Figure 5 (b–c), failure contexts exhibit the strongest effects, while several other state categories are substantially weaker. Overall, decision utility is sparse, state dependent, and poorly captured by semantic relevance , motivating MemCredit to estimate memory value explicitly. Figure 5. Counterfactual analysis of memory decision utility. (a) Relevance–utility association changes across task coverage and is near zero on the combined set. (b) Mean memory credit varies substantially across decision states, with the strongest effect after failures. (c) Decision utility is highly sparse: most interventions produce no measurable change. Error bars denote task-clustered 95% bootstrap confidence intervals.",
+      "source": "https://arxiv.org/html/2611.15600v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0037",
+      "section": "4.4. Can Decision Utility Be Predicted?",
+      "text": "Table 4. Task-disjoint prediction of intervention-derived decision utility using 5-fold GroupKFold by task ID. The shuffled-label model serves as a negative control for spurious fitting. Feature Set Spearman ↑ \\uparrow AUPRC ↑ \\uparrow AUROC ↑ \\uparrow Relevance-only − 0.031 -0.031 0.097 0.483 Content-only + 0.016 +0.016 0.122 0.493 Failure-only + 0.095 +0.095 0.184 0.658 Full + 0.220 \\mathbf{+0.220} 0.270 \\mathbf{0.270} 0.744 \\mathbf{0.744} Shuffled labels + 0.048 +0.048 0.146 – We next ask whether decision utility can be predicted from information available at inference time. Table 4 reports task-disjoint 5-fold GroupKFold evaluation by task identity.",
+      "source": "https://arxiv.org/html/2611.15600v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0038",
+      "section": "Utility is predictable beyond relevance and failure cues .",
+      "text": "Relevance-only features provide little predictive signal ( ρ = − 0.031 \\rho=-0.031 , AUPRC 0.097 0.097 , AUROC 0.483 0.483 ), while failure-related features are more informative (AUPRC 0.184 0.184 , AUROC 0.658 0.658 ). The full estimator performs best, reaching ρ = 0.220 \\rho=0.220 , AUPRC 0.270 0.270 , and AUROC 0.744 0.744 . This indicates that useful-memory prediction depends on signals beyond semantic similarity or an explicit failure indicator. A context-blind control that omits the context descriptors x ctx x_{\\mathrm{ctx}} isolates the contribution of conditional context features (Appendix).",
+      "source": "https://arxiv.org/html/2611.15600v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0039",
+      "section": "Prediction remains imperfect .",
+      "text": "Although the full estimator consistently outperforms relevance-only, failure-only, and shuffled-label controls, its moderate rank correlation shows that fine-grained utility prediction remains challenging. MemCredit therefore uses the estimator as a practical ranking signal rather than an exact regressor of counterfactual value. We omit NDCG@5 from the main analysis because zero-inflated utility labels produce unstable rankings under ties; additional diagnostics are reported in the Appendix.",
+      "source": "https://arxiv.org/html/2611.15600v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0040",
+      "section": "4.5. Ablation and Analysis",
+      "text": "Table 5. Ablation of MemCredit on ALFWorld under a 500-token memory budget. Δ \\Delta is measured relative to utility-only ranking with full features. Variant SR@50 (%) ↑ \\uparrow Scoring strategy Relevance-only (BM25) 65.67 ( − 18.66 -18.66 ) Failure-only heuristic 70.15 ( − 14.18 -14.18 ) Relevance + utility ( λ = 0.5 \\lambda=0.5 ) 78.36 ( − 5.97 -5.97 ) Utility-only (full features) 84.33 ( + + 0.00) Utility features MemCredit (w/o explicit failure/state) 86.57 ( + 2.24 +2.24 ) Table 5 examines which components drive the ALFWorld gains under the 500-token memory budget.",
+      "source": "https://arxiv.org/html/2611.15600v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0041",
+      "section": "Decision utility is the main source of improvement .",
+      "text": "Replacing utility-based ranking with BM25 reduces SR@50 from 84.33 % 84.33\\% to 65.67 % 65.67\\% . A failure-only heuristic reaches 70.15 % 70.15\\% , indicating that simply prioritizing failure-related memories does not explain the improvement. These results highlight the importance of estimating the decision value of individual memories.",
+      "source": "https://arxiv.org/html/2611.15600v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0042",
+      "section": "Relevance is more useful for recall than arbitration .",
+      "text": "Directly combining relevance and predicted utility ( λ = 0.5 \\lambda=0.5 ) achieves 78.36 % 78.36\\% , 5.97 5.97 points below utility-only ranking. This supports our design choice of using relevance for candidate recall while relying on predicted utility for final memory arbitration.",
+      "source": "https://arxiv.org/html/2611.15600v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0043",
+      "section": "The gain is not a failure shortcut .",
+      "text": "Removing explicit failure/state indicators further improves SR@50 from 84.33 % 84.33\\% to 86.57 % 86.57\\% , which is used as the primary MemCredit configuration. Together with the weaker Failure-Aware baseline, this suggests that MemCredit captures broader state–memory interactions rather than relying on explicit failure cues. Overall, the ablation identifies utility-aware arbitration—the context-conditional credit-per-token selection of Sec. 3.4 —as the main source of improvement, while direct relevance interpolation and failure-specific heuristics provide weaker alternatives. Additional budget analyses are reported in the Appendix.",
+      "source": "https://arxiv.org/html/2611.15600v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0044",
+      "section": "5. Conclusion",
+      "text": "We introduced MemCredit, a decision-utility-based memory framework for long-horizon agents. Rather than treating semantic relevance as the primary criterion for memory selection, MemCredit estimates the context-conditional marginal contribution of individual memories through counterfactual credit assignment, while keeping the action policy frozen and avoiding additional environment interaction at deployment. Experiments on ALFWorld and WebShop show that this principle improves memory arbitration under limited context budgets. Our analysis further reveals that decision utility is sparse, strongly state dependent, and only weakly captured by semantic relevance. These findings suggest that future agent memory systems should optimize not only what information is retrieved, but which memories are most consequential for the decisions that follow.",
+      "source": "https://arxiv.org/html/2611.15600v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0045",
+      "section": "References",
+      "text": "Chen et al. (2026) Z. Chen, D. Li, M. Zhang, B. Hu, and M. Zhang Dynamic long context reasoning over compressed memory via end-to-end reinforcement learning . In Proceedings of the 64th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) , San Diego, California, United States , pp. 8064–8083 . External Links: Document Cited by: §1 , §2.1 . Dong et al. (2026) J. Dong, Y. Hu, F. Fan, S. Dou, Y. Wu, and D. Zou MemArbiter: decision-time memory arbitration for long-horizon llm agents . arXiv preprint arXiv:2608.02113 . Cited by: §2.1 , §3.1 , §4.1 , §4.1 . Foerster et al. (2018) J. Foerster, G. Farquhar, T. Afouras, N. Nardelli, and S. Whiteson Counterfactual multi-agent policy gradients . In Proceedings of the AAAI Conference on Artificial Intelligence , Vol. 32 , pp. 2974–2982 . External Links: Document Cited by: §3.2 . Geurts et al. (2006) P. Geurts, D. Ernst, and L. Wehenkel Extremely randomized trees . Machine Learning 63 ( 1 ), pp. 3–42 . External Links: Document Cited by: §A.4 , §3.3 . Ghorbani and Zou (2019) A. Ghorbani and J. Zou Data shapley: equitable valuation of data for machine learning . In Proceedings of the 36th International Conference on Machine Learning , Proceedings of Machine Learning Research , Vol. 97 , pp. 2242–2251 . Cited by: §3.2 . Guan et al. (2026) X. Guan, Q. Zhao, and Y. Deng Decision-aware memory cards: counterfactual-inspired context selection and compression for tool-using LLM agents . arXiv preprint arXiv:2606.08151 . External Links: 2606.08151 Cited by: §2.1 .",
+      "source": "https://arxiv.org/html/2611.15600v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0046",
+      "section": "References",
+      "text": "Karpukhin et al. (2020) V. Karpukhin, B. Oguz, S. Min, P. Lewis, L. Wu, S. Edunov, D. Chen, and W. Yih Dense passage retrieval for open-domain question answering . In Proceedings of the 2020 Conference on Empirical Methods in Natural Language Processing (EMNLP) , Online , pp. 6769–6781 . External Links: Document Cited by: §4.1 . Kwon et al. (2023) W. Kwon, Z. Li, S. Zhuang, Y. Sheng, L. Zheng, C. H. Yu, J. E. Gonzalez, H. Zhang, and I. Stoica Efficient memory management for large language model serving with PagedAttention . In Proceedings of the 29th Symposium on Operating Systems Principles , pp. 611–626 . External Links: Document Cited by: §A.1 , §4.1 . Li et al. (2026) J. Li, L. Song, R. Dong, and Y. Kong Learning from failures: heterogeneous graph memory for small language model tool-using agents . arXiv preprint arXiv:2609.28003 . External Links: 2609.28003 Cited by: §4.1 . Liu et al. (2024) N. F. Liu, K. Lin, J. Hewitt, A. Paranjape, M. Bevilacqua, F. Petroni, and P. Liang Lost in the middle: how language models use long contexts . Transactions of the Association for Computational Linguistics 12 , pp. 157–173 . External Links: Document Cited by: §1 . Luo et al. (2026) S. T. Luo, W. Liu, R. Liu, M. Gong, and J. Guo Multi-turn reasoning when context arrives in pieces: scalable sharding and memory-augmented rl . arXiv preprint arXiv:2606.12941 . Cited by: §1 , §2.1 , §2.2 . Packer et al. (2023) C. Packer, S. Wooders, K. Lin, V. Fang, S. G. Patil, I. Stoica, and J. E. Gonzalez MemGPT: towards llms as operating systems . arXiv preprint arXiv:2310.08560 . Cited by: §1 , §2.1 .",
+      "source": "https://arxiv.org/html/2611.15600v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0047",
+      "section": "References",
+      "text": "Park et al. (2023) J. S. Park, J. C. O’Brien, C. J. Cai, M. R. Morris, P. Liang, and M. S. Bernstein Generative agents: interactive simulacra of human behavior . In Proceedings of the 36th Annual ACM Symposium on User Interface Software and Technology , pp. 1–22 . External Links: Document Cited by: §1 , §2.1 . Robertson and Zaragoza (2009) S. E. Robertson and H. Zaragoza The probabilistic relevance framework: bm25 and beyond . Foundations and Trends in Information Retrieval 3 ( 4 ), pp. 333–389 . External Links: Document Cited by: §4.1 . Shinn et al. (2023) N. Shinn, F. Cassano, A. Gopinath, K. Narasimhan, and S. Yao Reflexion: language agents with verbal reinforcement learning . In Advances in Neural Information Processing Systems , Vol. 36 . Cited by: §1 , §2.2 , §4.1 . Shridhar et al. (2021) M. Shridhar, X. Yuan, M. Cote, Y. Bisk, A. Trischler, and M. Hausknecht ALFWorld: aligning text and embodied environments for interactive learning . In International Conference on Learning Representations , Cited by: §1 . Srivastava (2026) S. S. Srivastava Causal intervention-based memory selection for long-horizon LLM agents . arXiv preprint arXiv:2605.17641 . External Links: 2605.17641 Cited by: §2.1 . Tu et al. (2026) S. Tu, C. Xu, Q. Zhang, Y. Zhang, X. Lan, L. Li, and D. Zhao Dynamic dual-granularity skill bank for agentic rl . arXiv preprint arXiv:2603.28716 . Cited by: §1 , §2.2 . Wang et al. (2026) T. Wang, P. Xu, S. Cao, L. Yang, D. Li, J. Jiao, and K. Huang SAMem: state-aware memory as a fine-grained memory for LLM agents in decision-making . In Findings of the Association for Computational Linguistics: ACL 2026 , San Diego, California, United States , pp. 14691–14710 . External Links: Document Cited by: §4.1 .",
+      "source": "https://arxiv.org/html/2611.15600v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0048",
+      "section": "References",
+      "text": "Xia et al. (2026) P. Xia, J. Chen, H. Wang, J. Liu, K. Zeng, Y. Wang, S. Han, Y. Zhou, X. Zhao, H. Chen, Z. Zheng, C. Xie, and H. Yao SkillRL: evolving agents via recursive skill-augmented reinforcement learning . arXiv preprint arXiv:2602.08234 . Cited by: §1 , §2.2 . Xu et al. (2025) W. Xu, Z. Liang, K. Mei, H. Gao, J. Tan, and Y. Zhang A-mem: agentic memory for llm agents . In Advances in Neural Information Processing Systems , Vol. 38 . Cited by: §1 , §2.1 . Yang et al. (2026) B. Yang, J. Sun, Z. Lu, Z. Qiu, X. Peng, and J. Zheng MeClear: cooperative game-theoretic attribution and risk-aware memory clearance for long-horizon LLM agents . arXiv preprint arXiv:2609.09115 . External Links: 2609.09115 Cited by: §2.1 , §3.2 . Yao et al. (2022) S. Yao, H. Chen, J. Yang, and K. Narasimhan WebShop: towards scalable real-world web interaction with grounded language agents . In Advances in Neural Information Processing Systems , Vol. 35 , pp. 20744–20757 . Cited by: §1 . Yao et al. (2023) S. Yao, J. Zhao, D. Yu, N. Du, I. Shafran, K. R. Narasimhan, and Y. Cao ReAct: synergizing reasoning and acting in language models . In International Conference on Learning Representations , Cited by: §1 . Zhao et al. (2024) A. Zhao, D. Huang, Q. Xu, M. Lin, Y. Liu, and G. Huang ExpeL: llm agents are experiential learners . In Proceedings of the AAAI Conference on Artificial Intelligence , Vol. 38 , pp. 19632–19642 . External Links: Document Cited by: §1 , §2.2 . Zhong et al. (2024) W. Zhong, L. Guo, Q. Gao, H. Ye, and Y. Wang MemoryBank: enhancing large language models with long-term memory . In Proceedings of the AAAI Conference on Artificial Intelligence , Vol. 38 , pp. 19724–19731 . External Links: Document Cited by: §1 , §2.1 .",
+      "source": "https://arxiv.org/html/2611.15600v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0049",
+      "section": "References",
+      "text": "Zhu et al. (2026) J. Zhu, G. Zhang, X. Ma, L. Xu, M. Zhang, R. Yang, S. Wang, K. Qiu, Z. Wu, Q. Dai, R. Ma, B. Liu, Y. Yang, C. Luo, Z. Yang, L. Li, L. Wang, W. Chen, X. Geng, and B. Guo RE-trac: recursive trajectory compression for deep search agents . In Proceedings of the 43rd International Conference on Machine Learning , Proceedings of Machine Learning Research , Vol. 306 , pp. 167986–168007 . Cited by: §1 , §2.1 .",
+      "source": "https://arxiv.org/html/2611.15600v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0050",
+      "section": "A.1. Implementation and Evaluation Details",
+      "text": "Hardware and inference. All same-model ALFWorld evaluations use Qwen3.6-27B-FP8 served with vLLM ( Kwon et al., 2023 ) on A800-80GB GPUs, with a 4096-token context window, temperature 0, and seed 42. All compared methods use the same action protocol, parser, environment, and admissible-command hints. The current observation is included in the base prompt and excluded from the historical-memory budget. Pipeline validation. The sharded evaluation pipeline was validated by rerunning BM25@500, which reproduces the frozen result ( 65.67 % 65.67\\% SR@50) up to the execution-order variance documented below: across repeated executions, task-level outcomes agree on at least 94 % 94\\% of the 134 tasks, and single-run aggregate SR varies by up to ± 3 \\pm 3 pp. The agent uses no Python-side randomness; the residual flips trace to GPU-side logit nondeterminism on near-ties under temperature-0 decoding. Memory budgets of 500 and 750 tokens apply only to historical memory.",
+      "source": "https://arxiv.org/html/2611.15600v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0051",
+      "section": "A.1. Implementation and Evaluation Details",
+      "text": "Utility label generation. Intervention labels follow Eq. 9 : the observed one-step credit is the difference between the two branches’ environment rewards, r + i − r − i r^{+i}-r^{-i} , where each branch is executed by the same frozen policy from the same reconstructed state and differs only in the rendered inclusion of the target memory. For ALFWorld, the step reward r r is instantiated with an environment-grounded outcome score taking values in { + 1 , 0 , − 1 } \\{+1,0,-1\\} : + 1 +1 if the episode is won at this step; − 1 -1 if the chosen action is not in the admissible set or repeats a previously failed action; and 0 0 for a valid but neutral action. Reference contexts are sampled at occupancy levels α ∈ { 0 , 1 4 , 1 2 , 3 4 , 1 } \\alpha\\in\\{0,\\tfrac{1}{4},\\tfrac{1}{2},\\tfrac{3}{4},1\\} under the budget, so the factual branch A A and its reference S = A ∖ { m i } S=A\\setminus\\{m_{i}\\} cover isolated, partial, and near-budget contexts. Each pair is executed once (no repeated sampling), and samples whose reconstructed state differs from the recorded one are discarded by the reconstruction check; all 1,041 retained samples pass it. Primary causal analyses use the single-removal reference context S = C t ∖ { m i } S=C_{t}\\setminus\\{m_{i}\\} for the main statistics.",
+      "source": "https://arxiv.org/html/2611.15600v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0052",
+      "section": "A.1. Implementation and Evaluation Details",
+      "text": "WebShop catalog audit. The 10K-product catalog is a uniform subsample of the standard WebShop catalog. For all 200 evaluated instructions, the target product and its required options are present in the catalog, and the target is retrievable within the top-10 search results under the BM25 index used by the environment (Recall@10/20/50 = 100%), so the evaluation is not confounded by missing catalog entries. The reward semantics are identical to standard WebShop; because the catalog is a 10K subset of the full catalog, scores are not directly comparable to full-catalog literature values.",
+      "source": "https://arxiv.org/html/2611.15600v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0053",
+      "section": "A.2. Additional Overall Performance Results",
+      "text": "Table 6. ALFWorld budget-500 comparison relative to BM25 (65.67% SR@50). All 134 tasks have valid paired records. Recovery denotes the post-failure recovery rate and Failed Rep. the failed-action repetition rate; both are taken from the main comparison. Method Δ \\Delta SR (pp) Recovery (%) Failed Rep. (%) Flat Recency − 8.21 -8.21 40.8 43.2 Dense Retrieval + 5.97 +5.97 53.7 32.1 Failure-Aware Retrieval + 4.48 +4.48 59.6 27.6 State-Aware Retrieval + 10.45 +10.45 63.4 24.5 MemArbiter + 17.17 +17.17 68.2 22.4 MemCredit (hybrid) + 12.69 +12.69 69.7 20.6 MemCredit (utility-only) + 18.66 +18.66 72.8 18.5 MemCredit + 20.90 \\mathbf{+20.90} 75.9 16.4 All 134 ALFWorld tasks have valid paired records in the corrected pipeline; Table 6 reports each method’s budget-500 difference relative to BM25 together with the post-failure behavioral metrics from the main comparison. Behavioral metrics reinforce the task-success pattern: methods with larger SR gains also recover more often after failures and repeat failed actions less frequently.",
+      "source": "https://arxiv.org/html/2611.15600v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0054",
+      "section": "A.3. Additional Causal Analysis",
+      "text": "Table 7. Decision-utility causal statistics (combined set). “Decision utility” is the credit of including one memory item relative to the reference context; positive means inclusion improves the decision, and the reported statistics use the single-removal reference context S = C t ∖ { m i } S=C_{t}\\setminus\\{m_{i}\\} . Quantity Estimate [95% CI] Mean memory credit + 0.054 +0.054 [ + 0.030 +0.030 , + 0.080 +0.080 ] Spearman (relevance, utility), combined − 0.011 -0.011 [ − 0.073 -0.073 , + 0.077 +0.077 ] Spearman, dense-only (11 tasks) − 0.191 -0.191 Spearman, broad-only (44 tasks) + 0.135 +0.135 [ + 0.062 +0.062 , + 0.209 +0.209 ] Q1–Q5 relevance-quintile utility gap − 0.009 -0.009 [ − 0.072 -0.072 , + 0.069 +0.069 ] Utility zero-share 0.869 Failure-context utility + 0.176 +0.176 [ + 0.077 +0.077 , + 0.257 +0.257 ] Non-failure utility + 0.029 +0.029 [ + 0.005 +0.005 , + 0.057 +0.057 ] Harmed items in semantic top-1 / top-3 / top-5 0.000 / 0.000 / 0.000 Table 8. Mean memory credit by state type (combined set). State type Mean credit [95% CI] Zero share failure_context + 0.176 +0.176 [ + 0.077 +0.077 , + 0.257 +0.257 ] 0.722 normal_progress + 0.060 +0.060 [ + 0.007 +0.007 , + 0.120 +0.120 ] 0.863 repeat_risk + 0.035 +0.035 [ − 0.019 -0.019 , + 0.080 +0.080 ] 0.923 constraint_sensitive + 0.033 +0.033 [ − 0.010 -0.010 , + 0.079 +0.079 ] 0.900 reference_sensitive + 0.023 +0.023 [ − 0.023 -0.023 , + 0.076 +0.076 ] 0.853 subgoal_transition − 0.005 -0.005 [ − 0.036 -0.036 , + 0.031 +0.031 ] 0.962",
+      "source": "https://arxiv.org/html/2611.15600v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0055",
+      "section": "A.3. Additional Causal Analysis",
+      "text": "The combined causal set covers a dense task subset and a broader task-diverse subset, as summarized in Table 7 ; Table 8 additionally reports mean memory credit by state type. Primary uncertainty estimates use task-clustered bootstrap confidence intervals. We report dense-only and broad-only statistics separately to assess sensitivity to task coverage. Additional ranking-based diagnostics are treated as exploratory because positive-credit items are sparse and candidate sets can be small.",
+      "source": "https://arxiv.org/html/2611.15600v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0056",
+      "section": "A.4. Utility Prediction Details",
+      "text": "Evaluation protocol. Utility predictors are evaluated using 5-fold GroupKFold split by task ID, preventing intervention samples from the same task from appearing in both training and evaluation folds; main results are reported in Table 4 . Features. Relevance-only features contain semantic relevance and recency age; failure-only features contain previous-action failure, failure-related indicators, and state-type features; content features contain inference-time memory and state descriptors. The full estimator adds the context descriptors x ctx x_{\\mathrm{ctx}} (token-level overlap with the selected context, candidate-entity coverage, per-type context counts, and budget occupancy), which expose whether a candidate contributes information already represented in the selected context. A context-blind control omits these descriptors. No counterfactual outcome or intervention-result fields are available to the predictor. Estimator. The primary ExtraTrees ( Geurts et al., 2006 ) model uses 300 trees, maximum depth 8, and minimum leaf size 8. Ridge regression with α = 1 \\alpha=1 is used as a simpler control. NDCG diagnostic. NDCG@5 is omitted from the main text because 86.9 % 86.9\\% of utility labels are exactly zero, producing extensive ranking ties. The shuffled-label control obtains NDCG@5 0.301 0.301 , compared with 0.131 0.131 for the full estimator, indicating that this metric is not informative under the current label distribution. We therefore rely primarily on Spearman correlation, AUPRC, and AUROC.",
+      "source": "https://arxiv.org/html/2611.15600v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0057",
+      "section": "A.5. Additional Ablations",
+      "text": "The hybrid ablation variant uses a fixed interpolation coefficient λ = 0.5 \\lambda=0.5 , selected before final evaluation. The Failure-Aware baseline adds a fixed bonus to failure-related memories while preserving the same retrieval and memory budget. No post-hoc tuning is performed on the final 134-task evaluation set. A larger 750-token budget raises utility-only ALFWorld SR from 84.33 % 84.33\\% to 88.81 % 88.81\\% , and the primary MemCredit configuration from 86.57 % 86.57\\% to 90.30 % 90.30\\% . Additional failure-density analyses stratify tasks using bins fixed from baseline trajectories before comparing methods.",
+      "source": "https://arxiv.org/html/2611.15600v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0058",
+      "section": "A.6. Performance across Failure Density",
+      "text": "We further examine whether the benefit of MemCredit is restricted to failure-intensive trajectories. Using the frozen BM25 trajectories, we compute the failure density of each ALFWorld task and partition the 134 tasks into low-, medium-, and high-failure-density terciles. The resulting partition is fixed and applied to both BM25 and MemCredit, avoiding method-dependent grouping. As shown in Figure 6 , MemCredit consistently outperforms BM25 across all three groups. The SR@50 improvements are + 20.0 +20.0 , + 15.9 +15.9 , and + 20.0 +20.0 percentage points for the low-, medium-, and high-failure groups, respectively. The paired task-bootstrap 95% confidence intervals remain above zero in all three terciles: [ + 6.7 , + 33.3 ] [+6.7,+33.3] , [ + 4.5 , + 29.5 ] [+4.5,+29.5] , and [ + 8.9 , + 33.3 ] [+8.9,+33.3] . This result complements the intervention analysis in Sec. 4.3 . Although individual memories exhibit substantially larger marginal utility in failure contexts, the end-to-end advantage of utility-aware arbitration is not confined to failure-heavy tasks. Failure context therefore represents an important source of memory utility, but not the only setting in which decision-aware memory selection is useful. Figure 6. ALFWorld performance across baseline failure density. Tasks are partitioned into terciles using failure density measured from frozen BM25 trajectories, and the same partition is used for both methods. MemCredit consistently improves over BM25 across all three groups. Error bars denote task-bootstrap 95% confidence intervals; annotations report paired SR@50 differences and their 95% confidence intervals.",
+      "source": "https://arxiv.org/html/2611.15600v1",
+      "offset": 0
+    }
+  ],
+  "links": [
+    {
+      "href": "mailto:guochance1999@163.com",
+      "text": "guochance1999@163.com",
+      "section": "MemCredit: From Relevance to Utility for Decision-Time Memory in Long-Horizon Web Agents",
+      "context": "Conference: Proceedings of the ACM Web Conference 2027; 2027; Dublin, Ireland CCS: Computing methodologies Intelligent agents Quanjiang Guo Affiliation: UESTC , China email: guochance1999@163.com",
+      "url": "mailto:guochance1999@163.com"
+    },
+    {
+      "href": "mailto:wang1679@e.ntu.edu.sg",
+      "text": "wang1679@e.ntu.edu.sg",
+      "section": "MemCredit: From Relevance to Utility for Decision-Time Memory in Long-Horizon Web Agents",
+      "context": "Conference: Proceedings of the ACM Web Conference 2027; 2027; Dublin, Ireland CCS: Computing methodologies Intelligent agents Quanjiang Guo Affiliation: UESTC , China email: guochance1999@163.com , Sijie Wang Affiliation: Nanyang Technological University , Singapore email: wang1679@e.ntu.edu.sg",
+      "url": "mailto:wang1679@e.ntu.edu.sg"
+    },
+    {
+      "href": "mailto:zhuqianyang@std.uestc.edu.cn",
+      "text": "zhuqianyang@std.uestc.edu.cn",
+      "section": "MemCredit: From Relevance to Utility for Decision-Time Memory in Long-Horizon Web Agents",
+      "context": "Conference: Proceedings of the ACM Web Conference 2027; 2027; Dublin, Ireland CCS: Computing methodologies Intelligent agents Quanjiang Guo Affiliation: UESTC , China email: guochance1999@163.com , Sijie Wang Affiliation: Nanyang Technological University , Singapore email: wang1679@e.ntu.edu.sg , Qianyang Zhu Affiliation: UESTC , China email: zhuqianyang@std.uestc.edu.cn",
+      "url": "mailto:zhuqianyang@std.uestc.edu.cn"
+    },
+    {
+      "href": "mailto:zhangben@std.uestc.edu.cn",
+      "text": "zhangben@std.uestc.edu.cn",
+      "section": "MemCredit: From Relevance to Utility for Decision-Time Memory in Long-Horizon Web Agents",
+      "context": "Conference: Proceedings of the ACM Web Conference 2027; 2027; Dublin, Ireland CCS: Computing methodologies Intelligent agents Quanjiang Guo Affiliation: UESTC , China email: guochance1999@163.com , Sijie Wang Affiliation: Nanyang Technological University , Singapore email: wang1679@e.ntu.edu.sg , Qianyang Zhu Affiliation: UESTC , China email: zhuqianyang@std.uestc.edu.cn , Ben Zhang Affiliation: UESTC , China email: zhangben@std.uestc.edu.cn",
+      "url": "mailto:zhangben@std.uestc.edu.cn"
+    },
+    {
+      "href": "mailto:jc.zhang@uestc.edu.cn",
+      "text": "jc.zhang@uestc.edu.cn",
+      "section": "MemCredit: From Relevance to Utility for Decision-Time Memory in Long-Horizon Web Agents",
+      "context": "Conference: Proceedings of the ACM Web Conference 2027; 2027; Dublin, Ireland CCS: Computing methodologies Intelligent agents Quanjiang Guo Affiliation: UESTC , China email: guochance1999@163.com , Sijie Wang Affiliation: Nanyang Technological University , Singapore email: wang1679@e.ntu.edu.sg , Qianyang Zhu Affiliation: UESTC , China email: zhuqianyang@std.uestc.edu.cn , Ben Zhang Affiliation: UESTC , China email: zhangben@std.uestc.edu.cn , Jinchuan Zhang Affiliation: UESTC , China email: jc.zhang@uestc.edu.cn",
+      "url": "mailto:jc.zhang@uestc.edu.cn"
+    },
+    {
+      "href": "mailto:kyan@uestc.edu.cn",
+      "text": "kyan@uestc.edu.cn",
+      "section": "MemCredit: From Relevance to Utility for Decision-Time Memory in Long-Horizon Web Agents",
+      "context": "Conference: Proceedings of the ACM Web Conference 2027; 2027; Dublin, Ireland CCS: Computing methodologies Intelligent agents Quanjiang Guo Affiliation: UESTC , China email: guochance1999@163.com , Sijie Wang Affiliation: Nanyang Technological University , Singapore email: wang1679@e.ntu.edu.sg , Qianyang Zhu Affiliation: UESTC , China email: zhuqianyang@std.uestc.edu.cn , Ben Zhang Affiliation: UESTC , China email: zhangben@std.uestc.edu.cn , Jinchuan Zhang Affiliation: UESTC , China email: jc.zhang@uestc.edu.cn , Ke Yan Affiliation: UESTC , China email: kyan@uestc.edu.cn",
+      "url": "mailto:kyan@uestc.edu.cn"
+    },
+    {
+      "href": "mailto:zkang@uestc.edu.cn",
+      "text": "zkang@uestc.edu.cn",
+      "section": "MemCredit: From Relevance to Utility for Decision-Time Memory in Long-Horizon Web Agents",
+      "context": "and CCS: Computing methodologies Intelligent agents Quanjiang Guo Affiliation: UESTC , China email: guochance1999@163.com , Sijie Wang Affiliation: Nanyang Technological University , Singapore email: wang1679@e.ntu.edu.sg , Qianyang Zhu Affiliation: UESTC , China email: zhuqianyang@std.uestc.edu.cn , Ben Zhang Affiliation: UESTC , China email: zhangben@std.uestc.edu.cn , Jinchuan Zhang Affiliation: UESTC , China email: jc.zhang@uestc.edu.cn , Ke Yan Affiliation: UESTC , China email: kyan@uestc.edu.cn and zhao Kang Note: Corresponding author. Affiliation: UESTC , China email: zkang@uestc.edu.cn",
+      "url": "mailto:zkang@uestc.edu.cn"
+    },
+    {
+      "href": "#bib.bib1",
+      "text": "Yao et al., 2023",
+      "section": "1. Introduction",
+      "context": "Large language models (LLMs) are increasingly deployed as autonomous agents that search, browse, invoke tools, and interact with online environments over extended trajectories ( Yao et al., 2023",
+      "url": "https://arxiv.org/html/2611.15600v1#bib.bib1"
+    },
+    {
+      "href": "#bib.bib2",
+      "text": "Shinn et al., 2023",
+      "section": "1. Introduction",
+      "context": "Large language models (LLMs) are increasingly deployed as autonomous agents that search, browse, invoke tools, and interact with online environments over extended trajectories ( Yao et al., 2023 ; Shinn et al., 2023",
+      "url": "https://arxiv.org/html/2611.15600v1#bib.bib2"
+    },
+    {
+      "href": "#bib.bib6",
+      "text": "Zhao et al., 2024",
+      "section": "1. Introduction",
+      "context": "Large language models (LLMs) are increasingly deployed as autonomous agents that search, browse, invoke tools, and interact with online environments over extended trajectories ( Yao et al., 2023 ; Shinn et al., 2023 ; Zhao et al., 2024",
+      "url": "https://arxiv.org/html/2611.15600v1#bib.bib6"
+    },
+    {
+      "href": "#bib.bib3",
+      "text": "Park et al., 2023",
+      "section": "1. Introduction",
+      "context": " are increasingly deployed as autonomous agents that search, browse, invoke tools, and interact with online environments over extended trajectories ( Yao et al., 2023 ; Shinn et al., 2023 ; Zhao et al., 2024 ) . Unlike single-turn generation, such interaction is inherently stateful : a correct decision may depend on an earlier user constraint, previously observed information, or a failed action that should not be repeated. As trajectories grow, retaining the full interaction history becomes increasingly inefficient, making memory management essential for long-horizon agents ( Park et al., 2023",
+      "url": "https://arxiv.org/html/2611.15600v1#bib.bib3"
+    },
+    {
+      "href": "#bib.bib4",
+      "text": "Packer et al., 2023",
+      "section": "1. Introduction",
+      "context": "oyed as autonomous agents that search, browse, invoke tools, and interact with online environments over extended trajectories ( Yao et al., 2023 ; Shinn et al., 2023 ; Zhao et al., 2024 ) . Unlike single-turn generation, such interaction is inherently stateful : a correct decision may depend on an earlier user constraint, previously observed information, or a failed action that should not be repeated. As trajectories grow, retaining the full interaction history becomes increasingly inefficient, making memory management essential for long-horizon agents ( Park et al., 2023 ; Packer et al., 2023",
+      "url": "https://arxiv.org/html/2611.15600v1#bib.bib4"
+    },
+    {
+      "href": "#bib.bib5",
+      "text": "Zhong et al., 2024",
+      "section": "1. Introduction",
+      "context": "ents that search, browse, invoke tools, and interact with online environments over extended trajectories ( Yao et al., 2023 ; Shinn et al., 2023 ; Zhao et al., 2024 ) . Unlike single-turn generation, such interaction is inherently stateful : a correct decision may depend on an earlier user constraint, previously observed information, or a failed action that should not be repeated. As trajectories grow, retaining the full interaction history becomes increasingly inefficient, making memory management essential for long-horizon agents ( Park et al., 2023 ; Packer et al., 2023 ; Zhong et al., 2024",
+      "url": "https://arxiv.org/html/2611.15600v1#bib.bib5"
+    },
+    {
+      "href": "#bib.bib23",
+      "text": "Liu et al., 2024",
+      "section": "1. Introduction",
+      "context": "ch interaction is inherently stateful : a correct decision may depend on an earlier user constraint, previously observed information, or a failed action that should not be repeated. As trajectories grow, retaining the full interaction history becomes increasingly inefficient, making memory management essential for long-horizon agents ( Park et al., 2023 ; Packer et al., 2023 ; Zhong et al., 2024 ) . Moreover, access to long context does not guarantee effective use of its contents, as performance can vary substantially with how relevant information is positioned and organized ( Liu et al., 2024",
+      "url": "https://arxiv.org/html/2611.15600v1#bib.bib23"
+    },
+    {
+      "href": "#bib.bib7",
+      "text": "Xu et al., 2025",
+      "section": "1. Introduction",
+      "context": "Existing memory systems address this challenge through recency-based retention, semantic retrieval, trajectory compression, structured memory banks, and learned memory policies ( Xu et al., 2025",
+      "url": "https://arxiv.org/html/2611.15600v1#bib.bib7"
+    },
+    {
+      "href": "#bib.bib8",
+      "text": "Zhu et al., 2026",
+      "section": "1. Introduction",
+      "context": "Existing memory systems address this challenge through recency-based retention, semantic retrieval, trajectory compression, structured memory banks, and learned memory policies ( Xu et al., 2025 ; Zhu et al., 2026",
+      "url": "https://arxiv.org/html/2611.15600v1#bib.bib8"
+    },
+    {
+      "href": "#bib.bib9",
+      "text": "Chen et al., 2026",
+      "section": "1. Introduction",
+      "context": "Existing memory systems address this challenge through recency-based retention, semantic retrieval, trajectory compression, structured memory banks, and learned memory policies ( Xu et al., 2025 ; Zhu et al., 2026 ; Chen et al., 2026",
+      "url": "https://arxiv.org/html/2611.15600v1#bib.bib9"
+    },
+    {
+      "href": "#bib.bib10",
+      "text": "Luo et al., 2026",
+      "section": "1. Introduction",
+      "context": "Existing memory systems address this challenge through recency-based retention, semantic retrieval, trajectory compression, structured memory banks, and learned memory policies ( Xu et al., 2025 ; Zhu et al., 2026 ; Chen et al., 2026 ; Luo et al., 2026",
+      "url": "https://arxiv.org/html/2611.15600v1#bib.bib10"
+    },
+    {
+      "href": "#S0.F1",
+      "text": "1",
+      "section": "1. Introduction",
+      "context": "As illustrated in Figure 1",
+      "url": "https://arxiv.org/html/2611.15600v1#S0.F1"
+    },
+    {
+      "href": "#bib.bib12",
+      "text": "Xia et al., 2026",
+      "section": "1. Introduction",
+      "context": "where Q Q measures environment-grounded decision quality. This formulation treats memory value as state-, reference-context-, and policy-dependent, and casts memory management as a fine-grained credit-assignment problem rather than relevance ranking. It is related to recent experience- and skill-based agents that evaluate reusable knowledge through downstream outcomes ( Xia et al., 2026",
+      "url": "https://arxiv.org/html/2611.15600v1#bib.bib12"
+    },
+    {
+      "href": "#bib.bib13",
+      "text": "Tu et al., 2026",
+      "section": "1. Introduction",
+      "context": "where Q Q measures environment-grounded decision quality. This formulation treats memory value as state-, reference-context-, and policy-dependent, and casts memory management as a fine-grained credit-assignment problem rather than relevance ranking. It is related to recent experience- and skill-based agents that evaluate reusable knowledge through downstream outcomes ( Xia et al., 2026 ; Tu et al., 2026",
+      "url": "https://arxiv.org/html/2611.15600v1#bib.bib13"
+    },
+    {
+      "href": "#S4.SS3",
+      "text": "4.3",
+      "section": "1. Introduction",
+      "context": "Controlled intervention experiments support this distinction (Sec. 4.3",
+      "url": "https://arxiv.org/html/2611.15600v1#S4.SS3"
+    },
+    {
+      "href": "#S4.T3",
+      "text": "3",
+      "section": "1. Introduction",
+      "context": "Controlled intervention experiments support this distinction (Sec. 4.3 ; Table 3",
+      "url": "https://arxiv.org/html/2611.15600v1#S4.T3"
+    },
+    {
+      "href": "#S4.F5",
+      "text": "5",
+      "section": "1. Introduction",
+      "context": "Controlled intervention experiments support this distinction (Sec. 4.3 ; Table 3 and Figure 5",
+      "url": "https://arxiv.org/html/2611.15600v1#S4.F5"
+    },
+    {
+      "href": "#bib.bib14",
+      "text": "Shridhar et al., 2021",
+      "section": "1. Introduction",
+      "context": "We evaluate MemCredit on ALFWorld ( Shridhar et al., 2021",
+      "url": "https://arxiv.org/html/2611.15600v1#bib.bib14"
+    },
+    {
+      "href": "#bib.bib15",
+      "text": "Yao et al., 2022",
+      "section": "1. Introduction",
+      "context": "We evaluate MemCredit on ALFWorld ( Shridhar et al., 2021 ) and WebShop ( Yao et al., 2022",
+      "url": "https://arxiv.org/html/2611.15600v1#bib.bib15"
+    },
+    {
+      "href": "#S1.F2",
+      "text": "2",
+      "section": "1. Introduction",
+      "context": "On WebShop, MemCredit achieves the highest task score of 0.612 0.612 while using only 152.1 152.1 memory tokens per decision. Compared with MemArbiter, the strongest non-MemCredit baseline, it improves the score from 0.586 0.586 to 0.612 0.612 while using about 2.8 × 2.8\\times fewer memory tokens; relative to BM25, memory usage is reduced by approximately 3.9 × 3.9\\times . As shown in Figure 2",
+      "url": "https://arxiv.org/html/2611.15600v1#S1.F2"
+    },
+    {
+      "href": "#bib.bib3",
+      "text": "Park et al., 2023",
+      "section": "2.1. Agent Memory Management",
+      "context": "Agent memory supports long-horizon interaction through experience retrieval ( Park et al., 2023",
+      "url": "https://arxiv.org/html/2611.15600v1#bib.bib3"
+    },
+    {
+      "href": "#bib.bib5",
+      "text": "Zhong et al., 2024",
+      "section": "2.1. Agent Memory Management",
+      "context": "Agent memory supports long-horizon interaction through experience retrieval ( Park et al., 2023 ) , long-term storage ( Zhong et al., 2024",
+      "url": "https://arxiv.org/html/2611.15600v1#bib.bib5"
+    },
+    {
+      "href": "#bib.bib4",
+      "text": "Packer et al., 2023",
+      "section": "2.1. Agent Memory Management",
+      "context": "Agent memory supports long-horizon interaction through experience retrieval ( Park et al., 2023 ) , long-term storage ( Zhong et al., 2024 ) , tiered context management ( Packer et al., 2023",
+      "url": "https://arxiv.org/html/2611.15600v1#bib.bib4"
+    },
+    {
+      "href": "#bib.bib7",
+      "text": "Xu et al., 2025",
+      "section": "2.1. Agent Memory Management",
+      "context": "Agent memory supports long-horizon interaction through experience retrieval ( Park et al., 2023 ) , long-term storage ( Zhong et al., 2024 ) , tiered context management ( Packer et al., 2023 ) , and evolving memory structures ( Xu et al., 2025",
+      "url": "https://arxiv.org/html/2611.15600v1#bib.bib7"
+    },
+    {
+      "href": "#bib.bib8",
+      "text": "Zhu et al., 2026",
+      "section": "2.1. Agent Memory Management",
+      "context": "Agent memory supports long-horizon interaction through experience retrieval ( Park et al., 2023 ) , long-term storage ( Zhong et al., 2024 ) , tiered context management ( Packer et al., 2023 ) , and evolving memory structures ( Xu et al., 2025 ) . Recent methods further compress trajectories into structured states ( Zhu et al., 2026",
+      "url": "https://arxiv.org/html/2611.15600v1#bib.bib8"
+    },
+    {
+      "href": "#bib.bib10",
+      "text": "Luo et al., 2026",
+      "section": "2.1. Agent Memory Management",
+      "context": "Agent memory supports long-horizon interaction through experience retrieval ( Park et al., 2023 ) , long-term storage ( Zhong et al., 2024 ) , tiered context management ( Packer et al., 2023 ) , and evolving memory structures ( Xu et al., 2025 ) . Recent methods further compress trajectories into structured states ( Zhu et al., 2026 ) , learn bounded memory updates ( Luo et al., 2026",
+      "url": "https://arxiv.org/html/2611.15600v1#bib.bib10"
+    },
+    {
+      "href": "#bib.bib9",
+      "text": "Chen et al., 2026",
+      "section": "2.1. Agent Memory Management",
+      "context": "Agent memory supports long-horizon interaction through experience retrieval ( Park et al., 2023 ) , long-term storage ( Zhong et al., 2024 ) , tiered context management ( Packer et al., 2023 ) , and evolving memory structures ( Xu et al., 2025 ) . Recent methods further compress trajectories into structured states ( Zhu et al., 2026 ) , learn bounded memory updates ( Luo et al., 2026 ) , or select compressed blocks using the query and working memory ( Chen et al., 2026",
+      "url": "https://arxiv.org/html/2611.15600v1#bib.bib9"
+    },
+    {
+      "href": "#bib.bib11",
+      "text": "Dong et al., 2026",
+      "section": "2.1. Agent Memory Management",
+      "context": "MemArbiter ( Dong et al., 2026",
+      "url": "https://arxiv.org/html/2611.15600v1#bib.bib11"
+    },
+    {
+      "href": "#bib.bib20",
+      "text": "Srivastava, 2026",
+      "section": "2.1. Agent Memory Management",
+      "context": "Closer approaches explicitly evaluate memory utility. CMI ( Srivastava, 2026",
+      "url": "https://arxiv.org/html/2611.15600v1#bib.bib20"
+    },
+    {
+      "href": "#bib.bib21",
+      "text": "Guan et al., 2026",
+      "section": "2.1. Agent Memory Management",
+      "context": "Closer approaches explicitly evaluate memory utility. CMI ( Srivastava, 2026 ) scores memories through controlled interventions in conversational tasks. CICL ( Guan et al., 2026",
+      "url": "https://arxiv.org/html/2611.15600v1#bib.bib21"
+    },
+    {
+      "href": "#bib.bib22",
+      "text": "Yang et al., 2026",
+      "section": "2.1. Agent Memory Management",
+      "context": "Closer approaches explicitly evaluate memory utility. CMI ( Srivastava, 2026 ) scores memories through controlled interventions in conversational tasks. CICL ( Guan et al., 2026 ) estimates decision-oriented utility and assembles selected evidence into budgeted memory cards. MeClear ( Yang et al., 2026",
+      "url": "https://arxiv.org/html/2611.15600v1#bib.bib22"
+    },
+    {
+      "href": "#S3.SS4",
+      "text": "3.4",
+      "section": "2.1. Agent Memory Management",
+      "context": "MemCredit focuses on state-conditioned, item-level credit assignment for sequential decisions. It collects credits through paired replay from matched environment states under a fixed action policy, then trains a lightweight estimator for token-budgeted selection without additional runtime environment interaction. Single-removal attribution can mask redundancy among interacting memories; Sec. 3.4",
+      "url": "https://arxiv.org/html/2611.15600v1#S3.SS4"
+    },
+    {
+      "href": "#bib.bib2",
+      "text": "Shinn et al., 2023",
+      "section": "2.2. Memory Utilization and Credit Assignment",
+      "context": "Effective memory use requires historical experience to improve downstream behavior. Reflexion ( Shinn et al., 2023",
+      "url": "https://arxiv.org/html/2611.15600v1#bib.bib2"
+    },
+    {
+      "href": "#bib.bib6",
+      "text": "Zhao et al., 2024",
+      "section": "2.2. Memory Utilization and Credit Assignment",
+      "context": "Effective memory use requires historical experience to improve downstream behavior. Reflexion ( Shinn et al., 2023 ) stores feedback-derived reflections in episodic memory, ExpeL ( Zhao et al., 2024",
+      "url": "https://arxiv.org/html/2611.15600v1#bib.bib6"
+    },
+    {
+      "href": "#bib.bib12",
+      "text": "Xia et al., 2026",
+      "section": "2.2. Memory Utilization and Credit Assignment",
+      "context": "Effective memory use requires historical experience to improve downstream behavior. Reflexion ( Shinn et al., 2023 ) stores feedback-derived reflections in episodic memory, ExpeL ( Zhao et al., 2024 ) extracts transferable insights from agent trajectories, and SkillRL ( Xia et al., 2026",
+      "url": "https://arxiv.org/html/2611.15600v1#bib.bib12"
+    },
+    {
+      "href": "#bib.bib13",
+      "text": "Tu et al., 2026",
+      "section": "2.2. Memory Utilization and Credit Assignment",
+      "context": "Effective memory use requires historical experience to improve downstream behavior. Reflexion ( Shinn et al., 2023 ) stores feedback-derived reflections in episodic memory, ExpeL ( Zhao et al., 2024 ) extracts transferable insights from agent trajectories, and SkillRL ( Xia et al., 2026 ) distills trajectories into reusable skills. More explicitly, D2Skill ( Tu et al., 2026",
+      "url": "https://arxiv.org/html/2611.15600v1#bib.bib13"
+    },
+    {
+      "href": "#bib.bib10",
+      "text": "Luo et al., 2026",
+      "section": "2.2. Memory Utilization and Credit Assignment",
+      "context": "Effective memory use requires historical experience to improve downstream behavior. Reflexion ( Shinn et al., 2023 ) stores feedback-derived reflections in episodic memory, ExpeL ( Zhao et al., 2024 ) extracts transferable insights from agent trajectories, and SkillRL ( Xia et al., 2026 ) distills trajectories into reusable skills. More explicitly, D2Skill ( Tu et al., 2026 ) evaluates skills through paired rollouts under the same policy, while memory-augmented RL optimizes memory updates using trajectory-level rewards ( Luo et al., 2026",
+      "url": "https://arxiv.org/html/2611.15600v1#bib.bib10"
+    },
+    {
+      "href": "#S1.F3",
+      "text": "3",
+      "section": "3. Methodology",
+      "context": "MemCredit learns which historical memories improve a frozen agent’s current decision under a limited context budget. As illustrated in Figure 3",
+      "url": "https://arxiv.org/html/2611.15600v1#S1.F3"
+    },
+    {
+      "href": "#bib.bib11",
+      "text": "Dong et al., 2026",
+      "section": "3.1. Problem Formulation and Memory Representation",
+      "context": "where c i c_{i} is content, b i b_{i} is a functional type, τ i \\tau_{i} is its creation time, and ξ i \\xi_{i} records observable metadata such as source actions, entities, and past outcomes. Following MemArbiter ( Dong et al., 2026",
+      "url": "https://arxiv.org/html/2611.15600v1#bib.bib11"
+    },
+    {
+      "href": "#bib.bib25",
+      "text": "Ghorbani and Zou, 2019",
+      "section": "Conditional memory credit .",
+      "context": "Single-removal credit from the full candidate set is the special case S = C t ∖ { m i } S=C_{t}\\setminus\\{m_{i}\\} . This case can mask redundancy: when two memories contain the same necessary fact, removing either alone may have zero effect. Conditioning on varied reference contexts exposes when an item adds information and when that information is already represented. Unlike Shapley attribution ( Ghorbani and Zou, 2019",
+      "url": "https://arxiv.org/html/2611.15600v1#bib.bib25"
+    },
+    {
+      "href": "#bib.bib24",
+      "text": "Foerster et al., 2018",
+      "section": "Conditional memory credit .",
+      "context": " t ∖ { m i } S=C_{t}\\setminus\\{m_{i}\\} . This case can mask redundancy: when two memories contain the same necessary fact, removing either alone may have zero effect. Conditioning on varied reference contexts exposes when an item adds information and when that information is already represented. Unlike Shapley attribution ( Ghorbani and Zou, 2019 ) , we predict a conditional marginal effect rather than averaging over all coalition orders to assign a global allocation of credit. The intervention-based credit perspective is also related to counterfactual credit assignment ( Foerster et al., 2018",
+      "url": "https://arxiv.org/html/2611.15600v1#bib.bib24"
+    },
+    {
+      "href": "#bib.bib22",
+      "text": "Yang et al., 2026",
+      "section": "Conditional memory credit .",
+      "context": " case can mask redundancy: when two memories contain the same necessary fact, removing either alone may have zero effect. Conditioning on varied reference contexts exposes when an item adds information and when that information is already represented. Unlike Shapley attribution ( Ghorbani and Zou, 2019 ) , we predict a conditional marginal effect rather than averaging over all coalition orders to assign a global allocation of credit. The intervention-based credit perspective is also related to counterfactual credit assignment ( Foerster et al., 2018 ) and memory attribution ( Yang et al., 2026",
+      "url": "https://arxiv.org/html/2611.15600v1#bib.bib22"
+    },
+    {
+      "href": "#bib.bib26",
+      "text": "Geurts et al., 2006",
+      "section": "3.3. Learning Context-Conditional Memory Utility",
+      "context": "We retain an ExtraTrees regressor ( Geurts et al., 2006",
+      "url": "https://arxiv.org/html/2611.15600v1#bib.bib26"
+    },
+    {
+      "href": "#S3.E4",
+      "text": "4",
+      "section": "Conditional budgeted selection .",
+      "context": "This procedure approximates Eq. 4",
+      "url": "https://arxiv.org/html/2611.15600v1#S3.E4"
+    },
+    {
+      "href": "#bib.bib11",
+      "text": "Dong et al., 2026",
+      "section": "Benchmarks .",
+      "context": "We evaluate MemCredit on ALFWorld and WebShop . For ALFWorld, following the evaluation protocol of MemArbiter ( Dong et al., 2026",
+      "url": "https://arxiv.org/html/2611.15600v1#bib.bib11"
+    },
+    {
+      "href": "#bib.bib27",
+      "text": "Kwon et al., 2023",
+      "section": "Models and Agent Protocol .",
+      "context": "All main experiments use Qwen3.6-27B-FP8 with deterministic decoding. The primary Qwen policy is served with vLLM ( Kwon et al., 2023",
+      "url": "https://arxiv.org/html/2611.15600v1#bib.bib27"
+    },
+    {
+      "href": "#bib.bib11",
+      "text": "Dong et al., 2026",
+      "section": "Compared Methods .",
+      "context": "We compare MemCredit with Flat Recency ( Dong et al., 2026",
+      "url": "https://arxiv.org/html/2611.15600v1#bib.bib11"
+    },
+    {
+      "href": "#bib.bib16",
+      "text": "Robertson and Zaragoza, 2009",
+      "section": "Compared Methods .",
+      "context": "We compare MemCredit with Flat Recency ( Dong et al., 2026 ) , which retains recent history; BM25 Retrieval ( Robertson and Zaragoza, 2009",
+      "url": "https://arxiv.org/html/2611.15600v1#bib.bib16"
+    },
+    {
+      "href": "#bib.bib17",
+      "text": "Karpukhin et al., 2020",
+      "section": "Compared Methods .",
+      "context": "We compare MemCredit with Flat Recency ( Dong et al., 2026 ) , which retains recent history; BM25 Retrieval ( Robertson and Zaragoza, 2009 ) , which ranks memories by lexical relevance; Dense Retrieval ( Karpukhin et al., 2020",
+      "url": "https://arxiv.org/html/2611.15600v1#bib.bib17"
+    },
+    {
+      "href": "#bib.bib2",
+      "text": "Shinn et al., 2023",
+      "section": "Compared Methods .",
+      "context": "We compare MemCredit with Flat Recency ( Dong et al., 2026 ) , which retains recent history; BM25 Retrieval ( Robertson and Zaragoza, 2009 ) , which ranks memories by lexical relevance; Dense Retrieval ( Karpukhin et al., 2020 ) , which uses semantic similarity; Failure-Aware Retrieval , a heuristic that prioritizes recent failure-related memories, inspired by failure-aware experience reuse ( Shinn et al., 2023",
+      "url": "https://arxiv.org/html/2611.15600v1#bib.bib2"
+    },
+    {
+      "href": "#bib.bib19",
+      "text": "Li et al., 2026",
+      "section": "Compared Methods .",
+      "context": "We compare MemCredit with Flat Recency ( Dong et al., 2026 ) , which retains recent history; BM25 Retrieval ( Robertson and Zaragoza, 2009 ) , which ranks memories by lexical relevance; Dense Retrieval ( Karpukhin et al., 2020 ) , which uses semantic similarity; Failure-Aware Retrieval , a heuristic that prioritizes recent failure-related memories, inspired by failure-aware experience reuse ( Shinn et al., 2023 ; Li et al., 2026",
+      "url": "https://arxiv.org/html/2611.15600v1#bib.bib19"
+    },
+    {
+      "href": "#bib.bib18",
+      "text": "Wang et al., 2026",
+      "section": "Compared Methods .",
+      "context": "We compare MemCredit with Flat Recency ( Dong et al., 2026 ) , which retains recent history; BM25 Retrieval ( Robertson and Zaragoza, 2009 ) , which ranks memories by lexical relevance; Dense Retrieval ( Karpukhin et al., 2020 ) , which uses semantic similarity; Failure-Aware Retrieval , a heuristic that prioritizes recent failure-related memories, inspired by failure-aware experience reuse ( Shinn et al., 2023 ; Li et al., 2026 ) ; and State-Aware Retrieval , a heuristic that selects memories aligned with the current interaction state ( Wang et al., 2026",
+      "url": "https://arxiv.org/html/2611.15600v1#bib.bib18"
+    },
+    {
+      "href": "#bib.bib11",
+      "text": "Dong et al., 2026",
+      "section": "Compared Methods .",
+      "context": "mCredit with Flat Recency ( Dong et al., 2026 ) , which retains recent history; BM25 Retrieval ( Robertson and Zaragoza, 2009 ) , which ranks memories by lexical relevance; Dense Retrieval ( Karpukhin et al., 2020 ) , which uses semantic similarity; Failure-Aware Retrieval , a heuristic that prioritizes recent failure-related memories, inspired by failure-aware experience reuse ( Shinn et al., 2023 ; Li et al., 2026 ) ; and State-Aware Retrieval , a heuristic that selects memories aligned with the current interaction state ( Wang et al., 2026 ) . We also evaluate MemArbiter ( Dong et al., 2026",
+      "url": "https://arxiv.org/html/2611.15600v1#bib.bib11"
+    },
+    {
+      "href": "#S4.T1",
+      "text": "1",
+      "section": "ALFWorld .",
+      "context": "Table 1",
+      "url": "https://arxiv.org/html/2611.15600v1#S4.T1"
+    },
+    {
+      "href": "#S4.T2",
+      "text": "2",
+      "section": "WebShop .",
+      "context": "Table 2",
+      "url": "https://arxiv.org/html/2611.15600v1#S4.T2"
+    },
+    {
+      "href": "#S1.F2",
+      "text": "2",
+      "section": "WebShop .",
+      "context": "MemCredit also yields more efficient interaction behavior. Compared with MemArbiter, repeated searches decrease from 0.227 0.227 to 0.213 0.213 , invalid actions from 0.324 0.324 to 0.316 0.316 , and average trajectory length from 12.3 12.3 to 12.0 12.0 steps. Similar improvements are observed over relevance-based retrieval methods. As visualized in Figure 2",
+      "url": "https://arxiv.org/html/2611.15600v1#S1.F2"
+    },
+    {
+      "href": "#S4.F4",
+      "text": "4",
+      "section": "Cross-model generalization .",
+      "context": "We further examine whether MemCredit depends on the underlying action-generation model. We replace only the action model while keeping memory construction, state parsing, prompts, interaction limits, and the 500-token memory budget fixed. As shown in Figure 4",
+      "url": "https://arxiv.org/html/2611.15600v1#S4.F4"
+    },
+    {
+      "href": "#S4.T3",
+      "text": "3",
+      "section": "4.3. Understanding Decision Utility",
+      "context": "where positive credit indicates that exposing the memory improves the decision; the removal-based statistics reported below are the single-removal special case S = C t ∖ { m i } S=C_{t}\\setminus\\{m_{i}\\} . Table 3",
+      "url": "https://arxiv.org/html/2611.15600v1#S4.T3"
+    },
+    {
+      "href": "#S4.F5",
+      "text": "5",
+      "section": "4.3. Understanding Decision Utility",
+      "context": "where positive credit indicates that exposing the memory improves the decision; the removal-based statistics reported below are the single-removal special case S = C t ∖ { m i } S=C_{t}\\setminus\\{m_{i}\\} . Table 3 summarizes the main statistics, and Figure 5",
+      "url": "https://arxiv.org/html/2611.15600v1#S4.F5"
+    },
+    {
+      "href": "#S4.F5",
+      "text": "5",
+      "section": "Utility is strongly state dependent .",
+      "context": "Failure-context interventions have a mean utility of 0.176 0.176 , compared with 0.029 0.029 outside failure states. As shown in Figure 5",
+      "url": "https://arxiv.org/html/2611.15600v1#S4.F5"
+    },
+    {
+      "href": "#S4.T4",
+      "text": "4",
+      "section": "4.4. Can Decision Utility Be Predicted?",
+      "context": "We next ask whether decision utility can be predicted from information available at inference time. Table 4",
+      "url": "https://arxiv.org/html/2611.15600v1#S4.T4"
+    },
+    {
+      "href": "#S4.T5",
+      "text": "5",
+      "section": "4.5. Ablation and Analysis",
+      "context": "Table 5",
+      "url": "https://arxiv.org/html/2611.15600v1#S4.T5"
+    },
+    {
+      "href": "#S3.SS4",
+      "text": "3.4",
+      "section": "The gain is not a failure shortcut .",
+      "context": "Overall, the ablation identifies utility-aware arbitration—the context-conditional credit-per-token selection of Sec. 3.4",
+      "url": "https://arxiv.org/html/2611.15600v1#S3.SS4"
+    },
+    {
+      "href": "https://dx.doi.org/10.18653/v1/2026.acl-long.365",
+      "text": "Document",
+      "section": "References",
+      "context": "Chen et al. (2026) Z. Chen, D. Li, M. Zhang, B. Hu, and M. Zhang Dynamic long context reasoning over compressed memory via end-to-end reinforcement learning . In Proceedings of the 64th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) , San Diego, California, United States , pp. 8064–8083 . External Links: Document",
+      "url": "https://dx.doi.org/10.18653/v1/2026.acl-long.365"
+    },
+    {
+      "href": "#S1.p2.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Chen et al. (2026) Z. Chen, D. Li, M. Zhang, B. Hu, and M. Zhang Dynamic long context reasoning over compressed memory via end-to-end reinforcement learning . In Proceedings of the 64th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) , San Diego, California, United States , pp. 8064–8083 . External Links: Document Cited by: §1",
+      "url": "https://arxiv.org/html/2611.15600v1#S1.p2.1"
+    },
+    {
+      "href": "#S2.SS1.p1.1",
+      "text": "§2.1",
+      "section": "References",
+      "context": "Chen et al. (2026) Z. Chen, D. Li, M. Zhang, B. Hu, and M. Zhang Dynamic long context reasoning over compressed memory via end-to-end reinforcement learning . In Proceedings of the 64th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) , San Diego, California, United States , pp. 8064–8083 . External Links: Document Cited by: §1 , §2.1",
+      "url": "https://arxiv.org/html/2611.15600v1#S2.SS1.p1.1"
+    },
+    {
+      "href": "#S2.SS1.p2.1",
+      "text": "§2.1",
+      "section": "References",
+      "context": "Dong et al. (2026) J. Dong, Y. Hu, F. Fan, S. Dou, Y. Wu, and D. Zou MemArbiter: decision-time memory arbitration for long-horizon llm agents . arXiv preprint arXiv:2608.02113 . Cited by: §2.1",
+      "url": "https://arxiv.org/html/2611.15600v1#S2.SS1.p2.1"
+    },
+    {
+      "href": "#S3.SS1.p1.2",
+      "text": "§3.1",
+      "section": "References",
+      "context": "Dong et al. (2026) J. Dong, Y. Hu, F. Fan, S. Dou, Y. Wu, and D. Zou MemArbiter: decision-time memory arbitration for long-horizon llm agents . arXiv preprint arXiv:2608.02113 . Cited by: §2.1 , §3.1",
+      "url": "https://arxiv.org/html/2611.15600v1#S3.SS1.p1.2"
+    },
+    {
+      "href": "#S4.SS1.SSS0.Px1.p1.1",
+      "text": "§4.1",
+      "section": "References",
+      "context": "Dong et al. (2026) J. Dong, Y. Hu, F. Fan, S. Dou, Y. Wu, and D. Zou MemArbiter: decision-time memory arbitration for long-horizon llm agents . arXiv preprint arXiv:2608.02113 . Cited by: §2.1 , §3.1 , §4.1",
+      "url": "https://arxiv.org/html/2611.15600v1#S4.SS1.SSS0.Px1.p1.1"
+    },
+    {
+      "href": "#S4.SS1.SSS0.Px3.p1.1",
+      "text": "§4.1",
+      "section": "References",
+      "context": "Dong et al. (2026) J. Dong, Y. Hu, F. Fan, S. Dou, Y. Wu, and D. Zou MemArbiter: decision-time memory arbitration for long-horizon llm agents . arXiv preprint arXiv:2608.02113 . Cited by: §2.1 , §3.1 , §4.1 , §4.1",
+      "url": "https://arxiv.org/html/2611.15600v1#S4.SS1.SSS0.Px3.p1.1"
+    },
+    {
+      "href": "https://dx.doi.org/10.1609/aaai.v32i1.11794",
+      "text": "Document",
+      "section": "References",
+      "context": "Foerster et al. (2018) J. Foerster, G. Farquhar, T. Afouras, N. Nardelli, and S. Whiteson Counterfactual multi-agent policy gradients . In Proceedings of the AAAI Conference on Artificial Intelligence , Vol. 32 , pp. 2974–2982 . External Links: Document",
+      "url": "https://dx.doi.org/10.1609/aaai.v32i1.11794"
+    },
+    {
+      "href": "#S3.SS2.SSS0.Px1.p2.1",
+      "text": "§3.2",
+      "section": "References",
+      "context": "Foerster et al. (2018) J. Foerster, G. Farquhar, T. Afouras, N. Nardelli, and S. Whiteson Counterfactual multi-agent policy gradients . In Proceedings of the AAAI Conference on Artificial Intelligence , Vol. 32 , pp. 2974–2982 . External Links: Document Cited by: §3.2",
+      "url": "https://arxiv.org/html/2611.15600v1#S3.SS2.SSS0.Px1.p2.1"
+    },
+    {
+      "href": "https://dx.doi.org/10.1007/s10994-006-6226-1",
+      "text": "Document",
+      "section": "References",
+      "context": "Geurts et al. (2006) P. Geurts, D. Ernst, and L. Wehenkel Extremely randomized trees . Machine Learning 63 ( 1 ), pp. 3–42 . External Links: Document",
+      "url": "https://dx.doi.org/10.1007/s10994-006-6226-1"
+    },
+    {
+      "href": "#A1.SS4.p3.1",
+      "text": "§A.4",
+      "section": "References",
+      "context": "Geurts et al. (2006) P. Geurts, D. Ernst, and L. Wehenkel Extremely randomized trees . Machine Learning 63 ( 1 ), pp. 3–42 . External Links: Document Cited by: §A.4",
+      "url": "https://arxiv.org/html/2611.15600v1#A1.SS4.p3.1"
+    },
+    {
+      "href": "#S3.SS3.p2.1",
+      "text": "§3.3",
+      "section": "References",
+      "context": "Geurts et al. (2006) P. Geurts, D. Ernst, and L. Wehenkel Extremely randomized trees . Machine Learning 63 ( 1 ), pp. 3–42 . External Links: Document Cited by: §A.4 , §3.3",
+      "url": "https://arxiv.org/html/2611.15600v1#S3.SS3.p2.1"
+    },
+    {
+      "href": "#S3.SS2.SSS0.Px1.p2.1",
+      "text": "§3.2",
+      "section": "References",
+      "context": "Ghorbani and Zou (2019) A. Ghorbani and J. Zou Data shapley: equitable valuation of data for machine learning . In Proceedings of the 36th International Conference on Machine Learning , Proceedings of Machine Learning Research , Vol. 97 , pp. 2242–2251 . Cited by: §3.2",
+      "url": "https://arxiv.org/html/2611.15600v1#S3.SS2.SSS0.Px1.p2.1"
+    },
+    {
+      "href": "#S2.SS1.p3.1",
+      "text": "§2.1",
+      "section": "References",
+      "context": "Guan et al. (2026) X. Guan, Q. Zhao, and Y. Deng Decision-aware memory cards: counterfactual-inspired context selection and compression for tool-using LLM agents . arXiv preprint arXiv:2606.08151 . External Links: 2606.08151 Cited by: §2.1",
+      "url": "https://arxiv.org/html/2611.15600v1#S2.SS1.p3.1"
+    },
+    {
+      "href": "https://dx.doi.org/10.18653/v1/2020.emnlp-main.550",
+      "text": "Document",
+      "section": "References",
+      "context": "Karpukhin et al. (2020) V. Karpukhin, B. Oguz, S. Min, P. Lewis, L. Wu, S. Edunov, D. Chen, and W. Yih Dense passage retrieval for open-domain question answering . In Proceedings of the 2020 Conference on Empirical Methods in Natural Language Processing (EMNLP) , Online , pp. 6769–6781 . External Links: Document",
+      "url": "https://dx.doi.org/10.18653/v1/2020.emnlp-main.550"
+    },
+    {
+      "href": "#S4.SS1.SSS0.Px3.p1.1",
+      "text": "§4.1",
+      "section": "References",
+      "context": "Karpukhin et al. (2020) V. Karpukhin, B. Oguz, S. Min, P. Lewis, L. Wu, S. Edunov, D. Chen, and W. Yih Dense passage retrieval for open-domain question answering . In Proceedings of the 2020 Conference on Empirical Methods in Natural Language Processing (EMNLP) , Online , pp. 6769–6781 . External Links: Document Cited by: §4.1",
+      "url": "https://arxiv.org/html/2611.15600v1#S4.SS1.SSS0.Px3.p1.1"
+    },
+    {
+      "href": "https://dx.doi.org/10.1145/3600006.3613165",
+      "text": "Document",
+      "section": "References",
+      "context": "Kwon et al. (2023) W. Kwon, Z. Li, S. Zhuang, Y. Sheng, L. Zheng, C. H. Yu, J. E. Gonzalez, H. Zhang, and I. Stoica Efficient memory management for large language model serving with PagedAttention . In Proceedings of the 29th Symposium on Operating Systems Principles , pp. 611–626 . External Links: Document",
+      "url": "https://dx.doi.org/10.1145/3600006.3613165"
+    },
+    {
+      "href": "#A1.SS1.p1.1",
+      "text": "§A.1",
+      "section": "References",
+      "context": "Kwon et al. (2023) W. Kwon, Z. Li, S. Zhuang, Y. Sheng, L. Zheng, C. H. Yu, J. E. Gonzalez, H. Zhang, and I. Stoica Efficient memory management for large language model serving with PagedAttention . In Proceedings of the 29th Symposium on Operating Systems Principles , pp. 611–626 . External Links: Document Cited by: §A.1",
+      "url": "https://arxiv.org/html/2611.15600v1#A1.SS1.p1.1"
+    },
+    {
+      "href": "#S4.SS1.SSS0.Px2.p1.1",
+      "text": "§4.1",
+      "section": "References",
+      "context": "Kwon et al. (2023) W. Kwon, Z. Li, S. Zhuang, Y. Sheng, L. Zheng, C. H. Yu, J. E. Gonzalez, H. Zhang, and I. Stoica Efficient memory management for large language model serving with PagedAttention . In Proceedings of the 29th Symposium on Operating Systems Principles , pp. 611–626 . External Links: Document Cited by: §A.1 , §4.1",
+      "url": "https://arxiv.org/html/2611.15600v1#S4.SS1.SSS0.Px2.p1.1"
+    },
+    {
+      "href": "#S4.SS1.SSS0.Px3.p1.1",
+      "text": "§4.1",
+      "section": "References",
+      "context": "Li et al. (2026) J. Li, L. Song, R. Dong, and Y. Kong Learning from failures: heterogeneous graph memory for small language model tool-using agents . arXiv preprint arXiv:2609.28003 . External Links: 2609.28003 Cited by: §4.1",
+      "url": "https://arxiv.org/html/2611.15600v1#S4.SS1.SSS0.Px3.p1.1"
+    },
+    {
+      "href": "https://dx.doi.org/10.1162/tacl%5Fa%5F00638",
+      "text": "Document",
+      "section": "References",
+      "context": "Liu et al. (2024) N. F. Liu, K. Lin, J. Hewitt, A. Paranjape, M. Bevilacqua, F. Petroni, and P. Liang Lost in the middle: how language models use long contexts . Transactions of the Association for Computational Linguistics 12 , pp. 157–173 . External Links: Document",
+      "url": "https://dx.doi.org/10.1162/tacl%5Fa%5F00638"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Liu et al. (2024) N. F. Liu, K. Lin, J. Hewitt, A. Paranjape, M. Bevilacqua, F. Petroni, and P. Liang Lost in the middle: how language models use long contexts . Transactions of the Association for Computational Linguistics 12 , pp. 157–173 . External Links: Document Cited by: §1",
+      "url": "https://arxiv.org/html/2611.15600v1#S1.p1.1"
+    },
+    {
+      "href": "#S1.p2.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Luo et al. (2026) S. T. Luo, W. Liu, R. Liu, M. Gong, and J. Guo Multi-turn reasoning when context arrives in pieces: scalable sharding and memory-augmented rl . arXiv preprint arXiv:2606.12941 . Cited by: §1",
+      "url": "https://arxiv.org/html/2611.15600v1#S1.p2.1"
+    },
+    {
+      "href": "#S2.SS1.p1.1",
+      "text": "§2.1",
+      "section": "References",
+      "context": "Luo et al. (2026) S. T. Luo, W. Liu, R. Liu, M. Gong, and J. Guo Multi-turn reasoning when context arrives in pieces: scalable sharding and memory-augmented rl . arXiv preprint arXiv:2606.12941 . Cited by: §1 , §2.1",
+      "url": "https://arxiv.org/html/2611.15600v1#S2.SS1.p1.1"
+    },
+    {
+      "href": "#S2.SS2.p1.1",
+      "text": "§2.2",
+      "section": "References",
+      "context": "Luo et al. (2026) S. T. Luo, W. Liu, R. Liu, M. Gong, and J. Guo Multi-turn reasoning when context arrives in pieces: scalable sharding and memory-augmented rl . arXiv preprint arXiv:2606.12941 . Cited by: §1 , §2.1 , §2.2",
+      "url": "https://arxiv.org/html/2611.15600v1#S2.SS2.p1.1"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Packer et al. (2023) C. Packer, S. Wooders, K. Lin, V. Fang, S. G. Patil, I. Stoica, and J. E. Gonzalez MemGPT: towards llms as operating systems . arXiv preprint arXiv:2310.08560 . Cited by: §1",
+      "url": "https://arxiv.org/html/2611.15600v1#S1.p1.1"
+    },
+    {
+      "href": "#S2.SS1.p1.1",
+      "text": "§2.1",
+      "section": "References",
+      "context": "Packer et al. (2023) C. Packer, S. Wooders, K. Lin, V. Fang, S. G. Patil, I. Stoica, and J. E. Gonzalez MemGPT: towards llms as operating systems . arXiv preprint arXiv:2310.08560 . Cited by: §1 , §2.1",
+      "url": "https://arxiv.org/html/2611.15600v1#S2.SS1.p1.1"
+    },
+    {
+      "href": "https://dx.doi.org/10.1145/3586183.3606763",
+      "text": "Document",
+      "section": "References",
+      "context": "Park et al. (2023) J. S. Park, J. C. O’Brien, C. J. Cai, M. R. Morris, P. Liang, and M. S. Bernstein Generative agents: interactive simulacra of human behavior . In Proceedings of the 36th Annual ACM Symposium on User Interface Software and Technology , pp. 1–22 . External Links: Document",
+      "url": "https://dx.doi.org/10.1145/3586183.3606763"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Park et al. (2023) J. S. Park, J. C. O’Brien, C. J. Cai, M. R. Morris, P. Liang, and M. S. Bernstein Generative agents: interactive simulacra of human behavior . In Proceedings of the 36th Annual ACM Symposium on User Interface Software and Technology , pp. 1–22 . External Links: Document Cited by: §1",
+      "url": "https://arxiv.org/html/2611.15600v1#S1.p1.1"
+    },
+    {
+      "href": "#S2.SS1.p1.1",
+      "text": "§2.1",
+      "section": "References",
+      "context": "Park et al. (2023) J. S. Park, J. C. O’Brien, C. J. Cai, M. R. Morris, P. Liang, and M. S. Bernstein Generative agents: interactive simulacra of human behavior . In Proceedings of the 36th Annual ACM Symposium on User Interface Software and Technology , pp. 1–22 . External Links: Document Cited by: §1 , §2.1",
+      "url": "https://arxiv.org/html/2611.15600v1#S2.SS1.p1.1"
+    },
+    {
+      "href": "https://dx.doi.org/10.1561/1500000019",
+      "text": "Document",
+      "section": "References",
+      "context": "Robertson and Zaragoza (2009) S. E. Robertson and H. Zaragoza The probabilistic relevance framework: bm25 and beyond . Foundations and Trends in Information Retrieval 3 ( 4 ), pp. 333–389 . External Links: Document",
+      "url": "https://dx.doi.org/10.1561/1500000019"
+    },
+    {
+      "href": "#S4.SS1.SSS0.Px3.p1.1",
+      "text": "§4.1",
+      "section": "References",
+      "context": "Robertson and Zaragoza (2009) S. E. Robertson and H. Zaragoza The probabilistic relevance framework: bm25 and beyond . Foundations and Trends in Information Retrieval 3 ( 4 ), pp. 333–389 . External Links: Document Cited by: §4.1",
+      "url": "https://arxiv.org/html/2611.15600v1#S4.SS1.SSS0.Px3.p1.1"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Shinn et al. (2023) N. Shinn, F. Cassano, A. Gopinath, K. Narasimhan, and S. Yao Reflexion: language agents with verbal reinforcement learning . In Advances in Neural Information Processing Systems , Vol. 36 . Cited by: §1",
+      "url": "https://arxiv.org/html/2611.15600v1#S1.p1.1"
+    },
+    {
+      "href": "#S2.SS2.p1.1",
+      "text": "§2.2",
+      "section": "References",
+      "context": "Shinn et al. (2023) N. Shinn, F. Cassano, A. Gopinath, K. Narasimhan, and S. Yao Reflexion: language agents with verbal reinforcement learning . In Advances in Neural Information Processing Systems , Vol. 36 . Cited by: §1 , §2.2",
+      "url": "https://arxiv.org/html/2611.15600v1#S2.SS2.p1.1"
+    },
+    {
+      "href": "#S4.SS1.SSS0.Px3.p1.1",
+      "text": "§4.1",
+      "section": "References",
+      "context": "Shinn et al. (2023) N. Shinn, F. Cassano, A. Gopinath, K. Narasimhan, and S. Yao Reflexion: language agents with verbal reinforcement learning . In Advances in Neural Information Processing Systems , Vol. 36 . Cited by: §1 , §2.2 , §4.1",
+      "url": "https://arxiv.org/html/2611.15600v1#S4.SS1.SSS0.Px3.p1.1"
+    },
+    {
+      "href": "#S1.p8.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Shridhar et al. (2021) M. Shridhar, X. Yuan, M. Cote, Y. Bisk, A. Trischler, and M. Hausknecht ALFWorld: aligning text and embodied environments for interactive learning . In International Conference on Learning Representations , Cited by: §1",
+      "url": "https://arxiv.org/html/2611.15600v1#S1.p8.1"
+    },
+    {
+      "href": "#S2.SS1.p3.1",
+      "text": "§2.1",
+      "section": "References",
+      "context": "Srivastava (2026) S. S. Srivastava Causal intervention-based memory selection for long-horizon LLM agents . arXiv preprint arXiv:2605.17641 . External Links: 2605.17641 Cited by: §2.1",
+      "url": "https://arxiv.org/html/2611.15600v1#S2.SS1.p3.1"
+    },
+    {
+      "href": "#S1.p5.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Tu et al. (2026) S. Tu, C. Xu, Q. Zhang, Y. Zhang, X. Lan, L. Li, and D. Zhao Dynamic dual-granularity skill bank for agentic rl . arXiv preprint arXiv:2603.28716 . Cited by: §1",
+      "url": "https://arxiv.org/html/2611.15600v1#S1.p5.1"
+    },
+    {
+      "href": "#S2.SS2.p1.1",
+      "text": "§2.2",
+      "section": "References",
+      "context": "Tu et al. (2026) S. Tu, C. Xu, Q. Zhang, Y. Zhang, X. Lan, L. Li, and D. Zhao Dynamic dual-granularity skill bank for agentic rl . arXiv preprint arXiv:2603.28716 . Cited by: §1 , §2.2",
+      "url": "https://arxiv.org/html/2611.15600v1#S2.SS2.p1.1"
+    },
+    {
+      "href": "https://dx.doi.org/10.18653/v1/2026.findings-acl.722",
+      "text": "Document",
+      "section": "References",
+      "context": "Wang et al. (2026) T. Wang, P. Xu, S. Cao, L. Yang, D. Li, J. Jiao, and K. Huang SAMem: state-aware memory as a fine-grained memory for LLM agents in decision-making . In Findings of the Association for Computational Linguistics: ACL 2026 , San Diego, California, United States , pp. 14691–14710 . External Links: Document",
+      "url": "https://dx.doi.org/10.18653/v1/2026.findings-acl.722"
+    },
+    {
+      "href": "#S4.SS1.SSS0.Px3.p1.1",
+      "text": "§4.1",
+      "section": "References",
+      "context": "Wang et al. (2026) T. Wang, P. Xu, S. Cao, L. Yang, D. Li, J. Jiao, and K. Huang SAMem: state-aware memory as a fine-grained memory for LLM agents in decision-making . In Findings of the Association for Computational Linguistics: ACL 2026 , San Diego, California, United States , pp. 14691–14710 . External Links: Document Cited by: §4.1",
+      "url": "https://arxiv.org/html/2611.15600v1#S4.SS1.SSS0.Px3.p1.1"
+    },
+    {
+      "href": "#S1.p5.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Xia et al. (2026) P. Xia, J. Chen, H. Wang, J. Liu, K. Zeng, Y. Wang, S. Han, Y. Zhou, X. Zhao, H. Chen, Z. Zheng, C. Xie, and H. Yao SkillRL: evolving agents via recursive skill-augmented reinforcement learning . arXiv preprint arXiv:2602.08234 . Cited by: §1",
+      "url": "https://arxiv.org/html/2611.15600v1#S1.p5.1"
+    },
+    {
+      "href": "#S2.SS2.p1.1",
+      "text": "§2.2",
+      "section": "References",
+      "context": "Xia et al. (2026) P. Xia, J. Chen, H. Wang, J. Liu, K. Zeng, Y. Wang, S. Han, Y. Zhou, X. Zhao, H. Chen, Z. Zheng, C. Xie, and H. Yao SkillRL: evolving agents via recursive skill-augmented reinforcement learning . arXiv preprint arXiv:2602.08234 . Cited by: §1 , §2.2",
+      "url": "https://arxiv.org/html/2611.15600v1#S2.SS2.p1.1"
+    },
+    {
+      "href": "#S1.p2.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Xu et al. (2025) W. Xu, Z. Liang, K. Mei, H. Gao, J. Tan, and Y. Zhang A-mem: agentic memory for llm agents . In Advances in Neural Information Processing Systems , Vol. 38 . Cited by: §1",
+      "url": "https://arxiv.org/html/2611.15600v1#S1.p2.1"
+    },
+    {
+      "href": "#S2.SS1.p1.1",
+      "text": "§2.1",
+      "section": "References",
+      "context": "Xu et al. (2025) W. Xu, Z. Liang, K. Mei, H. Gao, J. Tan, and Y. Zhang A-mem: agentic memory for llm agents . In Advances in Neural Information Processing Systems , Vol. 38 . Cited by: §1 , §2.1",
+      "url": "https://arxiv.org/html/2611.15600v1#S2.SS1.p1.1"
+    },
+    {
+      "href": "#S2.SS1.p3.1",
+      "text": "§2.1",
+      "section": "References",
+      "context": "Yang et al. (2026) B. Yang, J. Sun, Z. Lu, Z. Qiu, X. Peng, and J. Zheng MeClear: cooperative game-theoretic attribution and risk-aware memory clearance for long-horizon LLM agents . arXiv preprint arXiv:2609.09115 . External Links: 2609.09115 Cited by: §2.1",
+      "url": "https://arxiv.org/html/2611.15600v1#S2.SS1.p3.1"
+    },
+    {
+      "href": "#S3.SS2.SSS0.Px1.p2.1",
+      "text": "§3.2",
+      "section": "References",
+      "context": "Yang et al. (2026) B. Yang, J. Sun, Z. Lu, Z. Qiu, X. Peng, and J. Zheng MeClear: cooperative game-theoretic attribution and risk-aware memory clearance for long-horizon LLM agents . arXiv preprint arXiv:2609.09115 . External Links: 2609.09115 Cited by: §2.1 , §3.2",
+      "url": "https://arxiv.org/html/2611.15600v1#S3.SS2.SSS0.Px1.p2.1"
+    },
+    {
+      "href": "#S1.p8.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Yao et al. (2022) S. Yao, H. Chen, J. Yang, and K. Narasimhan WebShop: towards scalable real-world web interaction with grounded language agents . In Advances in Neural Information Processing Systems , Vol. 35 , pp. 20744–20757 . Cited by: §1",
+      "url": "https://arxiv.org/html/2611.15600v1#S1.p8.1"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Yao et al. (2023) S. Yao, J. Zhao, D. Yu, N. Du, I. Shafran, K. R. Narasimhan, and Y. Cao ReAct: synergizing reasoning and acting in language models . In International Conference on Learning Representations , Cited by: §1",
+      "url": "https://arxiv.org/html/2611.15600v1#S1.p1.1"
+    },
+    {
+      "href": "https://dx.doi.org/10.1609/aaai.v38i17.29936",
+      "text": "Document",
+      "section": "References",
+      "context": "Zhao et al. (2024) A. Zhao, D. Huang, Q. Xu, M. Lin, Y. Liu, and G. Huang ExpeL: llm agents are experiential learners . In Proceedings of the AAAI Conference on Artificial Intelligence , Vol. 38 , pp. 19632–19642 . External Links: Document",
+      "url": "https://dx.doi.org/10.1609/aaai.v38i17.29936"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Zhao et al. (2024) A. Zhao, D. Huang, Q. Xu, M. Lin, Y. Liu, and G. Huang ExpeL: llm agents are experiential learners . In Proceedings of the AAAI Conference on Artificial Intelligence , Vol. 38 , pp. 19632–19642 . External Links: Document Cited by: §1",
+      "url": "https://arxiv.org/html/2611.15600v1#S1.p1.1"
+    },
+    {
+      "href": "#S2.SS2.p1.1",
+      "text": "§2.2",
+      "section": "References",
+      "context": "Zhao et al. (2024) A. Zhao, D. Huang, Q. Xu, M. Lin, Y. Liu, and G. Huang ExpeL: llm agents are experiential learners . In Proceedings of the AAAI Conference on Artificial Intelligence , Vol. 38 , pp. 19632–19642 . External Links: Document Cited by: §1 , §2.2",
+      "url": "https://arxiv.org/html/2611.15600v1#S2.SS2.p1.1"
+    },
+    {
+      "href": "https://dx.doi.org/10.1609/aaai.v38i17.29946",
+      "text": "Document",
+      "section": "References",
+      "context": "Zhong et al. (2024) W. Zhong, L. Guo, Q. Gao, H. Ye, and Y. Wang MemoryBank: enhancing large language models with long-term memory . In Proceedings of the AAAI Conference on Artificial Intelligence , Vol. 38 , pp. 19724–19731 . External Links: Document",
+      "url": "https://dx.doi.org/10.1609/aaai.v38i17.29946"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Zhong et al. (2024) W. Zhong, L. Guo, Q. Gao, H. Ye, and Y. Wang MemoryBank: enhancing large language models with long-term memory . In Proceedings of the AAAI Conference on Artificial Intelligence , Vol. 38 , pp. 19724–19731 . External Links: Document Cited by: §1",
+      "url": "https://arxiv.org/html/2611.15600v1#S1.p1.1"
+    },
+    {
+      "href": "#S2.SS1.p1.1",
+      "text": "§2.1",
+      "section": "References",
+      "context": "Zhong et al. (2024) W. Zhong, L. Guo, Q. Gao, H. Ye, and Y. Wang MemoryBank: enhancing large language models with long-term memory . In Proceedings of the AAAI Conference on Artificial Intelligence , Vol. 38 , pp. 19724–19731 . External Links: Document Cited by: §1 , §2.1",
+      "url": "https://arxiv.org/html/2611.15600v1#S2.SS1.p1.1"
+    },
+    {
+      "href": "#S1.p2.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Zhu et al. (2026) J. Zhu, G. Zhang, X. Ma, L. Xu, M. Zhang, R. Yang, S. Wang, K. Qiu, Z. Wu, Q. Dai, R. Ma, B. Liu, Y. Yang, C. Luo, Z. Yang, L. Li, L. Wang, W. Chen, X. Geng, and B. Guo RE-trac: recursive trajectory compression for deep search agents . In Proceedings of the 43rd International Conference on Machine Learning , Proceedings of Machine Learning Research , Vol. 306 , pp. 167986–168007 . Cited by: §1",
+      "url": "https://arxiv.org/html/2611.15600v1#S1.p2.1"
+    },
+    {
+      "href": "#S2.SS1.p1.1",
+      "text": "§2.1",
+      "section": "References",
+      "context": "Zhu et al. (2026) J. Zhu, G. Zhang, X. Ma, L. Xu, M. Zhang, R. Yang, S. Wang, K. Qiu, Z. Wu, Q. Dai, R. Ma, B. Liu, Y. Yang, C. Luo, Z. Yang, L. Li, L. Wang, W. Chen, X. Geng, and B. Guo RE-trac: recursive trajectory compression for deep search agents . In Proceedings of the 43rd International Conference on Machine Learning , Proceedings of Machine Learning Research , Vol. 306 , pp. 167986–168007 . Cited by: §1 , §2.1",
+      "url": "https://arxiv.org/html/2611.15600v1#S2.SS1.p1.1"
+    },
+    {
+      "href": "#bib.bib27",
+      "text": "Kwon et al., 2023",
+      "section": "A.1. Implementation and Evaluation Details",
+      "context": "Hardware and inference. All same-model ALFWorld evaluations use Qwen3.6-27B-FP8 served with vLLM ( Kwon et al., 2023",
+      "url": "https://arxiv.org/html/2611.15600v1#bib.bib27"
+    },
+    {
+      "href": "#S3.E9",
+      "text": "9",
+      "section": "A.1. Implementation and Evaluation Details",
+      "context": "Utility label generation. Intervention labels follow Eq. 9",
+      "url": "https://arxiv.org/html/2611.15600v1#S3.E9"
+    },
+    {
+      "href": "#A1.T6",
+      "text": "6",
+      "section": "A.2. Additional Overall Performance Results",
+      "context": "All 134 ALFWorld tasks have valid paired records in the corrected pipeline; Table 6",
+      "url": "https://arxiv.org/html/2611.15600v1#A1.T6"
+    },
+    {
+      "href": "#A1.T7",
+      "text": "7",
+      "section": "A.3. Additional Causal Analysis",
+      "context": "The combined causal set covers a dense task subset and a broader task-diverse subset, as summarized in Table 7",
+      "url": "https://arxiv.org/html/2611.15600v1#A1.T7"
+    },
+    {
+      "href": "#A1.T8",
+      "text": "8",
+      "section": "A.3. Additional Causal Analysis",
+      "context": "The combined causal set covers a dense task subset and a broader task-diverse subset, as summarized in Table 7 ; Table 8",
+      "url": "https://arxiv.org/html/2611.15600v1#A1.T8"
+    },
+    {
+      "href": "#S4.T4",
+      "text": "4",
+      "section": "A.4. Utility Prediction Details",
+      "context": "Evaluation protocol. Utility predictors are evaluated using 5-fold GroupKFold split by task ID, preventing intervention samples from the same task from appearing in both training and evaluation folds; main results are reported in Table 4",
+      "url": "https://arxiv.org/html/2611.15600v1#S4.T4"
+    },
+    {
+      "href": "#bib.bib26",
+      "text": "Geurts et al., 2006",
+      "section": "A.4. Utility Prediction Details",
+      "context": "Estimator. The primary ExtraTrees ( Geurts et al., 2006",
+      "url": "https://arxiv.org/html/2611.15600v1#bib.bib26"
+    },
+    {
+      "href": "#A1.F6",
+      "text": "6",
+      "section": "A.6. Performance across Failure Density",
+      "context": "As shown in Figure 6",
+      "url": "https://arxiv.org/html/2611.15600v1#A1.F6"
+    },
+    {
+      "href": "#S4.SS3",
+      "text": "4.3",
+      "section": "A.6. Performance across Failure Density",
+      "context": "This result complements the intervention analysis in Sec. 4.3",
+      "url": "https://arxiv.org/html/2611.15600v1#S4.SS3"
+    }
+  ],
+  "note": "Extracted HTML text; equations and table formatting may be imperfect. No PDF extraction was attempted."
+}

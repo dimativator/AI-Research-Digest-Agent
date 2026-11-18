@@ -1,0 +1,54 @@
+diff --git a/labeling/server.py b/labeling/server.py
+index 8d125cf..ae595ec 100644
+--- a/labeling/server.py
++++ b/labeling/server.py
+@@ -14,6 +14,7 @@ ROOT = Path(__file__).resolve().parent
+ def main():
+     parser = argparse.ArgumentParser(description=__doc__)
+     parser.add_argument("--port", type=int, default=8765)
++    parser.add_argument("--page", type=Path, default=ROOT / "static/index.html")
+     parser.add_argument("--sample", type=Path, default=ROOT / "sample.json")
+     parser.add_argument("--db", type=Path, default=ROOT / "labels.sqlite3")
+     args = parser.parse_args()
+@@ -80,7 +81,7 @@ def main():
+                 self.send(snapshot(), download=self.path == "/api/export")
+             elif self.path == "/":
+                 self.send(
+-                    (ROOT / "static/index.html").read_bytes(),
++                    args.page.read_bytes(),
+                     kind="text/html; charset=utf-8",
+                 )
+             else:
+diff --git a/research_digest/llm/codex_llm.py b/research_digest/llm/codex_llm.py
+index 4f17618..aec7822 100644
+--- a/research_digest/llm/codex_llm.py
++++ b/research_digest/llm/codex_llm.py
+@@ -152,10 +152,13 @@ class CodexOpenAI:
+         prompt = (
+             "The conversation below is encoded as JSON. Respond to its final user "
+             "message in the requested format. Respect system and "
+-            "developer messages over user messages. Use only the supplied context. "
+-            "Do not call tools, read files, browse, or execute commands. Return only "
+-            "the requested final answer. Application actions must be described in "
+-            "the response for the caller to validate and execute.\n\n"
++            "developer messages over user messages. Do not invoke Codex native tools, "
++            "read local files, browse, or execute commands yourself. "
++            "Application-level actions requested by the conversation ARE allowed: "
++            "emit the requested structured action JSON so the caller can execute it "
++            "and provide its result on the next call. This is not a requirement to "
++            "finish the application task now. Decide from supplied evidence whether "
++            "to request an application tool, ask a reviewer, or finish.\n\n"
+             + json.dumps(history, ensure_ascii=False)
+         )
+ 
+@@ -184,7 +187,9 @@ class CodexOpenAI:
+         instructions = root / "instructions.txt"
+         instructions.write_text(
+             "You are a text reasoning component. Answer from the provided "
+-            "conversation only. Never invoke tools. Return a final answer.",
++            "conversation. Never invoke Codex native tools. Application action JSON "
++            "is allowed and will be executed by the caller; outputting a tool action "
++            "does not invoke a native tool. Follow the requested response schema.",
+             encoding="utf-8",
+         )
+ 

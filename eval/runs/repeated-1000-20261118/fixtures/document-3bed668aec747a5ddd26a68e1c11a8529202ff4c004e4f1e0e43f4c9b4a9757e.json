@@ -1,0 +1,1767 @@
+{
+  "status": "ok",
+  "source": "https://arxiv.org/html/2611.07349v1",
+  "extractor_version": "article-v1",
+  "chunks": [
+    {
+      "chunk_id": "chunk-0001",
+      "section": "From What Is Used to What Is Missing: Rethinking Dynamic Rank in LoRA",
+      "text": "Peng Xue Affiliation: Fuzhou University Guodong Fan Affiliation: Shandong Technology and Business University Guang-Yong Chen Affiliation: Fuzhou University Xing Chen Affiliation: Fuzhou University",
+      "source": "https://arxiv.org/html/2611.07349v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0002",
+      "section": "Abstract",
+      "text": "Parameter-efficient fine-tuning with LoRA is governed by rank, which controls parameter budget and locally accessible task updates. Existing dynamic-rank methods mainly focus on capacity allocation, leaving unresolved whether the current adaptation space is sufficient for the task. We characterize the first-order information boundary of standard factor gradients, showing that their unobservable subspace coincides with the normal space of the low-rank manifold. Thus, factor gradients alone cannot distinguish under-optimization within the current space from task-relevant directions beyond its first-order reach. This motivates a geometric view of rank evolution, where tangent information optimizes existing degrees of freedom and the normal spectrum quantifies the value of new ones. Under a local quadratic model, we show that leading normal singular directions yield the locally optimal rank expansion, with spectral energy determining its gain. Building on this characterization, we propose GEAR, which turns the tangent–normal decomposition into rank evolution through tangent-space optimization, matrix-free normal-spectrum estimation for rank expansion, and task-induced geometric initialization. Across language and vision benchmarks, GEAR achieves the best average performance in all evaluated settings with substantially fewer trainable parameters. On LLaMA3-8B, it raises the average commonsense score from 86.61 to 88.45 while reducing trainable parameters from 42.0M to 14.4M.",
+      "source": "https://arxiv.org/html/2611.07349v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0003",
+      "section": "1 Introduction",
+      "text": "Parameter-efficient fine-tuning (PEFT) has become a prevailing approach to adapting large pretrained models by updating only a small fraction of task-specific parameters ( Ding et al., 2023b ) . Among PEFT methods, LoRA represents the weight increment as a low-rank matrix, Δ ​ W = B ​ A \\Delta W=BA , where A ∈ ℝ r × m A\\in\\mathbb{R}^{r\\times m} and B ∈ ℝ n × r B\\in\\mathbb{R}^{n\\times r} , reducing the number of trainable parameters from n ​ m nm to r ⁡ ( n + m ) r(n+m) ( Hu et al., 2022 ) . While r r therefore directly controls the adaptation budget, it also determines the local first-order update space accessible under the low-rank constraint ( Vandereycken, 2013 ) . Rank thus governs both adaptation capacity and which task-induced directions can be expressed. Since these requirements vary across layers and throughout training, a uniform fixed rank is unlikely to match the evolving structure of task demand, motivating dynamic-rank adaptation.",
+      "source": "https://arxiv.org/html/2611.07349v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0004",
+      "section": "1 Introduction",
+      "text": "Most dynamic-rank methods still treat rank primarily as a capacity-allocation variable. AdaLoRA, for example, reallocates a prescribed rank budget across weight matrices according to the importance of individual singular components ( Zhang et al., 2023 ) , while DyLoRA trains nested low-rank structures to support inference at multiple truncation ranks ( Valipour et al., 2023 ) . More recent approaches permit more flexible rank evolution: FlexLoRA uses the spectral entropy of the current low-rank update to determine when capacity should be pruned or expanded ( Liu et al., 2026 ) , whereas GeoLoRA combines gradient-driven basis augmentation with spectral truncation within a dynamical low-rank integration framework ( Schotthöfer et al., 2025 ) . Although these methods substantially improve the flexibility of rank adaptation, their rank decisions are primarily derived from the capacity or structure already represented by the current adapter. They therefore characterize what the current low-rank space uses, but provide no direct criterion for determining whether task-relevant descent directions remain missing outside that space. This leaves a more fundamental question unresolved: Is the current adaptation space locally sufficient to express task-relevant descent directions, or must its rank expand to make such directions first-order accessible?",
+      "source": "https://arxiv.org/html/2611.07349v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0005",
+      "section": "1 Introduction",
+      "text": "Answering this question requires distinguishing insufficient optimization within the current low-rank space from insufficiency of the space itself. Limited progress may arise for two fundamentally different reasons: the current rank may be sufficient but under-optimized, or task-relevant descent directions may lie outside its first-order reachable space. Only the latter justifies increasing rank. Existing rank-allocation criteria do not explicitly separate these two cases, making it difficult to determine whether additional capacity is genuinely required. This distinction motivates our central view that dynamic rank should be driven not only by what the current adaptation space already represents, but also by what task-relevant descent information remains inaccessible to it. Figure 1: Motivation and overview of GEAR. (a) standard factor-gradient observations are insensitive to normal components, so identical first-order observations can correspond to different rank requirements . (b) GEAR distinguishes optimization within the current manifold from expansion toward task-relevant directions beyond the current first-order reachable space. (c) this geometry-guided rank evolution yields a stronger performance–parameter trade-off on commonsense reasoning.",
+      "source": "https://arxiv.org/html/2611.07349v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0006",
+      "section": "1 Introduction",
+      "text": "To address this limitation, we propose GEAR (Geometry-guided Evolution of Adaptive Rank), which formulates dynamic-rank adaptation as the evolution of a task-dependent low-rank space. Rather than inferring rank adequacy from existing factor statistics, we characterize the first-order information available under the fixed-rank parameterization. For X = B ​ A X=BA , we show that the standard factor-gradient map has an observability gap whose null space coincides with the normal space N X ​ ℳ r N_{X}\\mathcal{M}_{r} of the fixed-rank manifold ℳ r = { X ∈ ℝ n × m : rank ⁡ ( X ) = r } \\mathcal{M}_{r}=\\{X\\in\\mathbb{R}^{n\\times m}:\\operatorname{rank}(X)=r\\} . This establishes a structural information limitation in which standard factor gradients reveal the tangent component relevant to optimizing the current rank, while leaving the normal component unobservable. Consequently, they cannot distinguish under-optimization within the current adaptation space from task-relevant directions requiring rank expansion to become first-order accessible. For a prescribed rank increase, we further show that leading normal modes determine the locally optimal expansion, while their spectral energy quantifies its gain. Building on this characterization, we propose GEAR, which turns the tangent–normal decomposition into a practical rank-evolution mechanism through tangent-space optimization, matrix-free normal-spectrum estimation for rank expansion, and task-induced geometric initialization. By expanding rank only when the estimated normal spectrum reveals valuable task-relevant directions, GEAR improves adaptation effectiveness and parameter efficiency. Across multiple benchmarks, it consistently outperforms competitive PEFT baselines while using fewer trainable parameters. Our contributions",
+      "source": "https://arxiv.org/html/2611.07349v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0007",
+      "section": "1 Introduction",
+      "text": "improves adaptation effectiveness and parameter efficiency. Across multiple benchmarks, it consistently outperforms competitive PEFT baselines while using fewer trainable parameters. Our contributions are as follows:",
+      "source": "https://arxiv.org/html/2611.07349v1",
+      "offset": 1596
+    },
+    {
+      "chunk_id": "chunk-0008",
+      "section": "1 Introduction",
+      "text": "• First-order observability barrier for rank adaptation. To our knowledge, we are the first to characterize the information available from standard fixed-rank factor gradients and prove that their unobservable subspace is the normal space of the low-rank manifold, thereby separating current-space optimization from rank-expanding directions. • Geometry-guided rank evolution. We introduce GEAR, which unifies optimization over the current fixed-rank manifold and rank expansion using tangent information to optimize the adaptation space and the normal spectrum to identify and value new task-relevant directions. • Excellent performance–parameter trade-off. Across language and vision benchmarks, GEAR achieves the best average performance in every evaluated setting while using substantially fewer trainable parameters than strong PEFT baselines.",
+      "source": "https://arxiv.org/html/2611.07349v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0009",
+      "section": "LoRA and Adaptive Rank Adaptation.",
+      "text": "LoRA parameterizes task-specific updates through low-rank factors, reducing trainable parameters and storage while preserving frozen pretrained weights ( Hu et al., 2022 ) . Subsequent work has improved low-rank adaptation through refined parameterizations and initialization strategies. DoRA decouples weight magnitude and direction to enhance adaptation flexibility ( Liu et al., 2024 ) , while PiSSA initializes adapters from principal singular subspaces of the pretrained weights ( Meng et al., 2024 ) and LoRA-GA uses task gradients to identify more effective initial low-rank directions ( Wang et al., 2024 ) . Despite these advances, most methods still operate with a fixed rank, which may poorly match the heterogeneous adaptation demands across layers and training stages. This limitation has motivated adaptive-rank LoRA methods. AdaLoRA dynamically reallocates a prescribed rank budget across modules according to singular-component importance ( Zhang et al., 2023 ) ; DyLoRA trains nested low-rank structures to support multiple effective ranks ( Valipour et al., 2023 ) ; and SoRA learns effective rank through sparse gating ( Ding et al., 2023a ) . More recent approaches allow rank to both contract and expand: FlexLoRA adjusts rank according to the spectral structure of the current adapter ( Liu et al., 2026 ) , whereas GeoLoRA combines gradient-driven basis augmentation with spectral truncation under a dynamical low-rank formulation ( Schotthöfer et al., 2025 ) . GeLoRA further estimates the intrinsic dimensionality of hidden representations to derive adaptive layer-wise ranks ( Ed-dib et al., 2025 ) . Collectively, these methods have advanced LoRA from fixed-rank adaptation toward increasingly flexible, task-dependent capacity allocation. However, existing adaptive-rank",
+      "source": "https://arxiv.org/html/2611.07349v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0010",
+      "section": "LoRA and Adaptive Rank Adaptation.",
+      "text": "ks ( Ed-dib et al., 2025 ) . Collectively, these methods have advanced LoRA from fixed-rank adaptation toward increasingly flexible, task-dependent capacity allocation. However, existing adaptive-rank methods primarily decide how to allocate or reorganize represented low-rank capacity, whereas GEAR asks a different question: whether task-relevant descent information remains outside the current first-order reachable space and therefore warrants new rank dimensions.",
+      "source": "https://arxiv.org/html/2611.07349v1",
+      "offset": 1598
+    },
+    {
+      "chunk_id": "chunk-0011",
+      "section": "Geometric Optimization for LoRA",
+      "text": "Fixed-rank matrices admit a natural Riemannian manifold structure, providing a principled way to optimize low-rank states independently of a particular factorization ( Vandereycken, 2013 ) . Early geometric approaches to LoRA exploit this structure through Riemannian metrics and preconditioning; for example, Riemannian Preconditioned LoRA derives low-dimensional preconditioners from the geometry of the low-rank matrix space to improve optimization stability and convergence ( Zhang and Pilanci, 2024 ) . GeoLoRA further introduces dynamical low-rank integration into PEFT, combining gradient-driven basis augmentation with spectral truncation for structure-preserving and rank-adaptive updates ( Schotthöfer et al., 2025 ) . Related work has also explored explicit manifold constraints on LoRA factors. Park et al. optimize the B B factor on the Stiefel manifold to maintain orthogonality and effective rank ( Park et al., 2025 ) , while Manifold-LoRA develops a retraction-free Stiefel-manifold formulation for LoRA fine-tuning ( Zhang et al., 2026 ) . More recently, Riemannion directly optimizes the adaptation matrix on the fixed-rank manifold, removing factorization ambiguity and enabling parametrization-independent geometric updates ( Bogachev et al., 2026 ) .",
+      "source": "https://arxiv.org/html/2611.07349v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0012",
+      "section": "Geometric Optimization for LoRA",
+      "text": "These methods establish geometry as an effective tool for improving low-rank optimization, primarily by refining the metric, constraining the factor geometry, or evolving the current low-rank state. GEAR instead focuses on the information required to determine when the current adaptation space itself should expand. From a first-order observability perspective, it relates the normal component unobservable from standard factor gradients to task-relevant directions beyond the current first-order reachable space, thereby connecting manifold optimization with rank expansion.",
+      "source": "https://arxiv.org/html/2611.07349v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0013",
+      "section": "3 Method",
+      "text": "GEAR builds on a first-order observability gap in fixed-rank adaptation: standard factor gradients characterize optimization within the current space, but not the normal task information that governs its expansion. We first formalize this boundary and then develop a geometry-guided adaptation framework that optimizes the low-rank space while identifying when and how it should expand. Algorithm 1 GEAR: Geometry-Guided Evolution of Adaptive Rank",
+      "source": "https://arxiv.org/html/2611.07349v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0014",
+      "section": "3 Method",
+      "text": "Input: Pretrained weights W W ; initial rank r 0 r_{0} ; rank upper bound r max r_{\\max} ; audit set 𝒯 audit \\mathcal{T}_{\\mathrm{audit}} ; budget ℬ target \\mathcal{B}_{\\mathrm{target}} ( U , C , V ) ← TGI ⁡ ( W , r 0 ) (U,C,V)\\leftarrow\\mathrm{TGI}(W,r_{0}) ; X ← U ​ C , W ← W − s ​ X , r ← r 0 X\\leftarrow UC,\\quad W\\leftarrow W-sX,\\quad r\\leftarrow r_{0} ; for t = 1 , … , T t=1,\\ldots,T do G T ← U ⁡ ( U ⊤ ​ G ) + ( I − U ​ U ⊤ ) ​ G ​ V ​ V ⊤ G_{T}\\leftarrow U(U^{\\top}G)+(I-UU^{\\top})GVV^{\\top} ; // Eq. ( 1 ) ( X , U , C , V ) ← Retr ℳ r ⁡ ( X − η t ​ G T ) (X,U,C,V)\\leftarrow\\operatorname{Retr}_{\\mathcal{M}_{r}}(X-\\eta_{t}G_{T}) ; // Eq. ( 2 ) if t ∈ 𝒯 audit t\\in\\mathcal{T}_{\\mathrm{audit}} and r < r max r<r_{\\max} then ( U ^ , Σ ^ , V ^ ) ← NormalSketch ⁡ ( X ) (\\widehat{U},\\widehat{\\Sigma},\\widehat{V})\\leftarrow\\mathrm{NormalSketch}(X) ; // Eqs. ( 3 )--( 4 ) 𝒮 ← Select ⁡ ( U ^ , Σ ^ , V ^ , ℬ target ) \\mathcal{S}\\leftarrow\\mathrm{Select}(\\widehat{U},\\widehat{\\Sigma},\\widehat{V};\\mathcal{B}_{\\mathrm{target}}) ; // Eq. ( 5 ) X cand ← Propose ⁡ ( X , 𝒮 ) X_{\\mathrm{cand}}\\leftarrow\\mathrm{Propose}(X,\\mathcal{S}) ; // Eq. ( 6 ) if Validate ⁡ ( X cand , X ) \\mathrm{Validate}(X_{\\mathrm{cand}},X) then ( U , C , r ) ← Expand ⁡ ( U , C , 𝒮 ) , X ← U ​ C (U,C,r)\\leftarrow\\mathrm{Expand}(U,C,\\mathcal{S}),\\quad X\\leftarrow UC ; // Eq. ( 7 ) end if end if end for Output: X X",
+      "source": "https://arxiv.org/html/2611.07349v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0015",
+      "section": "3.1 First-Order Information Boundary of Standard Factor Gradients",
+      "text": "Consider a pretrained weight matrix W ∈ ℝ n × m W\\in\\mathbb{R}^{n\\times m} adapted as W ′ = W + s ​ X , X = B ​ A , W^{\\prime}=W+sX,\\qquad X=BA, where s > 0 s>0 is a fixed scaling factor. Let f ⁡ ( X ) = ℒ ⁡ ( W + s ​ X ) f(X)=\\mathcal{L}(W+sX) and G = ∇ X f ​ ( X ) G=\\nabla_{X}f(X) . For a rank- r r adaptation matrix X = B ​ A X=BA , we analyze X X on the fixed-rank manifold ℳ r \\mathcal{M}_{r} , whose tangent space characterizes the first-order directions accessible without increasing rank ( Vandereycken, 2013 ) . Let X = U ​ Σ ​ V ⊤ X=U\\Sigma V^{\\top} be the compact SVD of X X , and define P U = U ​ U ⊤ P_{U}=UU^{\\top} and P V = V ​ V ⊤ P_{V}=VV^{\\top} . The full gradient admits the orthogonal decomposition G = G T + G N , G=G_{T}+G_{N}, where G T = P U ​ G + ( I − P U ) ​ G ​ P V ∈ T X ​ ℳ r G_{T}=P_{U}G+(I-P_{U})GP_{V}\\in T_{X}\\mathcal{M}_{r} and G N = ( I − P U ) ​ G ​ ( I − P V ) ∈ N X ​ ℳ r G_{N}=(I-P_{U})G(I-P_{V})\\in N_{X}\\mathcal{M}_{r} . Under the factorized parameterization X = B ​ A X=BA , the corresponding gradients are ∇ B f = G ​ A ⊤ , ∇ A f = B ⊤ ​ G . \\nabla_{B}f=GA^{\\top},\\qquad\\nabla_{A}f=B^{\\top}G. We therefore define the factor-gradient observation operator 𝒪 A , B ​ ( G ) = ( G ​ A ⊤ , B ⊤ ​ G ) , \\mathcal{O}_{A,B}(G)=\\bigl(GA^{\\top},B^{\\top}G\\bigr), which captures the first-order information about G G available from standard factor backpropagation.",
+      "source": "https://arxiv.org/html/2611.07349v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0016",
+      "section": "Theorem 1 (Factor-Gradient Observability Barrier) .",
+      "text": "Let A ∈ ℝ r × m A\\in\\mathbb{R}^{r\\times m} and B ∈ ℝ n × r B\\in\\mathbb{R}^{n\\times r} be full rank, with X = B ​ A ∈ ℳ r X=BA\\in\\mathcal{M}_{r} . Then ker ⁡ 𝒪 A , B = N X ​ ℳ r . \\ker\\mathcal{O}_{A,B}=N_{X}\\mathcal{M}_{r}. Equivalently, for any G 1 G_{1} and G 2 G_{2} , 𝒪 A , B ​ ( G 1 ) = 𝒪 A , B ​ ( G 2 ) \\mathcal{O}_{A,B}(G_{1})=\\mathcal{O}_{A,B}(G_{2}) if and only if ( G 1 ) T = ( G 2 ) T . (G_{1})_{T}=(G_{2})_{T}. The theorem establishes a precise first-order observability boundary, showing that standard factor gradients preserve the tangent component of the task gradient but cannot distinguish gradients that differ only in their normal components. A complete proof is provided in Appendix C.1 . Consequently, the same factor-gradient observation may correspond either to a gradient fully represented by the current adaptation space or to one containing additional task-relevant directions beyond its first-order reach. This ambiguity arises from the information available under the current fixed-rank parameterization, rather than from factorization itself. This result distinguishes optimization within the current adaptation space from the need for rank expansion. The tangent component represents directions that are first-order accessible at rank r r , whereas the normal component captures task-relevant directions beyond the current space. Accordingly, tangent information is used to optimize the existing degrees of freedom, while normal information provides the relevant signal for assessing the value of rank expansion. The subsequent sections develop these two mechanisms, respectively.",
+      "source": "https://arxiv.org/html/2611.07349v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0017",
+      "section": "3.2 Fixed-Rank Manifold Optimization",
+      "text": "For a fixed rank r r , GEAR performs optimization on the manifold ℳ r \\mathcal{M}_{r} using the tangent component of the gradient. We represent the adaptation matrix as X = U ​ C , U ⊤ ​ U = I r , X=UC,\\qquad U^{\\top}U=I_{r}, where U U is an orthonormal basis for the column space of X X , and C C contains the corresponding low-rank coefficients. Let V V be an orthonormal basis for the column space of C ⊤ C^{\\top} . The tangent gradient is then G T = U ⁡ ( U ⊤ ​ G ) + ( I − U ​ U ⊤ ) ​ G ​ V ​ V ⊤ . G_{T}=U(U^{\\top}G)+(I-UU^{\\top})GVV^{\\top}. (1) Equation ( 1 ) shows that G T G_{T} can be computed from the two gradient contractions U ⊤ ​ G U^{\\top}G and G ​ V GV , avoiding explicit construction of the full gradient G G . To obtain these quantities directly through backpropagation, GEAR uses the forward-equivalent representation B ext = [ U , 0 ] , A ext = [ C V ⊤ ] , B_{\\mathrm{ext}}=[U,\\ 0],\\qquad A_{\\mathrm{ext}}=\\begin{bmatrix}C\\\\ V^{\\top}\\end{bmatrix}, which satisfies B ext ​ A ext = X B_{\\mathrm{ext}}A_{\\mathrm{ext}}=X . Although this representation leaves the forward mapping unchanged, its backward derivatives expose the required gradient contractions: ∇ C f = U ⊤ ​ G , ∇ B ext ( 2 ) f = G ​ V . \\nabla_{C}f=U^{\\top}G,\\qquad\\nabla_{B_{\\mathrm{ext}}^{(2)}}f=GV. Thus, the tangent gradient can be recovered without explicitly materializing G G . GEAR then performs a tangent update followed by retraction onto the fixed-rank manifold, X − = X − η ​ G T , X t + 1 = Retr ℳ r ⁡ ( X − ) . X^{-}=X-\\eta G_{T},\\qquad X_{t+1}=\\operatorname{Retr}_{\\mathcal{M}_{r}}(X^{-}). (2)",
+      "source": "https://arxiv.org/html/2611.07349v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0018",
+      "section": "3.2 Fixed-Rank Manifold Optimization",
+      "text": "Since X − X^{-} has rank at most 2 ​ r 2r , the retraction is performed on its compact factors rather than on the full matrix. Specifically, thin QR factorizations reduce the update to a small core matrix, whose truncated SVD yields the retracted rank- r r state together with the updated left and right subspace bases. Full details are provided in Appendix B.1 .",
+      "source": "https://arxiv.org/html/2611.07349v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0019",
+      "section": "3.3 Geometry-Guided Rank Evolution",
+      "text": "The preceding section optimizes the current adaptation state on ℳ r \\mathcal{M}_{r} . Rank expansion, by contrast, is governed by the normal component G N G_{N} , which captures task-relevant directions beyond the current first-order reachable space. We next quantify the local value of these directions for rank expansion. Let G N = ∑ i ≥ 1 σ i ​ u i ​ v i ⊤ , σ 1 ≥ σ 2 ≥ ⋯ , G_{N}=\\sum_{i\\geq 1}\\sigma_{i}u_{i}v_{i}^{\\top},\\qquad\\sigma_{1}\\geq\\sigma_{2}\\geq\\cdots, and denote its best rank- k k approximation by ( G N ) k (G_{N})_{k} .",
+      "source": "https://arxiv.org/html/2611.07349v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0020",
+      "section": "Theorem 2 (Local Optimality of Rank Expansion) .",
+      "text": "Let X ∈ ℳ r X\\in\\mathcal{M}_{r} , and let 𝒞 r , k ​ ( X ) \\mathcal{C}_{r,k}(X) denote the tangent cone at X to the bounded-rank set 𝒱 r + k = { Y ∈ ℝ n × m : rank ⁡ ( Y ) ≤ r + k } \\mathcal{V}_{r+k}=\\{Y\\in\\mathbb{R}^{n\\times m}:\\operatorname{rank}(Y)\\leq r+k\\} . For the local quadratic model q η ​ ( H ) = ⟨ G , H ⟩ F + 1 2 ​ η ​ ‖ H ‖ F 2 q_{\\eta}(H)=\\langle G,H\\rangle_{F}+\\frac{1}{2\\eta}\\|H\\|_{F}^{2} , an optimal direction over 𝒞 r , k ​ ( X ) \\mathcal{C}_{r,k}(X) is H k ⋆ = − η ⁡ [ G T + ( G N ) k ] , H_{k}^{\\star}=-\\eta\\left[G_{T}+(G_{N})_{k}\\right], where ( G N ) k (G_{N})_{k} is a best rank- k k approximation of G N G_{N} . Moreover, the optimal model decrease enabled by the additional k k rank dimensions, relative to optimization over T X ​ ℳ r T_{X}\\mathcal{M}_{r} , is Δ k := min H ∈ T X ​ ℳ r ⁡ q η ​ ( H ) − min H ∈ 𝒞 r , k ​ ( X ) ⁡ q η ​ ( H ) = η 2 ​ ∑ i = 1 k σ i 2 ​ ( G N ) . \\Delta_{k}:=\\min_{H\\in T_{X}\\mathcal{M}_{r}}q_{\\eta}(H)-\\min_{H\\in\\mathcal{C}_{r,k}(X)}q_{\\eta}(H)=\\frac{\\eta}{2}\\sum_{i=1}^{k}\\sigma_{i}^{2}(G_{N}). A complete proof is provided in Appendix C.2 . The result shows that the leading singular directions of the normal gradient constitute the locally optimal directions for rank expansion, while their spectral energy exactly quantifies the additional decrease attainable under the local quadratic model.",
+      "source": "https://arxiv.org/html/2611.07349v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0021",
+      "section": "Theorem 2 (Local Optimality of Rank Expansion) .",
+      "text": "However, constructing G N = ( I − U ​ U ⊤ ) ​ G ​ ( I − V ​ V ⊤ ) G_{N}=(I-UU^{\\top})G(I-VV^{\\top}) requires the full gradient G G . GEAR instead estimates its dominant spectrum through randomized probing ( Halko et al., 2011 ) . Given Ω ∈ ℝ m × h \\Omega\\in\\mathbb{R}^{m\\times h} , with h ≪ min ⁡ { n , m } h\\ll\\min\\{n,m\\} , we project it onto the orthogonal complement of the right subspace, Ω ⟂ = ( I − V ​ V ⊤ ) ​ Ω \\Omega_{\\perp}=(I-VV^{\\top})\\Omega . We introduce a zero-initialized auxiliary variable P P through Δ ​ X probe = P ​ Ω ⟂ ⊤ \\Delta X_{\\mathrm{probe}}=P\\Omega_{\\perp}^{\\top} . Since P = 0 P=0 , this leaves the forward mapping unchanged, while backpropagation yields ∇ P f = G ​ Ω ⟂ \\nabla_{P}f=G\\Omega_{\\perp} . Projecting onto the orthogonal complement of the left subspace gives Y = ( I − U ​ U ⊤ ) ​ ∇ P f = G N ​ Ω . Y=(I-UU^{\\top})\\nabla_{P}f=G_{N}\\Omega. (3) Let Q = orth ⁡ ( Y ) Q=\\operatorname{orth}(Y) . If G N = U N ​ Σ N ​ V N ⊤ G_{N}=U_{N}\\Sigma_{N}V_{N}^{\\top} , then Y = U N ​ Σ N ​ ( V N ⊤ ​ Ω ) Y=U_{N}\\Sigma_{N}(V_{N}^{\\top}\\Omega) , so singular directions associated with larger singular values contribute more strongly to Y Y . Hence, span ⁡ ( Q ) \\operatorname{span}(Q) captures the dominant left singular subspace of G N G_{N} . Applying the same zero-output probe yields Q ⊤ ​ G Q^{\\top}G , from which we compute Z N = Q ⊤ ​ G ​ ( I − V ​ V ⊤ ) = Q ⊤ ​ G N = U ~ ​ Σ ^ ​ V ^ ⊤ . Z_{N}=Q^{\\top}G(I-VV^{\\top})=Q^{\\top}G_{N}=\\widetilde{U}\\widehat{\\Sigma}\\widehat{V}^{\\top}. (4)",
+      "source": "https://arxiv.org/html/2611.07349v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0022",
+      "section": "Theorem 2 (Local Optimality of Rank Expansion) .",
+      "text": "The leading normal components are therefore approximated by u ^ i = Q ​ u ~ i \\widehat{u}_{i}=Q\\widetilde{u}_{i} , v ^ i = V ^ : , i \\widehat{v}_{i}=\\widehat{V}_{:,i} , and σ ^ i = Σ ^ i ​ i \\widehat{\\sigma}_{i}=\\widehat{\\Sigma}_{ii} , without explicitly materializing G N G_{N} . The resulting approximation has a controlled effect on the local value of rank expansion.",
+      "source": "https://arxiv.org/html/2611.07349v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0023",
+      "section": "Theorem 3 (Stability under Inexact Normal Estimation) .",
+      "text": "Let G ^ N ∈ N X ​ ℳ r \\widehat{G}_{N}\\in N_{X}\\mathcal{M}_{r} satisfy ‖ G ^ N − G N ‖ F ≤ ε \\|\\widehat{G}_{N}-G_{N}\\|_{F}\\leq\\varepsilon , and let τ k = ‖ G N − ( G N ) k ‖ F \\tau_{k}=\\|G_{N}-(G_{N})_{k}\\|_{F} . Then the rank-k expansion based on ( G ^ N ) k (\\widehat{G}_{N})_{k} satisfies 0 ≤ q η ​ ( − η ​ ( G ^ N ) k ) − q η ​ ( − η ​ ( G N ) k ) ≤ 2 ​ η ​ ε ​ ( τ k + ε ) . 0\\leq q_{\\eta}\\!\\left(-\\eta(\\widehat{G}_{N})_{k}\\right)-q_{\\eta}\\!\\left(-\\eta(G_{N})_{k}\\right)\\leq 2\\eta\\varepsilon(\\tau_{k}+\\varepsilon). A complete proof is provided in Appendix C.3 . GEAR then uses the estimated normal spectrum to allocate rank under a global parameter budget. Motivated by Theorem 2 , we score each candidate normal direction by its estimated local gain per added parameter and impose a global rank budget: a ℓ , i = σ ^ ℓ , i 2 n ℓ + m ℓ , ℬ target = r ¯ budget ∑ ℓ = 1 L ( n ℓ + m ℓ ) . \\displaystyle a_{\\ell,i}=\\frac{\\widehat{\\sigma}_{\\ell,i}^{\\,2}}{n_{\\ell}+m_{\\ell}},\\qquad\\mathcal{B}_{\\mathrm{target}}=\\bar{r}_{\\mathrm{budget}}\\sum_{\\ell=1}^{L}\\left(n_{\\ell}+m_{\\ell}\\right). (5)",
+      "source": "https://arxiv.org/html/2611.07349v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0024",
+      "section": "Theorem 3 (Stability under Inexact Normal Estimation) .",
+      "text": "Here, r ℓ r_{\\ell} denotes the current rank of module ℓ \\ell , n ℓ + m ℓ n_{\\ell}+m_{\\ell} is the cost of one additional rank dimension in module ℓ \\ell , and r ¯ budget \\bar{r}_{\\mathrm{budget}} denotes the weighted-average rank budget. Candidates are selected according to a ℓ , i a_{\\ell,i} subject to the global budget and the per-module rank limit. For k ℓ k_{\\ell} selected directions, let U ^ ℓ , k ℓ = [ u ^ ℓ , 1 , … , u ^ ℓ , k ℓ ] \\widehat{U}_{\\ell,k_{\\ell}}=[\\widehat{u}_{\\ell,1},\\ldots,\\widehat{u}_{\\ell,k_{\\ell}}] , V ^ ℓ , k ℓ = [ v ^ ℓ , 1 , … , v ^ ℓ , k ℓ ] \\widehat{V}_{\\ell,k_{\\ell}}=[\\widehat{v}_{\\ell,1},\\ldots,\\widehat{v}_{\\ell,k_{\\ell}}] , and Σ ^ ℓ , k ℓ = diag ⁡ ( σ ^ ℓ , 1 , … , σ ^ ℓ , k ℓ ) \\widehat{\\Sigma}_{\\ell,k_{\\ell}}=\\operatorname{diag}(\\widehat{\\sigma}_{\\ell,1},\\ldots,\\widehat{\\sigma}_{\\ell,k_{\\ell}}) . They define the candidate expansion X ℓ , cand = X ℓ − η b ​ U ^ ℓ , k ℓ ​ Σ ^ ℓ , k ℓ ​ V ^ ℓ , k ℓ ⊤ . X_{\\ell,\\mathrm{cand}}=X_{\\ell}-\\eta_{b}\\widehat{U}_{\\ell,k_{\\ell}}\\widehat{\\Sigma}_{\\ell,k_{\\ell}}\\widehat{V}_{\\ell,k_{\\ell}}^{\\top}. (6) We validate X ℓ , cand X_{\\ell,\\mathrm{cand}} on a small set of separate training microbatches shared across candidate variants and accept the expansion only if its mean loss improves by more than a relative margin ρ \\rho ; full details are provided in Appendix B.2 . For an accepted expansion, U ^ ℓ , k ℓ ⟂ U ℓ \\widehat{U}_{\\ell,k_{\\ell}}\\perp U_{\\ell} and V ^ ℓ , k ℓ ⟂ V ℓ \\widehat{V}_{\\ell,k_{\\ell}}\\perp V_{\\ell} , so the low-rank state is updated directly as",
+      "source": "https://arxiv.org/html/2611.07349v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0025",
+      "section": "Theorem 3 (Stability under Inexact Normal Estimation) .",
+      "text": "U ℓ + = [ U ℓ , U ^ ℓ , k ℓ ] , C ℓ + = [ C ℓ − η b ​ Σ ^ ℓ , k ℓ ​ V ^ ℓ , k ℓ ⊤ ] , X ℓ + = U ℓ + ​ C ℓ + . U_{\\ell}^{+}=[U_{\\ell},\\widehat{U}_{\\ell,k_{\\ell}}],\\qquad C_{\\ell}^{+}=\\begin{bmatrix}C_{\\ell}\\\\ -\\eta_{b}\\widehat{\\Sigma}_{\\ell,k_{\\ell}}\\widehat{V}_{\\ell,k_{\\ell}}^{\\top}\\end{bmatrix},\\qquad X_{\\ell}^{+}=U_{\\ell}^{+}C_{\\ell}^{+}. (7) The accepted expansion moves the adaptation state from ℳ r ℓ \\mathcal{M}_{r_{\\ell}} to ℳ r ℓ + k ℓ \\mathcal{M}_{r_{\\ell}+k_{\\ell}} . Optimizer states associated with existing components are inherited, while those of newly introduced directions are initialized to zero. Subsequent updates then follow the fixed-rank manifold optimization in Section 3.2 .",
+      "source": "https://arxiv.org/html/2611.07349v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0026",
+      "section": "3.4 Task-Induced Geometric Initialization (TGI)",
+      "text": "Rank inadequacy is defined relative to the current adaptation space. To avoid conflating random subspace mismatch with genuine missing directions, GEAR initializes this space from task-gradient structure estimated on a small calibration set. Let G 0 = ∇ X f ​ ( 0 ) G_{0}=\\nabla_{X}f(0) . In a left-probing stage, set X = P ​ Ω ⊤ X=P\\Omega^{\\top} with P = 0 P=0 and fixed Ω ∈ ℝ m × h \\Omega\\in\\mathbb{R}^{m\\times h} . This preserves the pretrained mapping, while backpropagation yields Z 0 = ∇ P f ​ ( P ​ Ω ⊤ ) | P = 0 = G 0 ​ Ω ∈ ℝ n × h Z_{0}=\\left.\\nabla_{P}f(P\\Omega^{\\top})\\right|_{P=0}=G_{0}\\Omega\\in\\mathbb{R}^{n\\times h} without forming G 0 G_{0} . To express the normalization for both stages uniformly, write Z 0 ∈ ℝ d × h Z_{0}\\in\\mathbb{R}^{d\\times h} , with d = n d=n for the left probe and d = m d=m for the right probe. Set M = Z 0 ⊙ 2 M=Z_{0}^{\\odot 2} and μ = ( d ​ h ) − 1 ​ ∑ i , a M i ​ a \\mu=(dh)^{-1}\\sum_{i,a}M_{ia} . To prevent large gradient scales from dominating subspace estimation, we normalize the sketch along both dimensions: d i row = 1 h ∑ a M i ​ a + λ μ , d a col = 1 d ∑ i M i ​ a + λ μ , Z ~ 0 = D row − 1 / 2 Z 0 D col − 1 / 2 , \\displaystyle d_{i}^{\\mathrm{row}}=\\frac{1}{h}\\sum_{a}M_{ia}+\\lambda\\mu,\\quad d_{a}^{\\mathrm{col}}=\\frac{1}{d}\\sum_{i}M_{ia}+\\lambda\\mu,\\quad\\widetilde{Z}_{0}=D_{\\mathrm{row}}^{-1/2}Z_{0}D_{\\mathrm{col}}^{-1/2},",
+      "source": "https://arxiv.org/html/2611.07349v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0027",
+      "section": "3.4 Task-Induced Geometric Initialization (TGI)",
+      "text": "where D row = diag ⁡ ( d i row ) D_{\\mathrm{row}}=\\operatorname{diag}(d_{i}^{\\mathrm{row}}) and D col = diag ⁡ ( d a col ) D_{\\mathrm{col}}=\\operatorname{diag}(d_{a}^{\\mathrm{col}}) . A thin QR factorization of the left-stage Z ~ 0 \\widetilde{Z}_{0} yields Q L ∈ ℝ n × h Q_{L}\\in\\mathbb{R}^{n\\times h} . Holding Q L Q_{L} fixed, a zero-initialized right probe X = Q L ​ R X=Q_{L}R gives the transposed sketch Z 0 = ( ∇ R f ​ ( Q L ​ R ) | R = 0 ) ⊤ = G 0 ⊤ ​ Q L ∈ ℝ m × h Z_{0}=\\left(\\left.\\nabla_{R}f(Q_{L}R)\\right|_{R=0}\\right)^{\\top}=G_{0}^{\\top}Q_{L}\\in\\mathbb{R}^{m\\times h} . Non-final right stages use QR to update the next left-probing basis. TGI performs p + 1 p+1 left–right rounds, totaling 2 ​ ( p + 1 ) 2(p+1) stages. Additional rounds can refine the dominant-subspace estimate by probing with successively updated bases; we use p = 1 p=1 in our experiments. At the final right stage, the normalized sketch Z ~ 0 ∈ ℝ m × h \\widetilde{Z}_{0}\\in\\mathbb{R}^{m\\times h} gives Z ¯ 0 = Z ~ 0 ⊤ = U ^ ​ Σ ​ V ⊤ \\bar{Z}_{0}=\\widetilde{Z}_{0}^{\\top}=\\widehat{U}\\Sigma V^{\\top} . Retaining the leading r 0 ≤ h r_{0}\\leq h components, we initialize U 0 = Q L U ^ : , 1 : r 0 , C 0 = diag ( γ 1 , … , γ r 0 ) V : , 1 : r 0 ⊤ , X 0 = U 0 C 0 . U_{0}=Q_{L}\\widehat{U}_{:,1:r_{0}},\\qquad C_{0}=\\operatorname{diag}(\\gamma_{1},\\ldots,\\gamma_{r_{0}})V_{:,1:r_{0}}^{\\top},\\qquad X_{0}=U_{0}C_{0}. (8) Here γ i \\gamma_{i} is the clipped ratio of a retained singular value to the mean of the retained values. Since X 0 X_{0} is generally nonzero, we compensate its initial contribution in the frozen weight: W ~ = W − s ​ X 0 , W ~ + s ​ X 0 = W . \\widetilde{W}=W-sX_{0},\\qquad\\widetilde{W}+sX_{0}=W.",
+      "source": "https://arxiv.org/html/2611.07349v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0028",
+      "section": "3.4 Task-Induced Geometric Initialization (TGI)",
+      "text": "Thus, training starts from a task-aligned adaptation space while preserving the pretrained forward mapping at initialization.",
+      "source": "https://arxiv.org/html/2611.07349v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0029",
+      "section": "4 Experimental results",
+      "text": "We evaluate GEAR across commonsense reasoning, natural language understanding, and visual recognition benchmarks, considering both predictive performance and parameter efficiency. We compare against representative fixed-rank and adaptive-rank PEFT methods, including LoRA ( Hu et al., 2022 ) , AdaLoRA ( Zhang et al., 2023 ) , Riemannion ( Bogachev et al., 2026 ) , GeoLoRA ( Schotthöfer et al., 2025 ) , and FlexLoRA ( Liu et al., 2026 ) . All methods use consistent experimental settings for fair comparison. Ablation studies are provided in Appendix E .",
+      "source": "https://arxiv.org/html/2611.07349v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0030",
+      "section": "4.1 Rank Audit Schedule",
+      "text": "To ensure stable rank adaptation, GEAR performs rank-growth audits periodically during early-to-middle training and freezes the rank thereafter. Let t start t_{\\mathrm{start}} denote the first audit step, Δ ​ t \\Delta t the audit interval, and t final t_{\\mathrm{final}} the step after which rank expansion stops. The audit steps are defined as 𝒯 audit = { t start + k Δ t | k ∈ ℤ ≥ 0 , t start + k Δ t ≤ t final } . \\mathcal{T}_{\\mathrm{audit}}=\\left\\{t_{\\mathrm{start}}+k\\Delta t\\;\\middle|\\;k\\in\\mathbb{Z}_{\\geq 0},\\;t_{\\mathrm{start}}+k\\Delta t\\leq t_{\\mathrm{final}}\\right\\}. At each audit, GEAR estimates task-relevant directions beyond the current adaptation space and evaluates them as candidates for rank expansion. After t final t_{\\mathrm{final}} , the rank remains fixed and training proceeds solely with manifold optimization at the resulting rank.",
+      "source": "https://arxiv.org/html/2611.07349v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0031",
+      "section": "4.2 Commonsense Reasoning",
+      "text": "We evaluate GEAR on eight commonsense reasoning benchmarks, including BoolQ, PIQA, SIQA, and HellaSwag ( Clark et al., 2019 ; Bisk et al., 2020 ; Sap et al., 2019 ; Zellers et al., 2019 ) , together with WinoGrande, ARC-e/ARC-c, and OBQA ( Sakaguchi et al., 2020 ; Clark et al., 2018 ; Mihaylov et al., 2018 ) , using LLaMA3-8B ( Grattafiori and others, 2024 ) and Qwen2.5-7B ( Qwen et al., 2025 ) as backbone models. The reference rank is set to 16 16 , while GEAR initializes at r 0 = 4 r_{0}=4 , with a weighted-average rank budget of 16 16 and a per-module upper bound r max = 32 r_{\\max}=32 ; the final ranks are determined by the accepted expansions rather than the upper bound. Performance is reported together with the number of trainable parameters to evaluate both adaptation quality and parameter efficiency. As shown in Table 1 , GEAR achieves the highest average performance on both backbones with substantially fewer trainable parameters. On LLaMA3-8B, it reaches 88.45 88.45 , outperforming FlexLoRA by 1.84 1.84 points with 14.4 14.4 M versus 42.0 42.0 M parameters; on Qwen2.5-7B, it attains 89.40 89.40 with 14.0 14.0 M parameters, versus 87.65 87.65 with 40.3 40.3 M for FlexLoRA. Unlike adaptive-rank methods that rely mainly on statistics of the current low-rank representation, GEAR expands the adaptation space according to task-relevant normal directions while optimizing accessible directions on the current manifold, yielding a better performance–parameter trade-off across both backbones. Table 1: Commonsense reasoning performance on LLaMA3-8B and Qwen2.5-7B. We report the mean over three runs with different random seeds. Best results are shown in bold .",
+      "source": "https://arxiv.org/html/2611.07349v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0032",
+      "section": "4.2 Commonsense Reasoning",
+      "text": "Method (Params) BoolQ PIQA SIQA HellaS. WinoG. ARC-e ARC-c OBQA Avg. LLaMA3-8B LoRA (41.9M) 72.37 87.83 81.34 94.81 85.08 91.46 81.32 86.00 85.03 AdaLoRA (31.6M) 72.23 87.21 81.27 94.60 85.16 93.18 82.68 85.80 85.27 Riemannion (41.9M) 72.45 87.32 81.17 94.95 87.64 93.14 82.51 87.40 85.82 GeoLoRA (41.3M) 72.84 87.54 79.99 94.62 85.56 93.52 83.96 87.00 85.63 FlexLoRA (42.0M) 72.91 88.30 82.96 95.68 87.14 93.56 83.70 88.60 86.61 GEAR ( 14.4M ) 75.19 90.81 83.78 96.82 89.82 93.77 85.58 91.80 88.45 Qwen2.5-7B LoRA (40.4M) 71.54 88.52 78.73 94.05 82.56 96.13 90.00 90.12 86.46 AdaLoRA (35.2M) 71.59 89.12 78.92 94.06 82.79 96.00 90.27 89.80 86.57 Riemannion (40.4M) 71.68 89.17 79.32 94.72 84.53 95.96 90.53 91.00 87.11 GeoLoRA (40.1M) 71.90 89.12 79.02 94.88 85.00 96.21 89.93 91.00 87.13 FlexLoRA (40.3M) 72.29 89.17 79.68 95.19 86.03 96.21 90.19 92.40 87.65 GEAR ( 14.0M ) 75.51 90.86 81.58 96.34 90.53 96.80 89.76 93.80 89.40",
+      "source": "https://arxiv.org/html/2611.07349v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0033",
+      "section": "4.3 Natural Language Understanding",
+      "text": "We evaluate GEAR with DeBERTa-v3-base ( He et al., 2023 ) on the GLUE benchmark ( Wang et al., 2019 ) , covering eight tasks with linguistic objectives, including acceptability, inference, paraphrase detection, semantic similarity, and sentiment classification. The reference rank is set to 8 8 , while GEAR initializes at r 0 = 4 r_{0}=4 with r max = 16 r_{\\max}=16 as an upper bound; the final rank is determined by the accepted expansions rather than the limit. We report the task-specific metrics and their average. As shown in Table 2 , GEAR achieves the best average score of 89.63 89.63 with only 1.5 1.5 M trainable parameters, improving over FlexLoRA by 0.78 0.78 points while using about 21 % 21\\% fewer parameters. GEAR attains the strongest result on seven of the eight tasks, with particularly clear gains on MRPC, RTE, and STS-B. The improvement across heterogeneous objectives suggests that the benefit of GEAR is not tied to a specific task structure. By expanding the adaptation space according to task-relevant directions beyond its current first-order reach, GEAR can introduce additional capacity more selectively across diverse tasks. Table 2: GLUE performance with DeBERTa-v3-base. We report the mean over three runs with different random seeds. Best results are shown in bold .",
+      "source": "https://arxiv.org/html/2611.07349v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0034",
+      "section": "4.3 Natural Language Understanding",
+      "text": "Method (Params) CoLA Mcc. MNLI Acc. MRPC Acc. RTE Acc. QNLI Acc. SST-2 Acc. STS-B Corr. QQP Acc. Avg. LoRA (1.9M) 68.31 89.74 90.19 84.16 93.61 95.30 85.20 90.35 87.11 AdaLoRA (1.9M) 70.07 89.93 90.44 88.17 94.27 95.13 91.21 91.41 88.83 Riemannion (1.9M) 67.41 88.93 89.01 85.13 92.64 94.00 90.12 87.92 86.90 GeoLoRA (1.9M) 68.18 89.67 87.76 87.73 92.93 95.52 90.15 87.77 87.46 FlexLoRA (1.9M) 70.22 90.13 90.67 88.45 94.24 95.34 91.53 90.27 88.85 GEAR ( 1.5M ) 70.85 90.97 92.46 89.53 94.27 96.22 91.83 90.88 89.63",
+      "source": "https://arxiv.org/html/2611.07349v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0035",
+      "section": "4.4 Visual Task",
+      "text": "To assess the generality of GEAR beyond NLP, we evaluate it with ViT-B/16 ( Dosovitskiy et al., 2021 ) on the Visual Task Adaptation Benchmark (VTAB-1K) ( Zhai et al., 2020 ) , which covers 19 recognition tasks grouped into Natural, Specialized, and Structured domains. We use the same rank configuration as in the NLU experiments. As shown in Table 3 , GEAR achieves the highest overall average of 73.48 73.48 with only 0.2 0.2 M trainable parameters, compared with 72.55 72.55 for FlexLoRA using 0.3 0.3 M. GEAR obtains the best result on 14 of the 19 tasks, including 7 of the 8 Structured tasks. The gains across visually and semantically diverse domains indicate that the proposed rank-evolution mechanism is not tied to a particular modality or task family. By adapting the low-rank space according to task-relevant directions beyond its current first-order reach, GEAR maintains strong transfer performance while introducing fewer additional degrees of freedom. Table 3: VTAB-1K performance with ViT-B/16. We report the mean over three runs with different random seeds. Best results are shown in bold .",
+      "source": "https://arxiv.org/html/2611.07349v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0036",
+      "section": "4.4 Visual Task",
+      "text": "Dataset LoRA AdaLoRA Riemannion GeoLoRA FlexLoRA GEAR (0.3M) (0.3M) (0.3M) (0.3M) (0.3M) ( 0.2M ) Natural CIFAR100 69.39 71.81 70.78 68.05 71.30 71.88 Caltech101 90.60 89.96 91.03 88.87 91.72 91.78 DTD 71.01 71.76 71.28 68.88 70.18 71.60 Flowers 98.80 99.04 99.09 99.06 98.98 99.12 Pets 89.89 91.58 91.85 91.71 91.14 91.93 SVHN 90.53 90.59 89.08 91.39 90.25 91.89 SUN397 53.78 55.61 55.12 54.63 54.14 55.03 Specialized Camelyon 83.26 81.92 81.60 82.16 83.98 83.93 EuroSAT 93.74 94.04 93.13 94.61 93.91 94.91 RESISC45 85.40 85.37 84.30 84.52 85.41 85.98 Retinopathy 73.60 75.40 75.16 75.41 74.13 74.91 Structured CLEVR-C 80.91 81.23 78.95 80.63 81.30 82.07 CLEVR-D 64.74 65.38 68.49 63.37 63.56 68.51 DMLab 50.04 50.23 49.95 50.08 52.02 52.18 KITTI-D 77.87 78.34 75.81 78.14 78.95 78.90 dSpr-Loc 75.76 73.38 72.40 73.62 75.49 76.78 dSpr-Ori 47.65 49.32 48.71 48.27 49.02 49.52 sNORB-Azi 29.49 28.00 27.76 30.25 29.84 31.32 sNORB-Ele 41.93 37.56 39.58 40.99 43.17 43.89 Average 72.02 72.13 71.79 71.82 72.55 73.48 Across all evaluated settings, GEAR achieves the strongest average performance with fewer trainable parameters than the strongest adaptive-rank baseline. These gains span two language-model backbones, eight GLUE tasks, and 19 VTAB-1K tasks, indicating robustness across backbones, task families, and modalities. Importantly, they arise from adaptively selected final ranks rather than simply increasing the rank budget, supporting the hypothesis that identifying valuable directions outside the current adaptation space enables more efficient rank growth.",
+      "source": "https://arxiv.org/html/2611.07349v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0037",
+      "section": "5 Conclusion",
+      "text": "We presented GEAR, a geometry-guided framework for dynamic low-rank adaptation that shifts the focus from capacity allocation to the sufficiency of the current adaptation space. We established a first-order information boundary for standard factor gradients, showing that task-relevant normal information is unobservable from the current fixed-rank parameterization, and further related the normal spectrum to the locally optimal value of rank expansion. Building on this analysis, GEAR combines fixed-rank manifold optimization, efficient normal-spectrum estimation, and task-induced geometric initialization to adapt rank according to task-relevant directions beyond the current first-order reachable space. Across commonsense reasoning, GLUE, and VTAB-1K, GEAR achieves the highest average performance in all evaluated settings while using substantially fewer trainable parameters than strong adaptive-rank baselines. Overall, our results suggest that dynamic rank is most effectively viewed not as a budget-allocation problem alone, but as the controlled evolution of the adaptation space in response to previously unrepresented task information.",
+      "source": "https://arxiv.org/html/2611.07349v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0038",
+      "section": "AI use statement",
+      "text": "Generative AI tools were used to assist with language editing, L a T e X formatting, and the examination of mathematical derivations. All AI-assisted suggestions were independently reviewed and verified by the authors, who take full responsibility for the final content of this work.",
+      "source": "https://arxiv.org/html/2611.07349v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0039",
+      "section": "Reproducibility Statement",
+      "text": "We provide complete proofs of all theoretical results and detailed algorithm descriptions in the appendix. Experimental configurations, hyperparameters, dataset protocols, baseline settings, and additional ablations are also provided to facilitate reproducibility. All reported results are averaged over three random seeds.",
+      "source": "https://arxiv.org/html/2611.07349v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0040",
+      "section": "References",
+      "text": "Bar-Haim et al. (2006) R. Bar-Haim, I. Dagan, B. Dolan, L. Ferro, D. Giampiccolo, B. Magnini, and I. Szpektor The second PASCAL recognising textual entailment challenge . In Proceedings of the Second PASCAL Challenges Workshop on Recognising Textual Entailment , pp. 1–9 . Cited by: §D.2 . Bentivogli et al. (2009) L. Bentivogli, B. Magnini, I. Dagan, H. T. Dang, and D. Giampiccolo The fifth PASCAL recognizing textual entailment challenge . In Text Analysis Conference , Cited by: §D.2 . Bisk et al. (2020) Y. Bisk, R. Zellers, R. Le Bras, J. Gao, and Y. Choi PIQA: reasoning about physical commonsense in natural language . In Proceedings of the AAAI Conference on Artificial Intelligence , Vol. 34 , pp. 7432–7439 . External Links: Document Cited by: §D.1 , §4.2 . Bogachev et al. (2026) V. Bogachev, V. Aletov, A. Molozhavenko, D. Bobkov, V. Soboleva, A. Alanov, and M. Rakhuba LoRA meets Riemannion: muon optimizer for parametrization-independent low-rank adapters . In International Conference on Learning Representations , Cited by: §2 , §4 . Cer et al. (2017) D. Cer, M. Diab, E. Agirre, I. Lopez-Gazpio, and L. Specia SemEval-2017 task 1: semantic textual similarity multilingual and crosslingual focused evaluation . In Proceedings of the 11th International Workshop on Semantic Evaluation , pp. 1–14 . External Links: Document Cited by: §D.2 . Clark et al. (2019) C. Clark, K. Lee, M. Chang, T. Kwiatkowski, M. Collins, and K. Toutanova BoolQ: exploring the surprising difficulty of natural yes/no questions . In Proceedings of the 2019 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies , pp. 2924–2936 . External Links: Document Cited by: §D.1 , §4.2 .",
+      "source": "https://arxiv.org/html/2611.07349v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0041",
+      "section": "References",
+      "text": "Clark et al. (2018) P. Clark, I. Cowhey, O. Etzioni, T. Khot, A. Sabharwal, C. Schoenick, and O. Tafjord Think you have solved question answering? try ARC, the AI2 reasoning challenge . External Links: 1803.05457 Cited by: §D.1 , §4.2 . Dagan et al. (2006) I. Dagan, O. Glickman, and B. Magnini The PASCAL recognising textual entailment challenge . In Machine Learning Challenges: Evaluating Predictive Uncertainty, Visual Object Classification, and Recognising Textual Entailment , Lecture Notes in Computer Science , Vol. 3944 , pp. 177–190 . External Links: Document Cited by: §D.2 . Ding et al. (2023a) N. Ding, X. Lv, Q. Wang, Y. Chen, B. Zhou, Z. Liu, and M. Sun Sparse low-rank adaptation of pre-trained language models . In Proceedings of the 2023 Conference on Empirical Methods in Natural Language Processing , pp. 4133–4145 . External Links: Document Cited by: §2 . Ding et al. (2023b) N. Ding, Y. Qin, G. Yang, F. Wei, Z. Yang, Y. Su, S. Hu, Y. Chen, C. Chan, W. Chen, J. Yi, W. Zhao, X. Wang, Z. Liu, H. Zheng, J. Chen, Y. Liu, J. Tang, J. Li, and M. Sun Parameter-efficient fine-tuning of large-scale pre-trained language models . Nature Machine Intelligence 5 , pp. 220–235 . External Links: Document Cited by: §1 . Dolan and Brockett (2005) W. B. Dolan and C. Brockett Automatically constructing a corpus of sentential paraphrases . In Proceedings of the Third International Workshop on Paraphrasing , Cited by: §D.2 . Dosovitskiy et al. (2021) A. Dosovitskiy, L. Beyer, A. Kolesnikov, D. Weissenborn, X. Zhai, T. Unterthiner, M. Dehghani, M. Minderer, G. Heigold, S. Gelly, J. Uszkoreit, and N. Houlsby An image is worth 16x16 words: transformers for image recognition at scale . In International Conference on Learning Representations , External Links: Link Cited by: §4.4 .",
+      "source": "https://arxiv.org/html/2611.07349v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0042",
+      "section": "References",
+      "text": "Ed-dib et al. (2025) A. Ed-dib, Z. Datbayev, and A. M. Aboussalah GeLoRA: geometric adaptive ranks for efficient LoRA fine-tuning . In Findings of the Association for Computational Linguistics: EMNLP 2025 , pp. 25174–25196 . External Links: Document Cited by: §2 . Giampiccolo et al. (2007) D. Giampiccolo, B. Magnini, I. Dagan, and B. Dolan The third PASCAL recognizing textual entailment challenge . In Proceedings of the ACL-PASCAL Workshop on Textual Entailment and Paraphrasing , pp. 1–9 . Cited by: §D.2 . Grattafiori et al. (2024) A. Grattafiori et al. The llama 3 herd of models . External Links: 2407.21783 Cited by: §4.2 . Halko et al. (2011) N. Halko, P. Martinsson, and J. A. Tropp Finding structure with randomness: probabilistic algorithms for constructing approximate matrix decompositions . SIAM Review 53 ( 2 ), pp. 217–288 . External Links: Document Cited by: §3.3 . He et al. (2023) P. He, J. Gao, and W. Chen DeBERTaV3: improving DeBERTa using ELECTRA-style pre-training with gradient-disentangled embedding sharing . In International Conference on Learning Representations , External Links: Link Cited by: §4.3 . Hu et al. (2022) E. J. Hu, Y. Shen, P. Wallis, Z. Allen-Zhu, Y. Li, S. Wang, L. Wang, and W. Chen LoRA: low-rank adaptation of large language models . In International Conference on Learning Representations , Cited by: §1 , §2 , §4 . Hu et al. (2023) Z. Hu, L. Wang, Y. Lan, W. Xu, E. Lim, L. Bing, X. Xu, S. Poria, and R. Lee LLM-adapters: an adapter family for parameter-efficient fine-tuning of large language models . In Proceedings of the 2023 Conference on Empirical Methods in Natural Language Processing , pp. 5254–5276 . External Links: Document Cited by: §D.1 .",
+      "source": "https://arxiv.org/html/2611.07349v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0043",
+      "section": "References",
+      "text": "Liu et al. (2026) M. Liu, C. Si, and Y. Jia FlexLoRA: entropy-guided flexible low-rank adaptation . In International Conference on Learning Representations , Cited by: §1 , §2 , §4 . Liu et al. (2024) S. Liu, C. Wang, H. Yin, P. Molchanov, Y. F. Wang, K. Cheng, and M. Chen DoRA: weight-decomposed low-rank adaptation . In Proceedings of the 41st International Conference on Machine Learning , Proceedings of Machine Learning Research , Vol. 235 , pp. 32100–32121 . Cited by: §2 . Meng et al. (2024) F. Meng, Z. Wang, and M. Zhang PiSSA: principal singular values and singular vectors adaptation of large language models . In Advances in Neural Information Processing Systems , Vol. 37 . Cited by: §2 . Mihaylov et al. (2018) T. Mihaylov, P. Clark, T. Khot, and A. Sabharwal Can a suit of armor conduct electricity? a new dataset for open book question answering . In Proceedings of the 2018 Conference on Empirical Methods in Natural Language Processing , pp. 2381–2391 . External Links: Document Cited by: §D.1 , §4.2 . Park et al. (2025) J. Park, M. Kang, S. Lee, H. Lee, S. Kim, and J. Lee Riemannian optimization for LoRA on the stiefel manifold . In Findings of the Association for Computational Linguistics: EMNLP 2025 , Suzhou, China , pp. 20971–20985 . External Links: Document Cited by: §2 . Qwen et al. (2025) Qwen A. Yang et al. Qwen2.5 technical report . External Links: 2412.15115 Cited by: §4.2 . Rajpurkar et al. (2016) P. Rajpurkar, J. Zhang, K. Lopyrev, and P. Liang SQuAD: 100,000+ questions for machine comprehension of text . In Proceedings of the 2016 Conference on Empirical Methods in Natural Language Processing , pp. 2383–2392 . External Links: Document Cited by: §D.2 .",
+      "source": "https://arxiv.org/html/2611.07349v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0044",
+      "section": "References",
+      "text": "Sakaguchi et al. (2020) K. Sakaguchi, R. Le Bras, C. Bhagavatula, and Y. Choi WinoGrande: an adversarial winograd schema challenge at scale . In Proceedings of the AAAI Conference on Artificial Intelligence , Vol. 34 , pp. 8732–8740 . External Links: Document Cited by: §D.1 , §4.2 . Sap et al. (2019) M. Sap, H. Rashkin, D. Chen, R. Le Bras, and Y. Choi Social IQa: commonsense reasoning about social interactions . In Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing and the 9th International Joint Conference on Natural Language Processing , pp. 4463–4473 . External Links: Document Cited by: §D.1 , §4.2 . Schotthöfer et al. (2025) S. Schotthöfer, E. Zangrando, G. Ceruti, F. Tudisco, and J. Kusch GeoLoRA: geometric integration for parameter efficient fine-tuning . In International Conference on Learning Representations , Cited by: §1 , §2 , §2 , §4 . Socher et al. (2013) R. Socher, A. Perelygin, J. Wu, J. Chuang, C. D. Manning, A. Ng, and C. Potts Recursive deep models for semantic compositionality over a sentiment treebank . In Proceedings of the 2013 Conference on Empirical Methods in Natural Language Processing , pp. 1631–1642 . Cited by: §D.2 . Valipour et al. (2023) M. Valipour, M. Rezagholizadeh, I. Kobyzev, and A. Ghodsi DyLoRA: parameter-efficient tuning of pre-trained models using dynamic search-free low-rank adaptation . In Proceedings of the 17th Conference of the European Chapter of the Association for Computational Linguistics , pp. 3274–3287 . External Links: Document Cited by: §1 , §2 . Vandereycken (2013) B. Vandereycken Low-rank matrix completion by riemannian optimization . SIAM Journal on Optimization 23 ( 2 ), pp. 1214–1236 . External Links: Document Cited by: §1 , §2 , §3.1 .",
+      "source": "https://arxiv.org/html/2611.07349v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0045",
+      "section": "References",
+      "text": "Wang et al. (2019) A. Wang, A. Singh, J. Michael, F. Hill, O. Levy, and S. R. Bowman GLUE: a multi-task benchmark and analysis platform for natural language understanding . In International Conference on Learning Representations , Cited by: §D.2 , §4.3 . Wang et al. (2024) S. Wang, L. Yu, and J. Li LoRA-GA: low-rank adaptation with gradient approximation . In Advances in Neural Information Processing Systems , Vol. 37 . Cited by: §2 . Warstadt et al. (2019) A. Warstadt, A. Singh, and S. R. Bowman Neural network acceptability judgments . Transactions of the Association for Computational Linguistics 7 , pp. 625–641 . External Links: Document Cited by: §D.2 . Williams et al. (2018) A. Williams, N. Nangia, and S. R. Bowman A broad-coverage challenge corpus for sentence understanding through inference . In Proceedings of the 2018 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies, Volume 1 (Long Papers) , pp. 1112–1122 . External Links: Document Cited by: §D.2 . Zellers et al. (2019) R. Zellers, A. Holtzman, Y. Bisk, A. Farhadi, and Y. Choi HellaSwag: can a machine really finish your sentence? . In Proceedings of the 57th Annual Meeting of the Association for Computational Linguistics , pp. 4791–4800 . External Links: Document Cited by: §D.1 , §4.2 . Zhai et al. (2020) X. Zhai, J. Puigcerver, A. Kolesnikov, P. Ruyssen, C. Riquelme, M. Lucic, J. Djolonga, A. Susano Pinto, M. Neumann, A. Dosovitskiy, L. Beyer, O. Bachem, M. Tschannen, M. Michalski, O. Bousquet, S. Gelly, and N. Houlsby A large-scale study of representation learning with the visual task adaptation benchmark . External Links: 1910.04867 Cited by: §D.3 , §4.4 .",
+      "source": "https://arxiv.org/html/2611.07349v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0046",
+      "section": "References",
+      "text": "Zhang and Pilanci (2024) F. Zhang and M. Pilanci Riemannian preconditioned LoRA for fine-tuning foundation models . In Proceedings of the 41st International Conference on Machine Learning , Proceedings of Machine Learning Research , Vol. 235 , pp. 59641–59669 . Cited by: §2 . Zhang et al. (2023) Q. Zhang, M. Chen, A. Bukharin, P. He, Y. Cheng, W. Chen, and T. Zhao Adaptive budget allocation for parameter-efficient fine-tuning . In International Conference on Learning Representations , Cited by: §1 , §2 , §4 . Zhang et al. (2026) Y. Zhang, J. Hu, Z. Lai, L. Lin, and Z. Wen Retraction-free optimization over the stiefel manifold for the LoRA fine-tuning . IEEE Transactions on Pattern Analysis and Machine Intelligence . External Links: Document Cited by: §2 .",
+      "source": "https://arxiv.org/html/2611.07349v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0047",
+      "section": "Appendix A Supplementary Overview",
+      "text": "This supplementary material provides additional methodological, theoretical, and experimental details for GEAR. Appendix B describes the implementation of fixed-rank retraction and the validation procedure for rank-expansion candidates. Appendix C provides complete proofs of the three theoretical results presented in the main paper. Appendix D reports the datasets, evaluation protocols, training configurations, and hyperparameter settings used in our experiments. Finally, ablation studies are provided in Appendix E .",
+      "source": "https://arxiv.org/html/2611.07349v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0048",
+      "section": "B.1 Low-Rank Retraction",
+      "text": "We detail the retraction used in Section 3.2 . Recall that the current adaptation state is represented as X = U ​ C X=UC , with U ⊤ ​ U = I r U^{\\top}U=I_{r} , and let D = U ⊤ ​ G , K = ( I − U ​ U ⊤ ) ​ G ​ V . D=U^{\\top}G,\\qquad K=(I-UU^{\\top})GV. Using the tangent-gradient decomposition in Eq. ( 1 ), the update before retraction can be written as X − = U ⁡ ( C − η ​ D ) − η ​ K ​ V ⊤ = L ​ R , X^{-}=U(C-\\eta D)-\\eta KV^{\\top}=LR, where L = [ U , K ] , R = [ C − η ​ D − η ​ V ⊤ ] . L=[\\,U,\\;K\\,],\\qquad R=\\begin{bmatrix}C-\\eta D\\\\ -\\eta V^{\\top}\\end{bmatrix}. Hence, X − X^{-} has rank at most 2 ​ r 2r and can be manipulated without forming the full n × m n\\times m matrix. We compute thin QR factorizations of the two compact factors, L = Q L ​ R L , R ⊤ = Q R ​ R R , L=Q_{L}R_{L},\\qquad R^{\\top}=Q_{R}R_{R}, which gives X − = Q L ​ ( R L ​ R R ⊤ ) ​ Q R ⊤ . X^{-}=Q_{L}\\left(R_{L}R_{R}^{\\top}\\right)Q_{R}^{\\top}. The matrix R L ​ R R ⊤ R_{L}R_{R}^{\\top} is at most 2 ​ r × 2 ​ r 2r\\times 2r . We therefore compute only its compact SVD, R L ​ R R ⊤ = P ​ Σ ​ Q ⊤ , R_{L}R_{R}^{\\top}=P\\Sigma Q^{\\top}, and retain the leading r r singular components. The retracted state is X t + 1 = ( Q L ​ P r ) ​ Σ r ​ ( Q R ​ Q r ) ⊤ . X_{t+1}=(Q_{L}P_{r})\\Sigma_{r}(Q_{R}Q_{r})^{\\top}. Accordingly, the updated low-rank representation can be obtained directly as U t + 1 = Q L ​ P r , V t + 1 = Q R ​ Q r , C t + 1 = Σ r ​ V t + 1 ⊤ . U_{t+1}=Q_{L}P_{r},\\qquad V_{t+1}=Q_{R}Q_{r},\\qquad C_{t+1}=\\Sigma_{r}V_{t+1}^{\\top}. Thus, the retraction simultaneously restores the rank- r r constraint and updates the left and right subspace bases required by the next iteration, while avoiding any SVD of the full adaptation matrix.",
+      "source": "https://arxiv.org/html/2611.07349v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0049",
+      "section": "B.2 Rank-Expansion Candidate Validation",
+      "text": "At each rank audit, the selected normal directions are treated as candidate expansions rather than committed immediately. We order the proposed directions by the utility score in Eq. ( 5 ) and construct several prefixes with different birth-step scales. The current adapter and all candidate variants are evaluated on the same set of separate training microbatches under matched stochasticity, so that their losses are directly comparable. Let L ¯ 0 \\bar{L}_{0} and L ¯ cand \\bar{L}_{\\mathrm{cand}} denote the mean training losses of the current adapter and a candidate, respectively. We define the relative improvement as RI = L ¯ 0 − L ¯ cand | L ¯ 0 | . \\mathrm{RI}=\\frac{\\bar{L}_{0}-\\bar{L}_{\\mathrm{cand}}}{|\\bar{L}_{0}|}. A candidate is accepted only if RI > ρ \\mathrm{RI}>\\rho , where ρ \\rho is the prescribed acceptance threshold. Among the accepted candidates, we favor the smallest rank increase whose loss is close to the best observed value, and then the smaller birth-step scale. The selected expansion is committed only if it also satisfies the per-module rank limit and the global budget. If no candidate passes the acceptance criterion, the audit leaves the adapter unchanged.",
+      "source": "https://arxiv.org/html/2611.07349v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0050",
+      "section": "B.3 Computational and Memory Complexity",
+      "text": "GEAR preserves the low-rank computational structure throughout training. For a rank- r r adapter, a standard LoRA factor update requires 𝒪 ⁡ ( ( n + m ) ​ r ) \\mathcal{O}((n+m)r) element-wise operations, while the additional retraction in GEAR costs 𝒪 ⁡ ( ( n + m ) ​ r 2 + r 3 ) \\mathcal{O}((n+m)r^{2}+r^{3}) due to thin QR factorizations and an SVD of a 2 ​ r × 2 ​ r 2r\\times 2r core matrix. Since r ≪ min ⁡ { n , m } r\\ll\\min\\{n,m\\} , this overhead remains confined to the low-rank factors and small core matrices, without introducing any full n × m n\\times m decomposition. The committed adapter state requires only 𝒪 ⁡ ( ( n + m ) ​ r ) \\mathcal{O}((n+m)r) memory. TGI is performed once before fine-tuning. In the language experiments, its 2 ​ ( p + 1 ) 2(p+1) probing stages require 2 ​ ( p + 1 ) 2(p+1) calibration backward passes per initialization run and 𝒪 ⁡ ( h ​ max ⁡ { n , m } ) \\mathcal{O}(h\\max\\{n,m\\}) peak sketch storage per adapted matrix. The QR and SVD operations cost 𝒪 ⁡ ( ( p + 1 ) ​ ( n + m ) ​ h 2 ) \\mathcal{O}((p+1)(n+m)h^{2}) . We use p = 1 p=1 and h ≪ min ⁡ { n , m } h\\ll\\min\\{n,m\\} . In VTAB, initialization instead aggregates dense gradient proxies for the selected Q/V projections from three calibration batches, requiring 𝒪 ⁡ ( n ​ m ) \\mathcal{O}(nm) temporary gradient storage per adapted matrix.",
+      "source": "https://arxiv.org/html/2611.07349v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0051",
+      "section": "B.3 Computational and Memory Complexity",
+      "text": "Rank audits introduce additional computation only at scheduled audit steps. With the same probe width h h , the projections, orthogonalization, and decomposition of the compressed normal sketch incur 𝒪 ⁡ ( ( n + m ) ​ r ​ h + ( n + m ) ​ h 2 ) \\mathcal{O}((n+m)rh+(n+m)h^{2}) low-rank linear-algebra cost and 𝒪 ⁡ ( ( n + m ) ​ h ) \\mathcal{O}((n+m)h) temporary memory, in addition to the backward probes used to obtain gradient products. Both r r and h h are small relative to the ambient dimensions, and no full gradient or normal matrix is explicitly stored. The main audit overhead therefore comes from the additional backward probes and candidate forward evaluations rather than large-scale matrix operations. These computations are performed only for t ∈ 𝒯 audit t\\in\\mathcal{T}_{\\mathrm{audit}} , while ordinary training steps incur only the fixed-rank manifold update. Moreover, all probing variables are transient and do not contribute to the committed adapter rank or the trainable-parameter counts reported in our experiments. We further assess the measured resource costs on the DTD task with ViT-B/16 in Table 4 . Table 4: Training time and peak CUDA memory on DTD with ViT-B/16. Method Training time (s) Peak CUDA memory (MiB) LoRA 789.83 3825.15 FlexLoRA 1006.75 6553.87 GEAR 1060.83 4458.21",
+      "source": "https://arxiv.org/html/2611.07349v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0052",
+      "section": "Proof.",
+      "text": "Consider the factorization map Φ : ℝ n × r × ℝ r × m → ℝ n × m , Φ ⁡ ( B , A ) = B ​ A . \\Phi:\\mathbb{R}^{n\\times r}\\times\\mathbb{R}^{r\\times m}\\rightarrow\\mathbb{R}^{n\\times m},\\qquad\\Phi(B,A)=BA. Its differential at ( B , A ) (B,A) is D ​ Φ ( B , A ) ​ [ Δ ​ B , Δ ​ A ] = Δ ​ B ​ A + B ​ Δ ​ A . D\\Phi_{(B,A)}[\\Delta B,\\Delta A]=\\Delta BA+B\\Delta A. For arbitrary perturbations ( Δ ​ B , Δ ​ A ) (\\Delta B,\\Delta A) , define B ⁡ ( t ) = B + t ​ Δ ​ B B(t)=B+t\\Delta B and A ⁡ ( t ) = A + t ​ Δ ​ A A(t)=A+t\\Delta A . Since the set of full-rank matrices is open, both factors remain full rank for sufficiently small t t . Hence X ⁡ ( t ) = B ⁡ ( t ) ​ A ​ ( t ) ∈ ℳ r X(t)=B(t)A(t)\\in\\mathcal{M}_{r} locally around t = 0 t=0 , and X ˙ ​ ( 0 ) = Δ ​ B ​ A + B ​ Δ ​ A = D ​ Φ ( B , A ) ​ [ Δ ​ B , Δ ​ A ] . \\dot{X}(0)=\\Delta BA+B\\Delta A=D\\Phi_{(B,A)}[\\Delta B,\\Delta A]. Therefore, Im ⁡ D ​ Φ ( B , A ) ⊆ T X ​ ℳ r . \\operatorname{Im}D\\Phi_{(B,A)}\\subseteq T_{X}\\mathcal{M}_{r}. To determine the dimension of this image, consider the kernel condition Δ ​ B ​ A + B ​ Δ ​ A = 0 \\Delta BA+B\\Delta A=0 . Since A A has full row rank, it admits a right inverse A R A_{R} satisfying A ​ A R = I r AA_{R}=I_{r} . Right-multiplication by A R A_{R} gives Δ ​ B = − B ​ Δ ​ A ​ A R \\Delta B=-B\\Delta AA_{R} , so Δ ​ B = B ​ K \\Delta B=BK for some K ∈ ℝ r × r K\\in\\mathbb{R}^{r\\times r} . Substitution into the kernel condition yields B ⁡ ( K ​ A + Δ ​ A ) = 0 B(KA+\\Delta A)=0 . Since B B has full column rank, Δ ​ A = − K ​ A \\Delta A=-KA . Conversely, every pair ( B ​ K , − K ​ A ) (BK,-KA) satisfies D ​ Φ ( B , A ) ​ [ B ​ K , − K ​ A ] = 0 D\\Phi_{(B,A)}[BK,-KA]=0 . Thus, ker ⁡ D ​ Φ ( B , A ) = { ( B ​ K , − K ​ A ) : K ∈ ℝ r × r } . \\ker D\\Phi_{(B,A)}=\\{(BK,-KA):K\\in\\mathbb{R}^{r\\times r}\\}.",
+      "source": "https://arxiv.org/html/2611.07349v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0053",
+      "section": "Proof.",
+      "text": "The parametrization by K K is injective because B B has full column rank; hence dim ker ⁡ D ​ Φ ( B , A ) = r 2 \\dim\\ker D\\Phi_{(B,A)}=r^{2} . By the rank–nullity theorem, dim Im ⁡ D ​ Φ ( B , A ) = n ​ r + r ​ m − r 2 = r ⁡ ( n + m − r ) . \\dim\\operatorname{Im}D\\Phi_{(B,A)}=nr+rm-r^{2}=r(n+m-r). Since dim T X ​ ℳ r = dim ℳ r = r ⁡ ( n + m − r ) \\dim T_{X}\\mathcal{M}_{r}=\\dim\\mathcal{M}_{r}=r(n+m-r) , the inclusion above is between spaces of equal dimension, and therefore Im ⁡ D ​ Φ ( B , A ) = T X ​ ℳ r . \\operatorname{Im}D\\Phi_{(B,A)}=T_{X}\\mathcal{M}_{r}. We next identify the adjoint of D ​ Φ ( B , A ) D\\Phi_{(B,A)} . Under the Frobenius inner product, ⟨ G , D ​ Φ ( B , A ) ​ [ Δ ​ B , Δ ​ A ] ⟩ F \\displaystyle\\left\\langle G,D\\Phi_{(B,A)}[\\Delta B,\\Delta A]\\right\\rangle_{F} = ⟨ G , Δ ​ B ​ A + B ​ Δ ​ A ⟩ F \\displaystyle=\\langle G,\\Delta BA+B\\Delta A\\rangle_{F} = ⟨ G ​ A ⊤ , Δ ​ B ⟩ F + ⟨ B ⊤ ​ G , Δ ​ A ⟩ F . \\displaystyle=\\langle GA^{\\top},\\Delta B\\rangle_{F}+\\langle B^{\\top}G,\\Delta A\\rangle_{F}. Hence D ​ Φ ( B , A ) ∗ ​ ( G ) = ( G ​ A ⊤ , B ⊤ ​ G ) = 𝒪 A , B ​ ( G ) . D\\Phi_{(B,A)}^{*}(G)=(GA^{\\top},B^{\\top}G)=\\mathcal{O}_{A,B}(G). For any linear operator L L between finite-dimensional inner-product spaces, ker ⁡ L ∗ = ( Im ⁡ L ) ⟂ \\ker L^{*}=(\\operatorname{Im}L)^{\\perp} . Applying this identity to D ​ Φ ( B , A ) D\\Phi_{(B,A)} and using the characterization above gives ker ⁡ 𝒪 A , B = ( Im ⁡ D ​ Φ ( B , A ) ) ⟂ = ( T X ​ ℳ r ) ⟂ = N X ​ ℳ r . \\ker\\mathcal{O}_{A,B}=\\left(\\operatorname{Im}D\\Phi_{(B,A)}\\right)^{\\perp}=\\left(T_{X}\\mathcal{M}_{r}\\right)^{\\perp}=N_{X}\\mathcal{M}_{r}.",
+      "source": "https://arxiv.org/html/2611.07349v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0054",
+      "section": "Proof.",
+      "text": "Finally, for D = G 1 − G 2 D=G_{1}-G_{2} , 𝒪 A , B ​ ( G 1 ) = 𝒪 A , B ​ ( G 2 ) \\mathcal{O}_{A,B}(G_{1})=\\mathcal{O}_{A,B}(G_{2}) if and only if 𝒪 A , B ​ ( D ) = 0 \\mathcal{O}_{A,B}(D)=0 , which is equivalent to D ∈ N X ​ ℳ r D\\in N_{X}\\mathcal{M}_{r} . Equivalently, the tangent projection of D D vanishes, and hence ( G 1 ) T = ( G 2 ) T . (G_{1})_{T}=(G_{2})_{T}. This proves both statements. ∎ Let X = U ​ Σ ​ V ⊤ ∈ ℳ r X=U\\Sigma V^{\\top}\\in\\mathcal{M}_{r} be a compact SVD, and let U ⟂ U_{\\perp} and V ⟂ V_{\\perp} be orthonormal complements of U U and V V . For any perturbation H H , write [ U ⊤ U ⟂ ⊤ ] ​ H ​ [ V V ⟂ ] = [ H 11 H 12 H 21 H 22 ] . \\begin{bmatrix}U^{\\top}\\\\ U_{\\perp}^{\\top}\\end{bmatrix}H\\begin{bmatrix}V&V_{\\perp}\\end{bmatrix}=\\begin{bmatrix}H_{11}&H_{12}\\\\ H_{21}&H_{22}\\end{bmatrix}. Its normal component is H N = U ⟂ ​ H 22 ​ V ⟂ ⊤ H_{N}=U_{\\perp}H_{22}V_{\\perp}^{\\top} , while the remaining three blocks constitute the tangent component H T H_{T} . We first characterize the tangent cone of 𝒱 r + k = { Y : rank ⁡ ( Y ) ≤ r + k } \\mathcal{V}_{r+k}=\\{Y:\\operatorname{rank}(Y)\\leq r+k\\} at X X . In the above coordinates, 𝒞 r , k ( X ) = { H T + H N : H T ∈ T X ℳ r , H N ∈ N X ℳ r , rank ( H N ) ≤ k } . \\mathcal{C}_{r,k}(X)=\\left\\{H_{T}+H_{N}:H_{T}\\in T_{X}\\mathcal{M}_{r},\\;H_{N}\\in N_{X}\\mathcal{M}_{r},\\;\\operatorname{rank}(H_{N})\\leq k\\right\\}. To verify this characterization, consider a feasible curve X ⁡ ( t ) ∈ 𝒱 r + k X(t)\\in\\mathcal{V}_{r+k} with X ⁡ ( 0 ) = X X(0)=X and X ˙ ​ ( 0 ) = H \\dot{X}(0)=H . Its block form is X ⁡ ( t ) = [ Σ + t ​ H 11 + o ⁡ ( t ) t ​ H 12 + o ⁡ ( t ) t ​ H 21 + o ⁡ ( t ) t ​ H 22 + o ⁡ ( t ) ] . X(t)=\\begin{bmatrix}\\Sigma+tH_{11}+o(t)&tH_{12}+o(t)\\\\ tH_{21}+o(t)&tH_{22}+o(t)\\end{bmatrix}.",
+      "source": "https://arxiv.org/html/2611.07349v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0055",
+      "section": "Proof.",
+      "text": "For sufficiently small t t , the upper-left block is nonsingular. Since rank ⁡ ( X ⁡ ( t ) ) ≤ r + k \\operatorname{rank}(X(t))\\leq r+k , its Schur complement has rank at most k k . Dividing by t t and letting t → 0 t\\to 0 therefore gives rank ⁡ ( H 22 ) ≤ k \\operatorname{rank}(H_{22})\\leq k . Conversely, suppose rank ⁡ ( H 22 ) ≤ k \\operatorname{rank}(H_{22})\\leq k and define A t = Σ + t ​ H 11 A_{t}=\\Sigma+tH_{11} . Consider X ~ ​ ( t ) = [ A t t ​ H 12 t ​ H 21 t ​ H 22 + t 2 ​ H 21 ​ A t − 1 ​ H 12 ] . \\widetilde{X}(t)=\\begin{bmatrix}A_{t}&tH_{12}\\\\ tH_{21}&tH_{22}+t^{2}H_{21}A_{t}^{-1}H_{12}\\end{bmatrix}. Its Schur complement with respect to A t A_{t} is t ​ H 22 tH_{22} , so rank ⁡ ( X ~ ​ ( t ) ) = r + rank ⁡ ( H 22 ) ≤ r + k \\operatorname{rank}(\\widetilde{X}(t))=r+\\operatorname{rank}(H_{22})\\leq r+k . Moreover, X ~ ​ ( 0 ) = X \\widetilde{X}(0)=X and X ~ ˙ ​ ( 0 ) = H \\dot{\\widetilde{X}}(0)=H , establishing the stated tangent-cone characterization. We now minimize q η ​ ( H ) = ⟨ G , H ⟩ F + 1 2 ​ η ​ ‖ H ‖ F 2 q_{\\eta}(H)=\\langle G,H\\rangle_{F}+\\frac{1}{2\\eta}\\|H\\|_{F}^{2} over 𝒞 r , k ​ ( X ) \\mathcal{C}_{r,k}(X) . Since the tangent and normal spaces are orthogonal, write G = G T + G N G=G_{T}+G_{N} and H = H T + H N H=H_{T}+H_{N} . Then q η ​ ( H ) = ( ⟨ G T , H T ⟩ F + 1 2 ​ η ​ ‖ H T ‖ F 2 ) + ( ⟨ G N , H N ⟩ F + 1 2 ​ η ​ ‖ H N ‖ F 2 ) , q_{\\eta}(H)=\\left(\\langle G_{T},H_{T}\\rangle_{F}+\\frac{1}{2\\eta}\\|H_{T}\\|_{F}^{2}\\right)+\\left(\\langle G_{N},H_{N}\\rangle_{F}+\\frac{1}{2\\eta}\\|H_{N}\\|_{F}^{2}\\right), subject only to rank ⁡ ( H N ) ≤ k \\operatorname{rank}(H_{N})\\leq k . For the tangent component,",
+      "source": "https://arxiv.org/html/2611.07349v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0056",
+      "section": "Proof.",
+      "text": "⟨ G T , H T ⟩ F + 1 2 ​ η ​ ‖ H T ‖ F 2 = 1 2 ​ η ​ ‖ H T + η ​ G T ‖ F 2 − η 2 ​ ‖ G T ‖ F 2 , \\langle G_{T},H_{T}\\rangle_{F}+\\frac{1}{2\\eta}\\|H_{T}\\|_{F}^{2}=\\frac{1}{2\\eta}\\|H_{T}+\\eta G_{T}\\|_{F}^{2}-\\frac{\\eta}{2}\\|G_{T}\\|_{F}^{2}, so the unique minimizer is H T ⋆ = − η ​ G T H_{T}^{\\star}=-\\eta G_{T} . Similarly, for the normal component, ⟨ G N , H N ⟩ F + 1 2 ​ η ​ ‖ H N ‖ F 2 = 1 2 ​ η ​ ‖ H N + η ​ G N ‖ F 2 − η 2 ​ ‖ G N ‖ F 2 . \\langle G_{N},H_{N}\\rangle_{F}+\\frac{1}{2\\eta}\\|H_{N}\\|_{F}^{2}=\\frac{1}{2\\eta}\\|H_{N}+\\eta G_{N}\\|_{F}^{2}-\\frac{\\eta}{2}\\|G_{N}\\|_{F}^{2}. Thus, under rank ⁡ ( H N ) ≤ k \\operatorname{rank}(H_{N})\\leq k , minimizing the normal term is equivalent to finding the best rank- k k approximation of − η ​ G N -\\eta G_{N} in Frobenius norm. By the Eckart–Young–Mirsky theorem, H N ⋆ = − η ​ ( G N ) k H_{N}^{\\star}=-\\eta(G_{N})_{k} . Hence H k ⋆ = − η ⁡ [ G T + ( G N ) k ] . H_{k}^{\\star}=-\\eta\\left[G_{T}+(G_{N})_{k}\\right]. It remains to evaluate the additional decrease relative to fixed-rank optimization. Over T X ​ ℳ r T_{X}\\mathcal{M}_{r} , min ⁡ q η = − η 2 ​ ‖ G T ‖ F 2 \\min q_{\\eta}=-\\frac{\\eta}{2}\\|G_{T}\\|_{F}^{2} , whereas over 𝒞 r , k ​ ( X ) \\mathcal{C}_{r,k}(X) , min ⁡ q η = − η 2 ​ ‖ G T ‖ F 2 − η 2 ​ ‖ ( G N ) k ‖ F 2 . \\min q_{\\eta}=-\\frac{\\eta}{2}\\|G_{T}\\|_{F}^{2}-\\frac{\\eta}{2}\\|(G_{N})_{k}\\|_{F}^{2}. Therefore, Δ k = η 2 ​ ‖ ( G N ) k ‖ F 2 = η 2 ​ ∑ i = 1 k σ i 2 ​ ( G N ) . \\Delta_{k}=\\frac{\\eta}{2}\\|(G_{N})_{k}\\|_{F}^{2}=\\frac{\\eta}{2}\\sum_{i=1}^{k}\\sigma_{i}^{2}(G_{N}). Thus, the leading normal singular directions yield the optimal local rank- k k expansion, and their squared singular values determine the additional decrease of the local quadratic model. ∎",
+      "source": "https://arxiv.org/html/2611.07349v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0057",
+      "section": "Proof.",
+      "text": "For brevity, let N = G N N=G_{N} , N ^ = G ^ N \\widehat{N}=\\widehat{G}_{N} , N k = ( G N ) k N_{k}=(G_{N})_{k} , and N ^ k = ( G ^ N ) k \\widehat{N}_{k}=(\\widehat{G}_{N})_{k} . By assumption, ‖ N ^ − N ‖ F ≤ ε \\|\\widehat{N}-N\\|_{F}\\leq\\varepsilon and τ k = ‖ N − N k ‖ F \\tau_{k}=\\|N-N_{k}\\|_{F} . Since N k N_{k} and N ^ k \\widehat{N}_{k} lie in the normal space, they are orthogonal to the tangent component of G G . Hence, for any normal matrix B B , q η ​ ( − η ​ B ) = η 2 ​ ‖ N − B ‖ F 2 − η 2 ​ ‖ N ‖ F 2 . q_{\\eta}(-\\eta B)=\\frac{\\eta}{2}\\|N-B\\|_{F}^{2}-\\frac{\\eta}{2}\\|N\\|_{F}^{2}. Applying this identity to B = N k B=N_{k} and B = N ^ k B=\\widehat{N}_{k} yields q η ​ ( − η ​ N ^ k ) − q η ​ ( − η ​ N k ) = η 2 ​ ( ‖ N − N ^ k ‖ F 2 − ‖ N − N k ‖ F 2 ) . q_{\\eta}(-\\eta\\widehat{N}_{k})-q_{\\eta}(-\\eta N_{k})=\\frac{\\eta}{2}\\left(\\|N-\\widehat{N}_{k}\\|_{F}^{2}-\\|N-N_{k}\\|_{F}^{2}\\right). Because N k N_{k} is a best rank- k k approximation of N N and rank ⁡ ( N ^ k ) ≤ k \\operatorname{rank}(\\widehat{N}_{k})\\leq k , ‖ N − N k ‖ F ≤ ‖ N − N ^ k ‖ F \\|N-N_{k}\\|_{F}\\leq\\|N-\\widehat{N}_{k}\\|_{F} . Therefore, q η ​ ( − η ​ N ^ k ) − q η ​ ( − η ​ N k ) ≥ 0 q_{\\eta}(-\\eta\\widehat{N}_{k})-q_{\\eta}(-\\eta N_{k})\\geq 0 . It remains to establish the upper bound. Since N ^ k \\widehat{N}_{k} is a best rank- k k approximation of N ^ \\widehat{N} , ‖ N ^ − N ^ k ‖ F ≤ ‖ N ^ − N k ‖ F \\|\\widehat{N}-\\widehat{N}_{k}\\|_{F}\\leq\\|\\widehat{N}-N_{k}\\|_{F} . Using the triangle inequality,",
+      "source": "https://arxiv.org/html/2611.07349v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0058",
+      "section": "Proof.",
+      "text": "‖ N − N ^ k ‖ F \\displaystyle\\|N-\\widehat{N}_{k}\\|_{F} ≤ ‖ N − N ^ ‖ F + ‖ N ^ − N ^ k ‖ F \\displaystyle\\leq\\|N-\\widehat{N}\\|_{F}+\\|\\widehat{N}-\\widehat{N}_{k}\\|_{F} ≤ ε + ‖ N ^ − N k ‖ F \\displaystyle\\leq\\varepsilon+\\|\\widehat{N}-N_{k}\\|_{F} ≤ ε + ‖ N ^ − N ‖ F + ‖ N − N k ‖ F \\displaystyle\\leq\\varepsilon+\\|\\widehat{N}-N\\|_{F}+\\|N-N_{k}\\|_{F} ≤ τ k + 2 ​ ε . \\displaystyle\\leq\\tau_{k}+2\\varepsilon. Substituting this bound into the preceding identity gives q η ​ ( − η ​ N ^ k ) − q η ​ ( − η ​ N k ) \\displaystyle q_{\\eta}(-\\eta\\widehat{N}_{k})-q_{\\eta}(-\\eta N_{k}) ≤ η 2 ​ [ ( τ k + 2 ​ ε ) 2 − τ k 2 ] \\displaystyle\\leq\\frac{\\eta}{2}\\left[(\\tau_{k}+2\\varepsilon)^{2}-\\tau_{k}^{2}\\right] = 2 ​ η ​ ε ​ ( τ k + ε ) . \\displaystyle=2\\eta\\varepsilon(\\tau_{k}+\\varepsilon). Consequently, 0 ≤ q η ​ ( − η ​ ( G ^ N ) k ) − q η ​ ( − η ​ ( G N ) k ) ≤ 2 ​ η ​ ε ​ ( τ k + ε ) . 0\\leq q_{\\eta}\\!\\left(-\\eta(\\widehat{G}_{N})_{k}\\right)-q_{\\eta}\\!\\left(-\\eta(G_{N})_{k}\\right)\\leq 2\\eta\\varepsilon(\\tau_{k}+\\varepsilon). This completes the proof. ∎",
+      "source": "https://arxiv.org/html/2611.07349v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0059",
+      "section": "D.1 Details on Commonsense Reasoning Task",
+      "text": "The commonsense reasoning suite comprises eight benchmarks: BoolQ ( Clark et al., 2019 ) , PIQA ( Bisk et al., 2020 ) , SIQA ( Sap et al., 2019 ) , HellaSwag ( Zellers et al., 2019 ) , WinoGrande ( Sakaguchi et al., 2020 ) , ARC-e/ARC-c ( Clark et al., 2018 ) , and OBQA ( Mihaylov et al., 2018 ) . Following the standard multi-task protocol, we combine the training portions of these tasks into the Commonsense170K corpus ( Hu et al., 2023 ) and evaluate each benchmark separately on its corresponding test set. We use LLaMA3-8B and Qwen2.5-7B as backbone models. The main hyperparameter settings are summarized in Table 5 . The probing configuration estimates task-induced gradient structure for geometric initialization. We use probe width h = 24 h=24 for both TGI and rank audits. For rank audits, each calibration batch contains 128 examples, with 16 from each task. The damping coefficient λ = 0.1 \\lambda=0.1 regularizes the gradient-scale normalization. Subsequent experiments follow the same initialization and rank-audit framework with task-specific adjustments; the VTAB implementation is detailed in Appendix D.3 . Table 5: Hyperparameter settings for LLaMA3-8B and Qwen2.5-7B in commonsense reasoning experiments.",
+      "source": "https://arxiv.org/html/2611.07349v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0060",
+      "section": "D.1 Details on Commonsense Reasoning Task",
+      "text": "Hyperparameter Setting Initial effective rank r 0 r_{0} 4 Maximum per-module rank r max r_{\\max} 32 Weighted-average rank budget r ¯ budget \\bar{r}_{\\mathrm{budget}} 16 Target modules Q, K, V, O, Up, Down, Gate Probe Ω \\Omega width h h 24 Probe batch size 128 total (16 per task) Damping λ \\lambda 0.1 First audit step t start t_{\\mathrm{start}} 100 Audit interval Δ ​ t \\Delta t 50 Rank-audit cutoff t final t_{\\mathrm{final}} 500 Max. rank increment per module per audit 4 Acceptance threshold ρ \\rho 0.5% Learning rate 2 × 10 − 2 2\\times 10^{-2} Dropout 0.05 Scheduler / warmup Linear / 0.1 Batch configuration 16 microbatch × \\times 4 accumulation Epochs 2",
+      "source": "https://arxiv.org/html/2611.07349v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0061",
+      "section": "D.2 Details on Natural Language Understanding Task",
+      "text": "For the natural language understanding experiments, we fine-tune DeBERTa-v3-base on the GLUE benchmark ( Wang et al., 2019 ) , comprising eight tasks across single-sentence classification, semantic similarity and paraphrase detection, and natural language inference. Specifically, we evaluate on CoLA ( Warstadt et al., 2019 ) , SST-2 ( Socher et al., 2013 ) , MRPC ( Dolan and Brockett, 2005 ) , QQP ( Wang et al., 2019 ) , STS-B ( Cer et al., 2017 ) , MNLI ( Williams et al., 2018 ) , QNLI ( Rajpurkar et al., 2016 ) , and RTE ( Dagan et al., 2006 ; Bar-Haim et al., 2006 ; Giampiccolo et al., 2007 ; Bentivogli et al., 2009 ) . Dataset statistics and evaluation metrics are summarized in Table 6 , and the corresponding training and rank-adaptation settings are reported in Table 7 . We use the same probing and subspace estimation procedure as in the commonsense reasoning experiments, with shared probe width h = 24 h=24 for TGI and rank audits and task-specific calibration data and optimization settings. Separate learning rates are used for the adapter and task head because they operate under different parameterizations and effective update scales: the head follows standard Euclidean optimization, whereas the adapter learning rate controls the manifold-constrained update before retraction. Table 6: Details of the GLUE dataset. Dataset Task # Train # Dev # Test # Label Metrics Single-Sentence Classification CoLA Acceptability 8.5k 1k 1k 2 Matthews corr. SST-2 Sentiment 67k 872 1.8k 2 Accuracy Similarity and Paraphrase MRPC Paraphrase 3.7k 408 1.7k 2 Accuracy QQP Paraphrase 364k 40k 391k 2 Accuracy STS-B Similarity 7k 1.5k 1.4k 1 Pearson/Spearman corr. Natural Language Inference MNLI NLI 393k 20k 20k 3 Accuracy QNLI QA/NLI 108k 5.7k 5.7k 2 Accuracy RTE NLI 2.5k 276 3k 2 Accuracy",
+      "source": "https://arxiv.org/html/2611.07349v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0062",
+      "section": "D.2 Details on Natural Language Understanding Task",
+      "text": "Table 7: Hyper-parameter settings of our method on the GLUE benchmark. Dataset Adapter LR Head LR Batch Epochs 𝒓 𝟎 \\boldsymbol{r_{0}} 𝒓 ¯ 𝐛𝐮𝐝𝐠𝐞𝐭 \\boldsymbol{\\bar{r}_{\\mathrm{budget}}} 𝒓 𝐦𝐚𝐱 \\boldsymbol{r_{\\max}} 𝒕 𝐬𝐭𝐚𝐫𝐭 \\boldsymbol{t_{\\mathrm{start}}} 𝚫 ​ 𝒕 \\boldsymbol{\\Delta t} 𝒕 𝐟𝐢𝐧𝐚𝐥 \\boldsymbol{t_{\\mathrm{final}}} MNLI × 10 − 4 5\\!\\times\\!10^{-4} × 10 − 4 5\\!\\times\\!10^{-4} 32 6 4 8 16 0.1 ​ T 0.1T 0.075 ​ T 0.075T 0.7 ​ T 0.7T RTE × 10 − 3 3.6\\!\\times\\!10^{-3} × 10 − 3 1.2\\!\\times\\!10^{-3} 32 50 4 8 16 0.1 ​ T 0.1T 0.075 ​ T 0.075T 0.7 ​ T 0.7T QNLI × 10 − 3 3\\!\\times\\!10^{-3} × 10 − 4 3\\!\\times\\!10^{-4} 32 5 4 8 16 0.1 ​ T 0.1T 0.075 ​ T 0.075T 0.7 ​ T 0.7T MRPC × 10 − 3 3\\!\\times\\!10^{-3} × 10 − 3 1\\!\\times\\!10^{-3} 32 30 4 8 16 0.1 ​ T 0.1T 0.075 ​ T 0.075T 0.7 ​ T 0.7T QQP × 10 − 3 1.6\\!\\times\\!10^{-3} × 10 − 4 8\\!\\times\\!10^{-4} 32 5 4 8 16 0.1 ​ T 0.1T 0.075 ​ T 0.075T 0.7 ​ T 0.7T SST-2 × 10 − 3 5\\!\\times\\!10^{-3} × 10 − 4 3\\!\\times\\!10^{-4} 32 24 4 8 16 0.1 ​ T 0.1T 0.075 ​ T 0.075T 0.7 ​ T 0.7T CoLA × 10 − 3 1.6\\!\\times\\!10^{-3} × 10 − 4 8\\!\\times\\!10^{-4} 32 20 4 8 16 0.1 ​ T 0.1T 0.075 ​ T 0.075T 0.7 ​ T 0.7T STS-B × 10 − 3 4.4\\!\\times\\!10^{-3} × 10 − 3 2.2\\!\\times\\!10^{-3} 32 25 4 8 16 0.1 ​ T 0.1T 0.075 ​ T 0.075T 0.7 ​ T 0.7T T T denotes the total number of optimization steps. At each rank audit, each module may add at most one new rank-one direction, with an acceptance threshold of ρ = 0.1 % \\rho=0.1\\% relative loss improvement.",
+      "source": "https://arxiv.org/html/2611.07349v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0063",
+      "section": "D.3 Details on Visual Task",
+      "text": "We evaluate GEAR with ViT-B/16 on VTAB-1K ( Zhai et al., 2020 ) , which contains 19 visual classification tasks across Natural, Specialized, and Structured categories. Dataset statistics and hyperparameter settings are reported in Tables 8 and 9 , respectively. For TGI, we aggregate dense gradient proxies for the selected Q/V projections from three calibration batches. Rank audits and candidate validation use task-specific settings. Table 8: Details of the VTAB-1K benchmark. Dataset # Classes # Train # Val # Test Natural CIFAR100 100 800/1000 200 10,000 Caltech101 102 800/1000 200 6,084 DTD 47 800/1000 200 1,880 Flowers102 102 800/1000 200 6,149 Pets 37 800/1000 200 3,669 SVHN 10 800/1000 200 26,032 SUN397 397 800/1000 200 21,750 Specialized Camelyon 2 800/1000 200 32,768 EuroSAT 10 800/1000 200 5,400 RESISC45 45 800/1000 200 6,300 Retinopathy 5 800/1000 200 42,670 Structured CLEVR-Count 8 800/1000 200 15,000 CLEVR-Dist 6 800/1000 200 15,000 DMLab 6 800/1000 200 22,735 KITTI-Dist 4 800/1000 200 711 dSpr-Loc 16 800/1000 200 73,728 dSpr-Ori 16 800/1000 200 73,728 sNORB-Azim 18 800/1000 200 12,150 sNORB-Ele 18 800/1000 200 12,150 Table 9: Hyperparameter settings for the VTAB-1K experiments. Hyperparameter Setting Initial effective rank r 0 r_{0} 4 Weighted-average rank budget r ¯ budget \\bar{r}_{\\mathrm{budget}} 8 Maximum per-module rank r max r_{\\max} 16 Learning rate 5 × 10 − 3 5\\times 10^{-3} First audit step t start t_{\\mathrm{start}} 160 160 Audit interval Δ ​ t \\Delta t 50 50 Rank-audit cutoff t final t_{\\mathrm{final}} 1300 1300 Acceptance threshold ρ \\rho 0.03% Batch size 64 Epochs 100",
+      "source": "https://arxiv.org/html/2611.07349v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0064",
+      "section": "Appendix E Ablation Studies",
+      "text": "To isolate the contribution of each component, we conduct a component-wise ablation on LLaMA3-8B over the commonsense reasoning suite. Starting from the standard LoRA baseline, we examine task-induced geometric initialization (TGI), fixed-rank manifold optimization, and geometry-guided rank expansion. The results are reported in Table 10 . TGI and manifold optimization independently improve the average score from 85.03 85.03 to 85.57 85.57 and 85.65 85.65 , respectively, while combining them further raises it to 86.23 86.23 . This suggests that task-informed initialization and geometry-preserving optimization provide complementary benefits in constructing and optimizing the current adaptation space. Rank expansion brings a larger gain. Adding it to manifold optimization improves the average from 85.65 85.65 to 87.32 87.32 , while combining all three components further increases the score to 88.45 88.45 , with improvements across all eight tasks. TGI also remains beneficial when rank expansion is enabled, improving the manifold-plus-expansion configuration from 87.32 87.32 to 88.45 88.45 . Taken together, these ablations align with the central view of GEAR: dynamic rank adaptation should distinguish between better exploiting the current adaptation space and expanding it when task-relevant directions remain unrepresented. Table 10: Component ablation of GEAR on commonsense reasoning with LLaMA3-8B. TGI denotes task-induced geometric initialization.",
+      "source": "https://arxiv.org/html/2611.07349v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0065",
+      "section": "Appendix E Ablation Studies",
+      "text": "TGI Manifold Rank Expansion BoolQ PIQA SIQA HellaS. WinoG. ARC-e ARC-c OBQA Avg. – – – 72.37 87.83 81.34 94.81 85.08 91.46 81.32 86.00 85.03 ✓ – – 72.51 87.57 81.27 94.88 86.94 92.16 83.08 86.16 85.57 – ✓ – 72.40 87.03 81.12 94.46 87.38 92.51 83.12 87.21 85.65 ✓ ✓ – 73.15 89.13 82.01 94.90 87.27 92.88 83.30 87.17 86.23 – ✓ ✓ 73.95 89.73 83.13 95.84 88.66 93.04 84.71 89.51 87.32 ✓ ✓ ✓ 75.19 90.81 83.78 96.82 89.82 93.77 85.58 91.80 88.45",
+      "source": "https://arxiv.org/html/2611.07349v1",
+      "offset": 0
+    }
+  ],
+  "links": [
+    {
+      "href": "#bib.bib1",
+      "text": "Ding et al., 2023b",
+      "section": "1 Introduction",
+      "context": "Parameter-efficient fine-tuning (PEFT) has become a prevailing approach to adapting large pretrained models by updating only a small fraction of task-specific parameters ( Ding et al., 2023b",
+      "url": "https://arxiv.org/html/2611.07349v1#bib.bib1"
+    },
+    {
+      "href": "#bib.bib4",
+      "text": "Hu et al., 2022",
+      "section": "1 Introduction",
+      "context": "Parameter-efficient fine-tuning (PEFT) has become a prevailing approach to adapting large pretrained models by updating only a small fraction of task-specific parameters ( Ding et al., 2023b ) . Among PEFT methods, LoRA represents the weight increment as a low-rank matrix, Δ ​ W = B ​ A \\Delta W=BA , where A ∈ ℝ r × m A\\in\\mathbb{R}^{r\\times m} and B ∈ ℝ n × r B\\in\\mathbb{R}^{n\\times r} , reducing the number of trainable parameters from n ​ m nm to r ⁡ ( n + m ) r(n+m) ( Hu et al., 2022",
+      "url": "https://arxiv.org/html/2611.07349v1#bib.bib4"
+    },
+    {
+      "href": "#bib.bib15",
+      "text": "Vandereycken, 2013",
+      "section": "1 Introduction",
+      "context": "to adapting large pretrained models by updating only a small fraction of task-specific parameters ( Ding et al., 2023b ) . Among PEFT methods, LoRA represents the weight increment as a low-rank matrix, Δ ​ W = B ​ A \\Delta W=BA , where A ∈ ℝ r × m A\\in\\mathbb{R}^{r\\times m} and B ∈ ℝ n × r B\\in\\mathbb{R}^{n\\times r} , reducing the number of trainable parameters from n ​ m nm to r ⁡ ( n + m ) r(n+m) ( Hu et al., 2022 ) . While r r therefore directly controls the adaptation budget, it also determines the local first-order update space accessible under the low-rank constraint ( Vandereycken, 2013",
+      "url": "https://arxiv.org/html/2611.07349v1#bib.bib15"
+    },
+    {
+      "href": "#bib.bib5",
+      "text": "Zhang et al., 2023",
+      "section": "1 Introduction",
+      "context": "Most dynamic-rank methods still treat rank primarily as a capacity-allocation variable. AdaLoRA, for example, reallocates a prescribed rank budget across weight matrices according to the importance of individual singular components ( Zhang et al., 2023",
+      "url": "https://arxiv.org/html/2611.07349v1#bib.bib5"
+    },
+    {
+      "href": "#bib.bib6",
+      "text": "Valipour et al., 2023",
+      "section": "1 Introduction",
+      "context": "Most dynamic-rank methods still treat rank primarily as a capacity-allocation variable. AdaLoRA, for example, reallocates a prescribed rank budget across weight matrices according to the importance of individual singular components ( Zhang et al., 2023 ) , while DyLoRA trains nested low-rank structures to support inference at multiple truncation ranks ( Valipour et al., 2023",
+      "url": "https://arxiv.org/html/2611.07349v1#bib.bib6"
+    },
+    {
+      "href": "#bib.bib13",
+      "text": "Liu et al., 2026",
+      "section": "1 Introduction",
+      "context": "Most dynamic-rank methods still treat rank primarily as a capacity-allocation variable. AdaLoRA, for example, reallocates a prescribed rank budget across weight matrices according to the importance of individual singular components ( Zhang et al., 2023 ) , while DyLoRA trains nested low-rank structures to support inference at multiple truncation ranks ( Valipour et al., 2023 ) . More recent approaches permit more flexible rank evolution: FlexLoRA uses the spectral entropy of the current low-rank update to determine when capacity should be pruned or expanded ( Liu et al., 2026",
+      "url": "https://arxiv.org/html/2611.07349v1#bib.bib13"
+    },
+    {
+      "href": "#bib.bib11",
+      "text": "Schotthöfer et al., 2025",
+      "section": "1 Introduction",
+      "context": "cross weight matrices according to the importance of individual singular components ( Zhang et al., 2023 ) , while DyLoRA trains nested low-rank structures to support inference at multiple truncation ranks ( Valipour et al., 2023 ) . More recent approaches permit more flexible rank evolution: FlexLoRA uses the spectral entropy of the current low-rank update to determine when capacity should be pruned or expanded ( Liu et al., 2026 ) , whereas GeoLoRA combines gradient-driven basis augmentation with spectral truncation within a dynamical low-rank integration framework ( Schotthöfer et al., 2025",
+      "url": "https://arxiv.org/html/2611.07349v1#bib.bib11"
+    },
+    {
+      "href": "#bib.bib4",
+      "text": "Hu et al., 2022",
+      "section": "LoRA and Adaptive Rank Adaptation.",
+      "context": "LoRA parameterizes task-specific updates through low-rank factors, reducing trainable parameters and storage while preserving frozen pretrained weights ( Hu et al., 2022",
+      "url": "https://arxiv.org/html/2611.07349v1#bib.bib4"
+    },
+    {
+      "href": "#bib.bib8",
+      "text": "Liu et al., 2024",
+      "section": "LoRA and Adaptive Rank Adaptation.",
+      "context": "LoRA parameterizes task-specific updates through low-rank factors, reducing trainable parameters and storage while preserving frozen pretrained weights ( Hu et al., 2022 ) . Subsequent work has improved low-rank adaptation through refined parameterizations and initialization strategies. DoRA decouples weight magnitude and direction to enhance adaptation flexibility ( Liu et al., 2024",
+      "url": "https://arxiv.org/html/2611.07349v1#bib.bib8"
+    },
+    {
+      "href": "#bib.bib9",
+      "text": "Meng et al., 2024",
+      "section": "LoRA and Adaptive Rank Adaptation.",
+      "context": "LoRA parameterizes task-specific updates through low-rank factors, reducing trainable parameters and storage while preserving frozen pretrained weights ( Hu et al., 2022 ) . Subsequent work has improved low-rank adaptation through refined parameterizations and initialization strategies. DoRA decouples weight magnitude and direction to enhance adaptation flexibility ( Liu et al., 2024 ) , while PiSSA initializes adapters from principal singular subspaces of the pretrained weights ( Meng et al., 2024",
+      "url": "https://arxiv.org/html/2611.07349v1#bib.bib9"
+    },
+    {
+      "href": "#bib.bib10",
+      "text": "Wang et al., 2024",
+      "section": "LoRA and Adaptive Rank Adaptation.",
+      "context": "erizes task-specific updates through low-rank factors, reducing trainable parameters and storage while preserving frozen pretrained weights ( Hu et al., 2022 ) . Subsequent work has improved low-rank adaptation through refined parameterizations and initialization strategies. DoRA decouples weight magnitude and direction to enhance adaptation flexibility ( Liu et al., 2024 ) , while PiSSA initializes adapters from principal singular subspaces of the pretrained weights ( Meng et al., 2024 ) and LoRA-GA uses task gradients to identify more effective initial low-rank directions ( Wang et al., 2024",
+      "url": "https://arxiv.org/html/2611.07349v1#bib.bib10"
+    },
+    {
+      "href": "#bib.bib5",
+      "text": "Zhang et al., 2023",
+      "section": "LoRA and Adaptive Rank Adaptation.",
+      "context": "t al., 2024 ) , while PiSSA initializes adapters from principal singular subspaces of the pretrained weights ( Meng et al., 2024 ) and LoRA-GA uses task gradients to identify more effective initial low-rank directions ( Wang et al., 2024 ) . Despite these advances, most methods still operate with a fixed rank, which may poorly match the heterogeneous adaptation demands across layers and training stages. This limitation has motivated adaptive-rank LoRA methods. AdaLoRA dynamically reallocates a prescribed rank budget across modules according to singular-component importance ( Zhang et al., 2023",
+      "url": "https://arxiv.org/html/2611.07349v1#bib.bib5"
+    },
+    {
+      "href": "#bib.bib6",
+      "text": "Valipour et al., 2023",
+      "section": "LoRA and Adaptive Rank Adaptation.",
+      "context": "hts ( Meng et al., 2024 ) and LoRA-GA uses task gradients to identify more effective initial low-rank directions ( Wang et al., 2024 ) . Despite these advances, most methods still operate with a fixed rank, which may poorly match the heterogeneous adaptation demands across layers and training stages. This limitation has motivated adaptive-rank LoRA methods. AdaLoRA dynamically reallocates a prescribed rank budget across modules according to singular-component importance ( Zhang et al., 2023 ) ; DyLoRA trains nested low-rank structures to support multiple effective ranks ( Valipour et al., 2023",
+      "url": "https://arxiv.org/html/2611.07349v1#bib.bib6"
+    },
+    {
+      "href": "#bib.bib7",
+      "text": "Ding et al., 2023a",
+      "section": "LoRA and Adaptive Rank Adaptation.",
+      "context": "ective initial low-rank directions ( Wang et al., 2024 ) . Despite these advances, most methods still operate with a fixed rank, which may poorly match the heterogeneous adaptation demands across layers and training stages. This limitation has motivated adaptive-rank LoRA methods. AdaLoRA dynamically reallocates a prescribed rank budget across modules according to singular-component importance ( Zhang et al., 2023 ) ; DyLoRA trains nested low-rank structures to support multiple effective ranks ( Valipour et al., 2023 ) ; and SoRA learns effective rank through sparse gating ( Ding et al., 2023a",
+      "url": "https://arxiv.org/html/2611.07349v1#bib.bib7"
+    },
+    {
+      "href": "#bib.bib13",
+      "text": "Liu et al., 2026",
+      "section": "LoRA and Adaptive Rank Adaptation.",
+      "context": "us adaptation demands across layers and training stages. This limitation has motivated adaptive-rank LoRA methods. AdaLoRA dynamically reallocates a prescribed rank budget across modules according to singular-component importance ( Zhang et al., 2023 ) ; DyLoRA trains nested low-rank structures to support multiple effective ranks ( Valipour et al., 2023 ) ; and SoRA learns effective rank through sparse gating ( Ding et al., 2023a ) . More recent approaches allow rank to both contract and expand: FlexLoRA adjusts rank according to the spectral structure of the current adapter ( Liu et al., 2026",
+      "url": "https://arxiv.org/html/2611.07349v1#bib.bib13"
+    },
+    {
+      "href": "#bib.bib11",
+      "text": "Schotthöfer et al., 2025",
+      "section": "LoRA and Adaptive Rank Adaptation.",
+      "context": "ibed rank budget across modules according to singular-component importance ( Zhang et al., 2023 ) ; DyLoRA trains nested low-rank structures to support multiple effective ranks ( Valipour et al., 2023 ) ; and SoRA learns effective rank through sparse gating ( Ding et al., 2023a ) . More recent approaches allow rank to both contract and expand: FlexLoRA adjusts rank according to the spectral structure of the current adapter ( Liu et al., 2026 ) , whereas GeoLoRA combines gradient-driven basis augmentation with spectral truncation under a dynamical low-rank formulation ( Schotthöfer et al., 2025",
+      "url": "https://arxiv.org/html/2611.07349v1#bib.bib11"
+    },
+    {
+      "href": "#bib.bib12",
+      "text": "Ed-dib et al., 2025",
+      "section": "LoRA and Adaptive Rank Adaptation.",
+      "context": "o support multiple effective ranks ( Valipour et al., 2023 ) ; and SoRA learns effective rank through sparse gating ( Ding et al., 2023a ) . More recent approaches allow rank to both contract and expand: FlexLoRA adjusts rank according to the spectral structure of the current adapter ( Liu et al., 2026 ) , whereas GeoLoRA combines gradient-driven basis augmentation with spectral truncation under a dynamical low-rank formulation ( Schotthöfer et al., 2025 ) . GeLoRA further estimates the intrinsic dimensionality of hidden representations to derive adaptive layer-wise ranks ( Ed-dib et al., 2025",
+      "url": "https://arxiv.org/html/2611.07349v1#bib.bib12"
+    },
+    {
+      "href": "#bib.bib15",
+      "text": "Vandereycken, 2013",
+      "section": "Geometric Optimization for LoRA",
+      "context": "Fixed-rank matrices admit a natural Riemannian manifold structure, providing a principled way to optimize low-rank states independently of a particular factorization ( Vandereycken, 2013",
+      "url": "https://arxiv.org/html/2611.07349v1#bib.bib15"
+    },
+    {
+      "href": "#bib.bib27",
+      "text": "Zhang and Pilanci, 2024",
+      "section": "Geometric Optimization for LoRA",
+      "context": "Fixed-rank matrices admit a natural Riemannian manifold structure, providing a principled way to optimize low-rank states independently of a particular factorization ( Vandereycken, 2013 ) . Early geometric approaches to LoRA exploit this structure through Riemannian metrics and preconditioning; for example, Riemannian Preconditioned LoRA derives low-dimensional preconditioners from the geometry of the low-rank matrix space to improve optimization stability and convergence ( Zhang and Pilanci, 2024",
+      "url": "https://arxiv.org/html/2611.07349v1#bib.bib27"
+    },
+    {
+      "href": "#bib.bib11",
+      "text": "Schotthöfer et al., 2025",
+      "section": "Geometric Optimization for LoRA",
+      "context": "dependently of a particular factorization ( Vandereycken, 2013 ) . Early geometric approaches to LoRA exploit this structure through Riemannian metrics and preconditioning; for example, Riemannian Preconditioned LoRA derives low-dimensional preconditioners from the geometry of the low-rank matrix space to improve optimization stability and convergence ( Zhang and Pilanci, 2024 ) . GeoLoRA further introduces dynamical low-rank integration into PEFT, combining gradient-driven basis augmentation with spectral truncation for structure-preserving and rank-adaptive updates ( Schotthöfer et al., 2025",
+      "url": "https://arxiv.org/html/2611.07349v1#bib.bib11"
+    },
+    {
+      "href": "#bib.bib28",
+      "text": "Park et al., 2025",
+      "section": "Geometric Optimization for LoRA",
+      "context": "oned LoRA derives low-dimensional preconditioners from the geometry of the low-rank matrix space to improve optimization stability and convergence ( Zhang and Pilanci, 2024 ) . GeoLoRA further introduces dynamical low-rank integration into PEFT, combining gradient-driven basis augmentation with spectral truncation for structure-preserving and rank-adaptive updates ( Schotthöfer et al., 2025 ) . Related work has also explored explicit manifold constraints on LoRA factors. Park et al. optimize the B B factor on the Stiefel manifold to maintain orthogonality and effective rank ( Park et al., 2025",
+      "url": "https://arxiv.org/html/2611.07349v1#bib.bib28"
+    },
+    {
+      "href": "#bib.bib29",
+      "text": "Zhang et al., 2026",
+      "section": "Geometric Optimization for LoRA",
+      "context": "tability and convergence ( Zhang and Pilanci, 2024 ) . GeoLoRA further introduces dynamical low-rank integration into PEFT, combining gradient-driven basis augmentation with spectral truncation for structure-preserving and rank-adaptive updates ( Schotthöfer et al., 2025 ) . Related work has also explored explicit manifold constraints on LoRA factors. Park et al. optimize the B B factor on the Stiefel manifold to maintain orthogonality and effective rank ( Park et al., 2025 ) , while Manifold-LoRA develops a retraction-free Stiefel-manifold formulation for LoRA fine-tuning ( Zhang et al., 2026",
+      "url": "https://arxiv.org/html/2611.07349v1#bib.bib29"
+    },
+    {
+      "href": "#bib.bib14",
+      "text": "Bogachev et al., 2026",
+      "section": "Geometric Optimization for LoRA",
+      "context": "ing and rank-adaptive updates ( Schotthöfer et al., 2025 ) . Related work has also explored explicit manifold constraints on LoRA factors. Park et al. optimize the B B factor on the Stiefel manifold to maintain orthogonality and effective rank ( Park et al., 2025 ) , while Manifold-LoRA develops a retraction-free Stiefel-manifold formulation for LoRA fine-tuning ( Zhang et al., 2026 ) . More recently, Riemannion directly optimizes the adaptation matrix on the fixed-rank manifold, removing factorization ambiguity and enabling parametrization-independent geometric updates ( Bogachev et al., 2026",
+      "url": "https://arxiv.org/html/2611.07349v1#bib.bib14"
+    },
+    {
+      "href": "#S3.E1",
+      "text": "1",
+      "section": "3 Method",
+      "context": "Input: Pretrained weights W W ; initial rank r 0 r_{0} ; rank upper bound r max r_{\\max} ; audit set 𝒯 audit \\mathcal{T}_{\\mathrm{audit}} ; budget ℬ target \\mathcal{B}_{\\mathrm{target}} ( U , C , V ) ← TGI ⁡ ( W , r 0 ) (U,C,V)\\leftarrow\\mathrm{TGI}(W,r_{0}) ; X ← U ​ C , W ← W − s ​ X , r ← r 0 X\\leftarrow UC,\\quad W\\leftarrow W-sX,\\quad r\\leftarrow r_{0} ; for t = 1 , … , T t=1,\\ldots,T do G T ← U ⁡ ( U ⊤ ​ G ) + ( I − U ​ U ⊤ ) ​ G ​ V ​ V ⊤ G_{T}\\leftarrow U(U^{\\top}G)+(I-UU^{\\top})GVV^{\\top} ; // Eq. ( 1",
+      "url": "https://arxiv.org/html/2611.07349v1#S3.E1"
+    },
+    {
+      "href": "#S3.E2",
+      "text": "2",
+      "section": "3 Method",
+      "context": "0} ; rank upper bound r max r_{\\max} ; audit set 𝒯 audit \\mathcal{T}_{\\mathrm{audit}} ; budget ℬ target \\mathcal{B}_{\\mathrm{target}} ( U , C , V ) ← TGI ⁡ ( W , r 0 ) (U,C,V)\\leftarrow\\mathrm{TGI}(W,r_{0}) ; X ← U ​ C , W ← W − s ​ X , r ← r 0 X\\leftarrow UC,\\quad W\\leftarrow W-sX,\\quad r\\leftarrow r_{0} ; for t = 1 , … , T t=1,\\ldots,T do G T ← U ⁡ ( U ⊤ ​ G ) + ( I − U ​ U ⊤ ) ​ G ​ V ​ V ⊤ G_{T}\\leftarrow U(U^{\\top}G)+(I-UU^{\\top})GVV^{\\top} ; // Eq. ( 1 ) ( X , U , C , V ) ← Retr ℳ r ⁡ ( X − η t ​ G T ) (X,U,C,V)\\leftarrow\\operatorname{Retr}_{\\mathcal{M}_{r}}(X-\\eta_{t}G_{T}) ; // Eq. ( 2",
+      "url": "https://arxiv.org/html/2611.07349v1#S3.E2"
+    },
+    {
+      "href": "#S3.E3",
+      "text": "3",
+      "section": "3 Method",
+      "context": " ​ C , W ← W − s ​ X , r ← r 0 X\\leftarrow UC,\\quad W\\leftarrow W-sX,\\quad r\\leftarrow r_{0} ; for t = 1 , … , T t=1,\\ldots,T do G T ← U ⁡ ( U ⊤ ​ G ) + ( I − U ​ U ⊤ ) ​ G ​ V ​ V ⊤ G_{T}\\leftarrow U(U^{\\top}G)+(I-UU^{\\top})GVV^{\\top} ; // Eq. ( 1 ) ( X , U , C , V ) ← Retr ℳ r ⁡ ( X − η t ​ G T ) (X,U,C,V)\\leftarrow\\operatorname{Retr}_{\\mathcal{M}_{r}}(X-\\eta_{t}G_{T}) ; // Eq. ( 2 ) if t ∈ 𝒯 audit t\\in\\mathcal{T}_{\\mathrm{audit}} and r < r max r<r_{\\max} then ( U ^ , Σ ^ , V ^ ) ← NormalSketch ⁡ ( X ) (\\widehat{U},\\widehat{\\Sigma},\\widehat{V})\\leftarrow\\mathrm{NormalSketch}(X) ; // Eqs. ( 3",
+      "url": "https://arxiv.org/html/2611.07349v1#S3.E3"
+    },
+    {
+      "href": "#S3.E4",
+      "text": "4",
+      "section": "3 Method",
+      "context": "W ← W − s ​ X , r ← r 0 X\\leftarrow UC,\\quad W\\leftarrow W-sX,\\quad r\\leftarrow r_{0} ; for t = 1 , … , T t=1,\\ldots,T do G T ← U ⁡ ( U ⊤ ​ G ) + ( I − U ​ U ⊤ ) ​ G ​ V ​ V ⊤ G_{T}\\leftarrow U(U^{\\top}G)+(I-UU^{\\top})GVV^{\\top} ; // Eq. ( 1 ) ( X , U , C , V ) ← Retr ℳ r ⁡ ( X − η t ​ G T ) (X,U,C,V)\\leftarrow\\operatorname{Retr}_{\\mathcal{M}_{r}}(X-\\eta_{t}G_{T}) ; // Eq. ( 2 ) if t ∈ 𝒯 audit t\\in\\mathcal{T}_{\\mathrm{audit}} and r < r max r<r_{\\max} then ( U ^ , Σ ^ , V ^ ) ← NormalSketch ⁡ ( X ) (\\widehat{U},\\widehat{\\Sigma},\\widehat{V})\\leftarrow\\mathrm{NormalSketch}(X) ; // Eqs. ( 3 )--( 4",
+      "url": "https://arxiv.org/html/2611.07349v1#S3.E4"
+    },
+    {
+      "href": "#S3.E5",
+      "text": "5",
+      "section": "3 Method",
+      "context": "V ​ V ⊤ G_{T}\\leftarrow U(U^{\\top}G)+(I-UU^{\\top})GVV^{\\top} ; // Eq. ( 1 ) ( X , U , C , V ) ← Retr ℳ r ⁡ ( X − η t ​ G T ) (X,U,C,V)\\leftarrow\\operatorname{Retr}_{\\mathcal{M}_{r}}(X-\\eta_{t}G_{T}) ; // Eq. ( 2 ) if t ∈ 𝒯 audit t\\in\\mathcal{T}_{\\mathrm{audit}} and r < r max r<r_{\\max} then ( U ^ , Σ ^ , V ^ ) ← NormalSketch ⁡ ( X ) (\\widehat{U},\\widehat{\\Sigma},\\widehat{V})\\leftarrow\\mathrm{NormalSketch}(X) ; // Eqs. ( 3 )--( 4 ) 𝒮 ← Select ⁡ ( U ^ , Σ ^ , V ^ , ℬ target ) \\mathcal{S}\\leftarrow\\mathrm{Select}(\\widehat{U},\\widehat{\\Sigma},\\widehat{V};\\mathcal{B}_{\\mathrm{target}}) ; // Eq. ( 5",
+      "url": "https://arxiv.org/html/2611.07349v1#S3.E5"
+    },
+    {
+      "href": "#S3.E6",
+      "text": "6",
+      "section": "3 Method",
+      "context": "r ⁡ ( X − η t ​ G T ) (X,U,C,V)\\leftarrow\\operatorname{Retr}_{\\mathcal{M}_{r}}(X-\\eta_{t}G_{T}) ; // Eq. ( 2 ) if t ∈ 𝒯 audit t\\in\\mathcal{T}_{\\mathrm{audit}} and r < r max r<r_{\\max} then ( U ^ , Σ ^ , V ^ ) ← NormalSketch ⁡ ( X ) (\\widehat{U},\\widehat{\\Sigma},\\widehat{V})\\leftarrow\\mathrm{NormalSketch}(X) ; // Eqs. ( 3 )--( 4 ) 𝒮 ← Select ⁡ ( U ^ , Σ ^ , V ^ , ℬ target ) \\mathcal{S}\\leftarrow\\mathrm{Select}(\\widehat{U},\\widehat{\\Sigma},\\widehat{V};\\mathcal{B}_{\\mathrm{target}}) ; // Eq. ( 5 ) X cand ← Propose ⁡ ( X , 𝒮 ) X_{\\mathrm{cand}}\\leftarrow\\mathrm{Propose}(X,\\mathcal{S}) ; // Eq. ( 6",
+      "url": "https://arxiv.org/html/2611.07349v1#S3.E6"
+    },
+    {
+      "href": "#S3.E7",
+      "text": "7",
+      "section": "3 Method",
+      "context": " NormalSketch ⁡ ( X ) (\\widehat{U},\\widehat{\\Sigma},\\widehat{V})\\leftarrow\\mathrm{NormalSketch}(X) ; // Eqs. ( 3 )--( 4 ) 𝒮 ← Select ⁡ ( U ^ , Σ ^ , V ^ , ℬ target ) \\mathcal{S}\\leftarrow\\mathrm{Select}(\\widehat{U},\\widehat{\\Sigma},\\widehat{V};\\mathcal{B}_{\\mathrm{target}}) ; // Eq. ( 5 ) X cand ← Propose ⁡ ( X , 𝒮 ) X_{\\mathrm{cand}}\\leftarrow\\mathrm{Propose}(X,\\mathcal{S}) ; // Eq. ( 6 ) if Validate ⁡ ( X cand , X ) \\mathrm{Validate}(X_{\\mathrm{cand}},X) then ( U , C , r ) ← Expand ⁡ ( U , C , 𝒮 ) , X ← U ​ C (U,C,r)\\leftarrow\\mathrm{Expand}(U,C,\\mathcal{S}),\\quad X\\leftarrow UC ; // Eq. ( 7",
+      "url": "https://arxiv.org/html/2611.07349v1#S3.E7"
+    },
+    {
+      "href": "#bib.bib15",
+      "text": "Vandereycken, 2013",
+      "section": "3.1 First-Order Information Boundary of Standard Factor Gradients",
+      "context": "where s > 0 s>0 is a fixed scaling factor. Let f ⁡ ( X ) = ℒ ⁡ ( W + s ​ X ) f(X)=\\mathcal{L}(W+sX) and G = ∇ X f ​ ( X ) G=\\nabla_{X}f(X) . For a rank- r r adaptation matrix X = B ​ A X=BA , we analyze X X on the fixed-rank manifold ℳ r \\mathcal{M}_{r} , whose tangent space characterizes the first-order directions accessible without increasing rank ( Vandereycken, 2013",
+      "url": "https://arxiv.org/html/2611.07349v1#bib.bib15"
+    },
+    {
+      "href": "#A3.SS1",
+      "text": "C.1",
+      "section": "Theorem 1 (Factor-Gradient Observability Barrier) .",
+      "context": "The theorem establishes a precise first-order observability boundary, showing that standard factor gradients preserve the tangent component of the task gradient but cannot distinguish gradients that differ only in their normal components. A complete proof is provided in Appendix C.1",
+      "url": "https://arxiv.org/html/2611.07349v1#A3.SS1"
+    },
+    {
+      "href": "#S3.E1",
+      "text": "1",
+      "section": "3.2 Fixed-Rank Manifold Optimization",
+      "context": "Equation ( 1",
+      "url": "https://arxiv.org/html/2611.07349v1#S3.E1"
+    },
+    {
+      "href": "#A2.SS1",
+      "text": "B.1",
+      "section": "3.2 Fixed-Rank Manifold Optimization",
+      "context": "Since X − X^{-} has rank at most 2 ​ r 2r , the retraction is performed on its compact factors rather than on the full matrix. Specifically, thin QR factorizations reduce the update to a small core matrix, whose truncated SVD yields the retracted rank- r r state together with the updated left and right subspace bases. Full details are provided in Appendix B.1",
+      "url": "https://arxiv.org/html/2611.07349v1#A2.SS1"
+    },
+    {
+      "href": "#A3.SS2",
+      "text": "C.2",
+      "section": "Theorem 2 (Local Optimality of Rank Expansion) .",
+      "context": "A complete proof is provided in Appendix C.2",
+      "url": "https://arxiv.org/html/2611.07349v1#A3.SS2"
+    },
+    {
+      "href": "#bib.bib16",
+      "text": "Halko et al., 2011",
+      "section": "Theorem 2 (Local Optimality of Rank Expansion) .",
+      "context": "However, constructing G N = ( I − U ​ U ⊤ ) ​ G ​ ( I − V ​ V ⊤ ) G_{N}=(I-UU^{\\top})G(I-VV^{\\top}) requires the full gradient G G . GEAR instead estimates its dominant spectrum through randomized probing ( Halko et al., 2011",
+      "url": "https://arxiv.org/html/2611.07349v1#bib.bib16"
+    },
+    {
+      "href": "#A3.SS3",
+      "text": "C.3",
+      "section": "Theorem 3 (Stability under Inexact Normal Estimation) .",
+      "context": "A complete proof is provided in Appendix C.3",
+      "url": "https://arxiv.org/html/2611.07349v1#A3.SS3"
+    },
+    {
+      "href": "#Thmtheorem2",
+      "text": "2",
+      "section": "Theorem 3 (Stability under Inexact Normal Estimation) .",
+      "context": "A complete proof is provided in Appendix C.3 . GEAR then uses the estimated normal spectrum to allocate rank under a global parameter budget. Motivated by Theorem 2",
+      "url": "https://arxiv.org/html/2611.07349v1#Thmtheorem2"
+    },
+    {
+      "href": "#A2.SS2",
+      "text": "B.2",
+      "section": "Theorem 3 (Stability under Inexact Normal Estimation) .",
+      "context": "We validate X ℓ , cand X_{\\ell,\\mathrm{cand}} on a small set of separate training microbatches shared across candidate variants and accept the expansion only if its mean loss improves by more than a relative margin ρ \\rho ; full details are provided in Appendix B.2",
+      "url": "https://arxiv.org/html/2611.07349v1#A2.SS2"
+    },
+    {
+      "href": "#S3.SS2",
+      "text": "3.2",
+      "section": "Theorem 3 (Stability under Inexact Normal Estimation) .",
+      "context": "The accepted expansion moves the adaptation state from ℳ r ℓ \\mathcal{M}_{r_{\\ell}} to ℳ r ℓ + k ℓ \\mathcal{M}_{r_{\\ell}+k_{\\ell}} . Optimizer states associated with existing components are inherited, while those of newly introduced directions are initialized to zero. Subsequent updates then follow the fixed-rank manifold optimization in Section 3.2",
+      "url": "https://arxiv.org/html/2611.07349v1#S3.SS2"
+    },
+    {
+      "href": "#bib.bib4",
+      "text": "Hu et al., 2022",
+      "section": "4 Experimental results",
+      "context": "We evaluate GEAR across commonsense reasoning, natural language understanding, and visual recognition benchmarks, considering both predictive performance and parameter efficiency. We compare against representative fixed-rank and adaptive-rank PEFT methods, including LoRA ( Hu et al., 2022",
+      "url": "https://arxiv.org/html/2611.07349v1#bib.bib4"
+    },
+    {
+      "href": "#bib.bib5",
+      "text": "Zhang et al., 2023",
+      "section": "4 Experimental results",
+      "context": "We evaluate GEAR across commonsense reasoning, natural language understanding, and visual recognition benchmarks, considering both predictive performance and parameter efficiency. We compare against representative fixed-rank and adaptive-rank PEFT methods, including LoRA ( Hu et al., 2022 ) , AdaLoRA ( Zhang et al., 2023",
+      "url": "https://arxiv.org/html/2611.07349v1#bib.bib5"
+    },
+    {
+      "href": "#bib.bib14",
+      "text": "Bogachev et al., 2026",
+      "section": "4 Experimental results",
+      "context": "We evaluate GEAR across commonsense reasoning, natural language understanding, and visual recognition benchmarks, considering both predictive performance and parameter efficiency. We compare against representative fixed-rank and adaptive-rank PEFT methods, including LoRA ( Hu et al., 2022 ) , AdaLoRA ( Zhang et al., 2023 ) , Riemannion ( Bogachev et al., 2026",
+      "url": "https://arxiv.org/html/2611.07349v1#bib.bib14"
+    },
+    {
+      "href": "#bib.bib11",
+      "text": "Schotthöfer et al., 2025",
+      "section": "4 Experimental results",
+      "context": "We evaluate GEAR across commonsense reasoning, natural language understanding, and visual recognition benchmarks, considering both predictive performance and parameter efficiency. We compare against representative fixed-rank and adaptive-rank PEFT methods, including LoRA ( Hu et al., 2022 ) , AdaLoRA ( Zhang et al., 2023 ) , Riemannion ( Bogachev et al., 2026 ) , GeoLoRA ( Schotthöfer et al., 2025",
+      "url": "https://arxiv.org/html/2611.07349v1#bib.bib11"
+    },
+    {
+      "href": "#bib.bib13",
+      "text": "Liu et al., 2026",
+      "section": "4 Experimental results",
+      "context": "We evaluate GEAR across commonsense reasoning, natural language understanding, and visual recognition benchmarks, considering both predictive performance and parameter efficiency. We compare against representative fixed-rank and adaptive-rank PEFT methods, including LoRA ( Hu et al., 2022 ) , AdaLoRA ( Zhang et al., 2023 ) , Riemannion ( Bogachev et al., 2026 ) , GeoLoRA ( Schotthöfer et al., 2025 ) , and FlexLoRA ( Liu et al., 2026",
+      "url": "https://arxiv.org/html/2611.07349v1#bib.bib13"
+    },
+    {
+      "href": "#A5",
+      "text": "E",
+      "section": "4 Experimental results",
+      "context": "We evaluate GEAR across commonsense reasoning, natural language understanding, and visual recognition benchmarks, considering both predictive performance and parameter efficiency. We compare against representative fixed-rank and adaptive-rank PEFT methods, including LoRA ( Hu et al., 2022 ) , AdaLoRA ( Zhang et al., 2023 ) , Riemannion ( Bogachev et al., 2026 ) , GeoLoRA ( Schotthöfer et al., 2025 ) , and FlexLoRA ( Liu et al., 2026 ) . All methods use consistent experimental settings for fair comparison. Ablation studies are provided in Appendix E",
+      "url": "https://arxiv.org/html/2611.07349v1#A5"
+    },
+    {
+      "href": "#bib.bib19",
+      "text": "Clark et al., 2019",
+      "section": "4.2 Commonsense Reasoning",
+      "context": "We evaluate GEAR on eight commonsense reasoning benchmarks, including BoolQ, PIQA, SIQA, and HellaSwag ( Clark et al., 2019",
+      "url": "https://arxiv.org/html/2611.07349v1#bib.bib19"
+    },
+    {
+      "href": "#bib.bib20",
+      "text": "Bisk et al., 2020",
+      "section": "4.2 Commonsense Reasoning",
+      "context": "We evaluate GEAR on eight commonsense reasoning benchmarks, including BoolQ, PIQA, SIQA, and HellaSwag ( Clark et al., 2019 ; Bisk et al., 2020",
+      "url": "https://arxiv.org/html/2611.07349v1#bib.bib20"
+    },
+    {
+      "href": "#bib.bib21",
+      "text": "Sap et al., 2019",
+      "section": "4.2 Commonsense Reasoning",
+      "context": "We evaluate GEAR on eight commonsense reasoning benchmarks, including BoolQ, PIQA, SIQA, and HellaSwag ( Clark et al., 2019 ; Bisk et al., 2020 ; Sap et al., 2019",
+      "url": "https://arxiv.org/html/2611.07349v1#bib.bib21"
+    },
+    {
+      "href": "#bib.bib22",
+      "text": "Zellers et al., 2019",
+      "section": "4.2 Commonsense Reasoning",
+      "context": "We evaluate GEAR on eight commonsense reasoning benchmarks, including BoolQ, PIQA, SIQA, and HellaSwag ( Clark et al., 2019 ; Bisk et al., 2020 ; Sap et al., 2019 ; Zellers et al., 2019",
+      "url": "https://arxiv.org/html/2611.07349v1#bib.bib22"
+    },
+    {
+      "href": "#bib.bib23",
+      "text": "Sakaguchi et al., 2020",
+      "section": "4.2 Commonsense Reasoning",
+      "context": "We evaluate GEAR on eight commonsense reasoning benchmarks, including BoolQ, PIQA, SIQA, and HellaSwag ( Clark et al., 2019 ; Bisk et al., 2020 ; Sap et al., 2019 ; Zellers et al., 2019 ) , together with WinoGrande, ARC-e/ARC-c, and OBQA ( Sakaguchi et al., 2020",
+      "url": "https://arxiv.org/html/2611.07349v1#bib.bib23"
+    },
+    {
+      "href": "#bib.bib24",
+      "text": "Clark et al., 2018",
+      "section": "4.2 Commonsense Reasoning",
+      "context": "We evaluate GEAR on eight commonsense reasoning benchmarks, including BoolQ, PIQA, SIQA, and HellaSwag ( Clark et al., 2019 ; Bisk et al., 2020 ; Sap et al., 2019 ; Zellers et al., 2019 ) , together with WinoGrande, ARC-e/ARC-c, and OBQA ( Sakaguchi et al., 2020 ; Clark et al., 2018",
+      "url": "https://arxiv.org/html/2611.07349v1#bib.bib24"
+    },
+    {
+      "href": "#bib.bib25",
+      "text": "Mihaylov et al., 2018",
+      "section": "4.2 Commonsense Reasoning",
+      "context": "We evaluate GEAR on eight commonsense reasoning benchmarks, including BoolQ, PIQA, SIQA, and HellaSwag ( Clark et al., 2019 ; Bisk et al., 2020 ; Sap et al., 2019 ; Zellers et al., 2019 ) , together with WinoGrande, ARC-e/ARC-c, and OBQA ( Sakaguchi et al., 2020 ; Clark et al., 2018 ; Mihaylov et al., 2018",
+      "url": "https://arxiv.org/html/2611.07349v1#bib.bib25"
+    },
+    {
+      "href": "#bib.bib17",
+      "text": "Grattafiori and others, 2024",
+      "section": "4.2 Commonsense Reasoning",
+      "context": "We evaluate GEAR on eight commonsense reasoning benchmarks, including BoolQ, PIQA, SIQA, and HellaSwag ( Clark et al., 2019 ; Bisk et al., 2020 ; Sap et al., 2019 ; Zellers et al., 2019 ) , together with WinoGrande, ARC-e/ARC-c, and OBQA ( Sakaguchi et al., 2020 ; Clark et al., 2018 ; Mihaylov et al., 2018 ) , using LLaMA3-8B ( Grattafiori and others, 2024",
+      "url": "https://arxiv.org/html/2611.07349v1#bib.bib17"
+    },
+    {
+      "href": "#bib.bib18",
+      "text": "Qwen et al., 2025",
+      "section": "4.2 Commonsense Reasoning",
+      "context": "We evaluate GEAR on eight commonsense reasoning benchmarks, including BoolQ, PIQA, SIQA, and HellaSwag ( Clark et al., 2019 ; Bisk et al., 2020 ; Sap et al., 2019 ; Zellers et al., 2019 ) , together with WinoGrande, ARC-e/ARC-c, and OBQA ( Sakaguchi et al., 2020 ; Clark et al., 2018 ; Mihaylov et al., 2018 ) , using LLaMA3-8B ( Grattafiori and others, 2024 ) and Qwen2.5-7B ( Qwen et al., 2025",
+      "url": "https://arxiv.org/html/2611.07349v1#bib.bib18"
+    },
+    {
+      "href": "#S4.T1",
+      "text": "1",
+      "section": "4.2 Commonsense Reasoning",
+      "context": "As shown in Table 1",
+      "url": "https://arxiv.org/html/2611.07349v1#S4.T1"
+    },
+    {
+      "href": "#bib.bib2",
+      "text": "He et al., 2023",
+      "section": "4.3 Natural Language Understanding",
+      "context": "We evaluate GEAR with DeBERTa-v3-base ( He et al., 2023",
+      "url": "https://arxiv.org/html/2611.07349v1#bib.bib2"
+    },
+    {
+      "href": "#bib.bib26",
+      "text": "Wang et al., 2019",
+      "section": "4.3 Natural Language Understanding",
+      "context": "We evaluate GEAR with DeBERTa-v3-base ( He et al., 2023 ) on the GLUE benchmark ( Wang et al., 2019",
+      "url": "https://arxiv.org/html/2611.07349v1#bib.bib26"
+    },
+    {
+      "href": "#S4.T2",
+      "text": "2",
+      "section": "4.3 Natural Language Understanding",
+      "context": "As shown in Table 2",
+      "url": "https://arxiv.org/html/2611.07349v1#S4.T2"
+    },
+    {
+      "href": "#bib.bib3",
+      "text": "Dosovitskiy et al., 2021",
+      "section": "4.4 Visual Task",
+      "context": "To assess the generality of GEAR beyond NLP, we evaluate it with ViT-B/16 ( Dosovitskiy et al., 2021",
+      "url": "https://arxiv.org/html/2611.07349v1#bib.bib3"
+    },
+    {
+      "href": "#bib.bib41",
+      "text": "Zhai et al., 2020",
+      "section": "4.4 Visual Task",
+      "context": "To assess the generality of GEAR beyond NLP, we evaluate it with ViT-B/16 ( Dosovitskiy et al., 2021 ) on the Visual Task Adaptation Benchmark (VTAB-1K) ( Zhai et al., 2020",
+      "url": "https://arxiv.org/html/2611.07349v1#bib.bib41"
+    },
+    {
+      "href": "#S4.T3",
+      "text": "3",
+      "section": "4.4 Visual Task",
+      "context": "As shown in Table 3",
+      "url": "https://arxiv.org/html/2611.07349v1#S4.T3"
+    },
+    {
+      "href": "#A4.SS2.p1.1",
+      "text": "§D.2",
+      "section": "References",
+      "context": "Bar-Haim et al. (2006) R. Bar-Haim, I. Dagan, B. Dolan, L. Ferro, D. Giampiccolo, B. Magnini, and I. Szpektor The second PASCAL recognising textual entailment challenge . In Proceedings of the Second PASCAL Challenges Workshop on Recognising Textual Entailment , pp. 1–9 . Cited by: §D.2",
+      "url": "https://arxiv.org/html/2611.07349v1#A4.SS2.p1.1"
+    },
+    {
+      "href": "#A4.SS2.p1.1",
+      "text": "§D.2",
+      "section": "References",
+      "context": "Bentivogli et al. (2009) L. Bentivogli, B. Magnini, I. Dagan, H. T. Dang, and D. Giampiccolo The fifth PASCAL recognizing textual entailment challenge . In Text Analysis Conference , Cited by: §D.2",
+      "url": "https://arxiv.org/html/2611.07349v1#A4.SS2.p1.1"
+    },
+    {
+      "href": "https://dx.doi.org/10.1609/aaai.v34i05.6239",
+      "text": "Document",
+      "section": "References",
+      "context": "Bisk et al. (2020) Y. Bisk, R. Zellers, R. Le Bras, J. Gao, and Y. Choi PIQA: reasoning about physical commonsense in natural language . In Proceedings of the AAAI Conference on Artificial Intelligence , Vol. 34 , pp. 7432–7439 . External Links: Document",
+      "url": "https://dx.doi.org/10.1609/aaai.v34i05.6239"
+    },
+    {
+      "href": "#A4.SS1.p1.1",
+      "text": "§D.1",
+      "section": "References",
+      "context": "Bisk et al. (2020) Y. Bisk, R. Zellers, R. Le Bras, J. Gao, and Y. Choi PIQA: reasoning about physical commonsense in natural language . In Proceedings of the AAAI Conference on Artificial Intelligence , Vol. 34 , pp. 7432–7439 . External Links: Document Cited by: §D.1",
+      "url": "https://arxiv.org/html/2611.07349v1#A4.SS1.p1.1"
+    },
+    {
+      "href": "#S4.SS2.p1.1",
+      "text": "§4.2",
+      "section": "References",
+      "context": "Bisk et al. (2020) Y. Bisk, R. Zellers, R. Le Bras, J. Gao, and Y. Choi PIQA: reasoning about physical commonsense in natural language . In Proceedings of the AAAI Conference on Artificial Intelligence , Vol. 34 , pp. 7432–7439 . External Links: Document Cited by: §D.1 , §4.2",
+      "url": "https://arxiv.org/html/2611.07349v1#S4.SS2.p1.1"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px2.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Bogachev et al. (2026) V. Bogachev, V. Aletov, A. Molozhavenko, D. Bobkov, V. Soboleva, A. Alanov, and M. Rakhuba LoRA meets Riemannion: muon optimizer for parametrization-independent low-rank adapters . In International Conference on Learning Representations , Cited by: §2",
+      "url": "https://arxiv.org/html/2611.07349v1#S2.SS0.SSS0.Px2.p1.1"
+    },
+    {
+      "href": "#S4.p1.1",
+      "text": "§4",
+      "section": "References",
+      "context": "Bogachev et al. (2026) V. Bogachev, V. Aletov, A. Molozhavenko, D. Bobkov, V. Soboleva, A. Alanov, and M. Rakhuba LoRA meets Riemannion: muon optimizer for parametrization-independent low-rank adapters . In International Conference on Learning Representations , Cited by: §2 , §4",
+      "url": "https://arxiv.org/html/2611.07349v1#S4.p1.1"
+    },
+    {
+      "href": "https://dx.doi.org/10.18653/v1/S17-2001",
+      "text": "Document",
+      "section": "References",
+      "context": "Cer et al. (2017) D. Cer, M. Diab, E. Agirre, I. Lopez-Gazpio, and L. Specia SemEval-2017 task 1: semantic textual similarity multilingual and crosslingual focused evaluation . In Proceedings of the 11th International Workshop on Semantic Evaluation , pp. 1–14 . External Links: Document",
+      "url": "https://dx.doi.org/10.18653/v1/S17-2001"
+    },
+    {
+      "href": "#A4.SS2.p1.1",
+      "text": "§D.2",
+      "section": "References",
+      "context": "Cer et al. (2017) D. Cer, M. Diab, E. Agirre, I. Lopez-Gazpio, and L. Specia SemEval-2017 task 1: semantic textual similarity multilingual and crosslingual focused evaluation . In Proceedings of the 11th International Workshop on Semantic Evaluation , pp. 1–14 . External Links: Document Cited by: §D.2",
+      "url": "https://arxiv.org/html/2611.07349v1#A4.SS2.p1.1"
+    },
+    {
+      "href": "https://dx.doi.org/10.18653/v1/N19-1300",
+      "text": "Document",
+      "section": "References",
+      "context": "Clark et al. (2019) C. Clark, K. Lee, M. Chang, T. Kwiatkowski, M. Collins, and K. Toutanova BoolQ: exploring the surprising difficulty of natural yes/no questions . In Proceedings of the 2019 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies , pp. 2924–2936 . External Links: Document",
+      "url": "https://dx.doi.org/10.18653/v1/N19-1300"
+    },
+    {
+      "href": "#A4.SS1.p1.1",
+      "text": "§D.1",
+      "section": "References",
+      "context": "Clark et al. (2019) C. Clark, K. Lee, M. Chang, T. Kwiatkowski, M. Collins, and K. Toutanova BoolQ: exploring the surprising difficulty of natural yes/no questions . In Proceedings of the 2019 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies , pp. 2924–2936 . External Links: Document Cited by: §D.1",
+      "url": "https://arxiv.org/html/2611.07349v1#A4.SS1.p1.1"
+    },
+    {
+      "href": "#S4.SS2.p1.1",
+      "text": "§4.2",
+      "section": "References",
+      "context": "Clark et al. (2019) C. Clark, K. Lee, M. Chang, T. Kwiatkowski, M. Collins, and K. Toutanova BoolQ: exploring the surprising difficulty of natural yes/no questions . In Proceedings of the 2019 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies , pp. 2924–2936 . External Links: Document Cited by: §D.1 , §4.2",
+      "url": "https://arxiv.org/html/2611.07349v1#S4.SS2.p1.1"
+    },
+    {
+      "href": "#A4.SS1.p1.1",
+      "text": "§D.1",
+      "section": "References",
+      "context": "Clark et al. (2018) P. Clark, I. Cowhey, O. Etzioni, T. Khot, A. Sabharwal, C. Schoenick, and O. Tafjord Think you have solved question answering? try ARC, the AI2 reasoning challenge . External Links: 1803.05457 Cited by: §D.1",
+      "url": "https://arxiv.org/html/2611.07349v1#A4.SS1.p1.1"
+    },
+    {
+      "href": "#S4.SS2.p1.1",
+      "text": "§4.2",
+      "section": "References",
+      "context": "Clark et al. (2018) P. Clark, I. Cowhey, O. Etzioni, T. Khot, A. Sabharwal, C. Schoenick, and O. Tafjord Think you have solved question answering? try ARC, the AI2 reasoning challenge . External Links: 1803.05457 Cited by: §D.1 , §4.2",
+      "url": "https://arxiv.org/html/2611.07349v1#S4.SS2.p1.1"
+    },
+    {
+      "href": "https://dx.doi.org/10.1007/11736790%5F9",
+      "text": "Document",
+      "section": "References",
+      "context": "Dagan et al. (2006) I. Dagan, O. Glickman, and B. Magnini The PASCAL recognising textual entailment challenge . In Machine Learning Challenges: Evaluating Predictive Uncertainty, Visual Object Classification, and Recognising Textual Entailment , Lecture Notes in Computer Science , Vol. 3944 , pp. 177–190 . External Links: Document",
+      "url": "https://dx.doi.org/10.1007/11736790%5F9"
+    },
+    {
+      "href": "#A4.SS2.p1.1",
+      "text": "§D.2",
+      "section": "References",
+      "context": "Dagan et al. (2006) I. Dagan, O. Glickman, and B. Magnini The PASCAL recognising textual entailment challenge . In Machine Learning Challenges: Evaluating Predictive Uncertainty, Visual Object Classification, and Recognising Textual Entailment , Lecture Notes in Computer Science , Vol. 3944 , pp. 177–190 . External Links: Document Cited by: §D.2",
+      "url": "https://arxiv.org/html/2611.07349v1#A4.SS2.p1.1"
+    },
+    {
+      "href": "https://dx.doi.org/10.18653/v1/2023.emnlp-main.252",
+      "text": "Document",
+      "section": "References",
+      "context": "Ding et al. (2023a) N. Ding, X. Lv, Q. Wang, Y. Chen, B. Zhou, Z. Liu, and M. Sun Sparse low-rank adaptation of pre-trained language models . In Proceedings of the 2023 Conference on Empirical Methods in Natural Language Processing , pp. 4133–4145 . External Links: Document",
+      "url": "https://dx.doi.org/10.18653/v1/2023.emnlp-main.252"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px1.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Ding et al. (2023a) N. Ding, X. Lv, Q. Wang, Y. Chen, B. Zhou, Z. Liu, and M. Sun Sparse low-rank adaptation of pre-trained language models . In Proceedings of the 2023 Conference on Empirical Methods in Natural Language Processing , pp. 4133–4145 . External Links: Document Cited by: §2",
+      "url": "https://arxiv.org/html/2611.07349v1#S2.SS0.SSS0.Px1.p1.1"
+    },
+    {
+      "href": "https://dx.doi.org/10.1038/s42256-023-00626-4",
+      "text": "Document",
+      "section": "References",
+      "context": "Ding et al. (2023b) N. Ding, Y. Qin, G. Yang, F. Wei, Z. Yang, Y. Su, S. Hu, Y. Chen, C. Chan, W. Chen, J. Yi, W. Zhao, X. Wang, Z. Liu, H. Zheng, J. Chen, Y. Liu, J. Tang, J. Li, and M. Sun Parameter-efficient fine-tuning of large-scale pre-trained language models . Nature Machine Intelligence 5 , pp. 220–235 . External Links: Document",
+      "url": "https://dx.doi.org/10.1038/s42256-023-00626-4"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Ding et al. (2023b) N. Ding, Y. Qin, G. Yang, F. Wei, Z. Yang, Y. Su, S. Hu, Y. Chen, C. Chan, W. Chen, J. Yi, W. Zhao, X. Wang, Z. Liu, H. Zheng, J. Chen, Y. Liu, J. Tang, J. Li, and M. Sun Parameter-efficient fine-tuning of large-scale pre-trained language models . Nature Machine Intelligence 5 , pp. 220–235 . External Links: Document Cited by: §1",
+      "url": "https://arxiv.org/html/2611.07349v1#S1.p1.1"
+    },
+    {
+      "href": "#A4.SS2.p1.1",
+      "text": "§D.2",
+      "section": "References",
+      "context": "Dolan and Brockett (2005) W. B. Dolan and C. Brockett Automatically constructing a corpus of sentential paraphrases . In Proceedings of the Third International Workshop on Paraphrasing , Cited by: §D.2",
+      "url": "https://arxiv.org/html/2611.07349v1#A4.SS2.p1.1"
+    },
+    {
+      "href": "https://openreview.net/forum?id=YicbFdNTTy",
+      "text": "Link",
+      "section": "References",
+      "context": "Dosovitskiy et al. (2021) A. Dosovitskiy, L. Beyer, A. Kolesnikov, D. Weissenborn, X. Zhai, T. Unterthiner, M. Dehghani, M. Minderer, G. Heigold, S. Gelly, J. Uszkoreit, and N. Houlsby An image is worth 16x16 words: transformers for image recognition at scale . In International Conference on Learning Representations , External Links: Link",
+      "url": "https://openreview.net/forum?id=YicbFdNTTy"
+    },
+    {
+      "href": "#S4.SS4.p1.1",
+      "text": "§4.4",
+      "section": "References",
+      "context": "Dosovitskiy et al. (2021) A. Dosovitskiy, L. Beyer, A. Kolesnikov, D. Weissenborn, X. Zhai, T. Unterthiner, M. Dehghani, M. Minderer, G. Heigold, S. Gelly, J. Uszkoreit, and N. Houlsby An image is worth 16x16 words: transformers for image recognition at scale . In International Conference on Learning Representations , External Links: Link Cited by: §4.4",
+      "url": "https://arxiv.org/html/2611.07349v1#S4.SS4.p1.1"
+    },
+    {
+      "href": "https://dx.doi.org/10.18653/v1/2025.findings-emnlp.1372",
+      "text": "Document",
+      "section": "References",
+      "context": "Ed-dib et al. (2025) A. Ed-dib, Z. Datbayev, and A. M. Aboussalah GeLoRA: geometric adaptive ranks for efficient LoRA fine-tuning . In Findings of the Association for Computational Linguistics: EMNLP 2025 , pp. 25174–25196 . External Links: Document",
+      "url": "https://dx.doi.org/10.18653/v1/2025.findings-emnlp.1372"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px1.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Ed-dib et al. (2025) A. Ed-dib, Z. Datbayev, and A. M. Aboussalah GeLoRA: geometric adaptive ranks for efficient LoRA fine-tuning . In Findings of the Association for Computational Linguistics: EMNLP 2025 , pp. 25174–25196 . External Links: Document Cited by: §2",
+      "url": "https://arxiv.org/html/2611.07349v1#S2.SS0.SSS0.Px1.p1.1"
+    },
+    {
+      "href": "#A4.SS2.p1.1",
+      "text": "§D.2",
+      "section": "References",
+      "context": "Giampiccolo et al. (2007) D. Giampiccolo, B. Magnini, I. Dagan, and B. Dolan The third PASCAL recognizing textual entailment challenge . In Proceedings of the ACL-PASCAL Workshop on Textual Entailment and Paraphrasing , pp. 1–9 . Cited by: §D.2",
+      "url": "https://arxiv.org/html/2611.07349v1#A4.SS2.p1.1"
+    },
+    {
+      "href": "#S4.SS2.p1.1",
+      "text": "§4.2",
+      "section": "References",
+      "context": "Grattafiori et al. (2024) A. Grattafiori et al. The llama 3 herd of models . External Links: 2407.21783 Cited by: §4.2",
+      "url": "https://arxiv.org/html/2611.07349v1#S4.SS2.p1.1"
+    },
+    {
+      "href": "https://dx.doi.org/10.1137/090771806",
+      "text": "Document",
+      "section": "References",
+      "context": "Halko et al. (2011) N. Halko, P. Martinsson, and J. A. Tropp Finding structure with randomness: probabilistic algorithms for constructing approximate matrix decompositions . SIAM Review 53 ( 2 ), pp. 217–288 . External Links: Document",
+      "url": "https://dx.doi.org/10.1137/090771806"
+    },
+    {
+      "href": "#S3.SS3.p3.1",
+      "text": "§3.3",
+      "section": "References",
+      "context": "Halko et al. (2011) N. Halko, P. Martinsson, and J. A. Tropp Finding structure with randomness: probabilistic algorithms for constructing approximate matrix decompositions . SIAM Review 53 ( 2 ), pp. 217–288 . External Links: Document Cited by: §3.3",
+      "url": "https://arxiv.org/html/2611.07349v1#S3.SS3.p3.1"
+    },
+    {
+      "href": "https://openreview.net/forum?id=sE7-XhLxHA",
+      "text": "Link",
+      "section": "References",
+      "context": "He et al. (2023) P. He, J. Gao, and W. Chen DeBERTaV3: improving DeBERTa using ELECTRA-style pre-training with gradient-disentangled embedding sharing . In International Conference on Learning Representations , External Links: Link",
+      "url": "https://openreview.net/forum?id=sE7-XhLxHA"
+    },
+    {
+      "href": "#S4.SS3.p1.1",
+      "text": "§4.3",
+      "section": "References",
+      "context": "He et al. (2023) P. He, J. Gao, and W. Chen DeBERTaV3: improving DeBERTa using ELECTRA-style pre-training with gradient-disentangled embedding sharing . In International Conference on Learning Representations , External Links: Link Cited by: §4.3",
+      "url": "https://arxiv.org/html/2611.07349v1#S4.SS3.p1.1"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Hu et al. (2022) E. J. Hu, Y. Shen, P. Wallis, Z. Allen-Zhu, Y. Li, S. Wang, L. Wang, and W. Chen LoRA: low-rank adaptation of large language models . In International Conference on Learning Representations , Cited by: §1",
+      "url": "https://arxiv.org/html/2611.07349v1#S1.p1.1"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px1.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Hu et al. (2022) E. J. Hu, Y. Shen, P. Wallis, Z. Allen-Zhu, Y. Li, S. Wang, L. Wang, and W. Chen LoRA: low-rank adaptation of large language models . In International Conference on Learning Representations , Cited by: §1 , §2",
+      "url": "https://arxiv.org/html/2611.07349v1#S2.SS0.SSS0.Px1.p1.1"
+    },
+    {
+      "href": "#S4.p1.1",
+      "text": "§4",
+      "section": "References",
+      "context": "Hu et al. (2022) E. J. Hu, Y. Shen, P. Wallis, Z. Allen-Zhu, Y. Li, S. Wang, L. Wang, and W. Chen LoRA: low-rank adaptation of large language models . In International Conference on Learning Representations , Cited by: §1 , §2 , §4",
+      "url": "https://arxiv.org/html/2611.07349v1#S4.p1.1"
+    },
+    {
+      "href": "https://dx.doi.org/10.18653/v1/2023.emnlp-main.319",
+      "text": "Document",
+      "section": "References",
+      "context": "Hu et al. (2023) Z. Hu, L. Wang, Y. Lan, W. Xu, E. Lim, L. Bing, X. Xu, S. Poria, and R. Lee LLM-adapters: an adapter family for parameter-efficient fine-tuning of large language models . In Proceedings of the 2023 Conference on Empirical Methods in Natural Language Processing , pp. 5254–5276 . External Links: Document",
+      "url": "https://dx.doi.org/10.18653/v1/2023.emnlp-main.319"
+    },
+    {
+      "href": "#A4.SS1.p1.1",
+      "text": "§D.1",
+      "section": "References",
+      "context": "Hu et al. (2023) Z. Hu, L. Wang, Y. Lan, W. Xu, E. Lim, L. Bing, X. Xu, S. Poria, and R. Lee LLM-adapters: an adapter family for parameter-efficient fine-tuning of large language models . In Proceedings of the 2023 Conference on Empirical Methods in Natural Language Processing , pp. 5254–5276 . External Links: Document Cited by: §D.1",
+      "url": "https://arxiv.org/html/2611.07349v1#A4.SS1.p1.1"
+    },
+    {
+      "href": "#S1.p2.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Liu et al. (2026) M. Liu, C. Si, and Y. Jia FlexLoRA: entropy-guided flexible low-rank adaptation . In International Conference on Learning Representations , Cited by: §1",
+      "url": "https://arxiv.org/html/2611.07349v1#S1.p2.1"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px1.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Liu et al. (2026) M. Liu, C. Si, and Y. Jia FlexLoRA: entropy-guided flexible low-rank adaptation . In International Conference on Learning Representations , Cited by: §1 , §2",
+      "url": "https://arxiv.org/html/2611.07349v1#S2.SS0.SSS0.Px1.p1.1"
+    },
+    {
+      "href": "#S4.p1.1",
+      "text": "§4",
+      "section": "References",
+      "context": "Liu et al. (2026) M. Liu, C. Si, and Y. Jia FlexLoRA: entropy-guided flexible low-rank adaptation . In International Conference on Learning Representations , Cited by: §1 , §2 , §4",
+      "url": "https://arxiv.org/html/2611.07349v1#S4.p1.1"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px1.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Liu et al. (2024) S. Liu, C. Wang, H. Yin, P. Molchanov, Y. F. Wang, K. Cheng, and M. Chen DoRA: weight-decomposed low-rank adaptation . In Proceedings of the 41st International Conference on Machine Learning , Proceedings of Machine Learning Research , Vol. 235 , pp. 32100–32121 . Cited by: §2",
+      "url": "https://arxiv.org/html/2611.07349v1#S2.SS0.SSS0.Px1.p1.1"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px1.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Meng et al. (2024) F. Meng, Z. Wang, and M. Zhang PiSSA: principal singular values and singular vectors adaptation of large language models . In Advances in Neural Information Processing Systems , Vol. 37 . Cited by: §2",
+      "url": "https://arxiv.org/html/2611.07349v1#S2.SS0.SSS0.Px1.p1.1"
+    },
+    {
+      "href": "https://dx.doi.org/10.18653/v1/D18-1260",
+      "text": "Document",
+      "section": "References",
+      "context": "Mihaylov et al. (2018) T. Mihaylov, P. Clark, T. Khot, and A. Sabharwal Can a suit of armor conduct electricity? a new dataset for open book question answering . In Proceedings of the 2018 Conference on Empirical Methods in Natural Language Processing , pp. 2381–2391 . External Links: Document",
+      "url": "https://dx.doi.org/10.18653/v1/D18-1260"
+    },
+    {
+      "href": "#A4.SS1.p1.1",
+      "text": "§D.1",
+      "section": "References",
+      "context": "Mihaylov et al. (2018) T. Mihaylov, P. Clark, T. Khot, and A. Sabharwal Can a suit of armor conduct electricity? a new dataset for open book question answering . In Proceedings of the 2018 Conference on Empirical Methods in Natural Language Processing , pp. 2381–2391 . External Links: Document Cited by: §D.1",
+      "url": "https://arxiv.org/html/2611.07349v1#A4.SS1.p1.1"
+    },
+    {
+      "href": "#S4.SS2.p1.1",
+      "text": "§4.2",
+      "section": "References",
+      "context": "Mihaylov et al. (2018) T. Mihaylov, P. Clark, T. Khot, and A. Sabharwal Can a suit of armor conduct electricity? a new dataset for open book question answering . In Proceedings of the 2018 Conference on Empirical Methods in Natural Language Processing , pp. 2381–2391 . External Links: Document Cited by: §D.1 , §4.2",
+      "url": "https://arxiv.org/html/2611.07349v1#S4.SS2.p1.1"
+    },
+    {
+      "href": "https://dx.doi.org/10.18653/v1/2025.findings-emnlp.1143",
+      "text": "Document",
+      "section": "References",
+      "context": "Park et al. (2025) J. Park, M. Kang, S. Lee, H. Lee, S. Kim, and J. Lee Riemannian optimization for LoRA on the stiefel manifold . In Findings of the Association for Computational Linguistics: EMNLP 2025 , Suzhou, China , pp. 20971–20985 . External Links: Document",
+      "url": "https://dx.doi.org/10.18653/v1/2025.findings-emnlp.1143"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px2.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Park et al. (2025) J. Park, M. Kang, S. Lee, H. Lee, S. Kim, and J. Lee Riemannian optimization for LoRA on the stiefel manifold . In Findings of the Association for Computational Linguistics: EMNLP 2025 , Suzhou, China , pp. 20971–20985 . External Links: Document Cited by: §2",
+      "url": "https://arxiv.org/html/2611.07349v1#S2.SS0.SSS0.Px2.p1.1"
+    },
+    {
+      "href": "#S4.SS2.p1.1",
+      "text": "§4.2",
+      "section": "References",
+      "context": "Qwen et al. (2025) Qwen A. Yang et al. Qwen2.5 technical report . External Links: 2412.15115 Cited by: §4.2",
+      "url": "https://arxiv.org/html/2611.07349v1#S4.SS2.p1.1"
+    },
+    {
+      "href": "https://dx.doi.org/10.18653/v1/D16-1264",
+      "text": "Document",
+      "section": "References",
+      "context": "Rajpurkar et al. (2016) P. Rajpurkar, J. Zhang, K. Lopyrev, and P. Liang SQuAD: 100,000+ questions for machine comprehension of text . In Proceedings of the 2016 Conference on Empirical Methods in Natural Language Processing , pp. 2383–2392 . External Links: Document",
+      "url": "https://dx.doi.org/10.18653/v1/D16-1264"
+    },
+    {
+      "href": "#A4.SS2.p1.1",
+      "text": "§D.2",
+      "section": "References",
+      "context": "Rajpurkar et al. (2016) P. Rajpurkar, J. Zhang, K. Lopyrev, and P. Liang SQuAD: 100,000+ questions for machine comprehension of text . In Proceedings of the 2016 Conference on Empirical Methods in Natural Language Processing , pp. 2383–2392 . External Links: Document Cited by: §D.2",
+      "url": "https://arxiv.org/html/2611.07349v1#A4.SS2.p1.1"
+    },
+    {
+      "href": "https://dx.doi.org/10.1609/aaai.v34i05.6399",
+      "text": "Document",
+      "section": "References",
+      "context": "Sakaguchi et al. (2020) K. Sakaguchi, R. Le Bras, C. Bhagavatula, and Y. Choi WinoGrande: an adversarial winograd schema challenge at scale . In Proceedings of the AAAI Conference on Artificial Intelligence , Vol. 34 , pp. 8732–8740 . External Links: Document",
+      "url": "https://dx.doi.org/10.1609/aaai.v34i05.6399"
+    },
+    {
+      "href": "#A4.SS1.p1.1",
+      "text": "§D.1",
+      "section": "References",
+      "context": "Sakaguchi et al. (2020) K. Sakaguchi, R. Le Bras, C. Bhagavatula, and Y. Choi WinoGrande: an adversarial winograd schema challenge at scale . In Proceedings of the AAAI Conference on Artificial Intelligence , Vol. 34 , pp. 8732–8740 . External Links: Document Cited by: §D.1",
+      "url": "https://arxiv.org/html/2611.07349v1#A4.SS1.p1.1"
+    },
+    {
+      "href": "#S4.SS2.p1.1",
+      "text": "§4.2",
+      "section": "References",
+      "context": "Sakaguchi et al. (2020) K. Sakaguchi, R. Le Bras, C. Bhagavatula, and Y. Choi WinoGrande: an adversarial winograd schema challenge at scale . In Proceedings of the AAAI Conference on Artificial Intelligence , Vol. 34 , pp. 8732–8740 . External Links: Document Cited by: §D.1 , §4.2",
+      "url": "https://arxiv.org/html/2611.07349v1#S4.SS2.p1.1"
+    },
+    {
+      "href": "https://dx.doi.org/10.18653/v1/D19-1454",
+      "text": "Document",
+      "section": "References",
+      "context": "Sap et al. (2019) M. Sap, H. Rashkin, D. Chen, R. Le Bras, and Y. Choi Social IQa: commonsense reasoning about social interactions . In Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing and the 9th International Joint Conference on Natural Language Processing , pp. 4463–4473 . External Links: Document",
+      "url": "https://dx.doi.org/10.18653/v1/D19-1454"
+    },
+    {
+      "href": "#A4.SS1.p1.1",
+      "text": "§D.1",
+      "section": "References",
+      "context": "Sap et al. (2019) M. Sap, H. Rashkin, D. Chen, R. Le Bras, and Y. Choi Social IQa: commonsense reasoning about social interactions . In Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing and the 9th International Joint Conference on Natural Language Processing , pp. 4463–4473 . External Links: Document Cited by: §D.1",
+      "url": "https://arxiv.org/html/2611.07349v1#A4.SS1.p1.1"
+    },
+    {
+      "href": "#S4.SS2.p1.1",
+      "text": "§4.2",
+      "section": "References",
+      "context": "Sap et al. (2019) M. Sap, H. Rashkin, D. Chen, R. Le Bras, and Y. Choi Social IQa: commonsense reasoning about social interactions . In Proceedings of the 2019 Conference on Empirical Methods in Natural Language Processing and the 9th International Joint Conference on Natural Language Processing , pp. 4463–4473 . External Links: Document Cited by: §D.1 , §4.2",
+      "url": "https://arxiv.org/html/2611.07349v1#S4.SS2.p1.1"
+    },
+    {
+      "href": "#S1.p2.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Schotthöfer et al. (2025) S. Schotthöfer, E. Zangrando, G. Ceruti, F. Tudisco, and J. Kusch GeoLoRA: geometric integration for parameter efficient fine-tuning . In International Conference on Learning Representations , Cited by: §1",
+      "url": "https://arxiv.org/html/2611.07349v1#S1.p2.1"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px1.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Schotthöfer et al. (2025) S. Schotthöfer, E. Zangrando, G. Ceruti, F. Tudisco, and J. Kusch GeoLoRA: geometric integration for parameter efficient fine-tuning . In International Conference on Learning Representations , Cited by: §1 , §2",
+      "url": "https://arxiv.org/html/2611.07349v1#S2.SS0.SSS0.Px1.p1.1"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px2.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Schotthöfer et al. (2025) S. Schotthöfer, E. Zangrando, G. Ceruti, F. Tudisco, and J. Kusch GeoLoRA: geometric integration for parameter efficient fine-tuning . In International Conference on Learning Representations , Cited by: §1 , §2 , §2",
+      "url": "https://arxiv.org/html/2611.07349v1#S2.SS0.SSS0.Px2.p1.1"
+    },
+    {
+      "href": "#S4.p1.1",
+      "text": "§4",
+      "section": "References",
+      "context": "Schotthöfer et al. (2025) S. Schotthöfer, E. Zangrando, G. Ceruti, F. Tudisco, and J. Kusch GeoLoRA: geometric integration for parameter efficient fine-tuning . In International Conference on Learning Representations , Cited by: §1 , §2 , §2 , §4",
+      "url": "https://arxiv.org/html/2611.07349v1#S4.p1.1"
+    },
+    {
+      "href": "#A4.SS2.p1.1",
+      "text": "§D.2",
+      "section": "References",
+      "context": "Socher et al. (2013) R. Socher, A. Perelygin, J. Wu, J. Chuang, C. D. Manning, A. Ng, and C. Potts Recursive deep models for semantic compositionality over a sentiment treebank . In Proceedings of the 2013 Conference on Empirical Methods in Natural Language Processing , pp. 1631–1642 . Cited by: §D.2",
+      "url": "https://arxiv.org/html/2611.07349v1#A4.SS2.p1.1"
+    },
+    {
+      "href": "https://dx.doi.org/10.18653/v1/2023.eacl-main.239",
+      "text": "Document",
+      "section": "References",
+      "context": "Valipour et al. (2023) M. Valipour, M. Rezagholizadeh, I. Kobyzev, and A. Ghodsi DyLoRA: parameter-efficient tuning of pre-trained models using dynamic search-free low-rank adaptation . In Proceedings of the 17th Conference of the European Chapter of the Association for Computational Linguistics , pp. 3274–3287 . External Links: Document",
+      "url": "https://dx.doi.org/10.18653/v1/2023.eacl-main.239"
+    },
+    {
+      "href": "#S1.p2.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Valipour et al. (2023) M. Valipour, M. Rezagholizadeh, I. Kobyzev, and A. Ghodsi DyLoRA: parameter-efficient tuning of pre-trained models using dynamic search-free low-rank adaptation . In Proceedings of the 17th Conference of the European Chapter of the Association for Computational Linguistics , pp. 3274–3287 . External Links: Document Cited by: §1",
+      "url": "https://arxiv.org/html/2611.07349v1#S1.p2.1"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px1.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Valipour et al. (2023) M. Valipour, M. Rezagholizadeh, I. Kobyzev, and A. Ghodsi DyLoRA: parameter-efficient tuning of pre-trained models using dynamic search-free low-rank adaptation . In Proceedings of the 17th Conference of the European Chapter of the Association for Computational Linguistics , pp. 3274–3287 . External Links: Document Cited by: §1 , §2",
+      "url": "https://arxiv.org/html/2611.07349v1#S2.SS0.SSS0.Px1.p1.1"
+    },
+    {
+      "href": "https://dx.doi.org/10.1137/110845768",
+      "text": "Document",
+      "section": "References",
+      "context": "Vandereycken (2013) B. Vandereycken Low-rank matrix completion by riemannian optimization . SIAM Journal on Optimization 23 ( 2 ), pp. 1214–1236 . External Links: Document",
+      "url": "https://dx.doi.org/10.1137/110845768"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Vandereycken (2013) B. Vandereycken Low-rank matrix completion by riemannian optimization . SIAM Journal on Optimization 23 ( 2 ), pp. 1214–1236 . External Links: Document Cited by: §1",
+      "url": "https://arxiv.org/html/2611.07349v1#S1.p1.1"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px2.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Vandereycken (2013) B. Vandereycken Low-rank matrix completion by riemannian optimization . SIAM Journal on Optimization 23 ( 2 ), pp. 1214–1236 . External Links: Document Cited by: §1 , §2",
+      "url": "https://arxiv.org/html/2611.07349v1#S2.SS0.SSS0.Px2.p1.1"
+    },
+    {
+      "href": "#S3.SS1.p1.2",
+      "text": "§3.1",
+      "section": "References",
+      "context": "Vandereycken (2013) B. Vandereycken Low-rank matrix completion by riemannian optimization . SIAM Journal on Optimization 23 ( 2 ), pp. 1214–1236 . External Links: Document Cited by: §1 , §2 , §3.1",
+      "url": "https://arxiv.org/html/2611.07349v1#S3.SS1.p1.2"
+    },
+    {
+      "href": "#A4.SS2.p1.1",
+      "text": "§D.2",
+      "section": "References",
+      "context": "Wang et al. (2019) A. Wang, A. Singh, J. Michael, F. Hill, O. Levy, and S. R. Bowman GLUE: a multi-task benchmark and analysis platform for natural language understanding . In International Conference on Learning Representations , Cited by: §D.2",
+      "url": "https://arxiv.org/html/2611.07349v1#A4.SS2.p1.1"
+    },
+    {
+      "href": "#S4.SS3.p1.1",
+      "text": "§4.3",
+      "section": "References",
+      "context": "Wang et al. (2019) A. Wang, A. Singh, J. Michael, F. Hill, O. Levy, and S. R. Bowman GLUE: a multi-task benchmark and analysis platform for natural language understanding . In International Conference on Learning Representations , Cited by: §D.2 , §4.3",
+      "url": "https://arxiv.org/html/2611.07349v1#S4.SS3.p1.1"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px1.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Wang et al. (2024) S. Wang, L. Yu, and J. Li LoRA-GA: low-rank adaptation with gradient approximation . In Advances in Neural Information Processing Systems , Vol. 37 . Cited by: §2",
+      "url": "https://arxiv.org/html/2611.07349v1#S2.SS0.SSS0.Px1.p1.1"
+    },
+    {
+      "href": "https://dx.doi.org/10.1162/tacl%5Fa%5F00290",
+      "text": "Document",
+      "section": "References",
+      "context": "Warstadt et al. (2019) A. Warstadt, A. Singh, and S. R. Bowman Neural network acceptability judgments . Transactions of the Association for Computational Linguistics 7 , pp. 625–641 . External Links: Document",
+      "url": "https://dx.doi.org/10.1162/tacl%5Fa%5F00290"
+    },
+    {
+      "href": "#A4.SS2.p1.1",
+      "text": "§D.2",
+      "section": "References",
+      "context": "Warstadt et al. (2019) A. Warstadt, A. Singh, and S. R. Bowman Neural network acceptability judgments . Transactions of the Association for Computational Linguistics 7 , pp. 625–641 . External Links: Document Cited by: §D.2",
+      "url": "https://arxiv.org/html/2611.07349v1#A4.SS2.p1.1"
+    },
+    {
+      "href": "https://dx.doi.org/10.18653/v1/N18-1101",
+      "text": "Document",
+      "section": "References",
+      "context": "Williams et al. (2018) A. Williams, N. Nangia, and S. R. Bowman A broad-coverage challenge corpus for sentence understanding through inference . In Proceedings of the 2018 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies, Volume 1 (Long Papers) , pp. 1112–1122 . External Links: Document",
+      "url": "https://dx.doi.org/10.18653/v1/N18-1101"
+    },
+    {
+      "href": "#A4.SS2.p1.1",
+      "text": "§D.2",
+      "section": "References",
+      "context": "Williams et al. (2018) A. Williams, N. Nangia, and S. R. Bowman A broad-coverage challenge corpus for sentence understanding through inference . In Proceedings of the 2018 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies, Volume 1 (Long Papers) , pp. 1112–1122 . External Links: Document Cited by: §D.2",
+      "url": "https://arxiv.org/html/2611.07349v1#A4.SS2.p1.1"
+    },
+    {
+      "href": "https://dx.doi.org/10.18653/v1/P19-1472",
+      "text": "Document",
+      "section": "References",
+      "context": "Zellers et al. (2019) R. Zellers, A. Holtzman, Y. Bisk, A. Farhadi, and Y. Choi HellaSwag: can a machine really finish your sentence? . In Proceedings of the 57th Annual Meeting of the Association for Computational Linguistics , pp. 4791–4800 . External Links: Document",
+      "url": "https://dx.doi.org/10.18653/v1/P19-1472"
+    },
+    {
+      "href": "#A4.SS1.p1.1",
+      "text": "§D.1",
+      "section": "References",
+      "context": "Zellers et al. (2019) R. Zellers, A. Holtzman, Y. Bisk, A. Farhadi, and Y. Choi HellaSwag: can a machine really finish your sentence? . In Proceedings of the 57th Annual Meeting of the Association for Computational Linguistics , pp. 4791–4800 . External Links: Document Cited by: §D.1",
+      "url": "https://arxiv.org/html/2611.07349v1#A4.SS1.p1.1"
+    },
+    {
+      "href": "#S4.SS2.p1.1",
+      "text": "§4.2",
+      "section": "References",
+      "context": "Zellers et al. (2019) R. Zellers, A. Holtzman, Y. Bisk, A. Farhadi, and Y. Choi HellaSwag: can a machine really finish your sentence? . In Proceedings of the 57th Annual Meeting of the Association for Computational Linguistics , pp. 4791–4800 . External Links: Document Cited by: §D.1 , §4.2",
+      "url": "https://arxiv.org/html/2611.07349v1#S4.SS2.p1.1"
+    },
+    {
+      "href": "#A4.SS3.p1.1",
+      "text": "§D.3",
+      "section": "References",
+      "context": "Zhai et al. (2020) X. Zhai, J. Puigcerver, A. Kolesnikov, P. Ruyssen, C. Riquelme, M. Lucic, J. Djolonga, A. Susano Pinto, M. Neumann, A. Dosovitskiy, L. Beyer, O. Bachem, M. Tschannen, M. Michalski, O. Bousquet, S. Gelly, and N. Houlsby A large-scale study of representation learning with the visual task adaptation benchmark . External Links: 1910.04867 Cited by: §D.3",
+      "url": "https://arxiv.org/html/2611.07349v1#A4.SS3.p1.1"
+    },
+    {
+      "href": "#S4.SS4.p1.1",
+      "text": "§4.4",
+      "section": "References",
+      "context": "Zhai et al. (2020) X. Zhai, J. Puigcerver, A. Kolesnikov, P. Ruyssen, C. Riquelme, M. Lucic, J. Djolonga, A. Susano Pinto, M. Neumann, A. Dosovitskiy, L. Beyer, O. Bachem, M. Tschannen, M. Michalski, O. Bousquet, S. Gelly, and N. Houlsby A large-scale study of representation learning with the visual task adaptation benchmark . External Links: 1910.04867 Cited by: §D.3 , §4.4",
+      "url": "https://arxiv.org/html/2611.07349v1#S4.SS4.p1.1"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px2.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Zhang and Pilanci (2024) F. Zhang and M. Pilanci Riemannian preconditioned LoRA for fine-tuning foundation models . In Proceedings of the 41st International Conference on Machine Learning , Proceedings of Machine Learning Research , Vol. 235 , pp. 59641–59669 . Cited by: §2",
+      "url": "https://arxiv.org/html/2611.07349v1#S2.SS0.SSS0.Px2.p1.1"
+    },
+    {
+      "href": "#S1.p2.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Zhang et al. (2023) Q. Zhang, M. Chen, A. Bukharin, P. He, Y. Cheng, W. Chen, and T. Zhao Adaptive budget allocation for parameter-efficient fine-tuning . In International Conference on Learning Representations , Cited by: §1",
+      "url": "https://arxiv.org/html/2611.07349v1#S1.p2.1"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px1.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Zhang et al. (2023) Q. Zhang, M. Chen, A. Bukharin, P. He, Y. Cheng, W. Chen, and T. Zhao Adaptive budget allocation for parameter-efficient fine-tuning . In International Conference on Learning Representations , Cited by: §1 , §2",
+      "url": "https://arxiv.org/html/2611.07349v1#S2.SS0.SSS0.Px1.p1.1"
+    },
+    {
+      "href": "#S4.p1.1",
+      "text": "§4",
+      "section": "References",
+      "context": "Zhang et al. (2023) Q. Zhang, M. Chen, A. Bukharin, P. He, Y. Cheng, W. Chen, and T. Zhao Adaptive budget allocation for parameter-efficient fine-tuning . In International Conference on Learning Representations , Cited by: §1 , §2 , §4",
+      "url": "https://arxiv.org/html/2611.07349v1#S4.p1.1"
+    },
+    {
+      "href": "https://dx.doi.org/10.1109/TPAMI.2026.3711595",
+      "text": "Document",
+      "section": "References",
+      "context": "Zhang et al. (2026) Y. Zhang, J. Hu, Z. Lai, L. Lin, and Z. Wen Retraction-free optimization over the stiefel manifold for the LoRA fine-tuning . IEEE Transactions on Pattern Analysis and Machine Intelligence . External Links: Document",
+      "url": "https://dx.doi.org/10.1109/TPAMI.2026.3711595"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px2.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Zhang et al. (2026) Y. Zhang, J. Hu, Z. Lai, L. Lin, and Z. Wen Retraction-free optimization over the stiefel manifold for the LoRA fine-tuning . IEEE Transactions on Pattern Analysis and Machine Intelligence . External Links: Document Cited by: §2",
+      "url": "https://arxiv.org/html/2611.07349v1#S2.SS0.SSS0.Px2.p1.1"
+    },
+    {
+      "href": "#A2",
+      "text": "B",
+      "section": "Appendix A Supplementary Overview",
+      "context": "This supplementary material provides additional methodological, theoretical, and experimental details for GEAR. Appendix B",
+      "url": "https://arxiv.org/html/2611.07349v1#A2"
+    },
+    {
+      "href": "#A3",
+      "text": "C",
+      "section": "Appendix A Supplementary Overview",
+      "context": "This supplementary material provides additional methodological, theoretical, and experimental details for GEAR. Appendix B describes the implementation of fixed-rank retraction and the validation procedure for rank-expansion candidates. Appendix C",
+      "url": "https://arxiv.org/html/2611.07349v1#A3"
+    },
+    {
+      "href": "#A4",
+      "text": "D",
+      "section": "Appendix A Supplementary Overview",
+      "context": "This supplementary material provides additional methodological, theoretical, and experimental details for GEAR. Appendix B describes the implementation of fixed-rank retraction and the validation procedure for rank-expansion candidates. Appendix C provides complete proofs of the three theoretical results presented in the main paper. Appendix D",
+      "url": "https://arxiv.org/html/2611.07349v1#A4"
+    },
+    {
+      "href": "#A5",
+      "text": "E",
+      "section": "Appendix A Supplementary Overview",
+      "context": "This supplementary material provides additional methodological, theoretical, and experimental details for GEAR. Appendix B describes the implementation of fixed-rank retraction and the validation procedure for rank-expansion candidates. Appendix C provides complete proofs of the three theoretical results presented in the main paper. Appendix D reports the datasets, evaluation protocols, training configurations, and hyperparameter settings used in our experiments. Finally, ablation studies are provided in Appendix E",
+      "url": "https://arxiv.org/html/2611.07349v1#A5"
+    },
+    {
+      "href": "#S3.SS2",
+      "text": "3.2",
+      "section": "B.1 Low-Rank Retraction",
+      "context": "We detail the retraction used in Section 3.2",
+      "url": "https://arxiv.org/html/2611.07349v1#S3.SS2"
+    },
+    {
+      "href": "#S3.E1",
+      "text": "1",
+      "section": "B.1 Low-Rank Retraction",
+      "context": "Using the tangent-gradient decomposition in Eq. ( 1",
+      "url": "https://arxiv.org/html/2611.07349v1#S3.E1"
+    },
+    {
+      "href": "#S3.E5",
+      "text": "5",
+      "section": "B.2 Rank-Expansion Candidate Validation",
+      "context": "At each rank audit, the selected normal directions are treated as candidate expansions rather than committed immediately. We order the proposed directions by the utility score in Eq. ( 5",
+      "url": "https://arxiv.org/html/2611.07349v1#S3.E5"
+    },
+    {
+      "href": "#A2.T4",
+      "text": "4",
+      "section": "B.3 Computational and Memory Complexity",
+      "context": "We further assess the measured resource costs on the DTD task with ViT-B/16 in Table 4",
+      "url": "https://arxiv.org/html/2611.07349v1#A2.T4"
+    },
+    {
+      "href": "#Thmtheorem1",
+      "text": "1",
+      "section": "Appendix C Proofs",
+      "context": "",
+      "url": "https://arxiv.org/html/2611.07349v1#Thmtheorem1"
+    },
+    {
+      "href": "#Thmtheorem2",
+      "text": "2",
+      "section": "Proof.",
+      "context": "",
+      "url": "https://arxiv.org/html/2611.07349v1#Thmtheorem2"
+    },
+    {
+      "href": "#Thmtheorem3",
+      "text": "3",
+      "section": "Proof.",
+      "context": "",
+      "url": "https://arxiv.org/html/2611.07349v1#Thmtheorem3"
+    },
+    {
+      "href": "#bib.bib19",
+      "text": "Clark et al., 2019",
+      "section": "D.1 Details on Commonsense Reasoning Task",
+      "context": "The commonsense reasoning suite comprises eight benchmarks: BoolQ ( Clark et al., 2019",
+      "url": "https://arxiv.org/html/2611.07349v1#bib.bib19"
+    },
+    {
+      "href": "#bib.bib20",
+      "text": "Bisk et al., 2020",
+      "section": "D.1 Details on Commonsense Reasoning Task",
+      "context": "The commonsense reasoning suite comprises eight benchmarks: BoolQ ( Clark et al., 2019 ) , PIQA ( Bisk et al., 2020",
+      "url": "https://arxiv.org/html/2611.07349v1#bib.bib20"
+    },
+    {
+      "href": "#bib.bib21",
+      "text": "Sap et al., 2019",
+      "section": "D.1 Details on Commonsense Reasoning Task",
+      "context": "The commonsense reasoning suite comprises eight benchmarks: BoolQ ( Clark et al., 2019 ) , PIQA ( Bisk et al., 2020 ) , SIQA ( Sap et al., 2019",
+      "url": "https://arxiv.org/html/2611.07349v1#bib.bib21"
+    },
+    {
+      "href": "#bib.bib22",
+      "text": "Zellers et al., 2019",
+      "section": "D.1 Details on Commonsense Reasoning Task",
+      "context": "The commonsense reasoning suite comprises eight benchmarks: BoolQ ( Clark et al., 2019 ) , PIQA ( Bisk et al., 2020 ) , SIQA ( Sap et al., 2019 ) , HellaSwag ( Zellers et al., 2019",
+      "url": "https://arxiv.org/html/2611.07349v1#bib.bib22"
+    },
+    {
+      "href": "#bib.bib23",
+      "text": "Sakaguchi et al., 2020",
+      "section": "D.1 Details on Commonsense Reasoning Task",
+      "context": "The commonsense reasoning suite comprises eight benchmarks: BoolQ ( Clark et al., 2019 ) , PIQA ( Bisk et al., 2020 ) , SIQA ( Sap et al., 2019 ) , HellaSwag ( Zellers et al., 2019 ) , WinoGrande ( Sakaguchi et al., 2020",
+      "url": "https://arxiv.org/html/2611.07349v1#bib.bib23"
+    },
+    {
+      "href": "#bib.bib24",
+      "text": "Clark et al., 2018",
+      "section": "D.1 Details on Commonsense Reasoning Task",
+      "context": "The commonsense reasoning suite comprises eight benchmarks: BoolQ ( Clark et al., 2019 ) , PIQA ( Bisk et al., 2020 ) , SIQA ( Sap et al., 2019 ) , HellaSwag ( Zellers et al., 2019 ) , WinoGrande ( Sakaguchi et al., 2020 ) , ARC-e/ARC-c ( Clark et al., 2018",
+      "url": "https://arxiv.org/html/2611.07349v1#bib.bib24"
+    },
+    {
+      "href": "#bib.bib25",
+      "text": "Mihaylov et al., 2018",
+      "section": "D.1 Details on Commonsense Reasoning Task",
+      "context": "The commonsense reasoning suite comprises eight benchmarks: BoolQ ( Clark et al., 2019 ) , PIQA ( Bisk et al., 2020 ) , SIQA ( Sap et al., 2019 ) , HellaSwag ( Zellers et al., 2019 ) , WinoGrande ( Sakaguchi et al., 2020 ) , ARC-e/ARC-c ( Clark et al., 2018 ) , and OBQA ( Mihaylov et al., 2018",
+      "url": "https://arxiv.org/html/2611.07349v1#bib.bib25"
+    },
+    {
+      "href": "#bib.bib39",
+      "text": "Hu et al., 2023",
+      "section": "D.1 Details on Commonsense Reasoning Task",
+      "context": "The commonsense reasoning suite comprises eight benchmarks: BoolQ ( Clark et al., 2019 ) , PIQA ( Bisk et al., 2020 ) , SIQA ( Sap et al., 2019 ) , HellaSwag ( Zellers et al., 2019 ) , WinoGrande ( Sakaguchi et al., 2020 ) , ARC-e/ARC-c ( Clark et al., 2018 ) , and OBQA ( Mihaylov et al., 2018 ) . Following the standard multi-task protocol, we combine the training portions of these tasks into the Commonsense170K corpus ( Hu et al., 2023",
+      "url": "https://arxiv.org/html/2611.07349v1#bib.bib39"
+    },
+    {
+      "href": "#A4.T5",
+      "text": "5",
+      "section": "D.1 Details on Commonsense Reasoning Task",
+      "context": "ng suite comprises eight benchmarks: BoolQ ( Clark et al., 2019 ) , PIQA ( Bisk et al., 2020 ) , SIQA ( Sap et al., 2019 ) , HellaSwag ( Zellers et al., 2019 ) , WinoGrande ( Sakaguchi et al., 2020 ) , ARC-e/ARC-c ( Clark et al., 2018 ) , and OBQA ( Mihaylov et al., 2018 ) . Following the standard multi-task protocol, we combine the training portions of these tasks into the Commonsense170K corpus ( Hu et al., 2023 ) and evaluate each benchmark separately on its corresponding test set. We use LLaMA3-8B and Qwen2.5-7B as backbone models. The main hyperparameter settings are summarized in Table 5",
+      "url": "https://arxiv.org/html/2611.07349v1#A4.T5"
+    },
+    {
+      "href": "#A4.SS3",
+      "text": "D.3",
+      "section": "D.1 Details on Commonsense Reasoning Task",
+      "context": "The probing configuration estimates task-induced gradient structure for geometric initialization. We use probe width h = 24 h=24 for both TGI and rank audits. For rank audits, each calibration batch contains 128 examples, with 16 from each task. The damping coefficient λ = 0.1 \\lambda=0.1 regularizes the gradient-scale normalization. Subsequent experiments follow the same initialization and rank-audit framework with task-specific adjustments; the VTAB implementation is detailed in Appendix D.3",
+      "url": "https://arxiv.org/html/2611.07349v1#A4.SS3"
+    },
+    {
+      "href": "#bib.bib26",
+      "text": "Wang et al., 2019",
+      "section": "D.2 Details on Natural Language Understanding Task",
+      "context": "For the natural language understanding experiments, we fine-tune DeBERTa-v3-base on the GLUE benchmark ( Wang et al., 2019",
+      "url": "https://arxiv.org/html/2611.07349v1#bib.bib26"
+    },
+    {
+      "href": "#bib.bib30",
+      "text": "Warstadt et al., 2019",
+      "section": "D.2 Details on Natural Language Understanding Task",
+      "context": "For the natural language understanding experiments, we fine-tune DeBERTa-v3-base on the GLUE benchmark ( Wang et al., 2019 ) , comprising eight tasks across single-sentence classification, semantic similarity and paraphrase detection, and natural language inference. Specifically, we evaluate on CoLA ( Warstadt et al., 2019",
+      "url": "https://arxiv.org/html/2611.07349v1#bib.bib30"
+    },
+    {
+      "href": "#bib.bib31",
+      "text": "Socher et al., 2013",
+      "section": "D.2 Details on Natural Language Understanding Task",
+      "context": "For the natural language understanding experiments, we fine-tune DeBERTa-v3-base on the GLUE benchmark ( Wang et al., 2019 ) , comprising eight tasks across single-sentence classification, semantic similarity and paraphrase detection, and natural language inference. Specifically, we evaluate on CoLA ( Warstadt et al., 2019 ) , SST-2 ( Socher et al., 2013",
+      "url": "https://arxiv.org/html/2611.07349v1#bib.bib31"
+    },
+    {
+      "href": "#bib.bib32",
+      "text": "Dolan and Brockett, 2005",
+      "section": "D.2 Details on Natural Language Understanding Task",
+      "context": "For the natural language understanding experiments, we fine-tune DeBERTa-v3-base on the GLUE benchmark ( Wang et al., 2019 ) , comprising eight tasks across single-sentence classification, semantic similarity and paraphrase detection, and natural language inference. Specifically, we evaluate on CoLA ( Warstadt et al., 2019 ) , SST-2 ( Socher et al., 2013 ) , MRPC ( Dolan and Brockett, 2005",
+      "url": "https://arxiv.org/html/2611.07349v1#bib.bib32"
+    },
+    {
+      "href": "#bib.bib26",
+      "text": "Wang et al., 2019",
+      "section": "D.2 Details on Natural Language Understanding Task",
+      "context": "For the natural language understanding experiments, we fine-tune DeBERTa-v3-base on the GLUE benchmark ( Wang et al., 2019 ) , comprising eight tasks across single-sentence classification, semantic similarity and paraphrase detection, and natural language inference. Specifically, we evaluate on CoLA ( Warstadt et al., 2019 ) , SST-2 ( Socher et al., 2013 ) , MRPC ( Dolan and Brockett, 2005 ) , QQP ( Wang et al., 2019",
+      "url": "https://arxiv.org/html/2611.07349v1#bib.bib26"
+    },
+    {
+      "href": "#bib.bib33",
+      "text": "Cer et al., 2017",
+      "section": "D.2 Details on Natural Language Understanding Task",
+      "context": "For the natural language understanding experiments, we fine-tune DeBERTa-v3-base on the GLUE benchmark ( Wang et al., 2019 ) , comprising eight tasks across single-sentence classification, semantic similarity and paraphrase detection, and natural language inference. Specifically, we evaluate on CoLA ( Warstadt et al., 2019 ) , SST-2 ( Socher et al., 2013 ) , MRPC ( Dolan and Brockett, 2005 ) , QQP ( Wang et al., 2019 ) , STS-B ( Cer et al., 2017",
+      "url": "https://arxiv.org/html/2611.07349v1#bib.bib33"
+    },
+    {
+      "href": "#bib.bib34",
+      "text": "Williams et al., 2018",
+      "section": "D.2 Details on Natural Language Understanding Task",
+      "context": "For the natural language understanding experiments, we fine-tune DeBERTa-v3-base on the GLUE benchmark ( Wang et al., 2019 ) , comprising eight tasks across single-sentence classification, semantic similarity and paraphrase detection, and natural language inference. Specifically, we evaluate on CoLA ( Warstadt et al., 2019 ) , SST-2 ( Socher et al., 2013 ) , MRPC ( Dolan and Brockett, 2005 ) , QQP ( Wang et al., 2019 ) , STS-B ( Cer et al., 2017 ) , MNLI ( Williams et al., 2018",
+      "url": "https://arxiv.org/html/2611.07349v1#bib.bib34"
+    },
+    {
+      "href": "#bib.bib35",
+      "text": "Rajpurkar et al., 2016",
+      "section": "D.2 Details on Natural Language Understanding Task",
+      "context": "For the natural language understanding experiments, we fine-tune DeBERTa-v3-base on the GLUE benchmark ( Wang et al., 2019 ) , comprising eight tasks across single-sentence classification, semantic similarity and paraphrase detection, and natural language inference. Specifically, we evaluate on CoLA ( Warstadt et al., 2019 ) , SST-2 ( Socher et al., 2013 ) , MRPC ( Dolan and Brockett, 2005 ) , QQP ( Wang et al., 2019 ) , STS-B ( Cer et al., 2017 ) , MNLI ( Williams et al., 2018 ) , QNLI ( Rajpurkar et al., 2016",
+      "url": "https://arxiv.org/html/2611.07349v1#bib.bib35"
+    },
+    {
+      "href": "#bib.bib36",
+      "text": "Dagan et al., 2006",
+      "section": "D.2 Details on Natural Language Understanding Task",
+      "context": "For the natural language understanding experiments, we fine-tune DeBERTa-v3-base on the GLUE benchmark ( Wang et al., 2019 ) , comprising eight tasks across single-sentence classification, semantic similarity and paraphrase detection, and natural language inference. Specifically, we evaluate on CoLA ( Warstadt et al., 2019 ) , SST-2 ( Socher et al., 2013 ) , MRPC ( Dolan and Brockett, 2005 ) , QQP ( Wang et al., 2019 ) , STS-B ( Cer et al., 2017 ) , MNLI ( Williams et al., 2018 ) , QNLI ( Rajpurkar et al., 2016 ) , and RTE ( Dagan et al., 2006",
+      "url": "https://arxiv.org/html/2611.07349v1#bib.bib36"
+    },
+    {
+      "href": "#bib.bib37",
+      "text": "Bar-Haim et al., 2006",
+      "section": "D.2 Details on Natural Language Understanding Task",
+      "context": "For the natural language understanding experiments, we fine-tune DeBERTa-v3-base on the GLUE benchmark ( Wang et al., 2019 ) , comprising eight tasks across single-sentence classification, semantic similarity and paraphrase detection, and natural language inference. Specifically, we evaluate on CoLA ( Warstadt et al., 2019 ) , SST-2 ( Socher et al., 2013 ) , MRPC ( Dolan and Brockett, 2005 ) , QQP ( Wang et al., 2019 ) , STS-B ( Cer et al., 2017 ) , MNLI ( Williams et al., 2018 ) , QNLI ( Rajpurkar et al., 2016 ) , and RTE ( Dagan et al., 2006 ; Bar-Haim et al., 2006",
+      "url": "https://arxiv.org/html/2611.07349v1#bib.bib37"
+    },
+    {
+      "href": "#bib.bib38",
+      "text": "Giampiccolo et al., 2007",
+      "section": "D.2 Details on Natural Language Understanding Task",
+      "context": "For the natural language understanding experiments, we fine-tune DeBERTa-v3-base on the GLUE benchmark ( Wang et al., 2019 ) , comprising eight tasks across single-sentence classification, semantic similarity and paraphrase detection, and natural language inference. Specifically, we evaluate on CoLA ( Warstadt et al., 2019 ) , SST-2 ( Socher et al., 2013 ) , MRPC ( Dolan and Brockett, 2005 ) , QQP ( Wang et al., 2019 ) , STS-B ( Cer et al., 2017 ) , MNLI ( Williams et al., 2018 ) , QNLI ( Rajpurkar et al., 2016 ) , and RTE ( Dagan et al., 2006 ; Bar-Haim et al., 2006 ; Giampiccolo et al., 2007",
+      "url": "https://arxiv.org/html/2611.07349v1#bib.bib38"
+    },
+    {
+      "href": "#bib.bib40",
+      "text": "Bentivogli et al., 2009",
+      "section": "D.2 Details on Natural Language Understanding Task",
+      "context": "nderstanding experiments, we fine-tune DeBERTa-v3-base on the GLUE benchmark ( Wang et al., 2019 ) , comprising eight tasks across single-sentence classification, semantic similarity and paraphrase detection, and natural language inference. Specifically, we evaluate on CoLA ( Warstadt et al., 2019 ) , SST-2 ( Socher et al., 2013 ) , MRPC ( Dolan and Brockett, 2005 ) , QQP ( Wang et al., 2019 ) , STS-B ( Cer et al., 2017 ) , MNLI ( Williams et al., 2018 ) , QNLI ( Rajpurkar et al., 2016 ) , and RTE ( Dagan et al., 2006 ; Bar-Haim et al., 2006 ; Giampiccolo et al., 2007 ; Bentivogli et al., 2009",
+      "url": "https://arxiv.org/html/2611.07349v1#bib.bib40"
+    },
+    {
+      "href": "#A4.T6",
+      "text": "6",
+      "section": "D.2 Details on Natural Language Understanding Task",
+      "context": "mark ( Wang et al., 2019 ) , comprising eight tasks across single-sentence classification, semantic similarity and paraphrase detection, and natural language inference. Specifically, we evaluate on CoLA ( Warstadt et al., 2019 ) , SST-2 ( Socher et al., 2013 ) , MRPC ( Dolan and Brockett, 2005 ) , QQP ( Wang et al., 2019 ) , STS-B ( Cer et al., 2017 ) , MNLI ( Williams et al., 2018 ) , QNLI ( Rajpurkar et al., 2016 ) , and RTE ( Dagan et al., 2006 ; Bar-Haim et al., 2006 ; Giampiccolo et al., 2007 ; Bentivogli et al., 2009 ) . Dataset statistics and evaluation metrics are summarized in Table 6",
+      "url": "https://arxiv.org/html/2611.07349v1#A4.T6"
+    },
+    {
+      "href": "#A4.T7",
+      "text": "7",
+      "section": "D.2 Details on Natural Language Understanding Task",
+      "context": "ion, semantic similarity and paraphrase detection, and natural language inference. Specifically, we evaluate on CoLA ( Warstadt et al., 2019 ) , SST-2 ( Socher et al., 2013 ) , MRPC ( Dolan and Brockett, 2005 ) , QQP ( Wang et al., 2019 ) , STS-B ( Cer et al., 2017 ) , MNLI ( Williams et al., 2018 ) , QNLI ( Rajpurkar et al., 2016 ) , and RTE ( Dagan et al., 2006 ; Bar-Haim et al., 2006 ; Giampiccolo et al., 2007 ; Bentivogli et al., 2009 ) . Dataset statistics and evaluation metrics are summarized in Table 6 , and the corresponding training and rank-adaptation settings are reported in Table 7",
+      "url": "https://arxiv.org/html/2611.07349v1#A4.T7"
+    },
+    {
+      "href": "#bib.bib41",
+      "text": "Zhai et al., 2020",
+      "section": "D.3 Details on Visual Task",
+      "context": "We evaluate GEAR with ViT-B/16 on VTAB-1K ( Zhai et al., 2020",
+      "url": "https://arxiv.org/html/2611.07349v1#bib.bib41"
+    },
+    {
+      "href": "#A4.T8",
+      "text": "8",
+      "section": "D.3 Details on Visual Task",
+      "context": "We evaluate GEAR with ViT-B/16 on VTAB-1K ( Zhai et al., 2020 ) , which contains 19 visual classification tasks across Natural, Specialized, and Structured categories. Dataset statistics and hyperparameter settings are reported in Tables 8",
+      "url": "https://arxiv.org/html/2611.07349v1#A4.T8"
+    },
+    {
+      "href": "#A4.T9",
+      "text": "9",
+      "section": "D.3 Details on Visual Task",
+      "context": "We evaluate GEAR with ViT-B/16 on VTAB-1K ( Zhai et al., 2020 ) , which contains 19 visual classification tasks across Natural, Specialized, and Structured categories. Dataset statistics and hyperparameter settings are reported in Tables 8 and 9",
+      "url": "https://arxiv.org/html/2611.07349v1#A4.T9"
+    },
+    {
+      "href": "#A5.T10",
+      "text": "10",
+      "section": "Appendix E Ablation Studies",
+      "context": "To isolate the contribution of each component, we conduct a component-wise ablation on LLaMA3-8B over the commonsense reasoning suite. Starting from the standard LoRA baseline, we examine task-induced geometric initialization (TGI), fixed-rank manifold optimization, and geometry-guided rank expansion. The results are reported in Table 10",
+      "url": "https://arxiv.org/html/2611.07349v1#A5.T10"
+    }
+  ],
+  "note": "Extracted HTML text; equations and table formatting may be imperfect. No PDF extraction was attempted."
+}

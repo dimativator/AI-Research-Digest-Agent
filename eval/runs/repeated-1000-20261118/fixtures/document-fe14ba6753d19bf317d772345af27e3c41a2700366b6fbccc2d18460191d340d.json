@@ -1,0 +1,1137 @@
+{
+  "status": "ok",
+  "source": "https://arxiv.org/html/2610.39610v1",
+  "extractor_version": "article-v1",
+  "chunks": [
+    {
+      "chunk_id": "chunk-0001",
+      "section": "GistRank : Gist-Compressed Listwise Ranking with Large Language Models",
+      "text": "Guo Chen Affiliation: Southwest University Affiliation: Yuanbao Team, Tencent Wenhan Liu Affiliation: Renmin University of China Reed Li Affiliation: Yuanbao Team, Tencent Qianwen Ma Affiliation: Yuanbao Team, Tencent Yu Lu Affiliation: Yuanbao Team, Tencent Haibo Shi Affiliation: Yuanbao Team, Tencent Bingbing Xu Affiliation: Institute of Computing Technology, Chinese Academy of Sciences Junjie Huang Affiliation: Southwest University",
+      "source": "https://arxiv.org/html/2610.39610v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0002",
+      "section": "Abstract",
+      "text": "Large language models (LLMs) have become a powerful tool for listwise relevance ranking, which can improve web search by comparing retrieved passages jointly. However, processing every candidate verbatim and generating a permutation autoregressively can make inference costly, every candidate must be serialized verbatim into the prompt and the input therefore grows linearly with both the number and the length of the passages. While sliding-window ranking handles context limits through repeated re-encoding of overlapping blocks, hard compression techniques sacrifice the fine-grained details required for accurate discriminative judgment. To better understand and mitigate this trade-off, we conduct a comprehensive study of soft compression for LLM-based listwise ranking. Our findings reveal that a vanilla gist representation is ill-suited to ranking for two reasons: strictly causal encoding weakens how thoroughly each gist token absorbs its passage, and the representation is never trained to expose the relative-preference structure that separates closely competing candidates. To this end, we propose GistRank , a three-stage training framework that equips a large language model with gist-compressed passage representations by learning faithful gist tokens under a semi-bidirectional attention scheme, instilling discriminative comparison through pairwise training, and adapting the model to the listwise objective. GistRank collapses each passage into only K = 4 K{=}4 gist tokens, this gives 14 × \\times speedups over one-shot full-text ranking while reaching 59.17 average nDCG@10 over TREC DL19/20 and five BEIR subsets within 0.89 of the strongest full-context baseline. Overall, GistRank provides an effective means to enhance efficiency for searches in real-world environments.",
+      "source": "https://arxiv.org/html/2610.39610v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0003",
+      "section": "Abstract",
+      "text": "† † * Work done during internship at Tencent Yuanbao. † Corresponding author",
+      "source": "https://arxiv.org/html/2610.39610v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0004",
+      "section": "1 Introduction",
+      "text": "Large language models have rapidly become a powerful tool for relevance ranking, where a single model is prompted with a query alongside an ordered list of candidate passages and asked to directly emit the permutation that best reflects their relevance ( Sun et al., 2023 ; Ma et al., 2023 ; liu2026training ) . This listwise formulation lets the model reason jointly over all candidates and exploit cross-passage comparisons that pointwise and pairwise scorers cannot capture, and it has proven so effective that the capability of proprietary models has been distilled into compact open-source rankers that now serve as strong and reproducible baselines ( Pradeep et al., 2023a ; Pradeep et al., 2023b ) . Driven by these successes, listwise ranking with large language models has quickly become a central paradigm in modern retrieval pipelines. However, in web search and retrieval-augmented applications, the response must also be produced within an inference budget. A conventional listwise reranker serializes the candidate passages into the ranking prompt. Its input grows with both the number and length of passages, even when the entire list fits inside the model’s context window ( Liu et al., 2024 ) . A long candidate list, or passages that are individually long, quickly inflates inference latency, degrading both ranking quality and responsiveness. As shown in Figure 1 , the prevailing remedy is to process the list through a sliding window that reranks overlapping blocks and propagates the ordering across passes ( Sun et al., 2023 ; Liu et al., 2025d ) , but this comes at the cost of repeatedly re-encoding overlapping content. These costs motivate reducing the information consumed by the ranking stage, while explicitly accounting for any work needed to prepare that information.",
+      "source": "https://arxiv.org/html/2610.39610v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0005",
+      "section": "1 Introduction",
+      "text": "Figure 1: Comparison of existing listwise ranking strategies: Sliding Window, Full Ranking and GistRank , corresponding to panels (a), (b), and (c), respectively. A promising solution is to compress each passage before ranking, for example, extracting a summary or embedding the passage ( Feng et al., 2026 ; Liu et al., 2025a ) . Besides, a family of soft-compression methods encodes long inputs into a handful of trainable gist tokens that retain the conditioning effect of the original text while drastically shortening the sequence ( Mu et al., 2023 ; Ge et al., 2023 ) . We argue that such compression is a natural fit for improving inference efficiency in ranking tasks, as it could replace each verbatim passage with a compact set of gist tokens. Prior work has in fact measured gist and KV-level compression on reranking and reported a large gap to full attention ( Deng et al., 2025 ) , but has treated that gap as an intrinsic cost of compression. We argue it is instead a feature of the compression objective: relevance judgment hinges on fine-grained, query-conditioned distinctions among closely competing candidates, whereas objectives optimised for reconstruction or generative conditioning are never asked to preserve those distinctions. In ranking, the compressed states must expose relative preference across candidates, not merely preserve a useful account of each passage. Bridging this gap therefore requires adapting the gist representation so that it preserves the discriminative signals on which ranking depends.",
+      "source": "https://arxiv.org/html/2610.39610v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0006",
+      "section": "1 Introduction",
+      "text": "We propose GistRank , which equips a large language model with compressed gist tokes passage representations for efficiency listwise ranking through a three-stage training procedure. In the first stage, we learn faithful gist representations: fixed-length documents are followed by a set of gist tokens that are in turn concatenated with the query, with the query trailing the gist tokens. The model is trained to predict the subsequent tokens conditioned solely on the gist, while granting the gist tokens richer bidirectional access to their source context. In the second stage, with the gist tokens visible, but the original documents hidden, we train these representations on real-world search engine interaction data with pairwise objectives, instilling the discriminative capability required to distinguish competing candidates for the purpose of ranking. In the third stage, we continue training the model directly on labeled ranking data, so that it learns to leverage the gist tokens to produce the listwise permutation both efficiently and accurately.",
+      "source": "https://arxiv.org/html/2610.39610v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0007",
+      "section": "1 Introduction",
+      "text": "We evaluate both relevance and inference cost rather than treating a shorter prompt as proof of a faster complete pipeline. Over TREC DL19/20 and five BEIR subsets, GistRank obtains 59.17 mean nDCG@10. GistRank has total end-to-end P50 latencies of 1,625 ms on DL19 and 1,634 ms on DL20. Relative to the one-shot full-text baseline these correspond to 14.05 × \\times and 13.93 × \\times speedups. The measurement includes compression, KV assembly, and ranking. Direct stage measurements show that the compact rank forward accounts for only about 7% of the model time: most work remains in candidate compression. This confirms that compressed segments can significantly reduce overhead during the inference phase. These results highlight the potential of gist-compressed ranking for scalable search applications. Our main contributions are threefold: • We articulate the mismatch between gist objectives for compact conditioning and the relative-preference information required for listwise relevance ranking, and use it to motivate ranking-aware training. • We propose GistRank , a three-stage training method that first learns compressed gist representations, then continues training on real-world search engine data to enhance discriminative ability, and finally adapts gist tokens to efficient listwise ranking. • We evaluate both ranking effectiveness and end-to-end latency on TREC DL19/20 and five BEIR subsets, demonstrating substantially lower latency than the controlled full-text baselines while maintaining competitive average nDCG@10.",
+      "source": "https://arxiv.org/html/2610.39610v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0008",
+      "section": "2 Related Work",
+      "text": "In this section, we position GistRank at the intersection of listwise ranking and soft context compression, focusing on how discriminatively trained gist tokens can improve ranking efficiency while preserving effectiveness.",
+      "source": "https://arxiv.org/html/2610.39610v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0009",
+      "section": "2.1 Listwise Ranking",
+      "text": "Ranking a candidate set as a whole rather than scoring documents in isolation has long been recognized as a principled formulation, and the earliest learning-to-rank approaches directly optimized list-level objectives that account for the relative ordering among all candidates ( Cao et al., 2007 ; Xia et al., 2008 ; Burges, 2010 ) . With the advent of pretrained language models, this paradigm was reframed as estimating relevance from deep contextualized interactions between a query and each document, first through cross-encoders that score pairs pointwise and then through sequence-to-sequence formulations ( Nogueira and Cho, 2019 ; Nogueira et al., 2020 ; Zhuang et al., 2024 ) . The emergence of large language models pushed this further by feeding an entire ordered list of passages into a single prompt and instructing the model to emit a permutation, which proved remarkably effective even in zero-shot settings and was subsequently distilled into smaller open models for practical deployment ( Reddy et al., 2024 ; Qin et al., 2024 ) . Subsequent methods have taken both accuracy and efficiency into account—for instance, sliding-window-based approaches ( Sun et al., 2023 ) , as well as those utilizing reinforcement learning or collaborative ranking ( Liu et al., 2025b ; Liu et al., 2025c ; Liu et al., 2026 ) . In real-world retrieval, deploying listwise rankers requires both strong ranking performance and manageable inference costs. Yet existing token-level listwise methods have largely overlooked gist tokens trained with a discriminative ranking objective as a way to compress passage representations while retaining ranking-critical information.",
+      "source": "https://arxiv.org/html/2610.39610v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0010",
+      "section": "2.2 Soft Context Compression",
+      "text": "Using soft context compression for model inputs has become an effective way to reduce the computational overhead of model inference. A line of work has sought to shorten the context consumed by a language model by encoding long inputs into a handful of trainable soft tokens, where the seminal approach learns dedicated gist tokens that compress an entire instruction into a compact prefix while preserving its conditioning effect on subsequent generation ( Mu et al., 2023 ) . Building on this idea, later efforts scaled the compression to arbitrary contexts by training autoencoding objectives that reconstruct the original text from a few memory slots, or by recursively summarizing long documents into accumulated soft prompts that extend the effective context length ( Chevalier et al., 2023 ; Ge et al., 2023 ; Deng et al., 2025 ) . More recent studies have pushed the compression ratio to extreme regimes ( Petrov et al., 2025 ; Tarasov et al., 2025 ; Mao et al., 2026 ) , and integrated such condensed representations into retrieval-augmented pipelines to reduce the cost of conditioning on retrieved evidence ( Li et al., 2025 ; Cheng et al., 2024 ; Lu et al., 2025 ) . Furthermore, research has already extended pre-sorting compression to the token level in an effort to improve efficiency ( Zhi et al., 2026 ; Lu et al., 2026 ) . However, these works are primarily optimized for tasks such as representation compression or generative guidance, while capabilities regarding discriminative comparison tasks have been overlooked. There has no research repurposed gist-style soft tokens as compact passage representations for ranking.",
+      "source": "https://arxiv.org/html/2610.39610v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0011",
+      "section": "3.1 Task Formulation",
+      "text": "Given a user query q q and a list of candidate passages P = [ p 1 , … , p N ] P=[p_{1},\\dots,p_{N}] returned by a first-stage retriever, listwise ranking jointly compares the candidates and produces a permutation π ^ \\hat{\\pi} that orders them by their relevance to q q , π ^ = f rank ​ ( q , P ) ∈ 𝔖 N , \\hat{\\pi}=f_{\\mathrm{rank}}(q,P)\\in\\mathfrak{S}_{N}, (1) where 𝔖 N \\mathfrak{S}_{N} is the set of all permutations of { 1 , … , N } \\{1,\\dots,N\\} , and π ^ k \\hat{\\pi}_{k} identifies the passage placed at rank k k , with the aim of placing more relevant passages at earlier ranks. Let x ⁡ ( ⋅ ) x(\\cdot) denote the token sequence of its argument. A full-text listwise ranker serializes all candidate passages into a ranking prompt. Its passage-content token count is L full , passage = ∑ j = 1 N | x ⁡ ( p j ) | , L_{\\mathrm{full,passage}}=\\sum_{j=1}^{N}|x(p_{j})|, (2) which grows with both the number of candidates and their average token length. Our goal is to preserve joint comparison while reducing the passage content consumed by the ranking phase.",
+      "source": "https://arxiv.org/html/2610.39610v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0012",
+      "section": "3.2 Gist Compression",
+      "text": "For a query–passage pair ( q , p j ) (q,p_{j}) , the model first runs a compression phase over the serialized query and passage followed by K K gist tokens. The dense gist representation is defined as G ( q , j ) = Enc θ ( [ x ( q ) ; x ( p j ) ; ⟨ g 0 ⟩ , … , ⟨ g K − 1 ⟩ ] ; OPEN M gist ) | gist ∈ ℝ K × D . \\begin{split}G^{(q,j)}=\\mathrm{Enc}_{\\theta}\\Big([\\,x(q);\\,x(p_{j});\\,&\\langle g_{0}\\rangle,\\dots,\\langle g_{K-1}\\rangle\\,];\\\\ &M_{\\text{gist}}\\Big)\\Big|_{\\text{gist}}\\in\\mathbb{R}^{K\\times D}.\\end{split} (3) where M gist M_{\\text{gist}} is the attention mask that forces the ranking-relevant information to pass through the gist positions. We further denote by C ( q , j ) C^{(q,j)} the corresponding layer-wise KV-cache entries at these gist positions. The dense block G ( q , j ) G^{(q,j)} is used for scoring, while C ( q , j ) C^{(q,j)} is used as the compressed state consumed by the rank-phase forward pass. With K K gist positions per passage, the candidate-content length in the rank phase becomes L gist , passage = N ​ K . L_{\\mathrm{gist,passage}}=NK. (4) These expressions describe the candidate-content length; query tokens, formatting tokens, and rank slots contribute additional positions to the complete rank prompt. Candidate compression is performed independently for each query–passage pair before joint ranking.",
+      "source": "https://arxiv.org/html/2610.39610v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0013",
+      "section": "3.3 Motivation for GistRank",
+      "text": "A gist trained only to predict text is encouraged to retain information sufficient for that prediction. Relevance ranking asks a different question: which of several candidate passages better satisfies this query? Passages may both contain terms that make the query predictable while differing in the specific evidence needed to order them. For example, a query about the cause of a condition may be predictable from passages that mention the condition, even if only one passage supplies the requested causal evidence. The representation must expose the distinction that affects their relative order, not just the shared topic.",
+      "source": "https://arxiv.org/html/2610.39610v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0014",
+      "section": "4 Supervised Fine-tuning for GistRank",
+      "text": "As shown in Figure 2 , GistRank trains the same backbone in three stages: (i) query-predictive gist learning, (ii) pairwise preference training on search interactions, and (iii) listwise ranking adaptation. The gist token learned in earlier stages is reused throughout. Figure 2: Overview of the training workflow. Stage 1 trains the ability to compress gist tokens. Stage 2 involves continued training to enhance discriminative capabilities using search data. Finally, Stage 3 aligns the model with listwise ranking objectives.",
+      "source": "https://arxiv.org/html/2610.39610v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0015",
+      "section": "Stage 1: learn the gist interface.",
+      "text": "Stage 1 learns gist representations by predicting the query associated with a passage, following the sentence-compression formulation of Tarasov et al. (2025) . We use approximately 30 billion training tokens from search-engine queries and returned documents, packed into 4,096-token sequences. Observed query–passage associations provide supervision without additional relevance or preference labels. The input is arranged as [ x ⁡ ( p j ) ; ⟨ g 0 ⟩ , … , ⟨ g K − 1 ⟩ ; x ⁡ ( q ) ] . [\\,x(p_{j});\\langle g_{0}\\rangle,\\ldots,\\langle g_{K-1}\\rangle;x(q)\\,]. (5) Under the semi-bidirectional mask, passage tokens attend within the entire passage, and gist tokens attend to all passage and gist tokens. Query tokens attend only to the gist states and preceding query tokens; passage and gist tokens cannot attend to the target query. Thus, passage information reaches query prediction through the gist tokens. Let G rec ( j ) G_{\\mathrm{rec}}^{(j)} denote the passage gist states and q t q_{t} the t t -th query token. We minimize ℒ gist = − 1 | x ⁡ ( q ) | ∑ t = 1 | x ⁡ ( q ) | log p θ ( q t ∣ q < t , G rec ( j ) ) , \\mathcal{L}_{\\mathrm{gist}}=-\\frac{1}{|x(q)|}\\sum_{t=1}^{|x(q)|}\\log p_{\\theta}\\!\\left(q_{t}\\mid q_{<t},G_{\\mathrm{rec}}^{(j)}\\right), (6) with loss computed only over non-padding query tokens, excluding passage and gist positions.",
+      "source": "https://arxiv.org/html/2610.39610v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0016",
+      "section": "4.2 Stage 2: Discriminative Capability",
+      "text": "Stage 2 uses citation feedback from search-engine interactions as implicit preference supervision. For each query, the search engine returns results ordered by its ranking model. A result cited in the interaction is treated as p + p^{+} , and a returned but uncited result as p − p^{-} . We use approximately 15.36 million queries, each with one cited–uncited pair assigned labels 1 and 0. The texts come from the existing search data; citation feedback supplies the preference labels, no additional information is introduced. For each query–passage pair ( q , p j ) (q,p_{j}) , the input is arranged as: [ x ⁡ ( p j ) ; g 0 , … , g K − 1 ; x ⁡ ( query prompt ​ ( q ) ) ; CLS ] [\\,x(p_{j});\\,g_{0},\\ldots,g_{K-1};\\,x(\\text{query prompt}(q));\\,\\mathrm{CLS}\\,] The gist positions encode the passage before the query prompt is introduced. Under the attention mask, neither the query-prompt positions nor the final CLS \\mathrm{CLS} position can attend directly to raw passage tokens, while CLS \\mathrm{CLS} can attend to both the gist block and the query prompt. Consequently, the gist block serves as a compact document representation through which passage information reaches CLS \\mathrm{CLS} . Pairwise supervision encourages the query-conditioned CLS \\mathrm{CLS} state to distinguish the cited result from the uncited one, and encourages the gist representation to retain evidence useful for that distinction. Let h cls ( q , j ) h_{\\mathrm{cls}}^{(q,j)} denote the final hidden state at CLS \\mathrm{CLS} . A lightweight scoring head assigns s j = 𝐰 pair ⊤ ​ h cls ( q , j ) + b pair . s_{j}=\\mathbf{w}_{\\mathrm{pair}}^{\\top}h_{\\mathrm{cls}}^{(q,j)}+b_{\\mathrm{pair}}. (7)",
+      "source": "https://arxiv.org/html/2610.39610v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0017",
+      "section": "4.2 Stage 2: Discriminative Capability",
+      "text": "Let ℳ \\mathcal{M} be the set of valid cited–uncited pairs within the same query in a training batch. We optimize a pairwise hinge loss: ℒ pair = 1 | ℳ | + ϵ ​ ∑ ( j + , j − ) ∈ ℳ [ 1 − ( s j + − s j − ) ] + . \\mathcal{L}_{\\mathrm{pair}}=\\frac{1}{|\\mathcal{M}|+\\epsilon}\\sum_{(j_{+},j_{-})\\in\\mathcal{M}}\\big[1-(s_{j_{+}}-s_{j_{-}})\\big]_{+}. (8) Here, [ z ] + = max ⁡ ( z , 0 ) [z]_{+}=\\max(z,0) , the margin is fixed to 1, and ϵ = 10 − 9 \\epsilon=10^{-9} . A batch without a valid cited–uncited pair contributes zero pairwise loss.",
+      "source": "https://arxiv.org/html/2610.39610v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0018",
+      "section": "4.3 Stage 3: Listwise Ranking",
+      "text": "Stage 3 adapts the learned gist representations to joint listwise ranking using the GPT-4o-annotated candidate orderings provided by Liu et al. (2025d) . (i) Compression phase. We independently encode each query–passage pair as: [ x ⁡ ( q ) ; x ⁡ ( p j ) ; g 0 , … , g K − 1 ] . [\\,x(q);\\,x(p_{j});\\,g_{0},\\ldots,g_{K-1}\\,]. Unlike Stage 2, the query now precedes the gist tokens, so their states can encode query-conditioned passage information. Before compression, we add a learned document-position embedding to each gist-token input embedding: 𝐮 ~ j , k = 𝐮 ( g k ) + 𝐄 j − 1 doc , k = 0 , … , K − 1 , \\widetilde{\\mathbf{u}}_{j,k}=\\mathbf{u}(g_{k})+\\mathbf{E}^{\\mathrm{doc}}_{j-1},\\qquad k=0,\\ldots,K-1, (9) where j j is the candidate’s position in the input list and the embedding table is indexed from zero. From this forward pass, we retain both the layer-wise gist keys and values and the final normalized gist hidden states. (ii) Rank phase. We assemble the candidates’ gist slots into a single rank prompt followed by rank slots. At each transformer layer, the keys and values are replaced with those produced by the corresponding gist tokens; the keys use the slots’ positions in the rank prompt for RoPE. The rank forward uses standard causal and padding masks. Let 𝐫 i \\mathbf{r}_{i} be the final hidden state of the i i -th rank slot, and let 𝐞 j = K − 1 ​ ∑ k = 0 K − 1 𝐡 j , k comp \\mathbf{e}_{j}=K^{-1}\\sum_{k=0}^{K-1}\\mathbf{h}^{\\mathrm{comp}}_{j,k} be the mean of candidate j j ’s final normalized gist states. We score candidate j j at output position i i by s i ​ j = 𝐫 i ⊤ ​ 𝐞 j D , s_{ij}=\\frac{\\mathbf{r}_{i}^{\\top}\\mathbf{e}_{j}}{\\sqrt{D}}, (10) where D D is the hidden dimension.",
+      "source": "https://arxiv.org/html/2610.39610v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0019",
+      "section": "4.3 Stage 3: Listwise Ranking",
+      "text": "In Stage 2, the gist represents the passage before seeing the query, so the query-conditioned CLS \\mathrm{CLS} state performs the discriminative comparison. In Stage 3, the gist itself is query-conditioned; mean pooling yields one candidate vector shared across output positions, while the rank states capture listwise context. For N ′ N^{\\prime} valid candidates, let π ⁡ ( i ) \\pi(i) identify the candidate at teacher rank i i . We optimize a rank-slot formulation of ListMLE Xia et al. (2008) : ℒ list = − 1 N ′ ∑ i = 1 N ′ log exp ⁡ ( s i , π ⁡ ( i ) ) ∑ j ∈ 𝒜 i exp ⁡ ( s i ​ j ) , \\mathcal{L}_{\\mathrm{list}}=-\\frac{1}{N^{\\prime}}\\sum_{i=1}^{N^{\\prime}}\\log\\frac{\\exp(s_{i,\\pi(i)})}{\\sum_{j\\in\\mathcal{A}_{i}}\\exp(s_{ij})}, (11) Here, 𝒜 i = { π ⁡ ( i ) , … , π ⁡ ( N ′ ) } \\mathcal{A}_{i}=\\{\\pi(i),\\ldots,\\pi(N^{\\prime})\\} contains the remaining teacher candidates. Gradients reach compression through pooled gist states and injected layer-wise keys and values. At inference, each rank slot selects the highest-scoring unselected candidate. Padded candidates are excluded from loss and selection.",
+      "source": "https://arxiv.org/html/2610.39610v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0020",
+      "section": "Evaluation Datasets.",
+      "text": "We utilized the TREC DL 2019 ( Craswell et al., 2020 ) and TREC DL 2020 ( Craswell et al., 2021 ) datasets for our evaluation experiments, and also employed various datasets from the BEIR benchmark ( Thakur et al., 2021 ) for performance comparisons. Specifically, we selected five publicly available subsets from the BEIR collection (including Covid, DBPedia, SciFact, NFCorpus and Touche) to conduct evaluations.",
+      "source": "https://arxiv.org/html/2610.39610v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0021",
+      "section": "Baselines.",
+      "text": "For the primary efficiency experiments, we used Qwen3-4B ( Yang et al., 2025 ) as the base model and performed Supervised Fine-Tuning (SFT) on the same training set using two approaches: full-context ranking and ranking based on a summary extracted via BM25 for each passage. Each SFT model was implemented in both full-context and sliding-window variants, serving as direct benchmarks for efficiency. Regarding performance experiments, in addition to the basic BM25 Robertson and Zaragoza (2009) baseline, we included the following models for comparison spanning pointwise, sliding-window, full-context, and embedding-based approaches: monoBERT (340M) ( Nogueira and Cho, 2019 ) , monoT5 (220M) ( Nogueira et al., 2020 ) , RankT5 (3B) ( Zhuang et al., 2024 ) , RankVicuna (7B) ( Pradeep et al., 2023a ) , RankZephyr (7B) ( Pradeep et al., 2023b ) , FullRank 100 (7B) ( Liu et al., 2025d ) , and PE-Rank BM25 (7B) ( Liu et al., 2025a ) . MonoBERT, monoT5, RankT5, PE-Rank and FullRank were trained on annotated query-passage pairs from the MS MARCO training set, whereas RankVicuna and RankZephyr were derived from ranking lists generated by GPT-4.",
+      "source": "https://arxiv.org/html/2610.39610v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0022",
+      "section": "Metrics.",
+      "text": "We evaluate our method from two perspectives: efficiency and retrieval quality. For efficiency, we report three metrics: • P50 latency (ms/query) is the median end-to-end wall-clock time per query, reflecting the responsiveness perceived by users in online serving. • TFLOPs/query is the number of floating-point operations per query, expressed in trillions, indicating how effectively a method utilizes the available compute. • Relative latency is the ratio of a baseline’s P50 latency to that of GistRank under the same evaluation environment. For effectiveness, we adopt nDCG@10 , which jointly assesses the relevance and the ranking order of the top-10 retrieved results, rewarding methods that place highly relevant documents near the top of the list.",
+      "source": "https://arxiv.org/html/2610.39610v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0023",
+      "section": "Implementation Details.",
+      "text": "We adopt Qwen3-4B-Base as the backbone to study efficient listwise reranking with a compact open-source language model. The backbone provides a 32k context window. For Stage 3, we reuse the MS MARCO-based candidate lists and GPT-4o-annotated teacher permutations provided by Liu et al. (2025d) , using a single training epoch by default. The controlled full-text, summary, and gist variants use the same Stage 3 training examples and teacher permutations. We compress each passage into 4 gist tokens, and adopt a listwise ranking window of size 100 100 . The model is optimized with a micro batch size of 1 1 and a global batch size of 8 8 , using a learning rate of 5 × 10 − 6 5\\times 10^{-6} . Training is conducted on a single node with 8 × \\times H20 GPUs using the DeepSpeed framework ( Rasley et al., 2020 ) and bfloat16 mixed precision. All evaluations, including both effectiveness and latency measurements, are performed on a single H20 GPU. DL19 DL20 Model Strategy P50 (ms) TFLOPs/q Relative latency P50 (ms) TFLOPs/q Relative latency Qwen3-SFT-Full Sliding window 43,304 132.34 26.65 × \\times 32,093 132.24 19.64 × \\times Qwen3-SFT-Full One-shot full list 22,827 71.44 14.05 × \\times 22,760 71.62 13.93 × \\times Qwen3-SFT-Summary Sliding window 42,169 56.95 25.95 × \\times 30,595 55.31 18.72 × \\times Qwen3-SFT-Summary One-shot full list 18,312 28.35 11.27 × \\times 18,305 28.22 11.20 × \\times GistRank Gist 1,625 158.66 (85.05) 1.00 × \\times 1,634 160.16 (86.12) 1.00 × \\times Table 1: Efficiency comparison on DL19 and DL20. Relative latency is each method’s P50 divided by that of GistRank . Parentheses give FLOPs excluding padding. Latencies cover the complete reranking pipeline.",
+      "source": "https://arxiv.org/html/2610.39610v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0024",
+      "section": "Implementation Details.",
+      "text": "Models Strategies DL19 DL20 Covid DBPedia SciFact NFCorpus Touché Avg. BM25 – 50.58 47.96 59.47 31.80 67.89 33.75 44.22 47.95 monoBERT(340M) Pointwise 70.72 67.28 73.45 41.69 62.22 34.92 30.26 54.36 monoT5(220M) Pointwise 70.58 67.33 75.94 42.43 65.07 35.42 46.98 57.68 RankT5(3B) Pointwise 72.29 69.14 79.03 44.85 74.60 38.19 34.66 58.97 RankVicuna(7B) Sliding 67.72 65.98 79.19 44.51 70.67 34.51 33.00 56.51 RankZephyr(7B) Sliding 73.39 70.02 82.92 44.42 75.42 31.41 30.22 58.26 FullRank 100 (7B) Full 72.55 71.29 82.24 43.54 77.04 39.14 34.63 60.06 PE-Rank BM25 (7B) Embedding 70.48 63.54 77.72 40.05 69.38 36.39 33.06 55.80 Qwen3-SFT-Full Sliding 72.83 69.47 77.67 42.18 74.68 37.50 30.24 57.80 Full 72.58 68.30 76.52 41.70 73.34 36.17 31.57 57.17 Qwen3-SFT-Summary Sliding 64.25 58.59 67.18 36.09 70.08 33.33 31.11 51.52 Full 64.45 61.14 69.11 35.60 70.34 33.58 32.19 52.34 GistRank Gist Token 73.88 70.82 82.42 43.20 75.46 36.27 32.15 59.17 Table 2: Effectiveness nDCG@10 results across seven datasets. Bold represents the best results, while underlined denotes the second-best.",
+      "source": "https://arxiv.org/html/2610.39610v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0025",
+      "section": "5.2 Efficiency Performance",
+      "text": "In this section, we conduct efficiency experiments on DL19 and DL20 to verify that GistRank substantially accelerates listwise ranking, which is the central motivation of this work. Specifically, we rerank the top-100 passages retrieved by BM25 and compare three ranking regimes: the conventional sliding window (with a window size of 20 and a step size of 10), full ranking that consumes the entire list in a single pass, and our gist-token ranking. As controlled full-context baselines, we build two SFT variants on the same Qwen3-4B backbone as GistRank : one that serializes every passage verbatim, and one that first condenses each passage into a BM25-extracted summary. We report end-to-end P50 latency, TFLOPs per query, and relative latency with respect to GistRank . When calculating the TFLOPs for GistRank , we report both the computational cost associated with the padding process and the computational cost attributed to the actual padded tokens.",
+      "source": "https://arxiv.org/html/2610.39610v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0026",
+      "section": "5.2 Efficiency Performance",
+      "text": "Table 1 reports the corrected SFT efficiency measurements on DL19 and DL20. One-shot full-list ranking consistently achieves lower latency than sliding-window ranking. On DL19, processing the full list reduces P50 latency from 43,304 ms to 22,827 ms, and using BM25 passage summaries further lowers it to 18,312 ms. The corresponding DL20 latencies are 32,093 ms, 22,760 ms, and 18,305 ms. These results suggest that repeated processing of overlapping passages and input length both contribute to ranking latency. GistRank compresses the candidates into gist states and performs joint ranking in one non-autoregressive forward pass, with total P50 latencies of 1,625 ms on DL19 and 1,634 ms on DL20, including candidate compression and KV assembly. Relative to one-shot full-text ranking, these latencies give 14.05 × \\times /13.93 × \\times speedups; relative to full-text sliding-window ranking, the factors are 26.65 × \\times /19.64 × \\times . The corresponding factors for summary-based one-shot and sliding-window ranking are 11.27 × \\times /11.20 × \\times and 25.95 × \\times /18.72 × \\times , respectively. The gains reflect the complete inference procedure, including batched candidate compression and non-autoregressive ranking, rather than the isolated effect of shortening the rank prompt. Therefore, GistRank demonstrates a significant efficiency advantage throughout the entire inference process.",
+      "source": "https://arxiv.org/html/2610.39610v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0027",
+      "section": "5.3 Effectiveness Performance",
+      "text": "In this section, we evaluate the ranking effectiveness of GistRank . We rerank the top-100 passages retrieved by BM25 and report nDCG@10 on seven datasets, including the two TREC deep-learning sets DL19 and DL20 as well as five BEIR subsets covering diverse domains, namely TREC-COVID, DBPedia, SciFact, NFCorpus, and Touché. We compare against a broad set of baselines that spans pointwise, sliding-window, full-context, and embedding-based models, and further include two Qwen3-4B variants trained under full-context and summary-based settings. Finally, we report the nDCG@10 results for each subset, as well as the average performance across the seven datasets.",
+      "source": "https://arxiv.org/html/2610.39610v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0028",
+      "section": "5.3 Effectiveness Performance",
+      "text": "The results are presented in Table 2 . Despite compressing each passage into only a few gist tokens, GistRank achieves an average nDCG@10 of 59.17, ranking second among all evaluated methods and trailing the strongest baseline, FullRank 100 , by 0.89 points. On the in-domain TREC datasets, GistRank achieves the highest score on DL19 at 73.88 and the second-highest score on DL20 at 70.82. These results suggest that compact gist representations retain relevance information needed for effective ranking. Compared with the Qwen3-SFT-Full baselines built on the same backbone, GistRank improves average nDCG@10 by 1.37 points over sliding-window ranking and 2.00 points over full-list ranking, demonstrating that its compact representations support competitive effectiveness even when compared with methods that retain the original passage text. In Section 5.4 , we establish a more direct performance reference by employing a full-text rank slot variant based on the uncompressed outputs from Stage 2. The comparison with Qwen3-SFT-Summary further highlights the effectiveness of learned soft compression: GistRank exceeds the summary-based baselines by 6.83–7.65 points on average. This gap suggests that learned gist representations preserve ranking-relevant information more effectively than BM25-extracted summaries. On the out-of-domain five BEIR datasets, performance varies across domains, but GistRank remains competitive on Covid and DBPedia, achieving scores of 82.42 and 43.20, respectively. Its overall average also exceeds those of the evaluated baselines, although individual methods retain advantages on particular datasets. These results indicate that GistRank can significantly reduce ranking latency while still maintaining robust overall ranking performance.",
+      "source": "https://arxiv.org/html/2610.39610v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0029",
+      "section": "5.3 Effectiveness Performance",
+      "text": "Configuration Candidate input DL19 DL20 COVID DBPedia SciFact NFCorpus Touché Avg. Stage 1 → \\rightarrow Stage 2 → \\rightarrow Stage 3 ( GistRank ) Gist 73.88 70.82 82.42 43.20 75.46 36.27 32.15 59.17 Stage 1 → \\rightarrow Stage 3 (w/o Stage 2) Gist 71.34 66.55 80.61 41.19 72.74 34.11 30.23 56.68 Matched full-text reference Full text 75.15 67.86 80.24 45.02 74.99 36.53 40.80 60.09 Table 3: Ablation results in nDCG@10 across seven datasets. The full-text reference shares the Stage 2 initialization, Stage 3 training data, hyperparameters, training steps, and rank-slot readout with GistRank . Inference stage DL19 DL20 Latency Computation Latency Computation Mean (ms) Share TFLOPs/q Share Mean (ms) Share TFLOPs/q Share Candidate compression 1,450.23 92.85% 149.09 93.97% 1,463.74 92.89% 150.59 94.03% KV assembly 1.30 0.08% – – 1.32 0.08% – – Joint ranking + scoring 110.39 7.07% 9.56 6.03% 110.69 7.02% 9.57 5.97% Total 1,561.93 100% 158.66 100% 1,575.75 100% 160.16 100% Table 4: Stage-wise inference cost of GistRank on DL19 and DL20. Latency is reported as the per-query mean. Computation include padding and exclude KV assembly. Input-order variant DL19 DL20 Shuffled order 73.95 70.24 Original order 73.88 70.82 Table 5: Input-order for GistRank : nDCG@10 with shuffled and original candidate orders.",
+      "source": "https://arxiv.org/html/2610.39610v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0030",
+      "section": "5.4 Ablation Study",
+      "text": "Table 3 examines the contribution of Stage 2 and the effectiveness retained by gist compression. Since Stage 3 provides the listwise training required by the final ranking task, we retain it in both gist variants and ablate only Stage 2. Removing Stage 2 reduces average nDCG@10 from 59.17 to 56.68, a decrease of 2.49 points, with degradation across all seven datasets. The largest drop occurs on DL20, from 70.82 to 66.55, followed by SciFact, from 75.46 to 72.74. These consistent improvements suggest that learning to compress passages in Stage 1 does not fully capture the discriminative information needed for ranking, and that the citation-derived preference supervision in Stage 2 provides a useful initialization for subsequent listwise training. At the same time, the variant without Stage 2 remains competitive after Stage 3, indicating that Stage 2 strengthens ranking effectiveness rather than being a prerequisite for learning the ranking task.",
+      "source": "https://arxiv.org/html/2610.39610v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0031",
+      "section": "5.4 Ablation Study",
+      "text": "The matched full-text reference shares the Stage 2 initialization, Stage 3 data, hyperparameters, training steps, and 100-rank-slot readout with GistRank . Both compute the two-dimensional scores s i ​ j = 𝐫 i ⊤ ​ 𝐞 j / D s_{ij}=\\mathbf{r}_{i}^{\\top}\\mathbf{e}_{j}/\\sqrt{D} from Equation 10 , optimize the same ListMLE objective, and use identical permutation selection. Only the candidate representation changes from explicit passage content to gist tokens. We use this as a full-text baseline under the same configuration, serving as no compression effectiveness reference, while ensuring that no context window overflow occurs. The full-text reference obtains 60.09 average nDCG@10 versus 59.17 for GistRank , a difference of 0.92 points. This result shows that gist compression retains much of the effectiveness achievable by the same scoring design with access to explicit passage content. Moreover, we evaluate input order as an inference-time variant by shuffling the candidate list before reranking. Table 5 compares this variant with the original input order on DL19 and DL20. Shuffling changes nDCG@10 from 73.88 to 73.95 on DL19 and from 70.82 to 70.24 on DL20. These small changes, with opposite directions across datasets, suggest that GistRank has limited sensitivity to the initial candidate order in this experiment. This is consistent with ranking decisions guided by query-conditioned candidate representations rather than dominated by the original retrieval order. This demonstrates that our method is robust to the ordering of input positions.",
+      "source": "https://arxiv.org/html/2610.39610v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0032",
+      "section": "5.5 Inference-cost accounting",
+      "text": "We analyze the inference cost of GistRank by separating candidate compression, KV assembly, and joint ranking. Latency measurements cover the complete reranking pipeline, from processing the query and candidate passages to producing the final ranked candidate list. Table 4 shows that candidate compression dominates inference latency, accounting for approximately 92.9% of total time on both datasets. Its mean latency is 1,450.23 ms on DL19 and 1,463.74 ms on DL20, whereas joint ranking requires only 110.39 ms and 110.69 ms, respectively. KV assembly contributes less than 0.1% of total time. Including all three stages, total P50 latency is 1,624.66 ms on DL19 and 1,634.37 ms on DL20. These results show that gist representations make listwise ranking inexpensive, with query-conditioned candidate encoding accounting for most of the remaining overhead. The computation breakdown follows the same pattern. Candidate compression requires 149.09 and 150.59 TFLOPs/q on DL19 and DL20, accounting for approximately 94% of total estimated operations. Joint ranking requires only 9.56 and 9.57 TFLOPs/q, bringing the totals to 158.66 and 160.16 TFLOPs/q. Although these totals exceed those of the one-shot baselines, GistRank achieves lower latency through batched candidate compression and joint ranking over compact gist states. The stage-wise results identify candidate compression as the main target for further latency improvements.",
+      "source": "https://arxiv.org/html/2610.39610v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0033",
+      "section": "5.6 Parameter Analysis",
+      "text": "In this section, we analyze the effect of the number of gist tokens K K , which is used to compress each passage in Stage 3. This critical hyperparameter controls the number of inserted gist tokens, representing the trade-off between the compression rate and the amount of relevance signal preserved for each segment. To isolate the general representational capacity of gist tokens, we remove the explicit query q q from the Stage 3 ranking format and retrain the model while keeping all other settings fixed. This diagnostic evaluates whether the compressed passage states themselves remain useful for ranking. We vary K ∈ { 1 , 2 , 4 , 8 , 16 , 32 , 128 } K\\in\\{1,2,4,8,16,32,128\\} and report the average nDCG@10 across all seven evaluation datasets. Figure 3: Parameter analysis across seven datasets. Performance rises sharply up to K = 4 K=4 and then saturates, making K = 4 K=4 a favorable efficiency–effectiveness trade-off. The results are presented in Figure 3 . Performance increases rapidly when K K grows from 1 1 to 4 4 , showing that a small number of gist tokens is sufficient to recover useful passage signal. After K = 4 K=4 , however, the curve enters a clear saturation region: adding more gist tokens brings only marginal gains while increasing the context length and computation. This diminishing return suggests that larger gist representations provide limited additional benefit for ranking, while requiring the joint rank phase to process more candidate-token positions. We therefore view K = 4 K=4 as the elbow point of the efficiency–effectiveness trade-off. It preserves sufficient ranking quality while keeping the representation compact, and we adopt K = 4 K=4 as the default hyperparameter.",
+      "source": "https://arxiv.org/html/2610.39610v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0034",
+      "section": "5.7 Token Cost",
+      "text": "Case Study: “causes of left ventricular hypertrophy” (a) Full Context 115 tokens Chamber Hypertrophy and Enlargement. In hypertrophy the heart muscle becomes thicker. ⋯ \\cdots a congenital misalignment of cardiomyocytes, resulting in hypertrophy. (b) BM25 Summary 28 tokens Left ventricular hypertrophy results from an increase in left ventricular workload, e.g., during hypertension or aortic valve stenosis. (c) GistRank 4 tokens <|gist_0|> <|gist_1|> <|gist_2|> <|gist_3|> Figure 4: A single DL19 candidate passage under the three ranking protocols. Full Context feeds the whole passage (115 tokens, abbreviated here), BM25 Summary keeps one 28-token sentence, and GistRank represents the passage with K = 4 K{=}4 gist tokens. Strategy Per-psg. Prompt ( N = 100 N{=}100 ) Reduct. DL19 DL20 Full 79 8,358 8,590 1.0 × \\times Summary 26 3,015 2,884 2.8 × \\times Gist Token 4 1,253 1,254 6.8 × \\times Table 6: Rank-stage prompt length on DL19 and DL20 with N = 100 N{=}100 candidates. Representing each passage with four gist tokens reduces the full-list prompt to about 1.25k tokens, yielding a 6.7 × \\times /6.9 × \\times reduction over full-context serialization.",
+      "source": "https://arxiv.org/html/2610.39610v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0035",
+      "section": "5.7 Token Cost",
+      "text": "In this section, we quantify the rank-stage token cost to explain, at the token level, why GistRank is both faster and more predictable than the baselines. As shown in Table 6 , we measure the rank-stage prompt length on DL19 and DL20 for N = 100 N{=}100 passages. At the per-passage level, serializing a passage verbatim consumes about 79 tokens and a BM25 summary about 26, whereas GistRank represents each passage with only 4 gist tokens in the rank phase. This propagates to the full listwise rank input: over the N = 100 N{=}100 candidates, the median full-text prompt spans more than 8,000 tokens on both DL19 and DL20 and the summary prompt around 3,000, while GistRank needs only about 1,250. This result shows that GistRank drastically reduces the context length of the listwise rank phase. A more distinctive property of GistRank is that every candidate contributes exactly K K gist slots regardless of its raw length. This near-constant rank-phase length makes the downstream latency, the KV-cache footprint, and the batching throughput more predictable.",
+      "source": "https://arxiv.org/html/2610.39610v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0036",
+      "section": "5.7 Token Cost",
+      "text": "Figure 4 makes this compression concrete by rendering one candidate passage under the three protocols. The full text keeps all 115 tokens, the summary retains only the single sentence that directly answers the query, and GistRank collapses the whole passage into 4 gist tokens. Although the summary happens to preserve the answering sentence, it discards the passage’s discussion of alternative causes that a ranker may need to distinguish this candidate from its competitors; GistRank keeps the discriminative signal that Stage 2 is trained to preserve by a fixed number of gist tokens. By combining a fixed-size ranking representation with competitive ranking performance and low inference latency, GistRank offers predictable rank-stage costs and practical potential for deployment in search systems.",
+      "source": "https://arxiv.org/html/2610.39610v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0037",
+      "section": "6 Conclusion",
+      "text": "In this paper, we introduce GistRank , a three-stage training framework for gist-compressed listwise ranking. The framework combines query-predictive gist learning, citation-derived pairwise supervision, and listwise adaptation to optimize compact passage representations for relevance ranking. Experiments on TREC DL19/20 and five BEIR subsets show that GistRank achieves competitive average nDCG@10. GistRank reduces reranking latency relative to autoregressive SFT baselines, while approaching the effectiveness of a full-text reference with the same rank-slot scoring procedure. These results highlight the potential of GistRank for efficient deployment in practical search systems. The inference-cost breakdown shows that candidate compression accounts for most of the remaining latency, motivating further optimization of this stage. Future work will investigate query-independent passage compression that allows gist states to be precomputed and reused across queries.",
+      "source": "https://arxiv.org/html/2610.39610v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0038",
+      "section": "References",
+      "text": "Burges (2010) C. J. Burges From ranknet to lambdarank to lambdamart: an overview . Learning 11 ( 23-581 ), pp. 81 . Cited by: §2.1 . Cao et al. (2007) Z. Cao, T. Qin, T. Liu, M. Tsai, and H. Li Learning to rank: from pairwise approach to listwise approach . In Proceedings of the 24th international conference on Machine learning , pp. 129–136 . Cited by: §2.1 . Cheng et al. (2024) X. Cheng, X. Wang, X. Zhang, T. Ge, S. Chen, F. Wei, H. Zhang, and D. Zhao Xrag: extreme context compression for retrieval-augmented generation with one token . Advances in Neural Information Processing Systems 37 , pp. 109487–109516 . Cited by: §2.2 . Chevalier et al. (2023) A. Chevalier, A. Wettig, A. Ajith, and D. Chen Adapting language models to compress contexts . In Proceedings of the 2023 Conference on Empirical Methods in Natural Language Processing , pp. 3829–3846 . Cited by: §2.2 . Craswell et al. (2020) N. Craswell, B. Mitra, E. Yilmaz, D. Campos, and E. M. Voorhees Overview of the trec 2019 deep learning track . External Links: 2003.07820 , Link Cited by: §5.1 . Craswell et al. (2021) N. Craswell, B. Mitra, E. Yilmaz, and D. Campos Overview of the trec 2020 deep learning track . External Links: 2102.07662 , Link Cited by: §5.1 . Deng et al. (2025) C. Deng, Z. Zhang, K. Mao, S. Li, X. Huang, D. Yu, and Z. Dou A silver bullet or a compromise for full attention? a comprehensive study of gist token-based context compression . In Proceedings of the 63rd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) , pp. 4861–4879 . Cited by: §1 , §2.2 . Feng et al. (2026) J. Feng, W. Liu, and Z. Dou SumRank: aligning summarization models for long-document listwise reranking . arXiv preprint arXiv:2603.24204 . Cited by: §1 .",
+      "source": "https://arxiv.org/html/2610.39610v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0039",
+      "section": "References",
+      "text": "Ge et al. (2023) T. Ge, J. Hu, L. Wang, X. Wang, S. Chen, and F. Wei In-context autoencoder for context compression in a large language model . arXiv preprint arXiv:2307.06945 . Cited by: §1 , §2.2 . Li et al. (2025) Z. Li, Y. Su, and N. Collier 500xcompressor: generalized prompt compression for large language models . In Proceedings of the 63rd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) , pp. 25081–25091 . Cited by: §2.2 . Liu et al. (2024) N. F. Liu, K. Lin, J. Hewitt, A. Paranjape, M. Bevilacqua, F. Petroni, and P. Liang Lost in the middle: how language models use long contexts . Transactions of the association for computational linguistics 12 , pp. 157–173 . Cited by: §1 . Liu et al. (2025a) Q. Liu, B. Wang, N. Wang, and J. Mao Leveraging passage embeddings for efficient listwise reranking with large language models . In Proceedings of the ACM on Web Conference 2025 , pp. 4274–4283 . Cited by: §1 , §5.1 . Liu et al. (2025b) W. Liu, X. Ma, W. Sun, Y. Zhu, Y. Li, D. Yin, and Z. Dou Reasonrank: empowering passage ranking with strong reasoning ability . arXiv preprint arXiv:2508.07050 . Cited by: §2.1 . Liu et al. (2025c) W. Liu, X. Ma, Y. Zhu, L. Su, S. Wang, D. Yin, and Z. Dou Coranking: collaborative ranking with small and large ranking agents . arXiv preprint arXiv:2503.23427 . Cited by: §2.1 . Liu et al. (2025d) W. Liu, X. Ma, Y. Zhu, Z. Zhao, S. Wang, D. Yin, and Z. Dou Sliding windows are not the end: exploring full ranking with long-context large language models . In Proceedings of the 63rd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) , pp. 162–176 . Cited by: §1 , §4.3 , §5.1 , §5.1 .",
+      "source": "https://arxiv.org/html/2610.39610v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0040",
+      "section": "References",
+      "text": "Liu et al. (2026) W. Liu, Y. Zhu, Z. Dou, and Y. Zhou Demorank: selecting effective demonstrations for large language models in ranking task . ACM Transactions on Information Systems 44 ( 3 ), pp. 1–25 . Cited by: §2.1 . Lu et al. (2025) S. Lu, H. Wang, Y. Rong, Z. Chen, and Y. Tang Turborag: accelerating retrieval-augmented generation with precomputed kv caches for chunked text . In Proceedings of the 2025 Conference on Empirical Methods in Natural Language Processing , pp. 6599–6612 . Cited by: §2.2 . Lu et al. (2026) X. Lu, H. Huang, Y. Fan, J. Tong, Y. Zhang, P. Nie, R. Meng, and X. Shen CompRank: efficient llm reranking via token-level compression and decoding-free scoring . arXiv preprint arXiv:2606.11700 . Cited by: §2.2 . Ma et al. (2023) X. Ma, X. Zhang, R. Pradeep, and J. Lin Zero-shot listwise document reranking with a large language model . arXiv preprint arXiv:2305.02156 . Cited by: §1 . Mao et al. (2026) Y. Mao, M. Y. Li, and E. B. Fox Forget, then recall: learnable compression and selective unfolding via gist sparse attention . arXiv preprint arXiv:2604.20920 . Cited by: §2.2 . Mu et al. (2023) J. Mu, X. Li, and N. Goodman Learning to compress prompts with gist tokens . Advances in Neural Information Processing Systems 36 , pp. 19327–19352 . Cited by: §1 , §2.2 . Nogueira and Cho (2019) R. Nogueira and K. Cho Passage re-ranking with bert . arXiv preprint arXiv:1901.04085 . Cited by: §2.1 , §5.1 . Nogueira et al. (2020) R. Nogueira, Z. Jiang, R. Pradeep, and J. Lin Document ranking with a pretrained sequence-to-sequence model . In Findings of the association for computational linguistics: EMNLP 2020 , pp. 708–718 . Cited by: §2.1 , §5.1 .",
+      "source": "https://arxiv.org/html/2610.39610v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0041",
+      "section": "References",
+      "text": "Petrov et al. (2025) A. Petrov, M. Sandler, A. Zhmoginov, N. Miller, and M. Vladymyrov Long context in-context compression by getting to the gist of gisting . arXiv preprint arXiv:2504.08934 . Cited by: §2.2 . Pradeep et al. (2023a) R. Pradeep, S. Sharifymoghaddam, and J. Lin Rankvicuna: zero-shot listwise document reranking with open-source large language models . arXiv preprint arXiv:2309.15088 . Cited by: §1 , §5.1 . Pradeep et al. (2023b) R. Pradeep, S. Sharifymoghaddam, and J. Lin Rankzephyr: effective and robust zero-shot listwise reranking is a breeze! . arXiv preprint arXiv:2312.02724 . Cited by: §1 , §5.1 . Qin et al. (2024) Z. Qin, R. Jagerman, K. Hui, H. Zhuang, J. Wu, L. Yan, J. Shen, T. Liu, J. Liu, D. Metzler, et al. Large language models are effective text rankers with pairwise ranking prompting . In Findings of the Association for Computational Linguistics: NAACL 2024 , pp. 1504–1518 . Cited by: §2.1 . Rasley et al. (2020) J. Rasley, S. Rajbhandari, O. Ruwase, and Y. He Deepspeed: system optimizations enable training deep learning models with over 100 billion parameters . In Proceedings of the 26th ACM SIGKDD international conference on knowledge discovery & data mining , pp. 3505–3506 . Cited by: §5.1 . Reddy et al. (2024) R. G. Reddy, J. Doo, Y. Xu, M. A. Sultan, D. Swain, A. Sil, and H. Ji FIRST: faster improved listwise reranking with single token decoding . In Proceedings of the 2024 Conference on Empirical Methods in Natural Language Processing , pp. 8642–8652 . Cited by: §2.1 . Robertson and Zaragoza (2009) S. Robertson and H. Zaragoza The probabilistic relevance framework: bm25 and beyond . Vol. 4 , Now Publishers Inc . Cited by: §5.1 .",
+      "source": "https://arxiv.org/html/2610.39610v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0042",
+      "section": "References",
+      "text": "Sun et al. (2023) W. Sun, L. Yan, X. Ma, S. Wang, P. Ren, Z. Chen, D. Yin, and Z. Ren Is chatgpt good at search? investigating large language models as re-ranking agents . In Proceedings of the 2023 conference on empirical methods in natural language processing , pp. 14918–14937 . Cited by: §1 , §2.1 . Tarasov et al. (2025) D. Tarasov, E. Goncharova, and K. Andrey Sentence-anchored gist compression for long-context llms . arXiv preprint arXiv:2511.08128 . Cited by: §2.2 , §4.1 . Thakur et al. (2021) N. Thakur, N. Reimers, A. Rücklé, A. Srivastava, and I. Gurevych Beir: a heterogenous benchmark for zero-shot evaluation of information retrieval models . arXiv preprint arXiv:2104.08663 . Cited by: §5.1 . Xia et al. (2008) F. Xia, T. Liu, J. Wang, W. Zhang, and H. Li Listwise approach to learning to rank: theory and algorithm . In Proceedings of the 25th international conference on Machine learning , pp. 1192–1199 . Cited by: §2.1 , §4.3 . Yang et al. (2025) A. Yang, A. Li, B. Yang, B. Zhang, B. Hui, B. Zheng, B. Yu, C. Gao, C. Huang, C. Lv, et al. Qwen3 technical report . arXiv preprint arXiv:2505.09388 . Cited by: §5.1 . Zhi et al. (2026) Z. Zhi, Y. Zhang, Y. Jing, X. Li, J. Liu, H. Liu, and Y. Ding Compress-then-rank: faster and better listwise reranking with large language models via ranking-aware passage compression . Cited by: §2.2 . Zhuang et al. (2024) H. Zhuang, Z. Qin, K. Hui, J. Wu, L. Yan, X. Wang, and M. Bendersky Beyond yes and no: improving zero-shot llm rankers via scoring fine-grained relevance labels . In Proceedings of the 2024 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies (Volume 2: Short Papers) , pp. 358–370 . Cited by: §2.1 , §5.1 .",
+      "source": "https://arxiv.org/html/2610.39610v1",
+      "offset": 0
+    }
+  ],
+  "links": [
+    {
+      "href": "#bib.bib14",
+      "text": "Sun et al., 2023",
+      "section": "1 Introduction",
+      "context": "Large language models have rapidly become a powerful tool for relevance ranking, where a single model is prompted with a query alongside an ordered list of candidate passages and asked to directly emit the permutation that best reflects their relevance ( Sun et al., 2023",
+      "url": "https://arxiv.org/html/2610.39610v1#bib.bib14"
+    },
+    {
+      "href": "#bib.bib15",
+      "text": "Ma et al., 2023",
+      "section": "1 Introduction",
+      "context": "Large language models have rapidly become a powerful tool for relevance ranking, where a single model is prompted with a query alongside an ordered list of candidate passages and asked to directly emit the permutation that best reflects their relevance ( Sun et al., 2023 ; Ma et al., 2023",
+      "url": "https://arxiv.org/html/2610.39610v1#bib.bib15"
+    },
+    {
+      "href": "#bib.bib7",
+      "text": "Pradeep et al., 2023a",
+      "section": "1 Introduction",
+      "context": "g, where a single model is prompted with a query alongside an ordered list of candidate passages and asked to directly emit the permutation that best reflects their relevance ( Sun et al., 2023 ; Ma et al., 2023 ; liu2026training ) . This listwise formulation lets the model reason jointly over all candidates and exploit cross-passage comparisons that pointwise and pairwise scorers cannot capture, and it has proven so effective that the capability of proprietary models has been distilled into compact open-source rankers that now serve as strong and reproducible baselines ( Pradeep et al., 2023a",
+      "url": "https://arxiv.org/html/2610.39610v1#bib.bib7"
+    },
+    {
+      "href": "#bib.bib8",
+      "text": "Pradeep et al., 2023b",
+      "section": "1 Introduction",
+      "context": "is prompted with a query alongside an ordered list of candidate passages and asked to directly emit the permutation that best reflects their relevance ( Sun et al., 2023 ; Ma et al., 2023 ; liu2026training ) . This listwise formulation lets the model reason jointly over all candidates and exploit cross-passage comparisons that pointwise and pairwise scorers cannot capture, and it has proven so effective that the capability of proprietary models has been distilled into compact open-source rankers that now serve as strong and reproducible baselines ( Pradeep et al., 2023a ; Pradeep et al., 2023b",
+      "url": "https://arxiv.org/html/2610.39610v1#bib.bib8"
+    },
+    {
+      "href": "#bib.bib16",
+      "text": "Liu et al., 2024",
+      "section": "1 Introduction",
+      "context": " now serve as strong and reproducible baselines ( Pradeep et al., 2023a ; Pradeep et al., 2023b ) . Driven by these successes, listwise ranking with large language models has quickly become a central paradigm in modern retrieval pipelines. However, in web search and retrieval-augmented applications, the response must also be produced within an inference budget. A conventional listwise reranker serializes the candidate passages into the ranking prompt. Its input grows with both the number and length of passages, even when the entire list fits inside the model’s context window ( Liu et al., 2024",
+      "url": "https://arxiv.org/html/2610.39610v1#bib.bib16"
+    },
+    {
+      "href": "#S1.F1",
+      "text": "1",
+      "section": "1 Introduction",
+      "context": "quickly become a central paradigm in modern retrieval pipelines. However, in web search and retrieval-augmented applications, the response must also be produced within an inference budget. A conventional listwise reranker serializes the candidate passages into the ranking prompt. Its input grows with both the number and length of passages, even when the entire list fits inside the model’s context window ( Liu et al., 2024 ) . A long candidate list, or passages that are individually long, quickly inflates inference latency, degrading both ranking quality and responsiveness. As shown in Figure 1",
+      "url": "https://arxiv.org/html/2610.39610v1#S1.F1"
+    },
+    {
+      "href": "#bib.bib14",
+      "text": "Sun et al., 2023",
+      "section": "1 Introduction",
+      "context": "in an inference budget. A conventional listwise reranker serializes the candidate passages into the ranking prompt. Its input grows with both the number and length of passages, even when the entire list fits inside the model’s context window ( Liu et al., 2024 ) . A long candidate list, or passages that are individually long, quickly inflates inference latency, degrading both ranking quality and responsiveness. As shown in Figure 1 , the prevailing remedy is to process the list through a sliding window that reranks overlapping blocks and propagates the ordering across passes ( Sun et al., 2023",
+      "url": "https://arxiv.org/html/2610.39610v1#bib.bib14"
+    },
+    {
+      "href": "#bib.bib10",
+      "text": "Liu et al., 2025d",
+      "section": "1 Introduction",
+      "context": "et. A conventional listwise reranker serializes the candidate passages into the ranking prompt. Its input grows with both the number and length of passages, even when the entire list fits inside the model’s context window ( Liu et al., 2024 ) . A long candidate list, or passages that are individually long, quickly inflates inference latency, degrading both ranking quality and responsiveness. As shown in Figure 1 , the prevailing remedy is to process the list through a sliding window that reranks overlapping blocks and propagates the ordering across passes ( Sun et al., 2023 ; Liu et al., 2025d",
+      "url": "https://arxiv.org/html/2610.39610v1#bib.bib10"
+    },
+    {
+      "href": "#bib.bib17",
+      "text": "Feng et al., 2026",
+      "section": "1 Introduction",
+      "context": "A promising solution is to compress each passage before ranking, for example, extracting a summary or embedding the passage ( Feng et al., 2026",
+      "url": "https://arxiv.org/html/2610.39610v1#bib.bib17"
+    },
+    {
+      "href": "#bib.bib11",
+      "text": "Liu et al., 2025a",
+      "section": "1 Introduction",
+      "context": "A promising solution is to compress each passage before ranking, for example, extracting a summary or embedding the passage ( Feng et al., 2026 ; Liu et al., 2025a",
+      "url": "https://arxiv.org/html/2610.39610v1#bib.bib11"
+    },
+    {
+      "href": "#bib.bib18",
+      "text": "Mu et al., 2023",
+      "section": "1 Introduction",
+      "context": "A promising solution is to compress each passage before ranking, for example, extracting a summary or embedding the passage ( Feng et al., 2026 ; Liu et al., 2025a ) . Besides, a family of soft-compression methods encodes long inputs into a handful of trainable gist tokens that retain the conditioning effect of the original text while drastically shortening the sequence ( Mu et al., 2023",
+      "url": "https://arxiv.org/html/2610.39610v1#bib.bib18"
+    },
+    {
+      "href": "#bib.bib19",
+      "text": "Ge et al., 2023",
+      "section": "1 Introduction",
+      "context": "A promising solution is to compress each passage before ranking, for example, extracting a summary or embedding the passage ( Feng et al., 2026 ; Liu et al., 2025a ) . Besides, a family of soft-compression methods encodes long inputs into a handful of trainable gist tokens that retain the conditioning effect of the original text while drastically shortening the sequence ( Mu et al., 2023 ; Ge et al., 2023",
+      "url": "https://arxiv.org/html/2610.39610v1#bib.bib19"
+    },
+    {
+      "href": "#bib.bib32",
+      "text": "Deng et al., 2025",
+      "section": "1 Introduction",
+      "context": "ng et al., 2026 ; Liu et al., 2025a ) . Besides, a family of soft-compression methods encodes long inputs into a handful of trainable gist tokens that retain the conditioning effect of the original text while drastically shortening the sequence ( Mu et al., 2023 ; Ge et al., 2023 ) . We argue that such compression is a natural fit for improving inference efficiency in ranking tasks, as it could replace each verbatim passage with a compact set of gist tokens. Prior work has in fact measured gist and KV-level compression on reranking and reported a large gap to full attention ( Deng et al., 2025",
+      "url": "https://arxiv.org/html/2610.39610v1#bib.bib32"
+    },
+    {
+      "href": "#bib.bib25",
+      "text": "Cao et al., 2007",
+      "section": "2.1 Listwise Ranking",
+      "context": "Ranking a candidate set as a whole rather than scoring documents in isolation has long been recognized as a principled formulation, and the earliest learning-to-rank approaches directly optimized list-level objectives that account for the relative ordering among all candidates ( Cao et al., 2007",
+      "url": "https://arxiv.org/html/2610.39610v1#bib.bib25"
+    },
+    {
+      "href": "#bib.bib26",
+      "text": "Xia et al., 2008",
+      "section": "2.1 Listwise Ranking",
+      "context": "Ranking a candidate set as a whole rather than scoring documents in isolation has long been recognized as a principled formulation, and the earliest learning-to-rank approaches directly optimized list-level objectives that account for the relative ordering among all candidates ( Cao et al., 2007 ; Xia et al., 2008",
+      "url": "https://arxiv.org/html/2610.39610v1#bib.bib26"
+    },
+    {
+      "href": "#bib.bib27",
+      "text": "Burges, 2010",
+      "section": "2.1 Listwise Ranking",
+      "context": "Ranking a candidate set as a whole rather than scoring documents in isolation has long been recognized as a principled formulation, and the earliest learning-to-rank approaches directly optimized list-level objectives that account for the relative ordering among all candidates ( Cao et al., 2007 ; Xia et al., 2008 ; Burges, 2010",
+      "url": "https://arxiv.org/html/2610.39610v1#bib.bib27"
+    },
+    {
+      "href": "#bib.bib5",
+      "text": "Nogueira and Cho, 2019",
+      "section": "2.1 Listwise Ranking",
+      "context": "ther than scoring documents in isolation has long been recognized as a principled formulation, and the earliest learning-to-rank approaches directly optimized list-level objectives that account for the relative ordering among all candidates ( Cao et al., 2007 ; Xia et al., 2008 ; Burges, 2010 ) . With the advent of pretrained language models, this paradigm was reframed as estimating relevance from deep contextualized interactions between a query and each document, first through cross-encoders that score pairs pointwise and then through sequence-to-sequence formulations ( Nogueira and Cho, 2019",
+      "url": "https://arxiv.org/html/2610.39610v1#bib.bib5"
+    },
+    {
+      "href": "#bib.bib6",
+      "text": "Nogueira et al., 2020",
+      "section": "2.1 Listwise Ranking",
+      "context": "nts in isolation has long been recognized as a principled formulation, and the earliest learning-to-rank approaches directly optimized list-level objectives that account for the relative ordering among all candidates ( Cao et al., 2007 ; Xia et al., 2008 ; Burges, 2010 ) . With the advent of pretrained language models, this paradigm was reframed as estimating relevance from deep contextualized interactions between a query and each document, first through cross-encoders that score pairs pointwise and then through sequence-to-sequence formulations ( Nogueira and Cho, 2019 ; Nogueira et al., 2020",
+      "url": "https://arxiv.org/html/2610.39610v1#bib.bib6"
+    },
+    {
+      "href": "#bib.bib9",
+      "text": "Zhuang et al., 2024",
+      "section": "2.1 Listwise Ranking",
+      "context": "ong been recognized as a principled formulation, and the earliest learning-to-rank approaches directly optimized list-level objectives that account for the relative ordering among all candidates ( Cao et al., 2007 ; Xia et al., 2008 ; Burges, 2010 ) . With the advent of pretrained language models, this paradigm was reframed as estimating relevance from deep contextualized interactions between a query and each document, first through cross-encoders that score pairs pointwise and then through sequence-to-sequence formulations ( Nogueira and Cho, 2019 ; Nogueira et al., 2020 ; Zhuang et al., 2024",
+      "url": "https://arxiv.org/html/2610.39610v1#bib.bib9"
+    },
+    {
+      "href": "#bib.bib21",
+      "text": "Reddy et al., 2024",
+      "section": "2.1 Listwise Ranking",
+      "context": "levance from deep contextualized interactions between a query and each document, first through cross-encoders that score pairs pointwise and then through sequence-to-sequence formulations ( Nogueira and Cho, 2019 ; Nogueira et al., 2020 ; Zhuang et al., 2024 ) . The emergence of large language models pushed this further by feeding an entire ordered list of passages into a single prompt and instructing the model to emit a permutation, which proved remarkably effective even in zero-shot settings and was subsequently distilled into smaller open models for practical deployment ( Reddy et al., 2024",
+      "url": "https://arxiv.org/html/2610.39610v1#bib.bib21"
+    },
+    {
+      "href": "#bib.bib22",
+      "text": "Qin et al., 2024",
+      "section": "2.1 Listwise Ranking",
+      "context": "ontextualized interactions between a query and each document, first through cross-encoders that score pairs pointwise and then through sequence-to-sequence formulations ( Nogueira and Cho, 2019 ; Nogueira et al., 2020 ; Zhuang et al., 2024 ) . The emergence of large language models pushed this further by feeding an entire ordered list of passages into a single prompt and instructing the model to emit a permutation, which proved remarkably effective even in zero-shot settings and was subsequently distilled into smaller open models for practical deployment ( Reddy et al., 2024 ; Qin et al., 2024",
+      "url": "https://arxiv.org/html/2610.39610v1#bib.bib22"
+    },
+    {
+      "href": "#bib.bib14",
+      "text": "Sun et al., 2023",
+      "section": "2.1 Listwise Ranking",
+      "context": "ce-to-sequence formulations ( Nogueira and Cho, 2019 ; Nogueira et al., 2020 ; Zhuang et al., 2024 ) . The emergence of large language models pushed this further by feeding an entire ordered list of passages into a single prompt and instructing the model to emit a permutation, which proved remarkably effective even in zero-shot settings and was subsequently distilled into smaller open models for practical deployment ( Reddy et al., 2024 ; Qin et al., 2024 ) . Subsequent methods have taken both accuracy and efficiency into account—for instance, sliding-window-based approaches ( Sun et al., 2023",
+      "url": "https://arxiv.org/html/2610.39610v1#bib.bib14"
+    },
+    {
+      "href": "#bib.bib20",
+      "text": "Liu et al., 2025b",
+      "section": "2.1 Listwise Ranking",
+      "context": ") . The emergence of large language models pushed this further by feeding an entire ordered list of passages into a single prompt and instructing the model to emit a permutation, which proved remarkably effective even in zero-shot settings and was subsequently distilled into smaller open models for practical deployment ( Reddy et al., 2024 ; Qin et al., 2024 ) . Subsequent methods have taken both accuracy and efficiency into account—for instance, sliding-window-based approaches ( Sun et al., 2023 ) , as well as those utilizing reinforcement learning or collaborative ranking ( Liu et al., 2025b",
+      "url": "https://arxiv.org/html/2610.39610v1#bib.bib20"
+    },
+    {
+      "href": "#bib.bib24",
+      "text": "Liu et al., 2025c",
+      "section": "2.1 Listwise Ranking",
+      "context": " large language models pushed this further by feeding an entire ordered list of passages into a single prompt and instructing the model to emit a permutation, which proved remarkably effective even in zero-shot settings and was subsequently distilled into smaller open models for practical deployment ( Reddy et al., 2024 ; Qin et al., 2024 ) . Subsequent methods have taken both accuracy and efficiency into account—for instance, sliding-window-based approaches ( Sun et al., 2023 ) , as well as those utilizing reinforcement learning or collaborative ranking ( Liu et al., 2025b ; Liu et al., 2025c",
+      "url": "https://arxiv.org/html/2610.39610v1#bib.bib24"
+    },
+    {
+      "href": "#bib.bib23",
+      "text": "Liu et al., 2026",
+      "section": "2.1 Listwise Ranking",
+      "context": "els pushed this further by feeding an entire ordered list of passages into a single prompt and instructing the model to emit a permutation, which proved remarkably effective even in zero-shot settings and was subsequently distilled into smaller open models for practical deployment ( Reddy et al., 2024 ; Qin et al., 2024 ) . Subsequent methods have taken both accuracy and efficiency into account—for instance, sliding-window-based approaches ( Sun et al., 2023 ) , as well as those utilizing reinforcement learning or collaborative ranking ( Liu et al., 2025b ; Liu et al., 2025c ; Liu et al., 2026",
+      "url": "https://arxiv.org/html/2610.39610v1#bib.bib23"
+    },
+    {
+      "href": "#bib.bib18",
+      "text": "Mu et al., 2023",
+      "section": "2.2 Soft Context Compression",
+      "context": "Using soft context compression for model inputs has become an effective way to reduce the computational overhead of model inference. A line of work has sought to shorten the context consumed by a language model by encoding long inputs into a handful of trainable soft tokens, where the seminal approach learns dedicated gist tokens that compress an entire instruction into a compact prefix while preserving its conditioning effect on subsequent generation ( Mu et al., 2023",
+      "url": "https://arxiv.org/html/2610.39610v1#bib.bib18"
+    },
+    {
+      "href": "#bib.bib31",
+      "text": "Chevalier et al., 2023",
+      "section": "2.2 Soft Context Compression",
+      "context": "language model by encoding long inputs into a handful of trainable soft tokens, where the seminal approach learns dedicated gist tokens that compress an entire instruction into a compact prefix while preserving its conditioning effect on subsequent generation ( Mu et al., 2023 ) . Building on this idea, later efforts scaled the compression to arbitrary contexts by training autoencoding objectives that reconstruct the original text from a few memory slots, or by recursively summarizing long documents into accumulated soft prompts that extend the effective context length ( Chevalier et al., 2023",
+      "url": "https://arxiv.org/html/2610.39610v1#bib.bib31"
+    },
+    {
+      "href": "#bib.bib19",
+      "text": "Ge et al., 2023",
+      "section": "2.2 Soft Context Compression",
+      "context": "encoding long inputs into a handful of trainable soft tokens, where the seminal approach learns dedicated gist tokens that compress an entire instruction into a compact prefix while preserving its conditioning effect on subsequent generation ( Mu et al., 2023 ) . Building on this idea, later efforts scaled the compression to arbitrary contexts by training autoencoding objectives that reconstruct the original text from a few memory slots, or by recursively summarizing long documents into accumulated soft prompts that extend the effective context length ( Chevalier et al., 2023 ; Ge et al., 2023",
+      "url": "https://arxiv.org/html/2610.39610v1#bib.bib19"
+    },
+    {
+      "href": "#bib.bib32",
+      "text": "Deng et al., 2025",
+      "section": "2.2 Soft Context Compression",
+      "context": " into a handful of trainable soft tokens, where the seminal approach learns dedicated gist tokens that compress an entire instruction into a compact prefix while preserving its conditioning effect on subsequent generation ( Mu et al., 2023 ) . Building on this idea, later efforts scaled the compression to arbitrary contexts by training autoencoding objectives that reconstruct the original text from a few memory slots, or by recursively summarizing long documents into accumulated soft prompts that extend the effective context length ( Chevalier et al., 2023 ; Ge et al., 2023 ; Deng et al., 2025",
+      "url": "https://arxiv.org/html/2610.39610v1#bib.bib32"
+    },
+    {
+      "href": "#bib.bib33",
+      "text": "Petrov et al., 2025",
+      "section": "2.2 Soft Context Compression",
+      "context": "hat compress an entire instruction into a compact prefix while preserving its conditioning effect on subsequent generation ( Mu et al., 2023 ) . Building on this idea, later efforts scaled the compression to arbitrary contexts by training autoencoding objectives that reconstruct the original text from a few memory slots, or by recursively summarizing long documents into accumulated soft prompts that extend the effective context length ( Chevalier et al., 2023 ; Ge et al., 2023 ; Deng et al., 2025 ) . More recent studies have pushed the compression ratio to extreme regimes ( Petrov et al., 2025",
+      "url": "https://arxiv.org/html/2610.39610v1#bib.bib33"
+    },
+    {
+      "href": "#bib.bib35",
+      "text": "Tarasov et al., 2025",
+      "section": "2.2 Soft Context Compression",
+      "context": "instruction into a compact prefix while preserving its conditioning effect on subsequent generation ( Mu et al., 2023 ) . Building on this idea, later efforts scaled the compression to arbitrary contexts by training autoencoding objectives that reconstruct the original text from a few memory slots, or by recursively summarizing long documents into accumulated soft prompts that extend the effective context length ( Chevalier et al., 2023 ; Ge et al., 2023 ; Deng et al., 2025 ) . More recent studies have pushed the compression ratio to extreme regimes ( Petrov et al., 2025 ; Tarasov et al., 2025",
+      "url": "https://arxiv.org/html/2610.39610v1#bib.bib35"
+    },
+    {
+      "href": "#bib.bib34",
+      "text": "Mao et al., 2026",
+      "section": "2.2 Soft Context Compression",
+      "context": "compact prefix while preserving its conditioning effect on subsequent generation ( Mu et al., 2023 ) . Building on this idea, later efforts scaled the compression to arbitrary contexts by training autoencoding objectives that reconstruct the original text from a few memory slots, or by recursively summarizing long documents into accumulated soft prompts that extend the effective context length ( Chevalier et al., 2023 ; Ge et al., 2023 ; Deng et al., 2025 ) . More recent studies have pushed the compression ratio to extreme regimes ( Petrov et al., 2025 ; Tarasov et al., 2025 ; Mao et al., 2026",
+      "url": "https://arxiv.org/html/2610.39610v1#bib.bib34"
+    },
+    {
+      "href": "#bib.bib30",
+      "text": "Li et al., 2025",
+      "section": "2.2 Soft Context Compression",
+      "context": "on to arbitrary contexts by training autoencoding objectives that reconstruct the original text from a few memory slots, or by recursively summarizing long documents into accumulated soft prompts that extend the effective context length ( Chevalier et al., 2023 ; Ge et al., 2023 ; Deng et al., 2025 ) . More recent studies have pushed the compression ratio to extreme regimes ( Petrov et al., 2025 ; Tarasov et al., 2025 ; Mao et al., 2026 ) , and integrated such condensed representations into retrieval-augmented pipelines to reduce the cost of conditioning on retrieved evidence ( Li et al., 2025",
+      "url": "https://arxiv.org/html/2610.39610v1#bib.bib30"
+    },
+    {
+      "href": "#bib.bib29",
+      "text": "Cheng et al., 2024",
+      "section": "2.2 Soft Context Compression",
+      "context": "xts by training autoencoding objectives that reconstruct the original text from a few memory slots, or by recursively summarizing long documents into accumulated soft prompts that extend the effective context length ( Chevalier et al., 2023 ; Ge et al., 2023 ; Deng et al., 2025 ) . More recent studies have pushed the compression ratio to extreme regimes ( Petrov et al., 2025 ; Tarasov et al., 2025 ; Mao et al., 2026 ) , and integrated such condensed representations into retrieval-augmented pipelines to reduce the cost of conditioning on retrieved evidence ( Li et al., 2025 ; Cheng et al., 2024",
+      "url": "https://arxiv.org/html/2610.39610v1#bib.bib29"
+    },
+    {
+      "href": "#bib.bib28",
+      "text": "Lu et al., 2025",
+      "section": "2.2 Soft Context Compression",
+      "context": "toencoding objectives that reconstruct the original text from a few memory slots, or by recursively summarizing long documents into accumulated soft prompts that extend the effective context length ( Chevalier et al., 2023 ; Ge et al., 2023 ; Deng et al., 2025 ) . More recent studies have pushed the compression ratio to extreme regimes ( Petrov et al., 2025 ; Tarasov et al., 2025 ; Mao et al., 2026 ) , and integrated such condensed representations into retrieval-augmented pipelines to reduce the cost of conditioning on retrieved evidence ( Li et al., 2025 ; Cheng et al., 2024 ; Lu et al., 2025",
+      "url": "https://arxiv.org/html/2610.39610v1#bib.bib28"
+    },
+    {
+      "href": "#bib.bib36",
+      "text": "Zhi et al., 2026",
+      "section": "2.2 Soft Context Compression",
+      "context": "soft prompts that extend the effective context length ( Chevalier et al., 2023 ; Ge et al., 2023 ; Deng et al., 2025 ) . More recent studies have pushed the compression ratio to extreme regimes ( Petrov et al., 2025 ; Tarasov et al., 2025 ; Mao et al., 2026 ) , and integrated such condensed representations into retrieval-augmented pipelines to reduce the cost of conditioning on retrieved evidence ( Li et al., 2025 ; Cheng et al., 2024 ; Lu et al., 2025 ) . Furthermore, research has already extended pre-sorting compression to the token level in an effort to improve efficiency ( Zhi et al., 2026",
+      "url": "https://arxiv.org/html/2610.39610v1#bib.bib36"
+    },
+    {
+      "href": "#bib.bib37",
+      "text": "Lu et al., 2026",
+      "section": "2.2 Soft Context Compression",
+      "context": "extend the effective context length ( Chevalier et al., 2023 ; Ge et al., 2023 ; Deng et al., 2025 ) . More recent studies have pushed the compression ratio to extreme regimes ( Petrov et al., 2025 ; Tarasov et al., 2025 ; Mao et al., 2026 ) , and integrated such condensed representations into retrieval-augmented pipelines to reduce the cost of conditioning on retrieved evidence ( Li et al., 2025 ; Cheng et al., 2024 ; Lu et al., 2025 ) . Furthermore, research has already extended pre-sorting compression to the token level in an effort to improve efficiency ( Zhi et al., 2026 ; Lu et al., 2026",
+      "url": "https://arxiv.org/html/2610.39610v1#bib.bib37"
+    },
+    {
+      "href": "#S4.F2",
+      "text": "2",
+      "section": "4 Supervised Fine-tuning for GistRank",
+      "context": "As shown in Figure 2",
+      "url": "https://arxiv.org/html/2610.39610v1#S4.F2"
+    },
+    {
+      "href": "#bib.bib35",
+      "text": "Tarasov et al. (2025)",
+      "section": "Stage 1: learn the gist interface.",
+      "context": "Stage 1 learns gist representations by predicting the query associated with a passage, following the sentence-compression formulation of Tarasov et al. (2025)",
+      "url": "https://arxiv.org/html/2610.39610v1#bib.bib35"
+    },
+    {
+      "href": "#bib.bib10",
+      "text": "Liu et al. (2025d)",
+      "section": "4.3 Stage 3: Listwise Ranking",
+      "context": "Stage 3 adapts the learned gist representations to joint listwise ranking using the GPT-4o-annotated candidate orderings provided by Liu et al. (2025d)",
+      "url": "https://arxiv.org/html/2610.39610v1#bib.bib10"
+    },
+    {
+      "href": "#bib.bib26",
+      "text": "Xia et al. (2008)",
+      "section": "4.3 Stage 3: Listwise Ranking",
+      "context": "For N ′ N^{\\prime} valid candidates, let π ⁡ ( i ) \\pi(i) identify the candidate at teacher rank i i . We optimize a rank-slot formulation of ListMLE Xia et al. (2008)",
+      "url": "https://arxiv.org/html/2610.39610v1#bib.bib26"
+    },
+    {
+      "href": "#bib.bib2",
+      "text": "Craswell et al., 2020",
+      "section": "Evaluation Datasets.",
+      "context": "We utilized the TREC DL 2019 ( Craswell et al., 2020",
+      "url": "https://arxiv.org/html/2610.39610v1#bib.bib2"
+    },
+    {
+      "href": "#bib.bib1",
+      "text": "Craswell et al., 2021",
+      "section": "Evaluation Datasets.",
+      "context": "We utilized the TREC DL 2019 ( Craswell et al., 2020 ) and TREC DL 2020 ( Craswell et al., 2021",
+      "url": "https://arxiv.org/html/2610.39610v1#bib.bib1"
+    },
+    {
+      "href": "#bib.bib3",
+      "text": "Thakur et al., 2021",
+      "section": "Evaluation Datasets.",
+      "context": "We utilized the TREC DL 2019 ( Craswell et al., 2020 ) and TREC DL 2020 ( Craswell et al., 2021 ) datasets for our evaluation experiments, and also employed various datasets from the BEIR benchmark ( Thakur et al., 2021",
+      "url": "https://arxiv.org/html/2610.39610v1#bib.bib3"
+    },
+    {
+      "href": "#bib.bib12",
+      "text": "Yang et al., 2025",
+      "section": "Baselines.",
+      "context": "For the primary efficiency experiments, we used Qwen3-4B ( Yang et al., 2025",
+      "url": "https://arxiv.org/html/2610.39610v1#bib.bib12"
+    },
+    {
+      "href": "#bib.bib4",
+      "text": "Robertson and Zaragoza (2009)",
+      "section": "Baselines.",
+      "context": "For the primary efficiency experiments, we used Qwen3-4B ( Yang et al., 2025 ) as the base model and performed Supervised Fine-Tuning (SFT) on the same training set using two approaches: full-context ranking and ranking based on a summary extracted via BM25 for each passage. Each SFT model was implemented in both full-context and sliding-window variants, serving as direct benchmarks for efficiency. Regarding performance experiments, in addition to the basic BM25 Robertson and Zaragoza (2009)",
+      "url": "https://arxiv.org/html/2610.39610v1#bib.bib4"
+    },
+    {
+      "href": "#bib.bib5",
+      "text": "Nogueira and Cho, 2019",
+      "section": "Baselines.",
+      "context": ") as the base model and performed Supervised Fine-Tuning (SFT) on the same training set using two approaches: full-context ranking and ranking based on a summary extracted via BM25 for each passage. Each SFT model was implemented in both full-context and sliding-window variants, serving as direct benchmarks for efficiency. Regarding performance experiments, in addition to the basic BM25 Robertson and Zaragoza (2009) baseline, we included the following models for comparison spanning pointwise, sliding-window, full-context, and embedding-based approaches: monoBERT (340M) ( Nogueira and Cho, 2019",
+      "url": "https://arxiv.org/html/2610.39610v1#bib.bib5"
+    },
+    {
+      "href": "#bib.bib6",
+      "text": "Nogueira et al., 2020",
+      "section": "Baselines.",
+      "context": "ed Fine-Tuning (SFT) on the same training set using two approaches: full-context ranking and ranking based on a summary extracted via BM25 for each passage. Each SFT model was implemented in both full-context and sliding-window variants, serving as direct benchmarks for efficiency. Regarding performance experiments, in addition to the basic BM25 Robertson and Zaragoza (2009) baseline, we included the following models for comparison spanning pointwise, sliding-window, full-context, and embedding-based approaches: monoBERT (340M) ( Nogueira and Cho, 2019 ) , monoT5 (220M) ( Nogueira et al., 2020",
+      "url": "https://arxiv.org/html/2610.39610v1#bib.bib6"
+    },
+    {
+      "href": "#bib.bib9",
+      "text": "Zhuang et al., 2024",
+      "section": "Baselines.",
+      "context": "ing set using two approaches: full-context ranking and ranking based on a summary extracted via BM25 for each passage. Each SFT model was implemented in both full-context and sliding-window variants, serving as direct benchmarks for efficiency. Regarding performance experiments, in addition to the basic BM25 Robertson and Zaragoza (2009) baseline, we included the following models for comparison spanning pointwise, sliding-window, full-context, and embedding-based approaches: monoBERT (340M) ( Nogueira and Cho, 2019 ) , monoT5 (220M) ( Nogueira et al., 2020 ) , RankT5 (3B) ( Zhuang et al., 2024",
+      "url": "https://arxiv.org/html/2610.39610v1#bib.bib9"
+    },
+    {
+      "href": "#bib.bib7",
+      "text": "Pradeep et al., 2023a",
+      "section": "Baselines.",
+      "context": "anking and ranking based on a summary extracted via BM25 for each passage. Each SFT model was implemented in both full-context and sliding-window variants, serving as direct benchmarks for efficiency. Regarding performance experiments, in addition to the basic BM25 Robertson and Zaragoza (2009) baseline, we included the following models for comparison spanning pointwise, sliding-window, full-context, and embedding-based approaches: monoBERT (340M) ( Nogueira and Cho, 2019 ) , monoT5 (220M) ( Nogueira et al., 2020 ) , RankT5 (3B) ( Zhuang et al., 2024 ) , RankVicuna (7B) ( Pradeep et al., 2023a",
+      "url": "https://arxiv.org/html/2610.39610v1#bib.bib7"
+    },
+    {
+      "href": "#bib.bib8",
+      "text": "Pradeep et al., 2023b",
+      "section": "Baselines.",
+      "context": "ted via BM25 for each passage. Each SFT model was implemented in both full-context and sliding-window variants, serving as direct benchmarks for efficiency. Regarding performance experiments, in addition to the basic BM25 Robertson and Zaragoza (2009) baseline, we included the following models for comparison spanning pointwise, sliding-window, full-context, and embedding-based approaches: monoBERT (340M) ( Nogueira and Cho, 2019 ) , monoT5 (220M) ( Nogueira et al., 2020 ) , RankT5 (3B) ( Zhuang et al., 2024 ) , RankVicuna (7B) ( Pradeep et al., 2023a ) , RankZephyr (7B) ( Pradeep et al., 2023b",
+      "url": "https://arxiv.org/html/2610.39610v1#bib.bib8"
+    },
+    {
+      "href": "#bib.bib10",
+      "text": "Liu et al., 2025d",
+      "section": "Baselines.",
+      "context": "del was implemented in both full-context and sliding-window variants, serving as direct benchmarks for efficiency. Regarding performance experiments, in addition to the basic BM25 Robertson and Zaragoza (2009) baseline, we included the following models for comparison spanning pointwise, sliding-window, full-context, and embedding-based approaches: monoBERT (340M) ( Nogueira and Cho, 2019 ) , monoT5 (220M) ( Nogueira et al., 2020 ) , RankT5 (3B) ( Zhuang et al., 2024 ) , RankVicuna (7B) ( Pradeep et al., 2023a ) , RankZephyr (7B) ( Pradeep et al., 2023b ) , FullRank 100 (7B) ( Liu et al., 2025d",
+      "url": "https://arxiv.org/html/2610.39610v1#bib.bib10"
+    },
+    {
+      "href": "#bib.bib11",
+      "text": "Liu et al., 2025a",
+      "section": "Baselines.",
+      "context": "liding-window variants, serving as direct benchmarks for efficiency. Regarding performance experiments, in addition to the basic BM25 Robertson and Zaragoza (2009) baseline, we included the following models for comparison spanning pointwise, sliding-window, full-context, and embedding-based approaches: monoBERT (340M) ( Nogueira and Cho, 2019 ) , monoT5 (220M) ( Nogueira et al., 2020 ) , RankT5 (3B) ( Zhuang et al., 2024 ) , RankVicuna (7B) ( Pradeep et al., 2023a ) , RankZephyr (7B) ( Pradeep et al., 2023b ) , FullRank 100 (7B) ( Liu et al., 2025d ) , and PE-Rank BM25 (7B) ( Liu et al., 2025a",
+      "url": "https://arxiv.org/html/2610.39610v1#bib.bib11"
+    },
+    {
+      "href": "#bib.bib10",
+      "text": "Liu et al. (2025d)",
+      "section": "Implementation Details.",
+      "context": "We adopt Qwen3-4B-Base as the backbone to study efficient listwise reranking with a compact open-source language model. The backbone provides a 32k context window. For Stage 3, we reuse the MS MARCO-based candidate lists and GPT-4o-annotated teacher permutations provided by Liu et al. (2025d)",
+      "url": "https://arxiv.org/html/2610.39610v1#bib.bib10"
+    },
+    {
+      "href": "#bib.bib13",
+      "text": "Rasley et al., 2020",
+      "section": "Implementation Details.",
+      "context": "ate lists and GPT-4o-annotated teacher permutations provided by Liu et al. (2025d) , using a single training epoch by default. The controlled full-text, summary, and gist variants use the same Stage 3 training examples and teacher permutations. We compress each passage into 4 gist tokens, and adopt a listwise ranking window of size 100 100 . The model is optimized with a micro batch size of 1 1 and a global batch size of 8 8 , using a learning rate of 5 × 10 − 6 5\\times 10^{-6} . Training is conducted on a single node with 8 × \\times H20 GPUs using the DeepSpeed framework ( Rasley et al., 2020",
+      "url": "https://arxiv.org/html/2610.39610v1#bib.bib13"
+    },
+    {
+      "href": "#S5.T1",
+      "text": "1",
+      "section": "5.2 Efficiency Performance",
+      "context": "Table 1",
+      "url": "https://arxiv.org/html/2610.39610v1#S5.T1"
+    },
+    {
+      "href": "#S5.T2",
+      "text": "2",
+      "section": "5.3 Effectiveness Performance",
+      "context": "The results are presented in Table 2",
+      "url": "https://arxiv.org/html/2610.39610v1#S5.T2"
+    },
+    {
+      "href": "#S5.SS4",
+      "text": "5.4",
+      "section": "5.3 Effectiveness Performance",
+      "context": "n the in-domain TREC datasets, GistRank achieves the highest score on DL19 at 73.88 and the second-highest score on DL20 at 70.82. These results suggest that compact gist representations retain relevance information needed for effective ranking. Compared with the Qwen3-SFT-Full baselines built on the same backbone, GistRank improves average nDCG@10 by 1.37 points over sliding-window ranking and 2.00 points over full-list ranking, demonstrating that its compact representations support competitive effectiveness even when compared with methods that retain the original passage text. In Section 5.4",
+      "url": "https://arxiv.org/html/2610.39610v1#S5.SS4"
+    },
+    {
+      "href": "#S5.T3",
+      "text": "3",
+      "section": "5.4 Ablation Study",
+      "context": "Table 3",
+      "url": "https://arxiv.org/html/2610.39610v1#S5.T3"
+    },
+    {
+      "href": "#S4.E10",
+      "text": "10",
+      "section": "5.4 Ablation Study",
+      "context": "The matched full-text reference shares the Stage 2 initialization, Stage 3 data, hyperparameters, training steps, and 100-rank-slot readout with GistRank . Both compute the two-dimensional scores s i ​ j = 𝐫 i ⊤ ​ 𝐞 j / D s_{ij}=\\mathbf{r}_{i}^{\\top}\\mathbf{e}_{j}/\\sqrt{D} from Equation 10",
+      "url": "https://arxiv.org/html/2610.39610v1#S4.E10"
+    },
+    {
+      "href": "#S5.T5",
+      "text": "5",
+      "section": "5.4 Ablation Study",
+      "context": "Moreover, we evaluate input order as an inference-time variant by shuffling the candidate list before reranking. Table 5",
+      "url": "https://arxiv.org/html/2610.39610v1#S5.T5"
+    },
+    {
+      "href": "#S5.T4",
+      "text": "4",
+      "section": "5.5 Inference-cost accounting",
+      "context": "We analyze the inference cost of GistRank by separating candidate compression, KV assembly, and joint ranking. Latency measurements cover the complete reranking pipeline, from processing the query and candidate passages to producing the final ranked candidate list. Table 4",
+      "url": "https://arxiv.org/html/2610.39610v1#S5.T4"
+    },
+    {
+      "href": "#S5.F3",
+      "text": "3",
+      "section": "5.6 Parameter Analysis",
+      "context": "The results are presented in Figure 3",
+      "url": "https://arxiv.org/html/2610.39610v1#S5.F3"
+    },
+    {
+      "href": "#S5.T6",
+      "text": "6",
+      "section": "5.7 Token Cost",
+      "context": "In this section, we quantify the rank-stage token cost to explain, at the token level, why GistRank is both faster and more predictable than the baselines. As shown in Table 6",
+      "url": "https://arxiv.org/html/2610.39610v1#S5.T6"
+    },
+    {
+      "href": "#S5.F4",
+      "text": "4",
+      "section": "5.7 Token Cost",
+      "context": "Figure 4",
+      "url": "https://arxiv.org/html/2610.39610v1#S5.F4"
+    },
+    {
+      "href": "#S2.SS1.p1.1",
+      "text": "§2.1",
+      "section": "References",
+      "context": "Burges (2010) C. J. Burges From ranknet to lambdarank to lambdamart: an overview . Learning 11 ( 23-581 ), pp. 81 . Cited by: §2.1",
+      "url": "https://arxiv.org/html/2610.39610v1#S2.SS1.p1.1"
+    },
+    {
+      "href": "#S2.SS1.p1.1",
+      "text": "§2.1",
+      "section": "References",
+      "context": "Cao et al. (2007) Z. Cao, T. Qin, T. Liu, M. Tsai, and H. Li Learning to rank: from pairwise approach to listwise approach . In Proceedings of the 24th international conference on Machine learning , pp. 129–136 . Cited by: §2.1",
+      "url": "https://arxiv.org/html/2610.39610v1#S2.SS1.p1.1"
+    },
+    {
+      "href": "#S2.SS2.p1.1",
+      "text": "§2.2",
+      "section": "References",
+      "context": "Cheng et al. (2024) X. Cheng, X. Wang, X. Zhang, T. Ge, S. Chen, F. Wei, H. Zhang, and D. Zhao Xrag: extreme context compression for retrieval-augmented generation with one token . Advances in Neural Information Processing Systems 37 , pp. 109487–109516 . Cited by: §2.2",
+      "url": "https://arxiv.org/html/2610.39610v1#S2.SS2.p1.1"
+    },
+    {
+      "href": "#S2.SS2.p1.1",
+      "text": "§2.2",
+      "section": "References",
+      "context": "Chevalier et al. (2023) A. Chevalier, A. Wettig, A. Ajith, and D. Chen Adapting language models to compress contexts . In Proceedings of the 2023 Conference on Empirical Methods in Natural Language Processing , pp. 3829–3846 . Cited by: §2.2",
+      "url": "https://arxiv.org/html/2610.39610v1#S2.SS2.p1.1"
+    },
+    {
+      "href": "https://arxiv.org/abs/2003.07820",
+      "text": "Link",
+      "section": "References",
+      "context": "Craswell et al. (2020) N. Craswell, B. Mitra, E. Yilmaz, D. Campos, and E. M. Voorhees Overview of the trec 2019 deep learning track . External Links: 2003.07820 , Link",
+      "url": "https://arxiv.org/abs/2003.07820"
+    },
+    {
+      "href": "#S5.SS1.SSSx1.p1.1",
+      "text": "§5.1",
+      "section": "References",
+      "context": "Craswell et al. (2020) N. Craswell, B. Mitra, E. Yilmaz, D. Campos, and E. M. Voorhees Overview of the trec 2019 deep learning track . External Links: 2003.07820 , Link Cited by: §5.1",
+      "url": "https://arxiv.org/html/2610.39610v1#S5.SS1.SSSx1.p1.1"
+    },
+    {
+      "href": "https://arxiv.org/abs/2102.07662",
+      "text": "Link",
+      "section": "References",
+      "context": "Craswell et al. (2021) N. Craswell, B. Mitra, E. Yilmaz, and D. Campos Overview of the trec 2020 deep learning track . External Links: 2102.07662 , Link",
+      "url": "https://arxiv.org/abs/2102.07662"
+    },
+    {
+      "href": "#S5.SS1.SSSx1.p1.1",
+      "text": "§5.1",
+      "section": "References",
+      "context": "Craswell et al. (2021) N. Craswell, B. Mitra, E. Yilmaz, and D. Campos Overview of the trec 2020 deep learning track . External Links: 2102.07662 , Link Cited by: §5.1",
+      "url": "https://arxiv.org/html/2610.39610v1#S5.SS1.SSSx1.p1.1"
+    },
+    {
+      "href": "#S1.p2.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Deng et al. (2025) C. Deng, Z. Zhang, K. Mao, S. Li, X. Huang, D. Yu, and Z. Dou A silver bullet or a compromise for full attention? a comprehensive study of gist token-based context compression . In Proceedings of the 63rd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) , pp. 4861–4879 . Cited by: §1",
+      "url": "https://arxiv.org/html/2610.39610v1#S1.p2.1"
+    },
+    {
+      "href": "#S2.SS2.p1.1",
+      "text": "§2.2",
+      "section": "References",
+      "context": "Deng et al. (2025) C. Deng, Z. Zhang, K. Mao, S. Li, X. Huang, D. Yu, and Z. Dou A silver bullet or a compromise for full attention? a comprehensive study of gist token-based context compression . In Proceedings of the 63rd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) , pp. 4861–4879 . Cited by: §1 , §2.2",
+      "url": "https://arxiv.org/html/2610.39610v1#S2.SS2.p1.1"
+    },
+    {
+      "href": "#S1.p2.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Feng et al. (2026) J. Feng, W. Liu, and Z. Dou SumRank: aligning summarization models for long-document listwise reranking . arXiv preprint arXiv:2603.24204 . Cited by: §1",
+      "url": "https://arxiv.org/html/2610.39610v1#S1.p2.1"
+    },
+    {
+      "href": "#S1.p2.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Ge et al. (2023) T. Ge, J. Hu, L. Wang, X. Wang, S. Chen, and F. Wei In-context autoencoder for context compression in a large language model . arXiv preprint arXiv:2307.06945 . Cited by: §1",
+      "url": "https://arxiv.org/html/2610.39610v1#S1.p2.1"
+    },
+    {
+      "href": "#S2.SS2.p1.1",
+      "text": "§2.2",
+      "section": "References",
+      "context": "Ge et al. (2023) T. Ge, J. Hu, L. Wang, X. Wang, S. Chen, and F. Wei In-context autoencoder for context compression in a large language model . arXiv preprint arXiv:2307.06945 . Cited by: §1 , §2.2",
+      "url": "https://arxiv.org/html/2610.39610v1#S2.SS2.p1.1"
+    },
+    {
+      "href": "#S2.SS2.p1.1",
+      "text": "§2.2",
+      "section": "References",
+      "context": "Li et al. (2025) Z. Li, Y. Su, and N. Collier 500xcompressor: generalized prompt compression for large language models . In Proceedings of the 63rd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) , pp. 25081–25091 . Cited by: §2.2",
+      "url": "https://arxiv.org/html/2610.39610v1#S2.SS2.p1.1"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Liu et al. (2024) N. F. Liu, K. Lin, J. Hewitt, A. Paranjape, M. Bevilacqua, F. Petroni, and P. Liang Lost in the middle: how language models use long contexts . Transactions of the association for computational linguistics 12 , pp. 157–173 . Cited by: §1",
+      "url": "https://arxiv.org/html/2610.39610v1#S1.p1.1"
+    },
+    {
+      "href": "#S1.p2.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Liu et al. (2025a) Q. Liu, B. Wang, N. Wang, and J. Mao Leveraging passage embeddings for efficient listwise reranking with large language models . In Proceedings of the ACM on Web Conference 2025 , pp. 4274–4283 . Cited by: §1",
+      "url": "https://arxiv.org/html/2610.39610v1#S1.p2.1"
+    },
+    {
+      "href": "#S5.SS1.SSSx2.p1.1",
+      "text": "§5.1",
+      "section": "References",
+      "context": "Liu et al. (2025a) Q. Liu, B. Wang, N. Wang, and J. Mao Leveraging passage embeddings for efficient listwise reranking with large language models . In Proceedings of the ACM on Web Conference 2025 , pp. 4274–4283 . Cited by: §1 , §5.1",
+      "url": "https://arxiv.org/html/2610.39610v1#S5.SS1.SSSx2.p1.1"
+    },
+    {
+      "href": "#S2.SS1.p1.1",
+      "text": "§2.1",
+      "section": "References",
+      "context": "Liu et al. (2025b) W. Liu, X. Ma, W. Sun, Y. Zhu, Y. Li, D. Yin, and Z. Dou Reasonrank: empowering passage ranking with strong reasoning ability . arXiv preprint arXiv:2508.07050 . Cited by: §2.1",
+      "url": "https://arxiv.org/html/2610.39610v1#S2.SS1.p1.1"
+    },
+    {
+      "href": "#S2.SS1.p1.1",
+      "text": "§2.1",
+      "section": "References",
+      "context": "Liu et al. (2025c) W. Liu, X. Ma, Y. Zhu, L. Su, S. Wang, D. Yin, and Z. Dou Coranking: collaborative ranking with small and large ranking agents . arXiv preprint arXiv:2503.23427 . Cited by: §2.1",
+      "url": "https://arxiv.org/html/2610.39610v1#S2.SS1.p1.1"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Liu et al. (2025d) W. Liu, X. Ma, Y. Zhu, Z. Zhao, S. Wang, D. Yin, and Z. Dou Sliding windows are not the end: exploring full ranking with long-context large language models . In Proceedings of the 63rd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) , pp. 162–176 . Cited by: §1",
+      "url": "https://arxiv.org/html/2610.39610v1#S1.p1.1"
+    },
+    {
+      "href": "#S4.SS3.p1.1",
+      "text": "§4.3",
+      "section": "References",
+      "context": "Liu et al. (2025d) W. Liu, X. Ma, Y. Zhu, Z. Zhao, S. Wang, D. Yin, and Z. Dou Sliding windows are not the end: exploring full ranking with long-context large language models . In Proceedings of the 63rd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) , pp. 162–176 . Cited by: §1 , §4.3",
+      "url": "https://arxiv.org/html/2610.39610v1#S4.SS3.p1.1"
+    },
+    {
+      "href": "#S5.SS1.SSSx2.p1.1",
+      "text": "§5.1",
+      "section": "References",
+      "context": "Liu et al. (2025d) W. Liu, X. Ma, Y. Zhu, Z. Zhao, S. Wang, D. Yin, and Z. Dou Sliding windows are not the end: exploring full ranking with long-context large language models . In Proceedings of the 63rd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) , pp. 162–176 . Cited by: §1 , §4.3 , §5.1",
+      "url": "https://arxiv.org/html/2610.39610v1#S5.SS1.SSSx2.p1.1"
+    },
+    {
+      "href": "#S5.SS1.SSSx4.p1.1",
+      "text": "§5.1",
+      "section": "References",
+      "context": "Liu et al. (2025d) W. Liu, X. Ma, Y. Zhu, Z. Zhao, S. Wang, D. Yin, and Z. Dou Sliding windows are not the end: exploring full ranking with long-context large language models . In Proceedings of the 63rd Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) , pp. 162–176 . Cited by: §1 , §4.3 , §5.1 , §5.1",
+      "url": "https://arxiv.org/html/2610.39610v1#S5.SS1.SSSx4.p1.1"
+    },
+    {
+      "href": "#S2.SS1.p1.1",
+      "text": "§2.1",
+      "section": "References",
+      "context": "Liu et al. (2026) W. Liu, Y. Zhu, Z. Dou, and Y. Zhou Demorank: selecting effective demonstrations for large language models in ranking task . ACM Transactions on Information Systems 44 ( 3 ), pp. 1–25 . Cited by: §2.1",
+      "url": "https://arxiv.org/html/2610.39610v1#S2.SS1.p1.1"
+    },
+    {
+      "href": "#S2.SS2.p1.1",
+      "text": "§2.2",
+      "section": "References",
+      "context": "Lu et al. (2025) S. Lu, H. Wang, Y. Rong, Z. Chen, and Y. Tang Turborag: accelerating retrieval-augmented generation with precomputed kv caches for chunked text . In Proceedings of the 2025 Conference on Empirical Methods in Natural Language Processing , pp. 6599–6612 . Cited by: §2.2",
+      "url": "https://arxiv.org/html/2610.39610v1#S2.SS2.p1.1"
+    },
+    {
+      "href": "#S2.SS2.p1.1",
+      "text": "§2.2",
+      "section": "References",
+      "context": "Lu et al. (2026) X. Lu, H. Huang, Y. Fan, J. Tong, Y. Zhang, P. Nie, R. Meng, and X. Shen CompRank: efficient llm reranking via token-level compression and decoding-free scoring . arXiv preprint arXiv:2606.11700 . Cited by: §2.2",
+      "url": "https://arxiv.org/html/2610.39610v1#S2.SS2.p1.1"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Ma et al. (2023) X. Ma, X. Zhang, R. Pradeep, and J. Lin Zero-shot listwise document reranking with a large language model . arXiv preprint arXiv:2305.02156 . Cited by: §1",
+      "url": "https://arxiv.org/html/2610.39610v1#S1.p1.1"
+    },
+    {
+      "href": "#S2.SS2.p1.1",
+      "text": "§2.2",
+      "section": "References",
+      "context": "Mao et al. (2026) Y. Mao, M. Y. Li, and E. B. Fox Forget, then recall: learnable compression and selective unfolding via gist sparse attention . arXiv preprint arXiv:2604.20920 . Cited by: §2.2",
+      "url": "https://arxiv.org/html/2610.39610v1#S2.SS2.p1.1"
+    },
+    {
+      "href": "#S1.p2.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Mu et al. (2023) J. Mu, X. Li, and N. Goodman Learning to compress prompts with gist tokens . Advances in Neural Information Processing Systems 36 , pp. 19327–19352 . Cited by: §1",
+      "url": "https://arxiv.org/html/2610.39610v1#S1.p2.1"
+    },
+    {
+      "href": "#S2.SS2.p1.1",
+      "text": "§2.2",
+      "section": "References",
+      "context": "Mu et al. (2023) J. Mu, X. Li, and N. Goodman Learning to compress prompts with gist tokens . Advances in Neural Information Processing Systems 36 , pp. 19327–19352 . Cited by: §1 , §2.2",
+      "url": "https://arxiv.org/html/2610.39610v1#S2.SS2.p1.1"
+    },
+    {
+      "href": "#S2.SS1.p1.1",
+      "text": "§2.1",
+      "section": "References",
+      "context": "Nogueira and Cho (2019) R. Nogueira and K. Cho Passage re-ranking with bert . arXiv preprint arXiv:1901.04085 . Cited by: §2.1",
+      "url": "https://arxiv.org/html/2610.39610v1#S2.SS1.p1.1"
+    },
+    {
+      "href": "#S5.SS1.SSSx2.p1.1",
+      "text": "§5.1",
+      "section": "References",
+      "context": "Nogueira and Cho (2019) R. Nogueira and K. Cho Passage re-ranking with bert . arXiv preprint arXiv:1901.04085 . Cited by: §2.1 , §5.1",
+      "url": "https://arxiv.org/html/2610.39610v1#S5.SS1.SSSx2.p1.1"
+    },
+    {
+      "href": "#S2.SS1.p1.1",
+      "text": "§2.1",
+      "section": "References",
+      "context": "Nogueira et al. (2020) R. Nogueira, Z. Jiang, R. Pradeep, and J. Lin Document ranking with a pretrained sequence-to-sequence model . In Findings of the association for computational linguistics: EMNLP 2020 , pp. 708–718 . Cited by: §2.1",
+      "url": "https://arxiv.org/html/2610.39610v1#S2.SS1.p1.1"
+    },
+    {
+      "href": "#S5.SS1.SSSx2.p1.1",
+      "text": "§5.1",
+      "section": "References",
+      "context": "Nogueira et al. (2020) R. Nogueira, Z. Jiang, R. Pradeep, and J. Lin Document ranking with a pretrained sequence-to-sequence model . In Findings of the association for computational linguistics: EMNLP 2020 , pp. 708–718 . Cited by: §2.1 , §5.1",
+      "url": "https://arxiv.org/html/2610.39610v1#S5.SS1.SSSx2.p1.1"
+    },
+    {
+      "href": "#S2.SS2.p1.1",
+      "text": "§2.2",
+      "section": "References",
+      "context": "Petrov et al. (2025) A. Petrov, M. Sandler, A. Zhmoginov, N. Miller, and M. Vladymyrov Long context in-context compression by getting to the gist of gisting . arXiv preprint arXiv:2504.08934 . Cited by: §2.2",
+      "url": "https://arxiv.org/html/2610.39610v1#S2.SS2.p1.1"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Pradeep et al. (2023a) R. Pradeep, S. Sharifymoghaddam, and J. Lin Rankvicuna: zero-shot listwise document reranking with open-source large language models . arXiv preprint arXiv:2309.15088 . Cited by: §1",
+      "url": "https://arxiv.org/html/2610.39610v1#S1.p1.1"
+    },
+    {
+      "href": "#S5.SS1.SSSx2.p1.1",
+      "text": "§5.1",
+      "section": "References",
+      "context": "Pradeep et al. (2023a) R. Pradeep, S. Sharifymoghaddam, and J. Lin Rankvicuna: zero-shot listwise document reranking with open-source large language models . arXiv preprint arXiv:2309.15088 . Cited by: §1 , §5.1",
+      "url": "https://arxiv.org/html/2610.39610v1#S5.SS1.SSSx2.p1.1"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Pradeep et al. (2023b) R. Pradeep, S. Sharifymoghaddam, and J. Lin Rankzephyr: effective and robust zero-shot listwise reranking is a breeze! . arXiv preprint arXiv:2312.02724 . Cited by: §1",
+      "url": "https://arxiv.org/html/2610.39610v1#S1.p1.1"
+    },
+    {
+      "href": "#S5.SS1.SSSx2.p1.1",
+      "text": "§5.1",
+      "section": "References",
+      "context": "Pradeep et al. (2023b) R. Pradeep, S. Sharifymoghaddam, and J. Lin Rankzephyr: effective and robust zero-shot listwise reranking is a breeze! . arXiv preprint arXiv:2312.02724 . Cited by: §1 , §5.1",
+      "url": "https://arxiv.org/html/2610.39610v1#S5.SS1.SSSx2.p1.1"
+    },
+    {
+      "href": "#S2.SS1.p1.1",
+      "text": "§2.1",
+      "section": "References",
+      "context": "Qin et al. (2024) Z. Qin, R. Jagerman, K. Hui, H. Zhuang, J. Wu, L. Yan, J. Shen, T. Liu, J. Liu, D. Metzler, et al. Large language models are effective text rankers with pairwise ranking prompting . In Findings of the Association for Computational Linguistics: NAACL 2024 , pp. 1504–1518 . Cited by: §2.1",
+      "url": "https://arxiv.org/html/2610.39610v1#S2.SS1.p1.1"
+    },
+    {
+      "href": "#S5.SS1.SSSx4.p1.1",
+      "text": "§5.1",
+      "section": "References",
+      "context": "Rasley et al. (2020) J. Rasley, S. Rajbhandari, O. Ruwase, and Y. He Deepspeed: system optimizations enable training deep learning models with over 100 billion parameters . In Proceedings of the 26th ACM SIGKDD international conference on knowledge discovery & data mining , pp. 3505–3506 . Cited by: §5.1",
+      "url": "https://arxiv.org/html/2610.39610v1#S5.SS1.SSSx4.p1.1"
+    },
+    {
+      "href": "#S2.SS1.p1.1",
+      "text": "§2.1",
+      "section": "References",
+      "context": "Reddy et al. (2024) R. G. Reddy, J. Doo, Y. Xu, M. A. Sultan, D. Swain, A. Sil, and H. Ji FIRST: faster improved listwise reranking with single token decoding . In Proceedings of the 2024 Conference on Empirical Methods in Natural Language Processing , pp. 8642–8652 . Cited by: §2.1",
+      "url": "https://arxiv.org/html/2610.39610v1#S2.SS1.p1.1"
+    },
+    {
+      "href": "#S5.SS1.SSSx2.p1.1",
+      "text": "§5.1",
+      "section": "References",
+      "context": "Robertson and Zaragoza (2009) S. Robertson and H. Zaragoza The probabilistic relevance framework: bm25 and beyond . Vol. 4 , Now Publishers Inc . Cited by: §5.1",
+      "url": "https://arxiv.org/html/2610.39610v1#S5.SS1.SSSx2.p1.1"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Sun et al. (2023) W. Sun, L. Yan, X. Ma, S. Wang, P. Ren, Z. Chen, D. Yin, and Z. Ren Is chatgpt good at search? investigating large language models as re-ranking agents . In Proceedings of the 2023 conference on empirical methods in natural language processing , pp. 14918–14937 . Cited by: §1",
+      "url": "https://arxiv.org/html/2610.39610v1#S1.p1.1"
+    },
+    {
+      "href": "#S2.SS1.p1.1",
+      "text": "§2.1",
+      "section": "References",
+      "context": "Sun et al. (2023) W. Sun, L. Yan, X. Ma, S. Wang, P. Ren, Z. Chen, D. Yin, and Z. Ren Is chatgpt good at search? investigating large language models as re-ranking agents . In Proceedings of the 2023 conference on empirical methods in natural language processing , pp. 14918–14937 . Cited by: §1 , §2.1",
+      "url": "https://arxiv.org/html/2610.39610v1#S2.SS1.p1.1"
+    },
+    {
+      "href": "#S2.SS2.p1.1",
+      "text": "§2.2",
+      "section": "References",
+      "context": "Tarasov et al. (2025) D. Tarasov, E. Goncharova, and K. Andrey Sentence-anchored gist compression for long-context llms . arXiv preprint arXiv:2511.08128 . Cited by: §2.2",
+      "url": "https://arxiv.org/html/2610.39610v1#S2.SS2.p1.1"
+    },
+    {
+      "href": "#S4.SS1.SSS0.Px1.p1.1",
+      "text": "§4.1",
+      "section": "References",
+      "context": "Tarasov et al. (2025) D. Tarasov, E. Goncharova, and K. Andrey Sentence-anchored gist compression for long-context llms . arXiv preprint arXiv:2511.08128 . Cited by: §2.2 , §4.1",
+      "url": "https://arxiv.org/html/2610.39610v1#S4.SS1.SSS0.Px1.p1.1"
+    },
+    {
+      "href": "#S5.SS1.SSSx1.p1.1",
+      "text": "§5.1",
+      "section": "References",
+      "context": "Thakur et al. (2021) N. Thakur, N. Reimers, A. Rücklé, A. Srivastava, and I. Gurevych Beir: a heterogenous benchmark for zero-shot evaluation of information retrieval models . arXiv preprint arXiv:2104.08663 . Cited by: §5.1",
+      "url": "https://arxiv.org/html/2610.39610v1#S5.SS1.SSSx1.p1.1"
+    },
+    {
+      "href": "#S2.SS1.p1.1",
+      "text": "§2.1",
+      "section": "References",
+      "context": "Xia et al. (2008) F. Xia, T. Liu, J. Wang, W. Zhang, and H. Li Listwise approach to learning to rank: theory and algorithm . In Proceedings of the 25th international conference on Machine learning , pp. 1192–1199 . Cited by: §2.1",
+      "url": "https://arxiv.org/html/2610.39610v1#S2.SS1.p1.1"
+    },
+    {
+      "href": "#S4.SS3.p5.1",
+      "text": "§4.3",
+      "section": "References",
+      "context": "Xia et al. (2008) F. Xia, T. Liu, J. Wang, W. Zhang, and H. Li Listwise approach to learning to rank: theory and algorithm . In Proceedings of the 25th international conference on Machine learning , pp. 1192–1199 . Cited by: §2.1 , §4.3",
+      "url": "https://arxiv.org/html/2610.39610v1#S4.SS3.p5.1"
+    },
+    {
+      "href": "#S5.SS1.SSSx2.p1.1",
+      "text": "§5.1",
+      "section": "References",
+      "context": "Yang et al. (2025) A. Yang, A. Li, B. Yang, B. Zhang, B. Hui, B. Zheng, B. Yu, C. Gao, C. Huang, C. Lv, et al. Qwen3 technical report . arXiv preprint arXiv:2505.09388 . Cited by: §5.1",
+      "url": "https://arxiv.org/html/2610.39610v1#S5.SS1.SSSx2.p1.1"
+    },
+    {
+      "href": "#S2.SS2.p1.1",
+      "text": "§2.2",
+      "section": "References",
+      "context": "Zhi et al. (2026) Z. Zhi, Y. Zhang, Y. Jing, X. Li, J. Liu, H. Liu, and Y. Ding Compress-then-rank: faster and better listwise reranking with large language models via ranking-aware passage compression . Cited by: §2.2",
+      "url": "https://arxiv.org/html/2610.39610v1#S2.SS2.p1.1"
+    },
+    {
+      "href": "#S2.SS1.p1.1",
+      "text": "§2.1",
+      "section": "References",
+      "context": "Zhuang et al. (2024) H. Zhuang, Z. Qin, K. Hui, J. Wu, L. Yan, X. Wang, and M. Bendersky Beyond yes and no: improving zero-shot llm rankers via scoring fine-grained relevance labels . In Proceedings of the 2024 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies (Volume 2: Short Papers) , pp. 358–370 . Cited by: §2.1",
+      "url": "https://arxiv.org/html/2610.39610v1#S2.SS1.p1.1"
+    },
+    {
+      "href": "#S5.SS1.SSSx2.p1.1",
+      "text": "§5.1",
+      "section": "References",
+      "context": "Zhuang et al. (2024) H. Zhuang, Z. Qin, K. Hui, J. Wu, L. Yan, X. Wang, and M. Bendersky Beyond yes and no: improving zero-shot llm rankers via scoring fine-grained relevance labels . In Proceedings of the 2024 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies (Volume 2: Short Papers) , pp. 358–370 . Cited by: §2.1 , §5.1",
+      "url": "https://arxiv.org/html/2610.39610v1#S5.SS1.SSSx2.p1.1"
+    }
+  ],
+  "note": "Extracted HTML text; equations and table formatting may be imperfect. No PDF extraction was attempted."
+}

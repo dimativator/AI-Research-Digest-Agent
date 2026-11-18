@@ -1,0 +1,1781 @@
+{
+  "status": "ok",
+  "source": "https://arxiv.org/html/2610.37647v1",
+  "extractor_version": "article-v1",
+  "chunks": [
+    {
+      "chunk_id": "chunk-0001",
+      "section": "MuonGS: Pretraining LLMs with Relaxed Weight-Norm Control",
+      "text": "Athanasios Glentis † † thanks: Equal contribution, alphabetical order. Dawei Li 1 1 footnotemark: 1 Mingyi Hong Affiliation: University of Minnesota Email: {glent007,li004678,mhong}@umn.edu",
+      "source": "https://arxiv.org/html/2610.37647v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0002",
+      "section": "Abstract",
+      "text": "Weight decay and explicit weight-norm constraints improve optimizer performance in language model pretraining, yet a unified understanding of why such control helps and how much is needed remains incomplete. We analyze norm control in Muon over the entire training trajectory using the accumulated effective learning rate , C T = ∑ t < T η t / ∥ W t ∥ F C_{T}=\\sum_{t<T}\\eta_{t}/\\lVert W_{t}\\rVert_{F} , where η t \\eta_{t} is the nominal learning rate and η t / ∥ W t ∥ F \\eta_{t}/\\lVert W_{t}\\rVert_{F} is the effective learning rate relative to the weight norm. For bounded update directions, accumulation over any training interval bounds relative weight displacement. We show that vanilla Muon can accumulate only logarithmically, potentially limiting exploration and helping explain its slower empirical progress, whereas MuonW and MuonH guarantee at least linear accumulation under the stated conditions. Going beyond bounded-norm control, we show that sufficiently slow norm growth guarantees faster accumulation than the logarithmic worst case, opening up less restrictive optimizer designs, with more relaxed weight-norm control.",
+      "source": "https://arxiv.org/html/2610.37647v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0003",
+      "section": "Abstract",
+      "text": "Building on this connection between norm growth and exploration, we propose MuonGS, which uses Gram–Schmidt (GS) projection to remove the radial component of each Muon update without fixing the weight norm. With bounded update directions and a constant nominal learning rate, we prove that the weight norm grows at most proportionally to t \\sqrt{t} after t t steps. Consequently, MuonGS guarantees C T = Ω ⁡ ( T ) C_{T}=\\Omega(\\sqrt{T}) , with accumulation sustained even in later training. Further, for smooth scale-invariant objectives we establish its O ( T − 1 / 2 ) O(T^{-1/2}) stationarity guarantee. In pretraining experiments with 160M- and 400M-parameter dense models as well as a 135M active- and 1B total- parameter MoE model, MuonGS achieves lower validation perplexity than MuonH at long training horizons. In particular, for the dense model it achieves an estimated token-equivalent speedup up to about 15 % 15\\% at matched validation loss to MuonH.",
+      "source": "https://arxiv.org/html/2610.37647v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0004",
+      "section": "1 Introduction",
+      "text": "Optimizer design plays an important role in large language model (LLM) pretraining, shaping learning dynamics and model quality ( Liu et al., 2025 ; Wen et al., 2026 ) . Understanding the principles behind successful optimizers is therefore essential for improving training. Weight-norm control is a common component of effective optimizers for LLM pretraining. AdamW and the weight-decay variant of Muon, MuonW, counter norm growth through decoupled shrinkage ( Loshchilov and Hutter, 2017 ; Liu et al., 2025 ) . Its strength must be tuned, and the resulting weight scale depends on the optimization dynamics. Explicit constraints provide more direct control, as in fixed-radius optimization ( Kodryan et al., 2022 ) , unit-norm weight vectors in nGPT ( Loshchilov et al., 2024 ) , and fixed weight and update norms in MuonH, the Hyperball variant of Muon ( Wen et al., 2026 ) . These constraints prescribe weight scales throughout training and leave less freedom for their evolution. These different norm controls raise a common question: When is norm control needed, why does it help, and how much is sufficient? Existing analyses explain important effects of weight norms on optimization ( Zhang et al., 2018 ; D’Angelo et al., 2024 ; Liu et al., 2026 ) , but a unified basis for choosing among these controls remains incomplete. In particular, are the restrictions imposed by existing norm-control methods essential, or can weaker control deliver better optimization performance?",
+      "source": "https://arxiv.org/html/2610.37647v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0005",
+      "section": "1 Introduction",
+      "text": "A common rationale for controlling weight norms is to prevent updates from becoming too small relative to the current weights. Following prior work ( D’Angelo et al., 2024 ; Liu et al., 2026 ) , the effective learning rate is the ratio η t / ∥ W t ∥ F \\eta_{t}/\\lVert W_{t}\\rVert_{F} of the nominal learning rate η t \\eta_{t} to the Frobenius norm of the current weight matrix W t W_{t} . It determines the step size relative to the weight norm, up to the norm of the update direction. For a Muon update W t + 1 = W t − η t ​ O t W_{t+1}=W_{t}-\\eta_{t}O_{t} , ∥ W t + 1 − W t ∥ F ∥ W t ∥ F = η t ∥ W t ∥ F ​ ∥ O t ∥ F . \\frac{\\lVert W_{t+1}-W_{t}\\rVert_{F}}{\\lVert W_{t}\\rVert_{F}}=\\frac{\\eta_{t}}{\\lVert W_{t}\\rVert_{F}}\\lVert O_{t}\\rVert_{F}. Keeping the weight norm below R R ensures η t / ∥ W t ∥ F ≥ η t / R \\eta_{t}/\\lVert W_{t}\\rVert_{F}\\geq\\eta_{t}/R . When update norms are fixed, this protects relative movement in each step from shrinking due to norm growth. But must norm control preserve relative movement at every step, or is it sufficient to preserve exploration capacity over the training trajectory as a whole? To examine this question, we begin with the measure of net displacement ∥ W T − W 0 ∥ F \\lVert W_{T}-W_{0}\\rVert_{F} . Clearly, the same displacement produces a smaller relative change in the parameters when their norm is larger. We therefore normalize by the average weight norm r ¯ T = T − 1 ​ ∑ t < T ∥ W t ∥ F \\bar{r}_{T}=T^{-1}\\sum_{t<T}\\lVert W_{t}\\rVert_{F} , which summarizes the typical scale along the trajectory. This ratio measures net movement relative to that scale and is unchanged by a common rescaling of all iterates. For nonzero iterates, a constant nominal learning rate η \\eta , and ∥ O t ∥ F ≤ M \\lVert O_{t}\\rVert_{F}\\leq M ,",
+      "source": "https://arxiv.org/html/2610.37647v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0006",
+      "section": "1 Introduction",
+      "text": "∥ W T − W 0 ∥ F r ¯ T ≤ M ​ η ​ T r ¯ T ≤ M ​ ∑ t < T η ∥ W t ∥ F . \\displaystyle\\frac{\\lVert W_{T}-W_{0}\\rVert_{F}}{\\bar{r}_{T}}\\leq\\frac{M\\eta T}{\\bar{r}_{T}}\\leq M\\sum_{t<T}\\frac{\\eta}{\\lVert W_{t}\\rVert_{F}}. (1) The first bound sums update lengths; the second uses the fact that the average inverse norm is at least the inverse average norm. Clearly, sufficient accumulation of effective learning rates is therefore a necessary condition for substantial movement. Our contribution. We develop a global perspective on norm control for Muon-type algorithms by examining exploration over entire training trajectories. This perspective identifies less restrictive norm-control conditions and guides the design of MuonGS , a new optimizer with theoretical guarantees and strong empirical performance. Central to our analysis is the accumulated effective learning rate , defined for general learning-rate schedules by C T = ∑ t = 0 T − 1 η t ∥ W t ∥ F . C_{T}=\\sum_{t=0}^{T-1}\\frac{\\eta_{t}}{\\lVert W_{t}\\rVert_{F}}. Our main claim is that continued exploration requires sufficient growth of C T C_{T} over the training intervals of interest. Further, we extend the displacement argument to arbitrary intervals and learning-rate schedules, that for bounded update directions, net weight displacement from iteration s s to T T , relative to the larger endpoint norm, is at most M ⁡ ( C T − C s ) M(C_{T}-C_{s}) . A large C T C_{T} may come mostly from early iterations. Continued exploration after iteration s s requires sufficient additional accumulation, C T − C s C_{T}-C_{s} , and if this increment is small, relative weight displacement over [ s , T ] [s,T] must also be small.",
+      "source": "https://arxiv.org/html/2610.37647v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0007",
+      "section": "1 Introduction",
+      "text": "We next compare how different norm-control mechanisms affect this accumulation. When the learning rate η t = η \\eta_{t}=\\eta is held constant throughout training, vanilla Muon can exhibit linear norm growth and only logarithmic accumulation, C T = Θ ⁡ ( log ⁡ T ) C_{T}=\\Theta(\\log T) . MuonW guarantees C T = Ω ⁡ ( T ) C_{T}=\\Omega(T) under the stated conditions, while fixed-norm control gives C T = Θ ⁡ ( T ) C_{T}=\\Theta(T) . These results show that weight decay and fixed-norm constraints guarantee at least linear accumulation, compared with vanilla Muon’s logarithmic worst case. A direct consequence of our analysis is that bounded weight norms are sufficient for these linear accumulation guarantees, but stronger than needed to improve on vanilla Muon’s logarithmic worst case. We show that this requirement can be relaxed to sufficiently slow norm growth, which still guarantees faster accumulation (as compared to vanilla Muon) even as weight norms increase and effective learning rates decrease. This observation opens up a broader family of Muon variants that control norm growth without requiring bounded weight norms. Can this additional flexibility be used to design optimizers that sustain accumulation throughout training and achieve better practical performance?",
+      "source": "https://arxiv.org/html/2610.37647v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0008",
+      "section": "1 Introduction",
+      "text": "To investigate this question, we propose MuonGS , which uses Gram–Schmidt (GS) projection to remove the radial component of Muon’s update. The resulting update is orthogonal to the current weights in the Frobenius inner product. This orthogonality eliminates the first-order increase in the weight norm, so the norm grows only at second order in the step size. With bounded directions and a constant nominal learning rate, this guarantees O ⁡ ( t ) O(\\sqrt{t}) norm growth and C T = Ω ⁡ ( T ) C_{T}=\\Omega(\\sqrt{T}) , with the same accumulation order over later training windows. MuonGS thus improves vanilla Muon’s worst-case accumulation guarantee without fixing a radius. For smooth scale-invariant objectives, we further established the convergence rate for MuonGS. Figure 1 : One step of vanilla Muon, MuonW, MuonH and MuonGS from the same W t W_{t} and the same direction O t O_{t} , for a small (left) and a large (right) weight norm. Vanilla Muon’s radial part (dashed) grows the norm at first order; MuonH retracts to ‖ W ‖ F = R \\|W\\|_{F}=R (dotted); MuonGS keeps the tangential part only, so the norm changes at second order. MuonW’s decay − η ​ λ ​ W t -\\eta\\lambda W_{t} scales with ‖ W t ‖ F \\|W_{t}\\|_{F} but the actual step depends on the size of W t W_{t} ; the decay therefore hardly slows down the norm growth for a small norm but can shrink the norm for a large one.",
+      "source": "https://arxiv.org/html/2610.37647v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0009",
+      "section": "1 Introduction",
+      "text": "We evaluate MuonGS on FineWeb pretraining with modernized GPT-style models of approximately 160M and 400M parameters. At longer training horizons, MuonGS achieves lower validation perplexity than MuonH. Fitting MuonH’s loss as a function of the training-token budget gives an estimated token-equivalent speedup of up to about 15 % 15\\% at matched validation loss. In addition, MuonGS obtains lower validation perplexity than MuonH when pretraining a modern MoE model, having about 135M active and 1B total parameters, on Ultra-FineWeb. These results support MuonGS as a practical optimizer and demonstrate the value of relaxing norm-control requirements. Together with our theoretical guarantees, these findings provide a positive answer to the question above by showing that weaker norm control can indeed sustain accumulation throughout training while improving empirical performance. Our contributions are threefold. • We establish a global perspective on norm control in Muon, in the sense that we assess exploration over entire training trajectories through the growth of C T C_{T} and its increments over training intervals. Our analysis bounds relative weight displacement and, under scale-invariance and Lipschitz assumptions, attainable loss change. At a constant nominal learning rate, it distinguishes vanilla Muon’s logarithmic worst case from the linear guarantees of MuonW and fixed-norm control. It also explains when norm growth can offset a larger nominal learning rate.",
+      "source": "https://arxiv.org/html/2610.37647v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0010",
+      "section": "1 Introduction",
+      "text": "• We propose MuonGS and prove O ⁡ ( t ) O(\\sqrt{t}) weight-norm growth, C T = Ω ⁡ ( T ) C_{T}=\\Omega(\\sqrt{T}) , and C 2 ​ T − C T = Ω ⁡ ( T ) C_{2T}-C_{T}=\\Omega(\\sqrt{T}) for bounded directions and a constant nominal learning rate. These guarantees improvement on vanilla Muon’s logarithmic worst-case accumulation without requiring bounded weight norms. The bound on C 2 ​ T − C T C_{2T}-C_{T} further shows that accumulation is sustained over later training windows, preserving a necessary condition for continued exploration. • We demonstrate MuonGS’s effectiveness in dense transformer pretraining at 160M and 400M parameter scale, with lower validation perplexity than MuonH at longer horizons and an estimated token-equivalent speedup of up to about 15 % 15\\% at matched validation loss. In addition, we show MuonGS obtains lower validation perplexity than MuonH when pretraining a modern MoE model having about 135M active and 1B total parameters.",
+      "source": "https://arxiv.org/html/2610.37647v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0011",
+      "section": "2 Related Works",
+      "text": "Weight Norm Control. Weight-norm control approaches have been commonly used in neural network training through reparameterization, shrinkage or constraints. Early works like weight normalization controlled weight geometry ( Salimans and Kingma, 2016 ) . AdamW then decoupled weight decay from adaptive gradient preconditioning ( Loshchilov and Hutter, 2017 ) , while AdamP and SGDP ( Heo et al., 2020 ) subsequently slowed norm growth by removing the radial component of the update for weights they detect as scale-invariant. Later methods introduced norm targets and per-matrix upper bounds ( Loshchilov, 2023 ; Franke et al., 2024 ) , followed by explicit constraints for LLM pretraining ( Loshchilov et al., 2024 ; Wen et al., 2026 ; An et al., 2026 ; Hägele et al., 2026 ; Xie et al., 2026 ) . However, these methods do not describe how fast the norm grows, nor do they analyze what impact the increased weight norm has on the overall algorithm performance.",
+      "source": "https://arxiv.org/html/2610.37647v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0012",
+      "section": "2 Related Works",
+      "text": "Effective Learning Rate. The effective learning rate describes how parameter scale modifies the effect of a nominal learning rate. In scale-invariant settings, Van Laarhoven (2017) derived effective learning rates proportional to η / ‖ W ‖ 2 \\eta/\\|W\\|^{2} for SGD and η / ‖ W ‖ \\eta/\\|W\\| for RMSProp and Adam under their respective scaling assumptions. Later works related weight norms and decay to effective learning-rate schedules ( Hoffer et al., 2018 ; Zhang et al., 2018 ) , set up equivalences between weight decay and learning-rate schedules ( Li and Arora, 2019 ) , and studied related concepts such as spherical equilibrium, periodic behavior, and optimizer-dependent angular dynamics ( Wan et al., 2021 ; Lobacheva et al., 2021 ; Roburin et al., 2022 ; Kosson et al., 2023 ) . In LLM pretraining, the effective learning rate also helps explain why weight decay improves training ( D’Angelo et al., 2024 ) and why SGD underperforms Adam ( Glentis et al., 2026 ) . More recently, Liu et al. (2026) observed that effective learning rate determines the loss dynamics, while Amin et al. (2026) established stability results for effective learning-rate schedules. However, they do not explore how much the effective learning rate can accumulate over training, or relate this accumulation to exploration capacity.",
+      "source": "https://arxiv.org/html/2610.37647v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0013",
+      "section": "3 Norm Control Via Accumulated Effective Learning Rate",
+      "text": "We begin with formalizing the global perspective on norm control by relating Muon’s exploration over training intervals to the accumulated effective learning rate C T C_{T} . Section 3.1 starts from what exploration means for a weight matrix of an LLM, derives the effective learning rate as the quantity that sets the size of a Muon step relative to the weights, and shows that the sum of effective learning rates over a training interval bounds how far training can explore in that interval. Section 3.2 compares how fast this sum grows under the three forms in which Muon is run in practice, without norm control, with decoupled weight decay, and with a fixed norm. Then it further answers whether a larger nominal learning rate can substitute for norm control. Proofs are collected in Appendix B .",
+      "source": "https://arxiv.org/html/2610.37647v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0014",
+      "section": "3.1 Exploration and accumulated effective learning rate",
+      "text": "Consider a weight matrix W t ∈ ℝ m × n W_{t}\\in\\mathbb{R}^{m\\times n} of a transformer block updated by Muon ( Jordan et al., 2024 ) , and denote p = min ⁡ { m , n } p=\\min\\{m,n\\} . Vanilla Muon updates it as W t + 1 = W t − η t ​ O t , O t = Orthogonalize ⁡ ( U t + 1 ) , W_{t+1}=W_{t}-\\eta_{t}O_{t},\\qquad O_{t}=\\mathrm{Orthogonalize}(U_{t+1}), (2) where η t ≥ 0 \\eta_{t}\\geq 0 is the nominal learning rate and U t + 1 U_{t+1} is the gradient momentum. Exact orthogonalization replaces each nonzero singular value of U t + 1 U_{t+1} by one, giving ‖ O t ‖ F = rank ⁡ ( U t + 1 ) ≤ p . \\|O_{t}\\|_{F}=\\sqrt{\\operatorname{rank}(U_{t+1})}\\leq\\sqrt{p}. (3) Thus a full-rank Muon direction has norm p \\sqrt{p} , independent of the gradient magnitude 1 1 1 Practical implementations use Newton-Schulz iterations ( Jordan et al., 2024 ) and multiply the update by a constant that depends on the shape of the matrix ( Liu et al., 2025 ) . These implementations yield a constant-scale change in the bound of ‖ O t ‖ F \\|O_{t}\\|_{F} that can absorbed into η t \\eta_{t} or p \\sqrt{p} . We further note that all theoretical results below bound through ‖ O t ‖ F \\|O_{t}\\|_{F} , so we can use a constant M M to bound ‖ O t ‖ F \\|O_{t}\\|_{F} for general cases. . Write r t = ‖ W t ‖ F r_{t}=\\|W_{t}\\|_{F} for the weight norm and assume r t > 0 r_{t}>0 throughout training. We study exploration through the net movement of a weight matrix relative to its scale. Over an interval [ s , T ] [s,T] , the quantity ‖ W T − W s ‖ F r T \\frac{\\|W_{T}-W_{s}\\|_{F}}{r_{T}} measures how far the weights have moved relative to their final magnitude. To connect this net movement to Muon’s updates, first compare each step with the weights on which it acts:",
+      "source": "https://arxiv.org/html/2610.37647v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0015",
+      "section": "3.1 Exploration and accumulated effective learning rate",
+      "text": "‖ W t + 1 − W t ‖ F r t = rank ⁡ ( U t + 1 ) ​ η t r t ≤ p ​ η t r t . \\frac{\\|W_{t+1}-W_{t}\\|_{F}}{r_{t}}=\\sqrt{\\operatorname{rank}(U_{t+1})}\\,\\frac{\\eta_{t}}{r_{t}}\\leq\\sqrt{p}\\,\\frac{\\eta_{t}}{r_{t}}. (4) Muon supplies the dimension-dependent update scale, while η t / r t \\eta_{t}/r_{t} sets its size relative to the weights. We therefore use η t / r t \\eta_{t}/r_{t} as the effective learning rate relative to the weight norm ( D’Angelo et al., 2024 ; Liu et al., 2026 ) . Norm growth can reduce this rate even when the nominal learning rate is unchanged. Over a training interval [ s , T ] [s,T] , these relative updates accumulate: ∑ t = s T − 1 ‖ W t + 1 − W t ‖ F r t ≤ p ​ ∑ t = s T − 1 η t r t . \\sum_{t=s}^{T-1}\\frac{\\|W_{t+1}-W_{t}\\|_{F}}{r_{t}}\\leq\\sqrt{p}\\sum_{t=s}^{T-1}\\frac{\\eta_{t}}{r_{t}}. (5) This leads to the accumulated effective learning rate C 0 = 0 , C T = ∑ t = 0 T − 1 η t r t . C_{0}=0,\\qquad C_{T}=\\sum_{t=0}^{T-1}\\frac{\\eta_{t}}{r_{t}}. (6) The sum C T C_{T} captures how much relative updating can accumulate along the trajectory. The following proposition connects this quantity to the net displacement that motivated the analysis.",
+      "source": "https://arxiv.org/html/2610.37647v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0016",
+      "section": "Proposition 3.1 (Necessary accumulation for relative displacement) .",
+      "text": "For the updates above and integers 0 ≤ s < T 0\\leq s<T , ‖ W T − W s ‖ F max ⁡ { r s , r T } ≤ p ​ ( C T − C s ) . \\frac{\\|W_{T}-W_{s}\\|_{F}}{\\max\\{r_{s},r_{T}\\}}\\leq\\sqrt{p}(C_{T}-C_{s}). (7) In addition, define F ⁡ ( W ) = f ⁡ ( W / ‖ W ‖ F ) F(W)=f(W/\\|W\\|_{F}) and suppose f f is L L -Lipschitz on the unit Frobenius sphere with respect to Frobenius distance. Then | F ⁡ ( W T ) − F ⁡ ( W s ) | ≤ 2 ​ L ​ p ​ ( C T − C s ) . |F(W_{T})-F(W_{s})|\\leq 2L\\sqrt{p}(C_{T}-C_{s}). (8) The first bound ( 7 ) implies that a weight change of at least a fraction δ > 0 \\delta>0 of the larger endpoint norm requires C T − C s ≥ δ / p C_{T}-C_{s}\\geq\\delta/\\sqrt{p} for any weight matrix. The second bound ( 8 ) further assumes a scale-invariant loss, which means the loss depends only on its direction W / ‖ W ‖ F W/\\|W\\|_{F} because its output is normalized. These scale-invariant matrices are common in query and key projections of general transformers. Bound ( 8 ) states that under the scale-invariance and Lipschitz assumptions with L > 0 L>0 , a loss decrease of at least Δ > 0 \\Delta>0 requires C T − C s ≥ Δ / ( 2 ​ L ​ p ) C_{T}-C_{s}\\geq\\Delta/(2L\\sqrt{p}) . Note that the Lipschitz assumption is mild as L L is the Lipschitz constant of the loss restricted to the unit sphere, which is finite for every continuously differentiable loss. With the two bounds in Proposition 3.1 , small accumulation therefore limits both relative movement and, under these additional assumptions, loss reduction. We further note that Proposition 3.1 serves as a necessary condition that a lower-bound threshold is needed for sufficient exploration of the algorithm. It does not claim that larger exploration capacity can achieve lower loss.",
+      "source": "https://arxiv.org/html/2610.37647v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0017",
+      "section": "Proposition 3.1 (Necessary accumulation for relative displacement) .",
+      "text": "Proposition 3.1 holds for every interval [ s , T ] [s,T] , not only for the whole interval [ 0 , T ] [0,T] . This is particularly relevant to later training because a large C T C_{T} may come mainly from early steps. Substantial relative weight movement after step s s requires sufficient additional accumulation C T − C s C_{T}-C_{s} , so continued exploration requires C T C_{T} to keep growing. The next section therefore compares norm controls by two metrics: the relative growth C T − C 1 C_{T}-C_{1} with respect to T T , as well as the later stage relative growth C 2 ​ T − C T C_{2T}-C_{T} over the window [ T , 2 ​ T ] [T,2T] . Note that we use the relative growth of C T C_{T} because it is not sensitive to initialization scale or model size, which is not the case if we only consider C T C_{T} alone. See more discussion in Appendix D .",
+      "source": "https://arxiv.org/html/2610.37647v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0018",
+      "section": "3.2 Accumulation under three Muon norm controls",
+      "text": "Given the metric of C T C_{T} , we now compare how C T C_{T} grows under three forms of norm control for Muon, that is, leaving the norm uncontrolled, applying decoupled weight decay, or constraining the norm explicitly. They correspond to vanilla Muon ( Jordan et al., 2024 ) , MuonW ( Liu et al., 2025 ) , and the norm constraint used by MuonH ( Wen et al., 2026 ) , respectively. To isolate their effect, take a constant nominal learning rate η t = η > 0 \\eta_{t}=\\eta>0 . • Vanilla Muon follows ( 2 ). • MuonW uses W t + 1 = ( 1 − η ​ λ ) ​ W t − η ​ O t , λ > 0 , 0 < η ​ λ < 1 . W_{t+1}=(1-\\eta\\lambda)W_{t}-\\eta O_{t},\\qquad\\lambda>0,\\quad 0<\\eta\\lambda<1. (9) • For fixed-norm control , let r 0 = R > 0 r_{0}=R>0 and W t + 1 = R ​ W t − η ​ D t ‖ W t − η ​ D t ‖ F , W_{t+1}=R\\frac{W_{t}-\\eta D_{t}}{\\|W_{t}-\\eta D_{t}\\|_{F}}, (10) where D t D_{t} is the update direction before the weights are renormalized to norm R R . Fixed norm uses D t = O t D_{t}=O_{t} , while MuonH additionally fixes the update norm by setting D t = R ​ O t / ‖ O t ‖ F D_{t}=RO_{t}/\\|O_{t}\\|_{F} . The accumulation result below uses only the fixed weight norm, i.e., D t = O t D_{t}=O_{t} . The next proposition characterizes the accumulated effective learning rate under these three cases.",
+      "source": "https://arxiv.org/html/2610.37647v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0019",
+      "section": "Proposition 3.2 (Accumulation under norm control) .",
+      "text": "Assume a constant nominal learning rate η t = η > 0 \\eta_{t}=\\eta>0 , and let R λ = max ⁡ { r 0 , p / λ } R_{\\lambda}=\\max\\{r_{0},\\sqrt{p}/\\lambda\\} . For every integer T ≥ 1 T\\geq 1 : (i) Vanilla Muon satisfies C T ≥ 1 p ​ log ⁡ ( 1 + η ​ p ​ T r 0 ) , C 2 ​ T − C T ≥ 1 p ​ log ⁡ r 0 + 2 ​ η ​ p ​ T r 0 + η ​ p ​ T . C_{T}\\geq\\frac{1}{\\sqrt{p}}\\log\\Bigl(1+\\frac{\\eta\\sqrt{p}\\,T}{r_{0}}\\Bigr),\\qquad C_{2T}-C_{T}\\geq\\frac{1}{\\sqrt{p}}\\log\\frac{r_{0}+2\\eta\\sqrt{p}\\,T}{r_{0}+\\eta\\sqrt{p}\\,T}. (ii) MuonW satisfies C T ≥ η ​ T / R λ C_{T}\\geq\\eta T/R_{\\lambda} and C 2 ​ T − C T ≥ η ​ T / R λ C_{2T}-C_{T}\\geq\\eta T/R_{\\lambda} . (iii) A fixed norm R R gives C T = η ​ T / R C_{T}=\\eta T/R and C 2 ​ T − C T = η ​ T / R C_{2T}-C_{T}=\\eta T/R . Further, for vanilla Muon, the lower bound expressed in (i) is tight as there exists a function and an initialization such that the worst-case rate is attainable, i.e., C T = Θ ⁡ ( log ⁡ T ) C_{T}=\\Theta(\\log T) and C 2 ​ T − C T → log ⁡ 2 / p C_{2T}-C_{T}\\rightarrow\\log 2/\\sqrt{p} .",
+      "source": "https://arxiv.org/html/2610.37647v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0020",
+      "section": "Proposition 3.2 (Accumulation under norm control) .",
+      "text": "Proposition 3.2 shows why norm control matters for accumulation. Without it, the norm can grow linearly in t t , so the effective learning rate can decay like 1 / t 1/t and C T C_{T} can grow as slowly as log ⁡ T \\log T . Over a later window [ T , 2 ​ T ] [T,2T] , the bound in (i) tends to ( log ⁡ 2 ) / p (\\log 2)/\\sqrt{p} as T T grows, so the accumulation of vanilla Muon over later windows can stay bounded. In comparison, weight decay and a fixed norm keep the norm at most R λ R_{\\lambda} or R R , so the effective learning rate stays at least η / R λ \\eta/R_{\\lambda} or η / R \\eta/R , and C T C_{T} and C 2 ​ T − C T C_{2T}-C_{T} grow at least linearly. By Proposition 3.1 , bounded accumulation over later windows limits how far the weights can move late in training and, under the scale-invariance and Lipschitz assumptions, how much the loss can still decrease. This offers an explanation for vanilla Muon’s slower progress in training ( Liu et al., 2025 ) and for the improvements obtained with weight decay or fixed-norm constraints.",
+      "source": "https://arxiv.org/html/2610.37647v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0021",
+      "section": "Proposition 3.2 (Accumulation under norm control) .",
+      "text": "Figure 2 shows the three forms on the example (see Appendix B.3 ) that shows the bounds of Proposition 3.2 (i) are tight: F ⁡ ( W ) = exp ⁡ ( tr ⁡ W ) F(W)=\\exp(\\operatorname{tr}W) from W 0 = − 4 ​ I 2 W_{0}=-4I_{2} , where every Muon direction is O t = I 2 O_{t}=I_{2} , so each update − η ​ O t -\\eta O_{t} points away from the origin and the norm grows as fast as possible. Vanilla Muon has r t = 2 ​ ( 4 + η ​ t ) r_{t}=\\sqrt{2}(4+\\eta t) and C T = Θ ⁡ ( log ⁡ T ) C_{T}=\\Theta(\\log T) , whereas MuonW and fixed-norm control yield C T = Θ ⁡ ( T ) C_{T}=\\Theta(T) . The distinction is clearer over later windows: C 2 ​ T − C T C_{2T}-C_{T} approaches log ⁡ 2 / 2 \\log 2/\\sqrt{2} for vanilla Muon but grows linearly with T T under the other two controls. Figure 2 : An attainable gap in accumulation growth. Exact Muon is run on F ⁡ ( W ) = exp ⁡ ( tr ⁡ W ) F(W)=\\exp(\\operatorname{tr}W) from W 0 = − 4 ​ I 2 W_{0}=-4I_{2} for 10 5 10^{5} steps, with η = 0.04 \\eta=0.04 and momentum coefficient β = 0.95 \\beta=0.95 . MuonW uses λ = 0.2 \\lambda=0.2 , and MuonH uses R = 4 ​ 2 R=4\\sqrt{2} . All methods have the same orthogonalized direction I 2 I_{2} , which MuonH rescales to D t = 4 ​ I 2 D_{t}=4I_{2} . Left: total accumulation. Right: accumulation over [ T , 2 ​ T ) [T,2T) ; the dotted line is log ⁡ 2 / 2 \\log 2/\\sqrt{2} . The example in Proposition 3.2 shows that the difference in worst-case growth orders can occur in an actual Muon run. In practical LLM pretraining, we also observe such numerical differences in accumulation within the same training budget, though the gap is smaller. (See Figure 3 ).",
+      "source": "https://arxiv.org/html/2610.37647v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0022",
+      "section": "Proposition 3.2 (Accumulation under norm control) .",
+      "text": "Figure 3 : Accumulate effective learning rate C T C_{T} vs training horizon T T . Results from training a 160M GPT-style model on FineWeb for 100,000 steps (about 50B tokens) with a constant learning rate of 0.005 0.005 . Left: total accumulation C T C_{T} . Right: accumulation over [ T , 2 ​ T ) [T,2T) . The results so far fix the nominal learning rate. A natural question is whether a larger nominal learning rate can make up for the small accumulation of vanilla Muon. It does not, because a larger η \\eta also makes the norm grow faster, roughly in proportion to η \\eta , so the effective learning rates after the first step barely increase (Appendix C makes this precise). Figure 4 shows this in GPT-160M pretraining: raising the learning rate 16-fold moves C 20,000 C_{20{,}000} of vanilla Muon only from 0.165 0.165 to 0.190 0.190 , whereas with weight decay C 20,000 C_{20{,}000} grows with the learning rate. The best MuonW run for each weight decay (stars) reaches C 20,000 C_{20{,}000} between 0.3 0.3 and 0.4 0.4 , a level that vanilla Muon does not reach at any learning rate, and a lower perplexity ( 21.98 21.98 – 22.02 22.02 , versus 22.49 22.49 for the best vanilla Muon run). Figure 4 : Accumulate effective learning rate C T C_{T} vs learning rate scale η \\eta . Results from training a 160M GPT-style model on FineWeb for 20,000 steps (about 10.5B tokens). Each point represents a learning-rate and weight-decay setting; solid curves connect settings with the same weight decay (WD). WD= 0 is vanilla Muon, and positive WD corresponds to MuonW. Numbers beside the points report perplexity. Stars mark the lowest perplexity among the tested learning rates for each WD; the dashed line connects these stars for MuonW.",
+      "source": "https://arxiv.org/html/2610.37647v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0023",
+      "section": "Proposition 3.2 (Accumulation under norm control) .",
+      "text": "To summarize, our analysis links norm control to exploration through accumulated effective learning rates. Weight decay and fixed-norm constraints sustain accumulation, while rapid norm growth can limit it and offset a larger nominal learning rate.",
+      "source": "https://arxiv.org/html/2610.37647v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0024",
+      "section": "4 MuonGS for LLM Pretraining",
+      "text": "The preceding analysis links the benefit of bounded weight norms to the accumulation they preserve. This suggests relaxing the bounded-norm requirement, since sufficiently slow norm growth can still guarantee faster accumulation than vanilla Muon’s logarithmic worst case. For example, at a constant nominal learning rate η > 0 \\eta>0 , the bound r t ≤ r 0 + c ​ t a r_{t}\\leq r_{0}+ct^{a} with c > 0 c>0 and 0 ≤ a < 1 0\\leq a<1 gives C 2 ​ T − C T ≥ η ​ T r 0 + c ​ ( 2 ​ T ) a = Ω ⁡ ( T 1 − a ) . C_{2T}-C_{T}\\geq\\frac{\\eta T}{r_{0}+c(2T)^{a}}=\\Omega(T^{1-a}). Accumulation can therefore grow over later training windows even when weight norms increase and effective learning rates decrease. This opens up a broader family of Muon variants and brings us back to the question posed in the introduction. Can this additional flexibility be used to design optimizers that sustain accumulation throughout training and achieve better practical performance? We address this question with MuonGS , which controls norm growth by removing the radial component of Muon’s update. We analyze its accumulation and optimization properties, then evaluate its performance in LLM pretraining.",
+      "source": "https://arxiv.org/html/2610.37647v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0025",
+      "section": "4.1 Removing the radial component of the Muon update",
+      "text": "To construct an update that limits weight-norm growth, we first examine how a vanilla Muon step changes the squared weight norm. ‖ W t − η t ​ O t ‖ F 2 = r t 2 − 2 ​ η t ​ ⟨ W t , O t ⟩ F + η t 2 ​ ‖ O t ‖ F 2 . \\|W_{t}-\\eta_{t}O_{t}\\|_{F}^{2}=r_{t}^{2}-2\\eta_{t}\\langle W_{t},O_{t}\\rangle_{F}+\\eta_{t}^{2}\\|O_{t}\\|_{F}^{2}. (11) The term − 2 ​ η t ​ ⟨ W t , O t ⟩ F -2\\eta_{t}\\langle W_{t},O_{t}\\rangle_{F} is linear in the step size and increases the squared weight norm when ⟨ W t , O t ⟩ F < 0 \\langle W_{t},O_{t}\\rangle_{F}<0 . Muon controls the size of O t O_{t} through matrix orthogonalization, but the update may still point partly along W t W_{t} . This radial component is responsible for the first-order norm change. We therefore seek a modified direction that eliminates the first-order norm change while remaining as close as possible to Muon’s proposed update. Giving priority to the norm-control requirement leads to the following simple bilevel formulation for fixed W t ≠ 0 W_{t}\\neq 0 and O t O_{t} min D ∈ ℝ m × n \\displaystyle\\min_{D\\in\\mathbb{R}^{m\\times n}} 1 2 ​ ∥ D − O t ∥ F 2 \\displaystyle\\frac{1}{2}\\lVert D-O_{t}\\rVert_{F}^{2} subject to \\displaystyle\\text{subject to} D ∈ arg ​ min Z ∈ ℝ m × n ⁡ 1 2 ​ ⟨ W t , Z ⟩ F 2 . \\displaystyle D\\in\\operatorname*{arg\\,min}_{Z\\in\\mathbb{R}^{m\\times n}}\\frac{1}{2}\\langle W_{t},Z\\rangle_{F}^{\\,2}. The lower level minimizes the squared first-order norm change, so its minimizers are precisely the directions orthogonal to W t W_{t} . The upper level selects the closest such direction to O t O_{t} . The unique solution is the Gram–Schmidt (GS) projection onto the tangent space of the sphere through W t W_{t} . We call the resulting method MuonGS , with the update",
+      "source": "https://arxiv.org/html/2610.37647v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0026",
+      "section": "4.1 Removing the radial component of the Muon update",
+      "text": "O ~ t = O t − ⟨ W t , O t ⟩ F r t 2 ​ W t , W t + 1 = W t − η t ​ O ~ t . \\widetilde{O}_{t}=O_{t}-\\frac{\\langle W_{t},O_{t}\\rangle_{F}}{r_{t}^{2}}W_{t},\\qquad W_{t+1}=W_{t}-\\eta_{t}\\widetilde{O}_{t}. (12) The projection gives the solution in closed form, so no additional iterative optimization is required. Since O t O_{t} is treated as given, it also applies when the Muon direction incorporates momentum and approximate matrix orthogonalization. The projection gives ⟨ W t , O ~ t ⟩ F = 0 \\langle W_{t},\\widetilde{O}_{t}\\rangle_{F}=0 and ‖ O ~ t ‖ F ≤ p \\|\\widetilde{O}_{t}\\|_{F}\\leq\\sqrt{p} . Substituting into ( 11 ) leaves r t + 1 2 = r t 2 + η t 2 ​ ‖ O ~ t ‖ F 2 . r_{t+1}^{2}=r_{t}^{2}+\\eta_{t}^{2}\\|\\widetilde{O}_{t}\\|_{F}^{2}. (13) Thus the norm may increase, but its squared increment is only quadratic in the step size. AdamP applies the same tangent-space projection to the Adam update, removing its radial component to suppress momentum-induced norm growth on weights it detects as scale-invariant, i.e., when the cosine similarity between the gradient and the weight falls below a small threshold ( Heo et al., 2020 ) . MuonGS applies this projection directly to Muon’s matrix updates, without a scale-invariance test. More importantly, beyond this algorithmic distinction, our analysis links the resulting norm-growth control to exploration over entire training trajectories. As shown next, for bounded update directions and a constant nominal learning rate, MuonGS guarantees r t = O ⁡ ( t ) r_{t}=O(\\sqrt{t}) , C T = Ω ⁡ ( T ) C_{T}=\\Omega(\\sqrt{T}) , and C 2 ​ T − C T = Ω ⁡ ( T ) C_{2T}-C_{T}=\\Omega(\\sqrt{T}) . These guarantees hold without assuming a scale-invariant objective. Algorithm 1 MuonGS for one weight matrix (the projection is line 4).",
+      "source": "https://arxiv.org/html/2610.37647v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0027",
+      "section": "4.1 Removing the radial component of the Muon update",
+      "text": "1: learning rate η t \\eta_{t} , momentum β \\beta , initial weights W 0 W_{0} , U 0 = 0 U_{0}=0 2: for t = 0 , 1 , 2 , … t=0,1,2,\\dots do 3: U t + 1 ← β ​ U t + ∇ f ​ ( W t ) U_{t+1}\\leftarrow\\beta U_{t}+\\nabla f(W_{t}) ⊳ \\triangleright gradient momentum 4: O t ← Orthogonalize ⁡ ( U t + 1 ) O_{t}\\leftarrow\\mathrm{Orthogonalize}(U_{t+1}) ⊳ \\triangleright Newton–Schulz, as in Muon 5: O ~ t ← O t − ⟨ W t , O t ⟩ ‖ W t ‖ F 2 ​ W t \\widetilde{O}_{t}\\leftarrow O_{t}-\\dfrac{\\langle W_{t},O_{t}\\rangle}{\\|W_{t}\\|_{F}^{2}}\\,W_{t} ⊳ \\triangleright remove the component along W t W_{t} 6: W t + 1 ← W t − η t ​ O ~ t W_{t+1}\\leftarrow W_{t}-\\eta_{t}\\widetilde{O}_{t} 7: end for",
+      "source": "https://arxiv.org/html/2610.37647v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0028",
+      "section": "4.2 Norm growth and accumulation",
+      "text": "We now quantify how the projection’s control of norm growth sustains accumulation over training. Starting from r 0 > 0 r_{0}>0 and using the bound ‖ O t ‖ F ≤ p \\|O_{t}\\|_{F}\\leq\\sqrt{p} , the following theorem controls weight-norm growth under arbitrary learning-rate schedules. For a constant learning rate, it then gives lower bounds on both C T C_{T} and C 2 ​ T − C T C_{2T}-C_{T} , showing that accumulation is sustained during later training as well as over the full trajectory.",
+      "source": "https://arxiv.org/html/2610.37647v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0029",
+      "section": "Theorem 4.1 (MuonGS growth and accumulation) .",
+      "text": "Under ( 12 ), all iterates remain nonzero and r T 2 = r 0 2 + ∑ t = 0 T − 1 η t 2 ​ ∥ O ~ t ∥ F 2 ≤ r 0 2 + p ​ ∑ t = 0 T − 1 η t 2 . r_{T}^{2}=r_{0}^{2}+\\sum_{t=0}^{T-1}\\eta_{t}^{2}\\lVert\\widetilde{O}_{t}\\rVert_{F}^{\\,2}\\leq r_{0}^{2}+p\\sum_{t=0}^{T-1}\\eta_{t}^{2}. (14) For η t = η > 0 \\eta_{t}=\\eta>0 , C T \\displaystyle C_{T} ≥ 2 p ​ η ​ ( r 0 2 + p ​ η 2 ​ T − r 0 ) = Ω ⁡ ( T ) , \\displaystyle\\geq\\frac{2}{p\\eta}\\left(\\sqrt{r_{0}^{2}+p\\eta^{2}T}-r_{0}\\right)=\\Omega(\\sqrt{T}), (15) C 2 ​ T − C T \\displaystyle C_{2T}-C_{T} ≥ η ​ T r 0 2 + 2 ​ p ​ η 2 ​ T = Ω ⁡ ( T ) . \\displaystyle\\geq\\frac{\\eta T}{\\sqrt{r_{0}^{2}+2p\\eta^{2}T}}=\\Omega(\\sqrt{T}). (16) MuonGS therefore limits the norm to O ⁡ ( t ) O(\\sqrt{t}) and guarantees at least square-root accumulation, including over later windows. It improves the worst-case guarantee of vanilla Muon without enforcing a fixed radius. Thus the accumulation preserved by MuonGS is available during later training, rather than coming only from early updates. Table 1 summarizes the comparison with vanilla Muon and bounded-norm controls. Table 1: Norm and accumulation guarantees at a constant positive learning rate. Control Norm bound C T C_{T} C 2 ​ T − C T C_{2T}-C_{T} Vanilla Muon O ⁡ ( t ) O(t) Ω ⁡ ( log ⁡ T ) \\Omega(\\log T) Ω ⁡ ( 1 ) \\Omega(1) Weight decay O ⁡ ( 1 ) O(1) Ω ⁡ ( T ) \\Omega(T) Ω ⁡ ( T ) \\Omega(T) Fixed norm R R η ​ T / R \\eta T/R η ​ T / R \\eta T/R GS O ⁡ ( t ) O(\\sqrt{t}) Ω ⁡ ( T ) \\Omega(\\sqrt{T}) Ω ⁡ ( T ) \\Omega(\\sqrt{T}) The preceding bounds describe the relative updating available along a trajectory. To connect this accumulation to optimization, we now consider a fixed scale-invariant matrix objective",
+      "source": "https://arxiv.org/html/2610.37647v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0030",
+      "section": "Theorem 4.1 (MuonGS growth and accumulation) .",
+      "text": "F ⁡ ( W ) = f ⁡ ( W / ‖ W ‖ F ) , O t = Orthogonalize ⁡ ( ∇ F ​ ( W t ) ) , F(W)=f(W/\\|W\\|_{F}),\\qquad O_{t}=\\operatorname{Orthogonalize}(\\nabla F(W_{t})), (17) where f f is twice continuously differentiable on the unit Frobenius sphere.",
+      "source": "https://arxiv.org/html/2610.37647v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0031",
+      "section": "Proposition 4.2 (Stationarity for exact current-gradient MuonGS) .",
+      "text": "Under ( 17 ), MuonGS with r 0 > 0 r_{0}>0 and a constant learning rate η > 0 \\eta>0 satisfies, for every even T ≥ 2 T\\geq 2 , min T / 2 ≤ t < T ⁡ ‖ grad ⁡ f ⁡ ( W t / r t ) ‖ F ≤ K T , \\min_{T/2\\leq t<T}\\|\\operatorname{grad}f(W_{t}/r_{t})\\|_{F}\\leq\\frac{K}{\\sqrt{T}}, (18) where grad ⁡ f \\operatorname{grad}f is the sphere gradient and K < ∞ K<\\infty is independent of T T . Here the current-gradient direction provides descent alignment, while GS controls the weight norm and the resulting effective learning rates. Together they guarantee an iterate with a small sphere-gradient norm in the second half of training, even though the weight norm can keep growing.",
+      "source": "https://arxiv.org/html/2610.37647v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0032",
+      "section": "5 Experiments",
+      "text": "In this section we evaluate the MuonGS optimizer on the task of LLM pre-training. Since the results from Wen et al. (2026) indicate that the MuonH outperforms MuonW in typical pre-training settings, we focus our main comparison to MuonH. Note that both MuonGS and MuonH share the favorable property of not needing to tune a weight decay coefficient as opposed to MuonW. We include some additional results comparing with Muon and MuonW in Appendix A.1 . Below we present our main results using dense GPT-style models, but include preliminary results on MoE model training in Section 5.3 .",
+      "source": "https://arxiv.org/html/2610.37647v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0033",
+      "section": "5.1 Experimental settings",
+      "text": "Architecture. We use the modernized GPT-style architecture from the Modded-NanoGPT Optimization Benchmark ( Jordan, 2026 ) at two scales, approximately 160M and 400M parameters. The smaller model, which corresponds to the NanoGPT model used in Jordan (2026) , has 12 layers, hidden width 768, and 6 attention heads; the other is a scaled-up version and has 24 layers, hidden width 1024, and 8 heads, with head dimension 128 for both sizes. Both models use RMSNorm, rotary positional embeddings, QK-Norm, squared-ReLU MLPs, and untied input and output embeddings. Pre-training setup. We pre-train on the 100B-token subset of the FineWeb dataset ( Penedo et al., 2024 ) using a sequence length of 1024 and a global batch of 512 sequences. Our experiments span approximately 3–25B training tokens for the 160M model and 8–63B for the 400M model, corresponding to roughly 1–8 Chinchilla budgets ( Hoffmann et al., 2022 ) at both scales. We use BF16 mixed-precision training. Optimizers. We compare MuonGS as described in Algorithm 1 with MuonH and Muon/MuonW. All methods use Nesterov momentum 0.95 0.95 for hidden matrix weights. AdamW is used for token embeddings, output-head weights, and all 1D parameters, with ( β 1 , β 2 ) = ( 0.8 , 0.95 ) (\\beta_{1},\\beta_{2})=(0.8,0.95) , ϵ = 10 − 10 \\epsilon=10^{-10} , weight decay 10 − 3 10^{-3} , and respective max learning rates 0.7 0.7 , 0.004 0.004 , and 0.015 0.015 . Matrix and auxiliary learning rates decay linearly to zero without warmup after constant phases covering 15 % 15\\% and 30 % 30\\% of training, respectively.",
+      "source": "https://arxiv.org/html/2610.37647v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0034",
+      "section": "5.1 Experimental settings",
+      "text": "Tuning and metrics. We tune learning rates on a multiplicative grid with ratio 2 \\sqrt{2} similar to Wen et al. (2026) , separately for all optimizers, model sizes and training durations. For MuonW we additionally tune the weight decay as shown in Appendix A.1 . We use as metric the cross-entropy loss ℒ val \\mathcal{L}_{\\mathrm{val}} over about 10M tokens from the FineWeb validation set, equivalently expressed as perplexity PPL = exp ⁡ ( ℒ val ) \\mathrm{PPL}=\\exp(\\mathcal{L}_{\\mathrm{val}}) .",
+      "source": "https://arxiv.org/html/2610.37647v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0035",
+      "section": "5.2 Benchmarking Results",
+      "text": "Learning Rate Sweeps. From Figure 5 we observe that, for extended training horizons (overtraining), MuonGS achieves lower perplexity than MuonH. We note that in modern LLM pre-training extending to beyond one Chinchilla training tokens, i.e.,. more than 20 tokens per model parameter, is common practice ( Grattafiori et al., 2024 ; Yang et al., 2025 ) . Therefore, MuonGS’s favorable scaling with training horizon is particularly relevant to modern LLM pre-training. Figure 5 : Validation perplexity versus learning rate for MuonGS and MuonH across the two model sizes and Chinchilla ration 1 × 1{\\times} – 8 × 8{\\times} . Stars and dashed horizontal lines indicate the best observed perplexity in each panel. Speedup Estimation. Using the best results for each algorithm from the sweeps above, we estimate the training-budget speedup of MuonGS over MuonH following the method used in Wen et al. (2025) . Specifically, for each model size N N , we fit MuonH’s validation loss as a function of training-token budget D D by nonlinear least squares: L ^ N ​ ( D ) = α N ​ D − B N + β N . \\widehat{L}_{N}(D)=\\alpha_{N}D^{-B_{N}}+\\beta_{N}. For a MuonGS run achieving loss L GS L_{\\mathrm{GS}} at budget D GS D_{\\mathrm{GS}} , we solve L ^ N ​ ( D H ) = L GS \\widehat{L}_{N}(D_{\\mathrm{H}})=L_{\\mathrm{GS}} and report D H / D GS D_{\\mathrm{H}}/D_{\\mathrm{GS}} as the estimated speedup, where D H D_{\\mathrm{H}} is the estimated training-token budget MuonH would require to match the validation loss achieved by MuonGS. From Figure 6 we observe that MuonGS achieves a token-equivalent speedup over MuonH up to about 7-15% for longer training horizons.",
+      "source": "https://arxiv.org/html/2610.37647v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0036",
+      "section": "5.2 Benchmarking Results",
+      "text": "Figure 6 : Estimated token-equivalent speedup of MuonGS over MuonH for GPT-160M (left) and GPT-400M (right) across Chinclilla ratios 1 × 1{\\times} – 8 × 8{\\times} .",
+      "source": "https://arxiv.org/html/2610.37647v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0037",
+      "section": "5.3 MoE experiments",
+      "text": "Figure 7 : Validation perplexity versus learning rate for MuonGS and MuonH for an 135M active / 1B total MoE model for two different training durations. Stars and dashed horizontal lines indicate the best observed perplexity in each panel. In this section we include preliminary results comparing MuonGS to MuonH on a modern Mixture-of-Experts (MoE) architecture. The model incorporates grouped-query attention ( Ainslie et al., 2023 ) , gated attention ( Qiu et al., 2026 ) and attention residuals (AttnRes) ( Team et al., 2026 ) . It has 32 layers, hidden width 512, and 64 routed experts with top-7 routing plus one shared expert per layer, yielding approximately 135M active non-embedding parameters and 1B total parameters. We train on Ultra-FineWeb ( Wang et al., 2025 ) for 10.8B and 21.6B tokens (i.e., 80 and 160 times the active parameters), using a batch size of 1,024 sequences of length 4,096. Learning rates are tuned on a 2 \\sqrt{2} -spaced grid, with 2% warmup followed by linear decay to zero. Both MuonGS and MuonH use momentum 0.95 0.95 with Nesterov acceleration. From Figure 7 , we observe that MuonGS achieves lower best validation perplexity than MuonH at both training budgets, making it a promising method for modern MoE optimization.",
+      "source": "https://arxiv.org/html/2610.37647v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0038",
+      "section": "6 Conclusion",
+      "text": "We reexamined the role of weight norm control for Muon over the entire training trajectory instead of a single step. In particular, we use the accumulated effective learning rate to measure how far the weights can move relative to their norm over any training interval, and shows that continued exploration requires it to keep growing. We further show that vanilla Muon can only guarantee the accumulation to grow logarithmically, while weight norm control approaches such as weight decay and fixed-norm control guarantee a linear accumulation growth, which explains the role of weight norm control. Based on this finding, we relax the weight norm control to a larger range of approaches. In particular, we propose MuonGS by simply removing the radial component of the Muon update. Theoretically, we show that MuonGS guarantees an accumulation of at least T \\sqrt{T} , sufficient for continued exploration. Numerically, MuonGS outperforms MuonW and MuonH at long training horizons, providing a speedup of up to 15 % 15\\% at matched validation loss. Our accumulation guarantees are worst-case bounds, and the accumulation guarantee provides a necessary but not sufficient condition for continued exploration. Which rate of norm growth works best for a given training budget remains an open question.",
+      "source": "https://arxiv.org/html/2610.37647v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0039",
+      "section": "References",
+      "text": "Ainslie et al. (2023) J. Ainslie, J. Lee-Thorp, M. De Jong, Y. Zemlyanskiy, F. Lebrón, and S. Sanghai Gqa: training generalized multi-query transformer models from multi-head checkpoints . In Proceedings of the 2023 conference on empirical methods in natural language processing , pp. 4895–4901 . Cited by: §5.3 . Amin et al. (2026) H. Amin, W. Chang, and R. Khanna When does scale-invariant optimization become unstable? an exact schedule law with weight decay . arXiv preprint arXiv:2609.09116 . Cited by: §2 . An et al. (2026) K. An, J. Li, D. Goldfarb, and S. Ma Demystifying manifold constraints in llm pre-training . arXiv preprint arXiv:2605.04418 . Cited by: §2 . D’Angelo et al. (2024) F. D’Angelo, M. Andriushchenko, A. Varre, and N. Flammarion Why do we need weight decay in modern deep learning? . In Advances in Neural Information Processing Systems , Vol. 37 . External Links: Link Cited by: §1 , §1 , §2 , §3.1 . Franke et al. (2024) J. K. Franke, M. Hefenbrock, G. Koehler, and F. Hutter Improving deep learning optimization through constrained parameter regularization . Advances in Neural Information Processing Systems 37 , pp. 8984–9025 . Cited by: §2 . Glentis et al. (2026) A. Glentis, D. Li, C. Yau, and M. Hong Revisiting the adam-sgd gap in llm pre-training: the role of large effective learning rates . arXiv preprint arXiv:2605.17787 . Cited by: §2 . Grattafiori et al. (2024) A. Grattafiori, A. Dubey, A. Jauhri, A. Pandey, A. Kadian, A. Al-Dahle, A. Letman, A. Mathur, A. Schelten, A. Vaughan, et al. The llama 3 herd of models . arXiv preprint arXiv:2407.21783 . Cited by: §5.2 .",
+      "source": "https://arxiv.org/html/2610.37647v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0040",
+      "section": "References",
+      "text": "Hägele et al. (2026) A. Hägele, A. Hernández-Cano, A. Kosson, and M. Jaggi Improving neural network training by decoupling the magnitude and direction of weight vectors . arXiv preprint arXiv:2606.25971 . Cited by: §2 . Heo et al. (2020) B. Heo, S. Chun, S. J. Oh, D. Han, S. Yun, G. Kim, Y. Uh, and J. Ha Adamp: slowing down the slowdown for momentum optimizers on scale-invariant weights . arXiv preprint arXiv:2006.08217 . Cited by: §2 , §4.1 . Hoffer et al. (2018) E. Hoffer, R. Banner, I. Golan, and D. Soudry Norm matters: efficient and accurate normalization schemes in deep networks . Advances in Neural Information Processing Systems 31 . Cited by: §2 . Hoffmann et al. (2022) J. Hoffmann, S. Borgeaud, A. Mensch, E. Buchatskaya, T. Cai, E. Rutherford, D. de Las Casas, L. A. Hendricks, J. Welbl, A. Clark, et al. Training compute-optimal large language models (2022) . arXiv preprint arXiv:2203.15556 . Cited by: §5.1 . Jordan et al. (2024) K. Jordan, Y. Jin, V. Boza, J. You, F. Cesista, L. Newhouse, and J. Bernstein Muon: an optimizer for hidden layers in neural networks, 2024 . URL https://kellerjordan. github. io/posts/muon 6 ( 3 ), pp. 4 . Cited by: §3.1 , §3.2 , footnote 1 . Jordan (2026) K. Jordan Modded-nanogpt optimization benchmark . External Links: Link Cited by: §5.1 . Kodryan et al. (2022) M. Kodryan, E. Lobacheva, M. Nakhodnov, and D. Vetrov Training scale-invariant neural networks on the sphere can happen in three regimes . Advances in Neural Information Processing Systems 35 , pp. 14058–14070 . Cited by: §1 . Kosson et al. (2023) A. Kosson, B. Messmer, and M. Jaggi Rotational equilibrium: how weight decay balances learning across neural networks . arXiv preprint arXiv:2305.17212 . Cited by: §2 .",
+      "source": "https://arxiv.org/html/2610.37647v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0041",
+      "section": "References",
+      "text": "Li and Arora (2019) Z. Li and S. Arora An exponential learning rate schedule for deep learning . arXiv preprint arXiv:1910.07454 . Cited by: §2 . Liu et al. (2025) J. Liu, J. Su, X. Yao, Z. Jiang, G. Lai, Y. Du, Y. Qin, W. Xu, E. Lu, J. Yan, et al. Muon is scalable for llm training . arXiv preprint arXiv:2502.16982 . Cited by: §1 , §1 , §3.2 , §3.2 , footnote 1 . Liu et al. (2026) Z. Liu, R. Zheng, S. Zhang, C. Tian, K. Chen, Z. Zhang, and L. Wu Effective learning rate governs loss dynamics in language model pretraining . arXiv preprint arXiv:2608.24814 . External Links: Link Cited by: §1 , §1 , §2 , §3.1 . Lobacheva et al. (2021) E. Lobacheva, M. Kodryan, N. Chirkova, A. Malinin, and D. P. Vetrov On the periodic behavior of neural network training with batch normalization and weight decay . Advances in Neural Information Processing Systems 34 , pp. 21545–21556 . Cited by: §2 . Loshchilov et al. (2024) I. Loshchilov, C. Hsieh, S. Sun, and B. Ginsburg nGPT: normalized transformer with representation learning on the hypersphere . arXiv preprint arXiv:2410.01131 . Cited by: §1 , §2 . Loshchilov and Hutter (2017) I. Loshchilov and F. Hutter Decoupled weight decay regularization . arXiv preprint arXiv:1711.05101 . Cited by: §1 , §2 . Loshchilov (2023) I. Loshchilov Weight norm control . arXiv preprint arXiv:2311.11446 . Cited by: §2 . Penedo et al. (2024) G. Penedo, H. Kydlíček, L. B. allal, A. Lozhkov, M. Mitchell, C. Raffel, L. V. Werra, and T. Wolf The fineweb datasets: decanting the web for the finest text data at scale . External Links: 2406.17557 Cited by: §5.1 .",
+      "source": "https://arxiv.org/html/2610.37647v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0042",
+      "section": "References",
+      "text": "Qiu et al. (2026) Z. Qiu, Z. Wang, B. Zheng, Z. Huang, K. Wen, S. Yang, R. Men, L. Yu, F. Huang, S. Huang, et al. Gated attention for large language models: non-linearity, sparsity, and attention-sink-free . Advances in Neural Information Processing Systems 38 , pp. 100092–100118 . Cited by: §5.3 . Roburin et al. (2022) S. Roburin, Y. de Mont-Marin, A. Bursuc, R. Marlet, P. Perez, and M. Aubry Spherical perspective on learning with normalization layers . Neurocomputing 487 , pp. 66–74 . Cited by: §2 . Salimans and Kingma (2016) T. Salimans and D. P. Kingma Weight normalization: a simple reparameterization to accelerate training of deep neural networks . Advances in neural information processing systems 29 . Cited by: §2 . Team et al. (2026) K. Team, G. Chen, Y. Zhang, J. Su, W. Xu, S. Pan, Y. Wang, Y. Wang, G. Chen, B. Yin, et al. Attention residuals . arXiv preprint arXiv:2603.15031 . Cited by: §5.3 . Van Laarhoven (2017) T. Van Laarhoven L2 regularization versus batch and weight normalization . arXiv preprint arXiv:1706.05350 . Cited by: §2 . Wan et al. (2021) R. Wan, Z. Zhu, X. Zhang, and J. Sun Spherical motion dynamics: learning dynamics of normalized neural network using sgd and weight decay . Advances in Neural Information Processing Systems 34 , pp. 6380–6391 . Cited by: §2 . Wang et al. (2025) Y. Wang, Z. Fu, J. Cai, P. Tang, H. Lyu, Y. Fang, Z. Zheng, J. Zhou, G. Zeng, C. Xiao, et al. Ultra-fineweb: efficient data filtering and verification for high-quality llm training data . arXiv preprint arXiv:2505.05427 . Cited by: §5.3 . Wen et al. (2026) K. Wen, X. Dang, K. Lyu, T. Ma, and P. Liang Fantastic pretraining optimizers and where to find them ii: hyperball optimization . arXiv preprint arXiv:2606.16899 . Cited by: §1 , §1 , §2 , §3.2 , §5.1 , §5 .",
+      "source": "https://arxiv.org/html/2610.37647v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0043",
+      "section": "References",
+      "text": "Wen et al. (2025) K. Wen, D. Hall, T. Ma, and P. Liang Fantastic pretraining optimizers and where to find them . arXiv preprint arXiv:2509.02046 . Cited by: §5.2 . Xie et al. (2026) T. Xie, H. Luo, H. Tang, Y. Hu, J. K. Liu, Q. Ren, Y. Wang, W. X. Zhao, R. Yan, B. Su, et al. Controlled llm training on spectral sphere . arXiv preprint arXiv:2601.08393 . Cited by: §2 . Yang et al. (2025) A. Yang, A. Li, B. Yang, B. Zhang, B. Hui, B. Zheng, B. Yu, C. Gao, C. Huang, C. Lv, et al. Qwen3 technical report . arXiv preprint arXiv:2505.09388 . Cited by: §5.2 . Zhang et al. (2018) G. Zhang, C. Wang, B. Xu, and R. Grosse Three mechanisms of weight decay regularization . arXiv preprint arXiv:1810.12281 . Cited by: §1 , §2 .",
+      "source": "https://arxiv.org/html/2610.37647v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0044",
+      "section": "A.1 Experiments with Muon/MuonW",
+      "text": "In Figure 8 we include a comparison of MuonH and the proposed MuonGS over Muon and MuonW (with varying weight decay). We observe that Muon, not using any type of weight norm control, performs noticeably worse than the other baselines. MuonGS obtains the best perplexity, followed by MuonH and MuonW. Figure 8 : Validation perplexity vs learning rate for MuonGS, MuonH, Muon and MuonW with varying weight decay. Both models are trained for 20k steps (about 10.5B tokens) on FineWeb. We also compare the evolution of the norm of the combined matrix weights, ‖ w t ‖ 2 \\|w_{t}\\|_{2} , during training. As shown in Figure 9 , MuonH maintains a constant norm, while Muon without weight decay exhibits considerably larger norm growth. MuonW’s norm initially increases and subsequently declines, whereas MuonGS exhibits more moderate, gradual norm growth without weight decay or an explicit fixed-norm constraint. Figure 9 : Weight-norm evolution for the 160M (left) and 400M (right) models over 20k training steps, using each method’s best learning rate. Here, w t w_{t} concatenates the matrix weights updated by Muon variants, excluding auxiliary AdamW parameters. MuonW uses weight decay 0.0125 0.0125 which was found to be the best among the ones tested as shown 8 .",
+      "source": "https://arxiv.org/html/2610.37647v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0045",
+      "section": "Proof.",
+      "text": "For nonzero matrices X , Y X,Y let d ⁡ ( X , Y ) = ‖ X − Y ‖ F max ⁡ { ‖ X ‖ F , ‖ Y ‖ F } . d(X,Y)=\\frac{\\|X-Y\\|_{F}}{\\max\\{\\|X\\|_{F},\\|Y\\|_{F}\\}}. We first show that d ⁡ ( X , Y ) ≤ d ⁡ ( X , Z ) + d ⁡ ( Z , Y ) d(X,Y)\\leq d(X,Z)+d(Z,Y) . Write x = ‖ X ‖ F x=\\|X\\|_{F} , y = ‖ Y ‖ F y=\\|Y\\|_{F} , z = ‖ Z ‖ F z=\\|Z\\|_{F} , and assume x ≥ y x\\geq y . If z ≤ x z\\leq x , both denominators on the right are at most x x , and the claim follows from the triangle inequality for ∥ ⋅ ∥ F \\|\\cdot\\|_{F} . If z > x z>x , use the inversion ι ⁡ ( X ) = X / ‖ X ‖ F 2 \\iota(X)=X/\\|X\\|_{F}^{2} , which satisfies ‖ ι ⁡ ( X ) − ι ⁡ ( Y ) ‖ F = ‖ X − Y ‖ F / ( x ​ y ) \\|\\iota(X)-\\iota(Y)\\|_{F}=\\|X-Y\\|_{F}/(xy) . Then d ⁡ ( X , Y ) = y ​ ‖ ι ⁡ ( X ) − ι ⁡ ( Y ) ‖ F , d ⁡ ( X , Z ) = x ​ ‖ ι ⁡ ( X ) − ι ⁡ ( Z ) ‖ F , d ⁡ ( Z , Y ) = y ​ ‖ ι ⁡ ( Z ) − ι ⁡ ( Y ) ‖ F , d(X,Y)=y\\|\\iota(X)-\\iota(Y)\\|_{F},\\quad d(X,Z)=x\\|\\iota(X)-\\iota(Z)\\|_{F},\\quad d(Z,Y)=y\\|\\iota(Z)-\\iota(Y)\\|_{F}, and the claim follows from the triangle inequality for ι \\iota and y ≤ x y\\leq x . Applying this inequality along the iterates and then ( 4 ), ‖ W T − W s ‖ F max ⁡ { r s , r T } ≤ ∑ t = s T − 1 ‖ W t + 1 − W t ‖ F max ⁡ { r t , r t + 1 } ≤ ∑ t = s T − 1 η t ​ ‖ O t ‖ F r t ≤ p ​ ( C T − C s ) , \\frac{\\|W_{T}-W_{s}\\|_{F}}{\\max\\{r_{s},r_{T}\\}}\\leq\\sum_{t=s}^{T-1}\\frac{\\|W_{t+1}-W_{t}\\|_{F}}{\\max\\{r_{t},r_{t+1}\\}}\\leq\\sum_{t=s}^{T-1}\\frac{\\eta_{t}\\|O_{t}\\|_{F}}{r_{t}}\\leq\\sqrt{p}\\,(C_{T}-C_{s}), which is ( 7 ). For ( 8 ), let x ≥ y x\\geq y again; since x − y ≤ ‖ X − Y ‖ F x-y\\leq\\|X-Y\\|_{F} ,",
+      "source": "https://arxiv.org/html/2610.37647v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0046",
+      "section": "Proof.",
+      "text": "‖ X x − Y y ‖ F ≤ ‖ X − Y ‖ F x + ‖ Y ‖ F ​ ( 1 y − 1 x ) = ‖ X − Y ‖ F + x − y x ≤ 2 ​ d ​ ( X , Y ) . \\Bigl\\|\\frac{X}{x}-\\frac{Y}{y}\\Bigr\\|_{F}\\leq\\frac{\\|X-Y\\|_{F}}{x}+\\|Y\\|_{F}\\Bigl(\\frac{1}{y}-\\frac{1}{x}\\Bigr)=\\frac{\\|X-Y\\|_{F}+x-y}{x}\\leq 2\\,d(X,Y). Hence | F ⁡ ( W T ) − F ⁡ ( W s ) | ≤ L ​ ‖ W T / r T − W s / r s ‖ F ≤ 2 ​ L ​ d ​ ( W T , W s ) |F(W_{T})-F(W_{s})|\\leq L\\|W_{T}/r_{T}-W_{s}/r_{s}\\|_{F}\\leq 2L\\,d(W_{T},W_{s}) , and ( 7 ) gives ( 8 ). ∎ Vanilla Muon. Fix integers 0 ≤ s < u 0\\leq s<u . The triangle inequality gives r t + 1 ≤ r t + η t ​ p r_{t+1}\\leq r_{t}+\\eta_{t}\\sqrt{p} , so at a constant learning rate r t ≤ r 0 + η ​ p ​ t r_{t}\\leq r_{0}+\\eta\\sqrt{p}\\,t . The function x ↦ η / ( r 0 + η ​ p ​ x ) x\\mapsto\\eta/(r_{0}+\\eta\\sqrt{p}\\,x) is decreasing, so its value at an integer t t is at least its integral over [ t , t + 1 ] [t,t+1] . Summing over s ≤ t < u s\\leq t<u gives C u − C s = ∑ t = s u − 1 η r t ≥ ∫ s u η ​ d ​ x r 0 + η ​ p ​ x = 1 p ​ log ⁡ r 0 + η ​ p ​ u r 0 + η ​ p ​ s . C_{u}-C_{s}=\\sum_{t=s}^{u-1}\\frac{\\eta}{r_{t}}\\geq\\int_{s}^{u}\\frac{\\eta\\,dx}{r_{0}+\\eta\\sqrt{p}\\,x}=\\frac{1}{\\sqrt{p}}\\log\\frac{r_{0}+\\eta\\sqrt{p}\\,u}{r_{0}+\\eta\\sqrt{p}\\,s}. Taking ( s , u ) = ( 0 , T ) (s,u)=(0,T) and ( s , u ) = ( T , 2 ​ T ) (s,u)=(T,2T) give (i). MuonW. For 0 ≤ η t ​ λ ≤ 1 0\\leq\\eta_{t}\\lambda\\leq 1 , r t + 1 ≤ ( 1 − η t ​ λ ) ​ r t + η t ​ p r_{t+1}\\leq(1-\\eta_{t}\\lambda)r_{t}+\\eta_{t}\\sqrt{p} . Since p ≤ λ ​ R λ \\sqrt{p}\\leq\\lambda R_{\\lambda} , the bound r t ≤ R λ r_{t}\\leq R_{\\lambda} implies r t + 1 ≤ R λ − η t ​ ( λ ​ R λ − p ) ≤ R λ r_{t+1}\\leq R_{\\lambda}-\\eta_{t}(\\lambda R_{\\lambda}-\\sqrt{p})\\leq R_{\\lambda} . Therefore by induction r t ≤ R λ r_{t}\\leq R_{\\lambda} for all t t , so",
+      "source": "https://arxiv.org/html/2610.37647v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0047",
+      "section": "Proof.",
+      "text": "C u − C s = ∑ t = s u − 1 η t r t ≥ 1 R λ ​ ∑ t = s u − 1 η t . C_{u}-C_{s}=\\sum_{t=s}^{u-1}\\frac{\\eta_{t}}{r_{t}}\\geq\\frac{1}{R_{\\lambda}}\\sum_{t=s}^{u-1}\\eta_{t}. At a constant learning rate, the steps 0 ≤ t < T 0\\leq t<T and T ≤ t < 2 ​ T T\\leq t<2T each contribute η ​ T \\eta T to the last sum, which gives (ii). Fixed norm. Renormalization keeps r t = R r_{t}=R as long as the weight before renormalization is nonzero, so C u − C s = R − 1 ​ ∑ t = s u − 1 η t C_{u}-C_{s}=R^{-1}\\sum_{t=s}^{u-1}\\eta_{t} , which gives (iii) in the same way. The tightness of (i) is shown by the example of Appendix B.3 . ∎",
+      "source": "https://arxiv.org/html/2610.37647v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0048",
+      "section": "B.3 An exact Muon example",
+      "text": "Let F ⁡ ( W ) = exp ⁡ ( tr ⁡ W ) F(W)=\\exp(\\operatorname{tr}W) on ℝ p × p \\mathbb{R}^{p\\times p} and W 0 = − b ​ I p W_{0}=-bI_{p} with b > 0 b>0 . The gradient ∇ F ​ ( W ) = exp ⁡ ( tr ⁡ W ) ​ I p \\nabla F(W)=\\exp(\\operatorname{tr}W)I_{p} is a positive multiple of I p I_{p} , at every W W , and so is the momentum (also with Nesterov’s variant). Exact orthogonalization therefore gives O t = I p O_{t}=I_{p} with ‖ O t ‖ F = p \\|O_{t}\\|_{F}=\\sqrt{p} at every step. For every method below, we choose a constant nominal learning rate η t = η > 0 \\eta_{t}=\\eta>0 .",
+      "source": "https://arxiv.org/html/2610.37647v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0049",
+      "section": "Vanilla Muon.",
+      "text": "By induction, W t = − ( b + η ​ t ) ​ I p , r t = p ​ ( b + η ​ t ) , η r t = 1 p ​ η b + η ​ t . W_{t}=-(b+\\eta t)I_{p},\\qquad r_{t}=\\sqrt{p}\\,(b+\\eta t),\\qquad\\frac{\\eta}{r_{t}}=\\frac{1}{\\sqrt{p}}\\,\\frac{\\eta}{b+\\eta t}. (19) The applied update − η ​ O t -\\eta O_{t} is a positive multiple of W t W_{t} , so every step points directly away from the origin. In particular, − ⟨ W t , O t ⟩ F / r t = p -\\langle W_{t},O_{t}\\rangle_{F}/r_{t}=\\sqrt{p} , and the norm bound r t + 1 ≤ r t + η ​ p r_{t+1}\\leq r_{t}+\\eta\\sqrt{p} in Appendix B.2 holds with equality. We now calculate C u − C s C_{u}-C_{s} : C u − C s = ∑ t = s u − 1 η r t = 1 p ​ ∑ t = s u − 1 η b + η ​ t . C_{u}-C_{s}=\\sum_{t=s}^{u-1}\\frac{\\eta}{r_{t}}=\\frac{1}{\\sqrt{p}}\\sum_{t=s}^{u-1}\\frac{\\eta}{b+\\eta t}. Since the function x ↦ 1 / ( b + x ) x\\mapsto 1/(b+x) is decreasing, we have 0 ≤ η b + η ​ t − ∫ η ​ t η ⁡ ( t + 1 ) d ​ x b + x ≤ η ⁡ ( 1 b + η ​ t − 1 b + η ⁡ ( t + 1 ) ) . 0\\leq\\frac{\\eta}{b+\\eta t}-\\int_{\\eta t}^{\\eta(t+1)}\\frac{dx}{b+x}\\leq\\eta\\left(\\frac{1}{b+\\eta t}-\\frac{1}{b+\\eta(t+1)}\\right). Summing over s ≤ t < u s\\leq t<u and dividing by p \\sqrt{p} gives 0 ≤ C u − C s − 1 p ​ log ⁡ b + η ​ u b + η ​ s ≤ η p ​ ( 1 b + η ​ s − 1 b + η ​ u ) ≤ η b ​ p . 0\\leq C_{u}-C_{s}-\\frac{1}{\\sqrt{p}}\\log\\frac{b+\\eta u}{b+\\eta s}\\leq\\frac{\\eta}{\\sqrt{p}}\\left(\\frac{1}{b+\\eta s}-\\frac{1}{b+\\eta u}\\right)\\leq\\frac{\\eta}{b\\sqrt{p}}. (20)",
+      "source": "https://arxiv.org/html/2610.37647v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0050",
+      "section": "Vanilla Muon.",
+      "text": "Since r 0 = b ​ p r_{0}=b\\sqrt{p} , the logarithms for ( s , u ) = ( 0 , T ) (s,u)=(0,T) and ( T , 2 ​ T ) (T,2T) are exactly the two bounds of Proposition 3.2 (i). So C T C_{T} exceeds the first bound by at most η / ( b ​ p ) = C 1 \\eta/(b\\sqrt{p})=C_{1} , C 2 ​ T − C T C_{2T}-C_{T} exceeds the second by at most η / ( p ​ ( b + η ​ T ) ) → 0 \\eta/(\\sqrt{p}\\,(b+\\eta T))\\to 0 , and, as T → ∞ T\\to\\infty , C T = log ⁡ T p + O ⁡ ( 1 ) , C 2 ​ T − C T ⟶ log ⁡ 2 p . C_{T}=\\frac{\\log T}{\\sqrt{p}}+O(1),\\qquad C_{2T}-C_{T}\\longrightarrow\\frac{\\log 2}{\\sqrt{p}}. (21)",
+      "source": "https://arxiv.org/html/2610.37647v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0051",
+      "section": "MuonW and fixed norm.",
+      "text": "With weight decay and q = 1 − η ​ λ ∈ ( 0 , 1 ) q=1-\\eta\\lambda\\in(0,1) , the update W t + 1 = q ​ W t − η ​ I p W_{t+1}=qW_{t}-\\eta I_{p} gives W t = − b t ​ I p , b t = 1 λ + ( b − 1 λ ) ​ q t , r t = p ​ b t . W_{t}=-b_{t}I_{p},\\qquad b_{t}=\\frac{1}{\\lambda}+\\Bigl(b-\\frac{1}{\\lambda}\\Bigr)q^{t},\\qquad r_{t}=\\sqrt{p}\\,b_{t}. (22) Since b t → 1 / λ b_{t}\\to 1/\\lambda geometrically, η / r t = η ​ λ / p + O ⁡ ( q t ) \\eta/r_{t}=\\eta\\lambda/\\sqrt{p}+O(q^{t}) . Summing gives C T = η ​ λ ​ T / p + O ⁡ ( 1 ) C_{T}=\\eta\\lambda T/\\sqrt{p}+O(1) and C 2 ​ T − C T = η ​ λ ​ T / p + O ⁡ ( q T ) C_{2T}-C_{T}=\\eta\\lambda T/\\sqrt{p}+O(q^{T}) . With a fixed norm R = r 0 R=r_{0} , the weight before renormalization is − ( b + η ) ​ I p -(b+\\eta)I_{p} for D t = O t D_{t}=O_{t} , and − b ⁡ ( 1 + η ) ​ I p -b(1+\\eta)I_{p} for MuonH, whose rescaled direction is D t = R ​ O t / ‖ O t ‖ F = b ​ I p D_{t}=RO_{t}/\\|O_{t}\\|_{F}=bI_{p} . Both renormalize to W 0 W_{0} , so W t = W 0 W_{t}=W_{0} and C T = C 2 ​ T − C T = η ​ T / r 0 C_{T}=C_{2T}-C_{T}=\\eta T/r_{0} .",
+      "source": "https://arxiv.org/html/2610.37647v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0052",
+      "section": "Numerical illustration in Figure 2 .",
+      "text": "In Figure 2 , we choose p = 2 p=2 , b = 4 b=4 , η = 0.04 \\eta=0.04 , λ = 0.2 \\lambda=0.2 , momentum coefficient β = 0.95 \\beta=0.95 and 10 5 10^{5} steps. The corresponding weight norms are thus r t vanilla = 2 ​ ( 4 + 0.04 ​ t ) , r t W = 2 ​ ( 5 − 0.992 t ) , r t H = 4 ​ 2 . r_{t}^{\\mathrm{vanilla}}=\\sqrt{2}\\,(4+0.04t),\\qquad r_{t}^{\\mathrm{W}}=\\sqrt{2}\\,(5-0.992^{t}),\\qquad r_{t}^{\\mathrm{H}}=4\\sqrt{2}. (23)",
+      "source": "https://arxiv.org/html/2610.37647v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0053",
+      "section": "Proof.",
+      "text": "The projection gives ⟨ W t , O ~ t ⟩ F = 0 \\langle W_{t},\\widetilde{O}_{t}\\rangle_{F}=0 and ‖ O ~ t ‖ F 2 = ‖ O t ‖ F 2 − ⟨ W t , O t ⟩ F 2 / r t 2 ≤ p \\|\\widetilde{O}_{t}\\|_{F}^{2}=\\|O_{t}\\|_{F}^{2}-\\langle W_{t},O_{t}\\rangle_{F}^{2}/r_{t}^{2}\\leq p . Hence r t + 1 2 = ‖ W t − η t ​ O ~ t ‖ F 2 = r t 2 + η t 2 ​ ‖ O ~ t ‖ F 2 , r_{t+1}^{2}=\\|W_{t}-\\eta_{t}\\widetilde{O}_{t}\\|_{F}^{2}=r_{t}^{2}+\\eta_{t}^{2}\\|\\widetilde{O}_{t}\\|_{F}^{2}, so the iterates stay nonzero, and every subsequent projection is defined. Summing over t t gives r T 2 = r 0 2 + ∑ t = 0 T − 1 η t 2 ​ ∥ O ~ t ∥ F 2 ≤ r 0 2 + p ​ ∑ t = 0 T − 1 η t 2 . r_{T}^{2}=r_{0}^{2}+\\sum_{t=0}^{T-1}\\eta_{t}^{2}\\lVert\\widetilde{O}_{t}\\rVert_{F}^{\\,2}\\leq r_{0}^{2}+p\\sum_{t=0}^{T-1}\\eta_{t}^{2}. This proves the radius bound ( 14 ). For η t = η \\eta_{t}=\\eta , ( 14 ) gives r t ≤ r 0 2 + p ​ η 2 ​ t r_{t}\\leq\\sqrt{r_{0}^{2}+p\\eta^{2}t} , which increases with t t ; comparing the sum with an integral, C T ≥ ∑ t = 0 T − 1 η r 0 2 + p ​ η 2 ​ t ≥ ∫ 0 T η ​ d ​ x r 0 2 + p ​ η 2 ​ x = 2 p ​ η ​ ( r 0 2 + p ​ η 2 ​ T − r 0 ) . C_{T}\\geq\\sum_{t=0}^{T-1}\\frac{\\eta}{\\sqrt{r_{0}^{2}+p\\eta^{2}t}}\\geq\\int_{0}^{T}\\frac{\\eta\\,dx}{\\sqrt{r_{0}^{2}+p\\eta^{2}x}}=\\frac{2}{p\\eta}\\Bigl(\\sqrt{r_{0}^{2}+p\\eta^{2}T}-r_{0}\\Bigr). For fixed r 0 r_{0} , p p and η \\eta , the right-hand side equals 2 ​ T / p + O ⁡ ( 1 ) 2\\sqrt{T/p}+O(1) , proving ( 15 ). For T ≤ t < 2 ​ T T\\leq t<2T , the radius bound gives r t ≤ r 0 2 + 2 ​ p ​ η 2 ​ T r_{t}\\leq\\sqrt{r_{0}^{2}+2p\\eta^{2}T} . Hence C 2 ​ T − C T = ∑ t = T 2 ​ T − 1 η r t ≥ η ​ T r 0 2 + 2 ​ p ​ η 2 ​ T , C_{2T}-C_{T}=\\sum_{t=T}^{2T-1}\\frac{\\eta}{r_{t}}\\geq\\frac{\\eta T}{\\sqrt{r_{0}^{2}+2p\\eta^{2}T}}, and the right-hand side equals T / ( 2 ​ p ) + O ⁡ ( 1 ) \\sqrt{T/(2p)}+O(1) , which proves ( 16 ). ∎",
+      "source": "https://arxiv.org/html/2610.37647v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0054",
+      "section": "Proof.",
+      "text": "Write W ¯ t = W t / r t \\bar{W}_{t}=W_{t}/r_{t} and G t = grad ⁡ f ⁡ ( W ¯ t ) G_{t}=\\operatorname{grad}f(\\bar{W}_{t}) . The chain rule gives ∇ F ​ ( W t ) = G t / r t \\nabla F(W_{t})=G_{t}/r_{t} , so O t = Orthogonalize ⁡ ( G t ) O_{t}=\\mathrm{Orthogonalize}(G_{t}) . Since G t G_{t} is tangent, ⟨ G t , W ¯ t ⟩ F = 0 \\langle G_{t},\\bar{W}_{t}\\rangle_{F}=0 , and ⟨ G t , O ~ t ⟩ F = ⟨ G t , O t ⟩ F = ‖ G t ‖ ∗ . \\langle G_{t},\\widetilde{O}_{t}\\rangle_{F}=\\langle G_{t},O_{t}\\rangle_{F}=\\|G_{t}\\|_{*}. Here ∥ ⋅ ∥ ∗ \\|\\cdot\\|_{*} denotes the nuclear norm. When G t ≠ 0 G_{t}\\neq 0 , Cauchy–Schwarz gives 1 ≤ ‖ G t ‖ ∗ ‖ G t ‖ F ≤ ‖ O ~ t ‖ F ≤ ‖ O t ‖ F ≤ p . 1\\leq\\frac{\\|G_{t}\\|_{*}}{\\|G_{t}\\|_{F}}\\leq\\|\\widetilde{O}_{t}\\|_{F}\\leq\\|O_{t}\\|_{F}\\leq\\sqrt{p}. If G t = 0 G_{t}=0 for some t < T t<T , all later iterates are stationary and ( 18 ) holds. Otherwise ( 14 ) gives r 0 2 + η 2 ​ t ≤ r t 2 ≤ r 0 2 + p ​ η 2 ​ t , 0 ≤ t ≤ T . r_{0}^{2}+\\eta^{2}t\\leq r_{t}^{2}\\leq r_{0}^{2}+p\\eta^{2}t,\\qquad 0\\leq t\\leq T. (24) Let L 1 L_{1} and L 2 L_{2} bound the sphere-gradient norm and the operator norm of the Riemannian Hessian of f f . These bounds are finite because f f is C 2 C^{2} on the compact unit sphere. At a nonstationary step, set u = O ~ t ‖ O ~ t ‖ F , x = η ​ ‖ O ~ t ‖ F r t , θ = arctan ⁡ x . u=\\frac{\\widetilde{O}_{t}}{\\|\\widetilde{O}_{t}\\|_{F}},\\qquad x=\\frac{\\eta\\|\\widetilde{O}_{t}\\|_{F}}{r_{t}},\\qquad\\theta=\\arctan x. Orthogonality gives W ¯ t + 1 = W ¯ t ​ cos ⁡ θ − u ​ sin ⁡ θ \\bar{W}_{t+1}=\\bar{W}_{t}\\cos\\theta-u\\sin\\theta . Taylor’s theorem along this great-circle arc yields f ⁡ ( W ¯ t + 1 ) ≤ f ⁡ ( W ¯ t ) − θ ​ ⟨ G t , u ⟩ F + L 2 2 ​ θ 2 . f(\\bar{W}_{t+1})\\leq f(\\bar{W}_{t})-\\theta\\langle G_{t},u\\rangle_{F}+\\frac{L_{2}}{2}\\theta^{2}.",
+      "source": "https://arxiv.org/html/2610.37647v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0055",
+      "section": "Proof.",
+      "text": "Since x − arctan ⁡ x = ∫ 0 x s 2 / ( 1 + s 2 ) ​ 𝑑 s ≤ x 2 / 2 x-\\arctan x=\\int_{0}^{x}s^{2}/(1+s^{2})\\,ds\\leq x^{2}/2 , using θ ≤ x \\theta\\leq x and 0 ≤ ⟨ G t , u ⟩ F ≤ L 1 0\\leq\\langle G_{t},u\\rangle_{F}\\leq L_{1} , we obtain f ⁡ ( W ¯ t + 1 ) ≤ f ⁡ ( W ¯ t ) − x ​ ⟨ G t , u ⟩ F + L 1 + L 2 2 ​ x 2 ≤ f ⁡ ( W ¯ t ) − η r t ​ ‖ G t ‖ ∗ + B ​ η 2 r t 2 f(\\bar{W}_{t+1})\\leq f(\\bar{W}_{t})-x\\langle G_{t},u\\rangle_{F}+\\frac{L_{1}+L_{2}}{2}\\,x^{2}\\leq f(\\bar{W}_{t})-\\frac{\\eta}{r_{t}}\\|G_{t}\\|_{*}+B\\frac{\\eta^{2}}{r_{t}^{2}} (25) where B = p ⁡ ( L 1 + L 2 ) / 2 B=p(L_{1}+L_{2})/2 . If a stationary iterate occurs before T T , the claimed minimum is zero. Otherwise, the radius bounds in ( 24 ) imply ∑ t = T / 2 T − 1 η 2 r t 2 ≤ 1 , ∑ t = T / 2 T − 1 η r t ≥ η ​ T 2 ​ r 0 2 + p ​ η 2 ​ T . \\sum_{t=T/2}^{T-1}\\frac{\\eta^{2}}{r_{t}^{2}}\\leq 1,\\qquad\\sum_{t=T/2}^{T-1}\\frac{\\eta}{r_{t}}\\geq\\frac{\\eta T}{2\\sqrt{r_{0}^{2}+p\\eta^{2}T}}. Summing the one-step estimate ( 25 ) over interval T / 2 ≤ t < T T/2\\leq t<T and using ‖ G t ‖ F ≤ ‖ G t ‖ ∗ \\|G_{t}\\|_{F}\\leq\\|G_{t}\\|_{*} gives min T / 2 ≤ t < T ∥ G t ∥ F ≤ 2 ​ r 0 2 + p ​ η 2 ​ T η ​ T ( max f − min f + B ) = O ( T − 1 / 2 ) , \\min_{T/2\\leq t<T}\\|G_{t}\\|_{F}\\leq\\frac{2\\sqrt{r_{0}^{2}+p\\eta^{2}T}}{\\eta T}\\bigl(\\max f-\\min f+B\\bigr)=O(T^{-1/2}), where the extrema are over the unit sphere and all constants are independent of T T . ∎",
+      "source": "https://arxiv.org/html/2610.37647v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0056",
+      "section": "Appendix C Dependence on the Nominal Learning Rate",
+      "text": "Section 3.2 asks whether a larger nominal learning rate can make up for the small accumulation of vanilla Muon. This section shows that it cannot beyond the first step. In particular, we vary the constant learning rate η \\eta while keeping the initialization and the norm-control parameters fixed. Note that the directions O t O_{t} and the norms r t r_{t} may depend on η \\eta . The first term C 1 = η / r 0 C_{1}=\\eta/r_{0} is linear in η \\eta for every method, so we compare the accumulation after the first step, C T ​ ( η ) − C s ​ ( η ) = ∑ t = s T − 1 η r t ​ ( η ) , 1 ≤ s < T . C_{T}(\\eta)-C_{s}(\\eta)=\\sum_{t=s}^{T-1}\\frac{\\eta}{r_{t}(\\eta)},\\qquad 1\\leq s<T.",
+      "source": "https://arxiv.org/html/2610.37647v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0057",
+      "section": "Vanilla Muon.",
+      "text": "For vanilla Muon, a larger learning rate enlarges every update but may also accelerate norm growth. The next proposition shows that the two effects offset each other when the updates keep an outward component and, with a weaker bound, whenever they have no inward component.",
+      "source": "https://arxiv.org/html/2610.37647v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0058",
+      "section": "Proposition C.1 (Learning-rate compensation) .",
+      "text": "Consider vanilla Muon with a constant nominal learning rate η \\eta , and let 1 ≤ s < T 1\\leq s<T . (i) If − ⟨ W t , O t ⟩ F r t ≥ v > 0 , 0 ≤ t < T , -\\frac{\\langle W_{t},O_{t}\\rangle_{F}}{r_{t}}\\geq v>0,\\qquad 0\\leq t<T, (26) then r 0 + η ​ v ​ t ≤ r t ≤ r 0 + η ​ p ​ t r_{0}+\\eta vt\\leq r_{t}\\leq r_{0}+\\eta\\sqrt{p}\\,t for 0 ≤ t ≤ T 0\\leq t\\leq T . Moreover, ∑ t = s T − 1 1 r 0 / η + p ​ t ≤ C T − C s ≤ ∑ t = s T − 1 1 r 0 / η + v ​ t ≤ 1 v ​ ∑ t = s T − 1 1 t . \\sum_{t=s}^{T-1}\\frac{1}{r_{0}/\\eta+\\sqrt{p}\\,t}\\leq C_{T}-C_{s}\\leq\\sum_{t=s}^{T-1}\\frac{1}{r_{0}/\\eta+vt}\\leq\\frac{1}{v}\\sum_{t=s}^{T-1}\\frac{1}{t}. (27) (ii) If ⟨ W t , O t ⟩ F ≤ 0 \\langle W_{t},O_{t}\\rangle_{F}\\leq 0 and ‖ O t ‖ F ≥ μ > 0 \\|O_{t}\\|_{F}\\geq\\mu>0 for 0 ≤ t < T 0\\leq t<T , then r t 2 ≥ r 0 2 + μ 2 ​ η 2 ​ t r_{t}^{2}\\geq r_{0}^{2}+\\mu^{2}\\eta^{2}t for 0 ≤ t ≤ T 0\\leq t\\leq T . Moreover, C T − C s ≤ ∑ t = s T − 1 η r 0 2 + μ 2 ​ η 2 ​ t ≤ 1 μ ​ ∑ t = s T − 1 1 t . C_{T}-C_{s}\\leq\\sum_{t=s}^{T-1}\\frac{\\eta}{\\sqrt{r_{0}^{2}+\\mu^{2}\\eta^{2}t}}\\leq\\frac{1}{\\mu}\\sum_{t=s}^{T-1}\\frac{1}{\\sqrt{t}}. (28)",
+      "source": "https://arxiv.org/html/2610.37647v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0059",
+      "section": "Proof.",
+      "text": "(i) Consider the direction along W t / r t W_{t}/r_{t} . The norm r t + 1 r_{t+1} is at least the component of W t + 1 = W t − η ​ O t W_{t+1}=W_{t}-\\eta O_{t} along this direction, which gives r t + 1 ≥ ⟨ W t r t , W t − η ​ O t ⟩ F = r t − η ​ ⟨ W t , O t ⟩ F / r t ≥ r t + η ​ v . r_{t+1}\\geq\\left\\langle\\frac{W_{t}}{r_{t}},W_{t}-\\eta O_{t}\\right\\rangle_{F}=r_{t}-\\eta\\langle W_{t},O_{t}\\rangle_{F}/r_{t}\\geq r_{t}+\\eta v. Meanwhile, the triangle inequality gives r t + 1 ≤ r t + η ​ p r_{t+1}\\leq r_{t}+\\eta\\sqrt{p} . Summing these increments gives ( 26 ). Dividing η \\eta by these bounds and summing over s ≤ t < T s\\leq t<T gives ( 27 ). (ii) Since ⟨ W t , O t ⟩ F ≤ 0 \\langle W_{t},O_{t}\\rangle_{F}\\leq 0 , r t + 1 2 = r t 2 − 2 ​ η ​ ⟨ W t , O t ⟩ F + η 2 ​ ‖ O t ‖ F 2 ≥ r t 2 + μ 2 ​ η 2 . r_{t+1}^{2}=r_{t}^{2}-2\\eta\\langle W_{t},O_{t}\\rangle_{F}+\\eta^{2}\\|O_{t}\\|_{F}^{2}\\geq r_{t}^{2}+\\mu^{2}\\eta^{2}. Summing gives the norm bound, and dividing η \\eta by it gives ( 28 ) in the same way. ∎ Proposition C.1 shows why a larger learning rate cannot raise the accumulation of vanilla Muon after the first step: the norm grows in proportion to η \\eta . In (i), every update has an outward component, and r t ≥ η ​ v ​ t r_{t}\\geq\\eta vt ; in (ii), tangent updates enlarge the norm through the second-order term η 2 ​ ‖ O t ‖ F 2 \\eta^{2}\\|O_{t}\\|_{F}^{2} , and r t ≥ μ ​ η ​ t r_{t}\\geq\\mu\\eta\\sqrt{t} . A larger η \\eta thus enlarges the steps and the norm by the same factor, so the effective learning rates after the first step are bounded independently of η \\eta : η r t ≤ 1 v ​ t in (i) , η r t ≤ 1 μ ​ t in (ii) , t ≥ 1 . \\frac{\\eta}{r_{t}}\\leq\\frac{1}{vt}\\quad\\text{in (i)},\\qquad\\frac{\\eta}{r_{t}}\\leq\\frac{1}{\\mu\\sqrt{t}}\\quad\\text{in (ii)},\\qquad t\\geq 1.",
+      "source": "https://arxiv.org/html/2610.37647v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0060",
+      "section": "Proof.",
+      "text": "Summing them gives the last bounds in ( 27 ) and ( 28 ): whatever the value of η \\eta , C T − C s C_{T}-C_{s} stays below v − 1 ​ ∑ t = s T − 1 1 / t v^{-1}\\sum_{t=s}^{T-1}1/t in (i) and below μ − 1 ∑ t = s T − 1 t − 1 / 2 \\mu^{-1}\\sum_{t=s}^{T-1}t^{-1/2} in (ii). The middle sums in ( 27 ) and ( 28 ) do increase with η \\eta , but they converge to these limits, so a larger η \\eta can bring C T − C s C_{T}-C_{s} at most up to a level that does not depend on η \\eta . Only the first step, taken before the norm has grown, gains from a larger η \\eta , as C 1 = η / r 0 C_{1}=\\eta/r_{0} grows linearly. The same holds when η \\eta scales a fixed schedule η t = η ​ g t \\eta_{t}=\\eta g_{t} with g 0 > 0 g_{0}>0 as in practical training. In particular, with S t = ∑ j < t g j S_{t}=\\sum_{j<t}g_{j} and Q t = ∑ j < t g j 2 Q_{t}=\\sum_{j<t}g_{j}^{2} , the effective learning rates satisfy η t / r t ≤ g t / ( v ​ S t ) \\eta_{t}/r_{t}\\leq g_{t}/(vS_{t}) in (i) and η t / r t ≤ g t / ( μ ​ Q t ) \\eta_{t}/r_{t}\\leq g_{t}/(\\mu\\sqrt{Q_{t}}) in (ii) for t ≥ 1 t\\geq 1 , again independent of η \\eta .",
+      "source": "https://arxiv.org/html/2610.37647v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0061",
+      "section": "Proof.",
+      "text": "In contrast, norm control approaches bound the norm r t r_{t} by a quantity that does not depend on η \\eta , so the accumulation grows linearly with η \\eta , exactly for a fixed norm and as a guarantee for MuonW. Specifically, at a fixed radius R R , C T − C s = η ⁡ ( T − s ) / R C_{T}-C_{s}=\\eta(T-s)/R ; and for MuonW with fixed λ > 0 \\lambda>0 and 0 < η ​ λ < 1 0<\\eta\\lambda<1 , the recursion r t + 1 ≤ ( 1 − η ​ λ ) ​ r t + η ​ p r_{t+1}\\leq(1-\\eta\\lambda)r_{t}+\\eta\\sqrt{p} gives r t ≤ R λ = max ⁡ { r 0 , p / λ } r_{t}\\leq R_{\\lambda}=\\max\\{r_{0},\\sqrt{p}/\\lambda\\} , and hence C T − C s ≥ η ⁡ ( T − s ) / R λ C_{T}-C_{s}\\geq\\eta(T-s)/R_{\\lambda} . With a schedule, η ⁡ ( T − s ) \\eta(T-s) becomes η ​ ∑ t = s T − 1 g t \\eta\\sum_{t=s}^{T-1}g_{t} in both, for MuonW when η ​ λ ​ g t ≤ 1 \\eta\\lambda g_{t}\\leq 1 .",
+      "source": "https://arxiv.org/html/2610.37647v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0062",
+      "section": "Appendix D Dependence on Scale and the Matrix Size",
+      "text": "In the previous sections, the value of C T C_{T} depends on the initialization scale, the matrix size and on how Muon’s updates are scaled, while the orders of growth that our bounds guarantee do not. Values can therefore be compared between runs that share the initialization and the update scale, as in Figures 3 and 4 , whose runs differ only in the norm control, η \\eta and λ \\lambda . Comparisons across initializations or widths need the normalization below. Below we assume η t = η > 0 \\eta_{t}=\\eta>0 .",
+      "source": "https://arxiv.org/html/2610.37647v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0063",
+      "section": "Scale and growth.",
+      "text": "Since C 1 = η / r 0 C_{1}=\\eta/r_{0} , C T C 1 = ∑ t = 0 T − 1 r 0 r t . \\frac{C_{T}}{C_{1}}=\\sum_{t=0}^{T-1}\\frac{r_{0}}{r_{t}}. (29) Thus the factor C 1 C_{1} carries the learning rate, the initial norm, and any constant that an implementation maintains throughout training. The ratio C T / C 1 C_{T}/C_{1} measures accumulation in units of the first step and depends only on the normalized norms r t / r 0 r_{t}/r_{0} . Because C 1 C_{1} does not depend on T T , C T C_{T} and C T / C 1 C_{T}/C_{1} grow at the same rate in T T .",
+      "source": "https://arxiv.org/html/2610.37647v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0064",
+      "section": "Normalized accumulation bounds.",
+      "text": "Let α = η ​ p r 0 . \\alpha=\\frac{\\eta\\sqrt{p}}{r_{0}}. This quantity bounds the initial update size relative to the weight norm. By Proposition 3.2 and Theorem 4.1 , we have vanilla Muon: C T C 1 \\displaystyle\\text{vanilla Muon:}\\qquad\\frac{C_{T}}{C_{1}} ≥ log ⁡ ( 1 + α ​ T ) α , \\displaystyle\\geq\\frac{\\log(1+\\alpha T)}{\\alpha}, (30) MuonGS: C T C 1 \\displaystyle\\text{MuonGS:}\\qquad\\frac{C_{T}}{C_{1}} ≥ 2 α 2 ​ ( 1 + α 2 ​ T − 1 ) , \\displaystyle\\geq\\frac{2}{\\alpha^{2}}\\left(\\sqrt{1+\\alpha^{2}T}-1\\right), (31) MuonW: C T C 1 \\displaystyle\\text{MuonW:}\\qquad\\frac{C_{T}}{C_{1}} ≥ T max ⁡ { 1 , α / ( η ​ λ ) } , \\displaystyle\\geq\\frac{T}{\\max\\{1,\\alpha/(\\eta\\lambda)\\}}, (32) fixed norm: C T C 1 \\displaystyle\\text{fixed norm:}\\qquad\\frac{C_{T}}{C_{1}} = T . \\displaystyle=T. (33) The first two follow by comparing the sum of r 0 / r t r_{0}/r_{t} with an integral, and the third from R λ / r 0 = max ⁡ { 1 , α / ( η ​ λ ) } R_{\\lambda}/r_{0}=\\max\\{1,\\alpha/(\\eta\\lambda)\\} . For every α > 0 \\alpha>0 , the right-hand sides grow like log ⁡ T \\log T , T \\sqrt{T} , T T and T T . The value of α \\alpha changes their constants and the time at which they stop growing linearly, about α ​ T ≈ 1 \\alpha T\\approx 1 for vanilla Muon and α 2 ​ T ≈ 1 \\alpha^{2}T\\approx 1 for MuonGS, but not their orders in T T . These expressions show that matching α \\alpha gives the same normalized bounds for vanilla Muon and MuonGS across matrix sizes. MuonW may additionally require matching η ​ λ \\eta\\lambda .",
+      "source": "https://arxiv.org/html/2610.37647v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0065",
+      "section": "Independence of matrix size for Muon.",
+      "text": "With the usual initialization, a matrix of shape m d × n d m_{d}\\times n_{d} with independent N ⁡ ( 0 , σ 2 / n d ) N(0,\\sigma^{2}/n_{d}) entries has r 0 , d 2 ≈ m d ​ σ 2 r_{0,d}^{2}\\approx m_{d}\\sigma^{2} , so r 0 , d ≈ σ ​ m d r_{0,d}\\approx\\sigma\\sqrt{m_{d}} , while the Muon update size is p d = min ⁡ { m d , n d } \\sqrt{p_{d}}=\\sqrt{\\min\\{m_{d},n_{d}\\}} . Therefore, α d = η ​ p d / r 0 , d ≈ η σ ​ p d m d \\alpha_{d}=\\eta\\sqrt{p_{d}}/r_{0,d}\\approx\\frac{\\eta}{\\sigma}\\sqrt{\\frac{p_{d}}{m_{d}}} is asymptotically independent of d d . Consequently, at a fixed ratio of p / m p/m , the normalized Muon -type bounds ( 30 )-( 32 ) are asymptotically independent of absolute matrix size at a fixed horizon.",
+      "source": "https://arxiv.org/html/2610.37647v1",
+      "offset": 0
+    }
+  ],
+  "links": [
+    {
+      "href": "mailto:",
+      "text": "{glent007,li004678,mhong}@umn.edu",
+      "section": "MuonGS: Pretraining LLMs with Relaxed Weight-Norm Control",
+      "context": "Athanasios Glentis † † thanks: Equal contribution, alphabetical order. Dawei Li 1 1 footnotemark: 1 Mingyi Hong Affiliation: University of Minnesota Email: {glent007,li004678,mhong}@umn.edu",
+      "url": "mailto:"
+    },
+    {
+      "href": "#bib.bib19",
+      "text": "Liu et al., 2025",
+      "section": "1 Introduction",
+      "context": "Optimizer design plays an important role in large language model (LLM) pretraining, shaping learning dynamics and model quality ( Liu et al., 2025",
+      "url": "https://arxiv.org/html/2610.37647v1#bib.bib19"
+    },
+    {
+      "href": "#bib.bib15",
+      "text": "Wen et al., 2026",
+      "section": "1 Introduction",
+      "context": "Optimizer design plays an important role in large language model (LLM) pretraining, shaping learning dynamics and model quality ( Liu et al., 2025 ; Wen et al., 2026",
+      "url": "https://arxiv.org/html/2610.37647v1#bib.bib15"
+    },
+    {
+      "href": "#bib.bib16",
+      "text": "Loshchilov and Hutter, 2017",
+      "section": "1 Introduction",
+      "context": "Weight-norm control is a common component of effective optimizers for LLM pretraining. AdamW and the weight-decay variant of Muon, MuonW, counter norm growth through decoupled shrinkage ( Loshchilov and Hutter, 2017",
+      "url": "https://arxiv.org/html/2610.37647v1#bib.bib16"
+    },
+    {
+      "href": "#bib.bib19",
+      "text": "Liu et al., 2025",
+      "section": "1 Introduction",
+      "context": "Weight-norm control is a common component of effective optimizers for LLM pretraining. AdamW and the weight-decay variant of Muon, MuonW, counter norm growth through decoupled shrinkage ( Loshchilov and Hutter, 2017 ; Liu et al., 2025",
+      "url": "https://arxiv.org/html/2610.37647v1#bib.bib19"
+    },
+    {
+      "href": "#bib.bib22",
+      "text": "Kodryan et al., 2022",
+      "section": "1 Introduction",
+      "context": "Weight-norm control is a common component of effective optimizers for LLM pretraining. AdamW and the weight-decay variant of Muon, MuonW, counter norm growth through decoupled shrinkage ( Loshchilov and Hutter, 2017 ; Liu et al., 2025 ) . Its strength must be tuned, and the resulting weight scale depends on the optimization dynamics. Explicit constraints provide more direct control, as in fixed-radius optimization ( Kodryan et al., 2022",
+      "url": "https://arxiv.org/html/2610.37647v1#bib.bib22"
+    },
+    {
+      "href": "#bib.bib23",
+      "text": "Loshchilov et al., 2024",
+      "section": "1 Introduction",
+      "context": "Weight-norm control is a common component of effective optimizers for LLM pretraining. AdamW and the weight-decay variant of Muon, MuonW, counter norm growth through decoupled shrinkage ( Loshchilov and Hutter, 2017 ; Liu et al., 2025 ) . Its strength must be tuned, and the resulting weight scale depends on the optimization dynamics. Explicit constraints provide more direct control, as in fixed-radius optimization ( Kodryan et al., 2022 ) , unit-norm weight vectors in nGPT ( Loshchilov et al., 2024",
+      "url": "https://arxiv.org/html/2610.37647v1#bib.bib23"
+    },
+    {
+      "href": "#bib.bib15",
+      "text": "Wen et al., 2026",
+      "section": "1 Introduction",
+      "context": "Weight-norm control is a common component of effective optimizers for LLM pretraining. AdamW and the weight-decay variant of Muon, MuonW, counter norm growth through decoupled shrinkage ( Loshchilov and Hutter, 2017 ; Liu et al., 2025 ) . Its strength must be tuned, and the resulting weight scale depends on the optimization dynamics. Explicit constraints provide more direct control, as in fixed-radius optimization ( Kodryan et al., 2022 ) , unit-norm weight vectors in nGPT ( Loshchilov et al., 2024 ) , and fixed weight and update norms in MuonH, the Hyperball variant of Muon ( Wen et al., 2026",
+      "url": "https://arxiv.org/html/2610.37647v1#bib.bib15"
+    },
+    {
+      "href": "#bib.bib18",
+      "text": "Zhang et al., 2018",
+      "section": "1 Introduction",
+      "context": "These different norm controls raise a common question: When is norm control needed, why does it help, and how much is sufficient? Existing analyses explain important effects of weight norms on optimization ( Zhang et al., 2018",
+      "url": "https://arxiv.org/html/2610.37647v1#bib.bib18"
+    },
+    {
+      "href": "#bib.bib24",
+      "text": "D’Angelo et al., 2024",
+      "section": "1 Introduction",
+      "context": "These different norm controls raise a common question: When is norm control needed, why does it help, and how much is sufficient? Existing analyses explain important effects of weight norms on optimization ( Zhang et al., 2018 ; D’Angelo et al., 2024",
+      "url": "https://arxiv.org/html/2610.37647v1#bib.bib24"
+    },
+    {
+      "href": "#bib.bib25",
+      "text": "Liu et al., 2026",
+      "section": "1 Introduction",
+      "context": "These different norm controls raise a common question: When is norm control needed, why does it help, and how much is sufficient? Existing analyses explain important effects of weight norms on optimization ( Zhang et al., 2018 ; D’Angelo et al., 2024 ; Liu et al., 2026",
+      "url": "https://arxiv.org/html/2610.37647v1#bib.bib25"
+    },
+    {
+      "href": "#bib.bib24",
+      "text": "D’Angelo et al., 2024",
+      "section": "1 Introduction",
+      "context": "A common rationale for controlling weight norms is to prevent updates from becoming too small relative to the current weights. Following prior work ( D’Angelo et al., 2024",
+      "url": "https://arxiv.org/html/2610.37647v1#bib.bib24"
+    },
+    {
+      "href": "#bib.bib25",
+      "text": "Liu et al., 2026",
+      "section": "1 Introduction",
+      "context": "A common rationale for controlling weight norms is to prevent updates from becoming too small relative to the current weights. Following prior work ( D’Angelo et al., 2024 ; Liu et al., 2026",
+      "url": "https://arxiv.org/html/2610.37647v1#bib.bib25"
+    },
+    {
+      "href": "#bib.bib27",
+      "text": "Salimans and Kingma, 2016",
+      "section": "2 Related Works",
+      "context": "Weight Norm Control. Weight-norm control approaches have been commonly used in neural network training through reparameterization, shrinkage or constraints. Early works like weight normalization controlled weight geometry ( Salimans and Kingma, 2016",
+      "url": "https://arxiv.org/html/2610.37647v1#bib.bib27"
+    },
+    {
+      "href": "#bib.bib16",
+      "text": "Loshchilov and Hutter, 2017",
+      "section": "2 Related Works",
+      "context": "Weight Norm Control. Weight-norm control approaches have been commonly used in neural network training through reparameterization, shrinkage or constraints. Early works like weight normalization controlled weight geometry ( Salimans and Kingma, 2016 ) . AdamW then decoupled weight decay from adaptive gradient preconditioning ( Loshchilov and Hutter, 2017",
+      "url": "https://arxiv.org/html/2610.37647v1#bib.bib16"
+    },
+    {
+      "href": "#bib.bib20",
+      "text": "Heo et al., 2020",
+      "section": "2 Related Works",
+      "context": "Weight Norm Control. Weight-norm control approaches have been commonly used in neural network training through reparameterization, shrinkage or constraints. Early works like weight normalization controlled weight geometry ( Salimans and Kingma, 2016 ) . AdamW then decoupled weight decay from adaptive gradient preconditioning ( Loshchilov and Hutter, 2017 ) , while AdamP and SGDP ( Heo et al., 2020",
+      "url": "https://arxiv.org/html/2610.37647v1#bib.bib20"
+    },
+    {
+      "href": "#bib.bib26",
+      "text": "Loshchilov, 2023",
+      "section": "2 Related Works",
+      "context": "m Control. Weight-norm control approaches have been commonly used in neural network training through reparameterization, shrinkage or constraints. Early works like weight normalization controlled weight geometry ( Salimans and Kingma, 2016 ) . AdamW then decoupled weight decay from adaptive gradient preconditioning ( Loshchilov and Hutter, 2017 ) , while AdamP and SGDP ( Heo et al., 2020 ) subsequently slowed norm growth by removing the radial component of the update for weights they detect as scale-invariant. Later methods introduced norm targets and per-matrix upper bounds ( Loshchilov, 2023",
+      "url": "https://arxiv.org/html/2610.37647v1#bib.bib26"
+    },
+    {
+      "href": "#bib.bib28",
+      "text": "Franke et al., 2024",
+      "section": "2 Related Works",
+      "context": " control approaches have been commonly used in neural network training through reparameterization, shrinkage or constraints. Early works like weight normalization controlled weight geometry ( Salimans and Kingma, 2016 ) . AdamW then decoupled weight decay from adaptive gradient preconditioning ( Loshchilov and Hutter, 2017 ) , while AdamP and SGDP ( Heo et al., 2020 ) subsequently slowed norm growth by removing the radial component of the update for weights they detect as scale-invariant. Later methods introduced norm targets and per-matrix upper bounds ( Loshchilov, 2023 ; Franke et al., 2024",
+      "url": "https://arxiv.org/html/2610.37647v1#bib.bib28"
+    },
+    {
+      "href": "#bib.bib23",
+      "text": "Loshchilov et al., 2024",
+      "section": "2 Related Works",
+      "context": "rameterization, shrinkage or constraints. Early works like weight normalization controlled weight geometry ( Salimans and Kingma, 2016 ) . AdamW then decoupled weight decay from adaptive gradient preconditioning ( Loshchilov and Hutter, 2017 ) , while AdamP and SGDP ( Heo et al., 2020 ) subsequently slowed norm growth by removing the radial component of the update for weights they detect as scale-invariant. Later methods introduced norm targets and per-matrix upper bounds ( Loshchilov, 2023 ; Franke et al., 2024 ) , followed by explicit constraints for LLM pretraining ( Loshchilov et al., 2024",
+      "url": "https://arxiv.org/html/2610.37647v1#bib.bib23"
+    },
+    {
+      "href": "#bib.bib15",
+      "text": "Wen et al., 2026",
+      "section": "2 Related Works",
+      "context": "inkage or constraints. Early works like weight normalization controlled weight geometry ( Salimans and Kingma, 2016 ) . AdamW then decoupled weight decay from adaptive gradient preconditioning ( Loshchilov and Hutter, 2017 ) , while AdamP and SGDP ( Heo et al., 2020 ) subsequently slowed norm growth by removing the radial component of the update for weights they detect as scale-invariant. Later methods introduced norm targets and per-matrix upper bounds ( Loshchilov, 2023 ; Franke et al., 2024 ) , followed by explicit constraints for LLM pretraining ( Loshchilov et al., 2024 ; Wen et al., 2026",
+      "url": "https://arxiv.org/html/2610.37647v1#bib.bib15"
+    },
+    {
+      "href": "#bib.bib11",
+      "text": "An et al., 2026",
+      "section": "2 Related Works",
+      "context": "nts. Early works like weight normalization controlled weight geometry ( Salimans and Kingma, 2016 ) . AdamW then decoupled weight decay from adaptive gradient preconditioning ( Loshchilov and Hutter, 2017 ) , while AdamP and SGDP ( Heo et al., 2020 ) subsequently slowed norm growth by removing the radial component of the update for weights they detect as scale-invariant. Later methods introduced norm targets and per-matrix upper bounds ( Loshchilov, 2023 ; Franke et al., 2024 ) , followed by explicit constraints for LLM pretraining ( Loshchilov et al., 2024 ; Wen et al., 2026 ; An et al., 2026",
+      "url": "https://arxiv.org/html/2610.37647v1#bib.bib11"
+    },
+    {
+      "href": "#bib.bib2",
+      "text": "Hägele et al., 2026",
+      "section": "2 Related Works",
+      "context": "weight normalization controlled weight geometry ( Salimans and Kingma, 2016 ) . AdamW then decoupled weight decay from adaptive gradient preconditioning ( Loshchilov and Hutter, 2017 ) , while AdamP and SGDP ( Heo et al., 2020 ) subsequently slowed norm growth by removing the radial component of the update for weights they detect as scale-invariant. Later methods introduced norm targets and per-matrix upper bounds ( Loshchilov, 2023 ; Franke et al., 2024 ) , followed by explicit constraints for LLM pretraining ( Loshchilov et al., 2024 ; Wen et al., 2026 ; An et al., 2026 ; Hägele et al., 2026",
+      "url": "https://arxiv.org/html/2610.37647v1#bib.bib2"
+    },
+    {
+      "href": "#bib.bib1",
+      "text": "Xie et al., 2026",
+      "section": "2 Related Works",
+      "context": "n controlled weight geometry ( Salimans and Kingma, 2016 ) . AdamW then decoupled weight decay from adaptive gradient preconditioning ( Loshchilov and Hutter, 2017 ) , while AdamP and SGDP ( Heo et al., 2020 ) subsequently slowed norm growth by removing the radial component of the update for weights they detect as scale-invariant. Later methods introduced norm targets and per-matrix upper bounds ( Loshchilov, 2023 ; Franke et al., 2024 ) , followed by explicit constraints for LLM pretraining ( Loshchilov et al., 2024 ; Wen et al., 2026 ; An et al., 2026 ; Hägele et al., 2026 ; Xie et al., 2026",
+      "url": "https://arxiv.org/html/2610.37647v1#bib.bib1"
+    },
+    {
+      "href": "#bib.bib32",
+      "text": "Van Laarhoven (2017)",
+      "section": "2 Related Works",
+      "context": "Effective Learning Rate. The effective learning rate describes how parameter scale modifies the effect of a nominal learning rate. In scale-invariant settings, Van Laarhoven (2017)",
+      "url": "https://arxiv.org/html/2610.37647v1#bib.bib32"
+    },
+    {
+      "href": "#bib.bib29",
+      "text": "Hoffer et al., 2018",
+      "section": "2 Related Works",
+      "context": "Effective Learning Rate. The effective learning rate describes how parameter scale modifies the effect of a nominal learning rate. In scale-invariant settings, Van Laarhoven (2017) derived effective learning rates proportional to η / ‖ W ‖ 2 \\eta/\\|W\\|^{2} for SGD and η / ‖ W ‖ \\eta/\\|W\\| for RMSProp and Adam under their respective scaling assumptions. Later works related weight norms and decay to effective learning-rate schedules ( Hoffer et al., 2018",
+      "url": "https://arxiv.org/html/2610.37647v1#bib.bib29"
+    },
+    {
+      "href": "#bib.bib18",
+      "text": "Zhang et al., 2018",
+      "section": "2 Related Works",
+      "context": "Effective Learning Rate. The effective learning rate describes how parameter scale modifies the effect of a nominal learning rate. In scale-invariant settings, Van Laarhoven (2017) derived effective learning rates proportional to η / ‖ W ‖ 2 \\eta/\\|W\\|^{2} for SGD and η / ‖ W ‖ \\eta/\\|W\\| for RMSProp and Adam under their respective scaling assumptions. Later works related weight norms and decay to effective learning-rate schedules ( Hoffer et al., 2018 ; Zhang et al., 2018",
+      "url": "https://arxiv.org/html/2610.37647v1#bib.bib18"
+    },
+    {
+      "href": "#bib.bib30",
+      "text": "Li and Arora, 2019",
+      "section": "2 Related Works",
+      "context": "Effective Learning Rate. The effective learning rate describes how parameter scale modifies the effect of a nominal learning rate. In scale-invariant settings, Van Laarhoven (2017) derived effective learning rates proportional to η / ‖ W ‖ 2 \\eta/\\|W\\|^{2} for SGD and η / ‖ W ‖ \\eta/\\|W\\| for RMSProp and Adam under their respective scaling assumptions. Later works related weight norms and decay to effective learning-rate schedules ( Hoffer et al., 2018 ; Zhang et al., 2018 ) , set up equivalences between weight decay and learning-rate schedules ( Li and Arora, 2019",
+      "url": "https://arxiv.org/html/2610.37647v1#bib.bib30"
+    },
+    {
+      "href": "#bib.bib33",
+      "text": "Wan et al., 2021",
+      "section": "2 Related Works",
+      "context": "l learning rate. In scale-invariant settings, Van Laarhoven (2017) derived effective learning rates proportional to η / ‖ W ‖ 2 \\eta/\\|W\\|^{2} for SGD and η / ‖ W ‖ \\eta/\\|W\\| for RMSProp and Adam under their respective scaling assumptions. Later works related weight norms and decay to effective learning-rate schedules ( Hoffer et al., 2018 ; Zhang et al., 2018 ) , set up equivalences between weight decay and learning-rate schedules ( Li and Arora, 2019 ) , and studied related concepts such as spherical equilibrium, periodic behavior, and optimizer-dependent angular dynamics ( Wan et al., 2021",
+      "url": "https://arxiv.org/html/2610.37647v1#bib.bib33"
+    },
+    {
+      "href": "#bib.bib31",
+      "text": "Lobacheva et al., 2021",
+      "section": "2 Related Works",
+      "context": "-invariant settings, Van Laarhoven (2017) derived effective learning rates proportional to η / ‖ W ‖ 2 \\eta/\\|W\\|^{2} for SGD and η / ‖ W ‖ \\eta/\\|W\\| for RMSProp and Adam under their respective scaling assumptions. Later works related weight norms and decay to effective learning-rate schedules ( Hoffer et al., 2018 ; Zhang et al., 2018 ) , set up equivalences between weight decay and learning-rate schedules ( Li and Arora, 2019 ) , and studied related concepts such as spherical equilibrium, periodic behavior, and optimizer-dependent angular dynamics ( Wan et al., 2021 ; Lobacheva et al., 2021",
+      "url": "https://arxiv.org/html/2610.37647v1#bib.bib31"
+    },
+    {
+      "href": "#bib.bib21",
+      "text": "Roburin et al., 2022",
+      "section": "2 Related Works",
+      "context": "n Laarhoven (2017) derived effective learning rates proportional to η / ‖ W ‖ 2 \\eta/\\|W\\|^{2} for SGD and η / ‖ W ‖ \\eta/\\|W\\| for RMSProp and Adam under their respective scaling assumptions. Later works related weight norms and decay to effective learning-rate schedules ( Hoffer et al., 2018 ; Zhang et al., 2018 ) , set up equivalences between weight decay and learning-rate schedules ( Li and Arora, 2019 ) , and studied related concepts such as spherical equilibrium, periodic behavior, and optimizer-dependent angular dynamics ( Wan et al., 2021 ; Lobacheva et al., 2021 ; Roburin et al., 2022",
+      "url": "https://arxiv.org/html/2610.37647v1#bib.bib21"
+    },
+    {
+      "href": "#bib.bib35",
+      "text": "Kosson et al., 2023",
+      "section": "2 Related Works",
+      "context": "ived effective learning rates proportional to η / ‖ W ‖ 2 \\eta/\\|W\\|^{2} for SGD and η / ‖ W ‖ \\eta/\\|W\\| for RMSProp and Adam under their respective scaling assumptions. Later works related weight norms and decay to effective learning-rate schedules ( Hoffer et al., 2018 ; Zhang et al., 2018 ) , set up equivalences between weight decay and learning-rate schedules ( Li and Arora, 2019 ) , and studied related concepts such as spherical equilibrium, periodic behavior, and optimizer-dependent angular dynamics ( Wan et al., 2021 ; Lobacheva et al., 2021 ; Roburin et al., 2022 ; Kosson et al., 2023",
+      "url": "https://arxiv.org/html/2610.37647v1#bib.bib35"
+    },
+    {
+      "href": "#bib.bib24",
+      "text": "D’Angelo et al., 2024",
+      "section": "2 Related Works",
+      "context": "er their respective scaling assumptions. Later works related weight norms and decay to effective learning-rate schedules ( Hoffer et al., 2018 ; Zhang et al., 2018 ) , set up equivalences between weight decay and learning-rate schedules ( Li and Arora, 2019 ) , and studied related concepts such as spherical equilibrium, periodic behavior, and optimizer-dependent angular dynamics ( Wan et al., 2021 ; Lobacheva et al., 2021 ; Roburin et al., 2022 ; Kosson et al., 2023 ) . In LLM pretraining, the effective learning rate also helps explain why weight decay improves training ( D’Angelo et al., 2024",
+      "url": "https://arxiv.org/html/2610.37647v1#bib.bib24"
+    },
+    {
+      "href": "#bib.bib10",
+      "text": "Glentis et al., 2026",
+      "section": "2 Related Works",
+      "context": "ated weight norms and decay to effective learning-rate schedules ( Hoffer et al., 2018 ; Zhang et al., 2018 ) , set up equivalences between weight decay and learning-rate schedules ( Li and Arora, 2019 ) , and studied related concepts such as spherical equilibrium, periodic behavior, and optimizer-dependent angular dynamics ( Wan et al., 2021 ; Lobacheva et al., 2021 ; Roburin et al., 2022 ; Kosson et al., 2023 ) . In LLM pretraining, the effective learning rate also helps explain why weight decay improves training ( D’Angelo et al., 2024 ) and why SGD underperforms Adam ( Glentis et al., 2026",
+      "url": "https://arxiv.org/html/2610.37647v1#bib.bib10"
+    },
+    {
+      "href": "#bib.bib25",
+      "text": "Liu et al. (2026)",
+      "section": "2 Related Works",
+      "context": "ive learning-rate schedules ( Hoffer et al., 2018 ; Zhang et al., 2018 ) , set up equivalences between weight decay and learning-rate schedules ( Li and Arora, 2019 ) , and studied related concepts such as spherical equilibrium, periodic behavior, and optimizer-dependent angular dynamics ( Wan et al., 2021 ; Lobacheva et al., 2021 ; Roburin et al., 2022 ; Kosson et al., 2023 ) . In LLM pretraining, the effective learning rate also helps explain why weight decay improves training ( D’Angelo et al., 2024 ) and why SGD underperforms Adam ( Glentis et al., 2026 ) . More recently, Liu et al. (2026)",
+      "url": "https://arxiv.org/html/2610.37647v1#bib.bib25"
+    },
+    {
+      "href": "#bib.bib34",
+      "text": "Amin et al. (2026)",
+      "section": "2 Related Works",
+      "context": "s between weight decay and learning-rate schedules ( Li and Arora, 2019 ) , and studied related concepts such as spherical equilibrium, periodic behavior, and optimizer-dependent angular dynamics ( Wan et al., 2021 ; Lobacheva et al., 2021 ; Roburin et al., 2022 ; Kosson et al., 2023 ) . In LLM pretraining, the effective learning rate also helps explain why weight decay improves training ( D’Angelo et al., 2024 ) and why SGD underperforms Adam ( Glentis et al., 2026 ) . More recently, Liu et al. (2026) observed that effective learning rate determines the loss dynamics, while Amin et al. (2026)",
+      "url": "https://arxiv.org/html/2610.37647v1#bib.bib34"
+    },
+    {
+      "href": "#S3.SS1",
+      "text": "3.1",
+      "section": "3 Norm Control Via Accumulated Effective Learning Rate",
+      "context": "We begin with formalizing the global perspective on norm control by relating Muon’s exploration over training intervals to the accumulated effective learning rate C T C_{T} . Section 3.1",
+      "url": "https://arxiv.org/html/2610.37647v1#S3.SS1"
+    },
+    {
+      "href": "#S3.SS2",
+      "text": "3.2",
+      "section": "3 Norm Control Via Accumulated Effective Learning Rate",
+      "context": "We begin with formalizing the global perspective on norm control by relating Muon’s exploration over training intervals to the accumulated effective learning rate C T C_{T} . Section 3.1 starts from what exploration means for a weight matrix of an LLM, derives the effective learning rate as the quantity that sets the size of a Muon step relative to the weights, and shows that the sum of effective learning rates over a training interval bounds how far training can explore in that interval. Section 3.2",
+      "url": "https://arxiv.org/html/2610.37647v1#S3.SS2"
+    },
+    {
+      "href": "#A2",
+      "text": "B",
+      "section": "3 Norm Control Via Accumulated Effective Learning Rate",
+      "context": "what exploration means for a weight matrix of an LLM, derives the effective learning rate as the quantity that sets the size of a Muon step relative to the weights, and shows that the sum of effective learning rates over a training interval bounds how far training can explore in that interval. Section 3.2 compares how fast this sum grows under the three forms in which Muon is run in practice, without norm control, with decoupled weight decay, and with a fixed norm. Then it further answers whether a larger nominal learning rate can substitute for norm control. Proofs are collected in Appendix B",
+      "url": "https://arxiv.org/html/2610.37647v1#A2"
+    },
+    {
+      "href": "#bib.bib17",
+      "text": "Jordan et al., 2024",
+      "section": "3.1 Exploration and accumulated effective learning rate",
+      "context": "Consider a weight matrix W t ∈ ℝ m × n W_{t}\\in\\mathbb{R}^{m\\times n} of a transformer block updated by Muon ( Jordan et al., 2024",
+      "url": "https://arxiv.org/html/2610.37647v1#bib.bib17"
+    },
+    {
+      "href": "#bib.bib17",
+      "text": "Jordan et al., 2024",
+      "section": "3.1 Exploration and accumulated effective learning rate",
+      "context": "Thus a full-rank Muon direction has norm p \\sqrt{p} , independent of the gradient magnitude 1 1 1 Practical implementations use Newton-Schulz iterations ( Jordan et al., 2024",
+      "url": "https://arxiv.org/html/2610.37647v1#bib.bib17"
+    },
+    {
+      "href": "#bib.bib19",
+      "text": "Liu et al., 2025",
+      "section": "3.1 Exploration and accumulated effective learning rate",
+      "context": "Thus a full-rank Muon direction has norm p \\sqrt{p} , independent of the gradient magnitude 1 1 1 Practical implementations use Newton-Schulz iterations ( Jordan et al., 2024 ) and multiply the update by a constant that depends on the shape of the matrix ( Liu et al., 2025",
+      "url": "https://arxiv.org/html/2610.37647v1#bib.bib19"
+    },
+    {
+      "href": "#bib.bib24",
+      "text": "D’Angelo et al., 2024",
+      "section": "3.1 Exploration and accumulated effective learning rate",
+      "context": "Muon supplies the dimension-dependent update scale, while η t / r t \\eta_{t}/r_{t} sets its size relative to the weights. We therefore use η t / r t \\eta_{t}/r_{t} as the effective learning rate relative to the weight norm ( D’Angelo et al., 2024",
+      "url": "https://arxiv.org/html/2610.37647v1#bib.bib24"
+    },
+    {
+      "href": "#bib.bib25",
+      "text": "Liu et al., 2026",
+      "section": "3.1 Exploration and accumulated effective learning rate",
+      "context": "Muon supplies the dimension-dependent update scale, while η t / r t \\eta_{t}/r_{t} sets its size relative to the weights. We therefore use η t / r t \\eta_{t}/r_{t} as the effective learning rate relative to the weight norm ( D’Angelo et al., 2024 ; Liu et al., 2026",
+      "url": "https://arxiv.org/html/2610.37647v1#bib.bib25"
+    },
+    {
+      "href": "#S3.E7",
+      "text": "7",
+      "section": "Proposition 3.1 (Necessary accumulation for relative displacement) .",
+      "context": "The first bound ( 7",
+      "url": "https://arxiv.org/html/2610.37647v1#S3.E7"
+    },
+    {
+      "href": "#S3.E8",
+      "text": "8",
+      "section": "Proposition 3.1 (Necessary accumulation for relative displacement) .",
+      "context": "The first bound ( 7 ) implies that a weight change of at least a fraction δ > 0 \\delta>0 of the larger endpoint norm requires C T − C s ≥ δ / p C_{T}-C_{s}\\geq\\delta/\\sqrt{p} for any weight matrix. The second bound ( 8",
+      "url": "https://arxiv.org/html/2610.37647v1#S3.E8"
+    },
+    {
+      "href": "#S3.E8",
+      "text": "8",
+      "section": "Proposition 3.1 (Necessary accumulation for relative displacement) .",
+      "context": "The first bound ( 7 ) implies that a weight change of at least a fraction δ > 0 \\delta>0 of the larger endpoint norm requires C T − C s ≥ δ / p C_{T}-C_{s}\\geq\\delta/\\sqrt{p} for any weight matrix. The second bound ( 8 ) further assumes a scale-invariant loss, which means the loss depends only on its direction W / ‖ W ‖ F W/\\|W\\|_{F} because its output is normalized. These scale-invariant matrices are common in query and key projections of general transformers. Bound ( 8",
+      "url": "https://arxiv.org/html/2610.37647v1#S3.E8"
+    },
+    {
+      "href": "#S3.Thmtheorem1",
+      "text": "3.1",
+      "section": "Proposition 3.1 (Necessary accumulation for relative displacement) .",
+      "context": "n its direction W / ‖ W ‖ F W/\\|W\\|_{F} because its output is normalized. These scale-invariant matrices are common in query and key projections of general transformers. Bound ( 8 ) states that under the scale-invariance and Lipschitz assumptions with L > 0 L>0 , a loss decrease of at least Δ > 0 \\Delta>0 requires C T − C s ≥ Δ / ( 2 ​ L ​ p ) C_{T}-C_{s}\\geq\\Delta/(2L\\sqrt{p}) . Note that the Lipschitz assumption is mild as L L is the Lipschitz constant of the loss restricted to the unit sphere, which is finite for every continuously differentiable loss. With the two bounds in Proposition 3.1",
+      "url": "https://arxiv.org/html/2610.37647v1#S3.Thmtheorem1"
+    },
+    {
+      "href": "#S3.Thmtheorem1",
+      "text": "3.1",
+      "section": "Proposition 3.1 (Necessary accumulation for relative displacement) .",
+      "context": " transformers. Bound ( 8 ) states that under the scale-invariance and Lipschitz assumptions with L > 0 L>0 , a loss decrease of at least Δ > 0 \\Delta>0 requires C T − C s ≥ Δ / ( 2 ​ L ​ p ) C_{T}-C_{s}\\geq\\Delta/(2L\\sqrt{p}) . Note that the Lipschitz assumption is mild as L L is the Lipschitz constant of the loss restricted to the unit sphere, which is finite for every continuously differentiable loss. With the two bounds in Proposition 3.1 , small accumulation therefore limits both relative movement and, under these additional assumptions, loss reduction. We further note that Proposition 3.1",
+      "url": "https://arxiv.org/html/2610.37647v1#S3.Thmtheorem1"
+    },
+    {
+      "href": "#S3.Thmtheorem1",
+      "text": "3.1",
+      "section": "Proposition 3.1 (Necessary accumulation for relative displacement) .",
+      "context": "Proposition 3.1",
+      "url": "https://arxiv.org/html/2610.37647v1#S3.Thmtheorem1"
+    },
+    {
+      "href": "#A4",
+      "text": "D",
+      "section": "Proposition 3.1 (Necessary accumulation for relative displacement) .",
+      "context": "ovement after step s s requires sufficient additional accumulation C T − C s C_{T}-C_{s} , so continued exploration requires C T C_{T} to keep growing. The next section therefore compares norm controls by two metrics: the relative growth C T − C 1 C_{T}-C_{1} with respect to T T , as well as the later stage relative growth C 2 ​ T − C T C_{2T}-C_{T} over the window [ T , 2 ​ T ] [T,2T] . Note that we use the relative growth of C T C_{T} because it is not sensitive to initialization scale or model size, which is not the case if we only consider C T C_{T} alone. See more discussion in Appendix D",
+      "url": "https://arxiv.org/html/2610.37647v1#A4"
+    },
+    {
+      "href": "#bib.bib17",
+      "text": "Jordan et al., 2024",
+      "section": "3.2 Accumulation under three Muon norm controls",
+      "context": "Given the metric of C T C_{T} , we now compare how C T C_{T} grows under three forms of norm control for Muon, that is, leaving the norm uncontrolled, applying decoupled weight decay, or constraining the norm explicitly. They correspond to vanilla Muon ( Jordan et al., 2024",
+      "url": "https://arxiv.org/html/2610.37647v1#bib.bib17"
+    },
+    {
+      "href": "#bib.bib19",
+      "text": "Liu et al., 2025",
+      "section": "3.2 Accumulation under three Muon norm controls",
+      "context": "Given the metric of C T C_{T} , we now compare how C T C_{T} grows under three forms of norm control for Muon, that is, leaving the norm uncontrolled, applying decoupled weight decay, or constraining the norm explicitly. They correspond to vanilla Muon ( Jordan et al., 2024 ) , MuonW ( Liu et al., 2025",
+      "url": "https://arxiv.org/html/2610.37647v1#bib.bib19"
+    },
+    {
+      "href": "#bib.bib15",
+      "text": "Wen et al., 2026",
+      "section": "3.2 Accumulation under three Muon norm controls",
+      "context": "Given the metric of C T C_{T} , we now compare how C T C_{T} grows under three forms of norm control for Muon, that is, leaving the norm uncontrolled, applying decoupled weight decay, or constraining the norm explicitly. They correspond to vanilla Muon ( Jordan et al., 2024 ) , MuonW ( Liu et al., 2025 ) , and the norm constraint used by MuonH ( Wen et al., 2026",
+      "url": "https://arxiv.org/html/2610.37647v1#bib.bib15"
+    },
+    {
+      "href": "#S3.E2",
+      "text": "2",
+      "section": "3.2 Accumulation under three Muon norm controls",
+      "context": "• Vanilla Muon follows ( 2",
+      "url": "https://arxiv.org/html/2610.37647v1#S3.E2"
+    },
+    {
+      "href": "#S3.Thmtheorem2",
+      "text": "3.2",
+      "section": "Proposition 3.2 (Accumulation under norm control) .",
+      "context": "Proposition 3.2",
+      "url": "https://arxiv.org/html/2610.37647v1#S3.Thmtheorem2"
+    },
+    {
+      "href": "#S3.Thmtheorem1",
+      "text": "3.1",
+      "section": "Proposition 3.2 (Accumulation under norm control) .",
+      "context": " norm can grow linearly in t t , so the effective learning rate can decay like 1 / t 1/t and C T C_{T} can grow as slowly as log ⁡ T \\log T . Over a later window [ T , 2 ​ T ] [T,2T] , the bound in (i) tends to ( log ⁡ 2 ) / p (\\log 2)/\\sqrt{p} as T T grows, so the accumulation of vanilla Muon over later windows can stay bounded. In comparison, weight decay and a fixed norm keep the norm at most R λ R_{\\lambda} or R R , so the effective learning rate stays at least η / R λ \\eta/R_{\\lambda} or η / R \\eta/R , and C T C_{T} and C 2 ​ T − C T C_{2T}-C_{T} grow at least linearly. By Proposition 3.1",
+      "url": "https://arxiv.org/html/2610.37647v1#S3.Thmtheorem1"
+    },
+    {
+      "href": "#bib.bib19",
+      "text": "Liu et al., 2025",
+      "section": "Proposition 3.2 (Accumulation under norm control) .",
+      "context": "illa Muon over later windows can stay bounded. In comparison, weight decay and a fixed norm keep the norm at most R λ R_{\\lambda} or R R , so the effective learning rate stays at least η / R λ \\eta/R_{\\lambda} or η / R \\eta/R , and C T C_{T} and C 2 ​ T − C T C_{2T}-C_{T} grow at least linearly. By Proposition 3.1 , bounded accumulation over later windows limits how far the weights can move late in training and, under the scale-invariance and Lipschitz assumptions, how much the loss can still decrease. This offers an explanation for vanilla Muon’s slower progress in training ( Liu et al., 2025",
+      "url": "https://arxiv.org/html/2610.37647v1#bib.bib19"
+    },
+    {
+      "href": "#S3.F2",
+      "text": "2",
+      "section": "Proposition 3.2 (Accumulation under norm control) .",
+      "context": "Figure 2",
+      "url": "https://arxiv.org/html/2610.37647v1#S3.F2"
+    },
+    {
+      "href": "#A2.SS3",
+      "text": "B.3",
+      "section": "Proposition 3.2 (Accumulation under norm control) .",
+      "context": "Figure 2 shows the three forms on the example (see Appendix B.3",
+      "url": "https://arxiv.org/html/2610.37647v1#A2.SS3"
+    },
+    {
+      "href": "#S3.Thmtheorem2",
+      "text": "3.2",
+      "section": "Proposition 3.2 (Accumulation under norm control) .",
+      "context": "Figure 2 shows the three forms on the example (see Appendix B.3 ) that shows the bounds of Proposition 3.2",
+      "url": "https://arxiv.org/html/2610.37647v1#S3.Thmtheorem2"
+    },
+    {
+      "href": "#S3.Thmtheorem2",
+      "text": "3.2",
+      "section": "Proposition 3.2 (Accumulation under norm control) .",
+      "context": "The example in Proposition 3.2",
+      "url": "https://arxiv.org/html/2610.37647v1#S3.Thmtheorem2"
+    },
+    {
+      "href": "#S3.F3",
+      "text": "3",
+      "section": "Proposition 3.2 (Accumulation under norm control) .",
+      "context": "The example in Proposition 3.2 shows that the difference in worst-case growth orders can occur in an actual Muon run. In practical LLM pretraining, we also observe such numerical differences in accumulation within the same training budget, though the gap is smaller. (See Figure 3",
+      "url": "https://arxiv.org/html/2610.37647v1#S3.F3"
+    },
+    {
+      "href": "#A3",
+      "text": "C",
+      "section": "Proposition 3.2 (Accumulation under norm control) .",
+      "context": "The results so far fix the nominal learning rate. A natural question is whether a larger nominal learning rate can make up for the small accumulation of vanilla Muon. It does not, because a larger η \\eta also makes the norm grow faster, roughly in proportion to η \\eta , so the effective learning rates after the first step barely increase (Appendix C",
+      "url": "https://arxiv.org/html/2610.37647v1#A3"
+    },
+    {
+      "href": "#S3.F4",
+      "text": "4",
+      "section": "Proposition 3.2 (Accumulation under norm control) .",
+      "context": "The results so far fix the nominal learning rate. A natural question is whether a larger nominal learning rate can make up for the small accumulation of vanilla Muon. It does not, because a larger η \\eta also makes the norm grow faster, roughly in proportion to η \\eta , so the effective learning rates after the first step barely increase (Appendix C makes this precise). Figure 4",
+      "url": "https://arxiv.org/html/2610.37647v1#S3.F4"
+    },
+    {
+      "href": "#S4.E11",
+      "text": "11",
+      "section": "4.1 Removing the radial component of the Muon update",
+      "context": "The projection gives ⟨ W t , O ~ t ⟩ F = 0 \\langle W_{t},\\widetilde{O}_{t}\\rangle_{F}=0 and ‖ O ~ t ‖ F ≤ p \\|\\widetilde{O}_{t}\\|_{F}\\leq\\sqrt{p} . Substituting into ( 11",
+      "url": "https://arxiv.org/html/2610.37647v1#S4.E11"
+    },
+    {
+      "href": "#bib.bib20",
+      "text": "Heo et al., 2020",
+      "section": "4.1 Removing the radial component of the Muon update",
+      "context": "Thus the norm may increase, but its squared increment is only quadratic in the step size. AdamP applies the same tangent-space projection to the Adam update, removing its radial component to suppress momentum-induced norm growth on weights it detects as scale-invariant, i.e., when the cosine similarity between the gradient and the weight falls below a small threshold ( Heo et al., 2020",
+      "url": "https://arxiv.org/html/2610.37647v1#bib.bib20"
+    },
+    {
+      "href": "#S4.E12",
+      "text": "12",
+      "section": "Theorem 4.1 (MuonGS growth and accumulation) .",
+      "context": "Under ( 12",
+      "url": "https://arxiv.org/html/2610.37647v1#S4.E12"
+    },
+    {
+      "href": "#S4.T1",
+      "text": "1",
+      "section": "Theorem 4.1 (MuonGS growth and accumulation) .",
+      "context": "MuonGS therefore limits the norm to O ⁡ ( t ) O(\\sqrt{t}) and guarantees at least square-root accumulation, including over later windows. It improves the worst-case guarantee of vanilla Muon without enforcing a fixed radius. Thus the accumulation preserved by MuonGS is available during later training, rather than coming only from early updates. Table 1",
+      "url": "https://arxiv.org/html/2610.37647v1#S4.T1"
+    },
+    {
+      "href": "#S4.E17",
+      "text": "17",
+      "section": "Proposition 4.2 (Stationarity for exact current-gradient MuonGS) .",
+      "context": "Under ( 17",
+      "url": "https://arxiv.org/html/2610.37647v1#S4.E17"
+    },
+    {
+      "href": "#bib.bib15",
+      "text": "Wen et al. (2026)",
+      "section": "5 Experiments",
+      "context": "In this section we evaluate the MuonGS optimizer on the task of LLM pre-training. Since the results from Wen et al. (2026)",
+      "url": "https://arxiv.org/html/2610.37647v1#bib.bib15"
+    },
+    {
+      "href": "#A1.SS1",
+      "text": "A.1",
+      "section": "5 Experiments",
+      "context": "In this section we evaluate the MuonGS optimizer on the task of LLM pre-training. Since the results from Wen et al. (2026) indicate that the MuonH outperforms MuonW in typical pre-training settings, we focus our main comparison to MuonH. Note that both MuonGS and MuonH share the favorable property of not needing to tune a weight decay coefficient as opposed to MuonW. We include some additional results comparing with Muon and MuonW in Appendix A.1",
+      "url": "https://arxiv.org/html/2610.37647v1#A1.SS1"
+    },
+    {
+      "href": "#S5.SS3",
+      "text": "5.3",
+      "section": "5 Experiments",
+      "context": "In this section we evaluate the MuonGS optimizer on the task of LLM pre-training. Since the results from Wen et al. (2026) indicate that the MuonH outperforms MuonW in typical pre-training settings, we focus our main comparison to MuonH. Note that both MuonGS and MuonH share the favorable property of not needing to tune a weight decay coefficient as opposed to MuonW. We include some additional results comparing with Muon and MuonW in Appendix A.1 . Below we present our main results using dense GPT-style models, but include preliminary results on MoE model training in Section 5.3",
+      "url": "https://arxiv.org/html/2610.37647v1#S5.SS3"
+    },
+    {
+      "href": "#bib.bib12",
+      "text": "Jordan, 2026",
+      "section": "5.1 Experimental settings",
+      "context": "Architecture. We use the modernized GPT-style architecture from the Modded-NanoGPT Optimization Benchmark ( Jordan, 2026",
+      "url": "https://arxiv.org/html/2610.37647v1#bib.bib12"
+    },
+    {
+      "href": "#bib.bib12",
+      "text": "Jordan (2026)",
+      "section": "5.1 Experimental settings",
+      "context": "Architecture. We use the modernized GPT-style architecture from the Modded-NanoGPT Optimization Benchmark ( Jordan, 2026 ) at two scales, approximately 160M and 400M parameters. The smaller model, which corresponds to the NanoGPT model used in Jordan (2026)",
+      "url": "https://arxiv.org/html/2610.37647v1#bib.bib12"
+    },
+    {
+      "href": "#bib.bib3",
+      "text": "Penedo et al., 2024",
+      "section": "5.1 Experimental settings",
+      "context": "Pre-training setup. We pre-train on the 100B-token subset of the FineWeb dataset ( Penedo et al., 2024",
+      "url": "https://arxiv.org/html/2610.37647v1#bib.bib3"
+    },
+    {
+      "href": "#bib.bib13",
+      "text": "Hoffmann et al., 2022",
+      "section": "5.1 Experimental settings",
+      "context": "Pre-training setup. We pre-train on the 100B-token subset of the FineWeb dataset ( Penedo et al., 2024 ) using a sequence length of 1024 and a global batch of 512 sequences. Our experiments span approximately 3–25B training tokens for the 160M model and 8–63B for the 400M model, corresponding to roughly 1–8 Chinchilla budgets ( Hoffmann et al., 2022",
+      "url": "https://arxiv.org/html/2610.37647v1#bib.bib13"
+    },
+    {
+      "href": "#alg1",
+      "text": "1",
+      "section": "5.1 Experimental settings",
+      "context": "Optimizers. We compare MuonGS as described in Algorithm 1",
+      "url": "https://arxiv.org/html/2610.37647v1#alg1"
+    },
+    {
+      "href": "#bib.bib15",
+      "text": "Wen et al. (2026)",
+      "section": "5.1 Experimental settings",
+      "context": "Tuning and metrics. We tune learning rates on a multiplicative grid with ratio 2 \\sqrt{2} similar to Wen et al. (2026)",
+      "url": "https://arxiv.org/html/2610.37647v1#bib.bib15"
+    },
+    {
+      "href": "#A1.SS1",
+      "text": "A.1",
+      "section": "5.1 Experimental settings",
+      "context": "Tuning and metrics. We tune learning rates on a multiplicative grid with ratio 2 \\sqrt{2} similar to Wen et al. (2026) , separately for all optimizers, model sizes and training durations. For MuonW we additionally tune the weight decay as shown in Appendix A.1",
+      "url": "https://arxiv.org/html/2610.37647v1#A1.SS1"
+    },
+    {
+      "href": "#S5.F5",
+      "text": "5",
+      "section": "5.2 Benchmarking Results",
+      "context": "Learning Rate Sweeps. From Figure 5",
+      "url": "https://arxiv.org/html/2610.37647v1#S5.F5"
+    },
+    {
+      "href": "#bib.bib8",
+      "text": "Grattafiori et al., 2024",
+      "section": "5.2 Benchmarking Results",
+      "context": "Learning Rate Sweeps. From Figure 5 we observe that, for extended training horizons (overtraining), MuonGS achieves lower perplexity than MuonH. We note that in modern LLM pre-training extending to beyond one Chinchilla training tokens, i.e.,. more than 20 tokens per model parameter, is common practice ( Grattafiori et al., 2024",
+      "url": "https://arxiv.org/html/2610.37647v1#bib.bib8"
+    },
+    {
+      "href": "#bib.bib9",
+      "text": "Yang et al., 2025",
+      "section": "5.2 Benchmarking Results",
+      "context": "Learning Rate Sweeps. From Figure 5 we observe that, for extended training horizons (overtraining), MuonGS achieves lower perplexity than MuonH. We note that in modern LLM pre-training extending to beyond one Chinchilla training tokens, i.e.,. more than 20 tokens per model parameter, is common practice ( Grattafiori et al., 2024 ; Yang et al., 2025",
+      "url": "https://arxiv.org/html/2610.37647v1#bib.bib9"
+    },
+    {
+      "href": "#bib.bib14",
+      "text": "Wen et al. (2025)",
+      "section": "5.2 Benchmarking Results",
+      "context": "Speedup Estimation. Using the best results for each algorithm from the sweeps above, we estimate the training-budget speedup of MuonGS over MuonH following the method used in Wen et al. (2025)",
+      "url": "https://arxiv.org/html/2610.37647v1#bib.bib14"
+    },
+    {
+      "href": "#S5.F6",
+      "text": "6",
+      "section": "5.2 Benchmarking Results",
+      "context": "From Figure 6",
+      "url": "https://arxiv.org/html/2610.37647v1#S5.F6"
+    },
+    {
+      "href": "#bib.bib6",
+      "text": "Ainslie et al., 2023",
+      "section": "5.3 MoE experiments",
+      "context": "In this section we include preliminary results comparing MuonGS to MuonH on a modern Mixture-of-Experts (MoE) architecture. The model incorporates grouped-query attention ( Ainslie et al., 2023",
+      "url": "https://arxiv.org/html/2610.37647v1#bib.bib6"
+    },
+    {
+      "href": "#bib.bib5",
+      "text": "Qiu et al., 2026",
+      "section": "5.3 MoE experiments",
+      "context": "In this section we include preliminary results comparing MuonGS to MuonH on a modern Mixture-of-Experts (MoE) architecture. The model incorporates grouped-query attention ( Ainslie et al., 2023 ) , gated attention ( Qiu et al., 2026",
+      "url": "https://arxiv.org/html/2610.37647v1#bib.bib5"
+    },
+    {
+      "href": "#bib.bib4",
+      "text": "Team et al., 2026",
+      "section": "5.3 MoE experiments",
+      "context": "In this section we include preliminary results comparing MuonGS to MuonH on a modern Mixture-of-Experts (MoE) architecture. The model incorporates grouped-query attention ( Ainslie et al., 2023 ) , gated attention ( Qiu et al., 2026 ) and attention residuals (AttnRes) ( Team et al., 2026",
+      "url": "https://arxiv.org/html/2610.37647v1#bib.bib4"
+    },
+    {
+      "href": "#bib.bib7",
+      "text": "Wang et al., 2025",
+      "section": "5.3 MoE experiments",
+      "context": "In this section we include preliminary results comparing MuonGS to MuonH on a modern Mixture-of-Experts (MoE) architecture. The model incorporates grouped-query attention ( Ainslie et al., 2023 ) , gated attention ( Qiu et al., 2026 ) and attention residuals (AttnRes) ( Team et al., 2026 ) . It has 32 layers, hidden width 512, and 64 routed experts with top-7 routing plus one shared expert per layer, yielding approximately 135M active non-embedding parameters and 1B total parameters. We train on Ultra-FineWeb ( Wang et al., 2025",
+      "url": "https://arxiv.org/html/2610.37647v1#bib.bib7"
+    },
+    {
+      "href": "#S5.F7",
+      "text": "7",
+      "section": "5.3 MoE experiments",
+      "context": "From Figure 7",
+      "url": "https://arxiv.org/html/2610.37647v1#S5.F7"
+    },
+    {
+      "href": "#S5.SS3.p1.1",
+      "text": "§5.3",
+      "section": "References",
+      "context": "Ainslie et al. (2023) J. Ainslie, J. Lee-Thorp, M. De Jong, Y. Zemlyanskiy, F. Lebrón, and S. Sanghai Gqa: training generalized multi-query transformer models from multi-head checkpoints . In Proceedings of the 2023 conference on empirical methods in natural language processing , pp. 4895–4901 . Cited by: §5.3",
+      "url": "https://arxiv.org/html/2610.37647v1#S5.SS3.p1.1"
+    },
+    {
+      "href": "#S2.p2.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Amin et al. (2026) H. Amin, W. Chang, and R. Khanna When does scale-invariant optimization become unstable? an exact schedule law with weight decay . arXiv preprint arXiv:2609.09116 . Cited by: §2",
+      "url": "https://arxiv.org/html/2610.37647v1#S2.p2.1"
+    },
+    {
+      "href": "#S2.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "An et al. (2026) K. An, J. Li, D. Goldfarb, and S. Ma Demystifying manifold constraints in llm pre-training . arXiv preprint arXiv:2605.04418 . Cited by: §2",
+      "url": "https://arxiv.org/html/2610.37647v1#S2.p1.1"
+    },
+    {
+      "href": "https://proceedings.neurips.cc/paper_files/paper/2024/hash/29496c942ed6e08ecc469f4521ebfff0-Abstract-Conference.html",
+      "text": "Link",
+      "section": "References",
+      "context": "D’Angelo et al. (2024) F. D’Angelo, M. Andriushchenko, A. Varre, and N. Flammarion Why do we need weight decay in modern deep learning? . In Advances in Neural Information Processing Systems , Vol. 37 . External Links: Link",
+      "url": "https://proceedings.neurips.cc/paper_files/paper/2024/hash/29496c942ed6e08ecc469f4521ebfff0-Abstract-Conference.html"
+    },
+    {
+      "href": "#S1.p3.1.2",
+      "text": "§1",
+      "section": "References",
+      "context": "D’Angelo et al. (2024) F. D’Angelo, M. Andriushchenko, A. Varre, and N. Flammarion Why do we need weight decay in modern deep learning? . In Advances in Neural Information Processing Systems , Vol. 37 . External Links: Link Cited by: §1",
+      "url": "https://arxiv.org/html/2610.37647v1#S1.p3.1.2"
+    },
+    {
+      "href": "#S1.p4.1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "D’Angelo et al. (2024) F. D’Angelo, M. Andriushchenko, A. Varre, and N. Flammarion Why do we need weight decay in modern deep learning? . In Advances in Neural Information Processing Systems , Vol. 37 . External Links: Link Cited by: §1 , §1",
+      "url": "https://arxiv.org/html/2610.37647v1#S1.p4.1.1"
+    },
+    {
+      "href": "#S2.p2.1",
+      "text": "§2",
+      "section": "References",
+      "context": "D’Angelo et al. (2024) F. D’Angelo, M. Andriushchenko, A. Varre, and N. Flammarion Why do we need weight decay in modern deep learning? . In Advances in Neural Information Processing Systems , Vol. 37 . External Links: Link Cited by: §1 , §1 , §2",
+      "url": "https://arxiv.org/html/2610.37647v1#S2.p2.1"
+    },
+    {
+      "href": "#S3.SS1.p3.2",
+      "text": "§3.1",
+      "section": "References",
+      "context": "D’Angelo et al. (2024) F. D’Angelo, M. Andriushchenko, A. Varre, and N. Flammarion Why do we need weight decay in modern deep learning? . In Advances in Neural Information Processing Systems , Vol. 37 . External Links: Link Cited by: §1 , §1 , §2 , §3.1",
+      "url": "https://arxiv.org/html/2610.37647v1#S3.SS1.p3.2"
+    },
+    {
+      "href": "#S2.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Franke et al. (2024) J. K. Franke, M. Hefenbrock, G. Koehler, and F. Hutter Improving deep learning optimization through constrained parameter regularization . Advances in Neural Information Processing Systems 37 , pp. 8984–9025 . Cited by: §2",
+      "url": "https://arxiv.org/html/2610.37647v1#S2.p1.1"
+    },
+    {
+      "href": "#S2.p2.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Glentis et al. (2026) A. Glentis, D. Li, C. Yau, and M. Hong Revisiting the adam-sgd gap in llm pre-training: the role of large effective learning rates . arXiv preprint arXiv:2605.17787 . Cited by: §2",
+      "url": "https://arxiv.org/html/2610.37647v1#S2.p2.1"
+    },
+    {
+      "href": "#S5.SS2.p1.1",
+      "text": "§5.2",
+      "section": "References",
+      "context": "Grattafiori et al. (2024) A. Grattafiori, A. Dubey, A. Jauhri, A. Pandey, A. Kadian, A. Al-Dahle, A. Letman, A. Mathur, A. Schelten, A. Vaughan, et al. The llama 3 herd of models . arXiv preprint arXiv:2407.21783 . Cited by: §5.2",
+      "url": "https://arxiv.org/html/2610.37647v1#S5.SS2.p1.1"
+    },
+    {
+      "href": "#S2.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Hägele et al. (2026) A. Hägele, A. Hernández-Cano, A. Kosson, and M. Jaggi Improving neural network training by decoupling the magnitude and direction of weight vectors . arXiv preprint arXiv:2606.25971 . Cited by: §2",
+      "url": "https://arxiv.org/html/2610.37647v1#S2.p1.1"
+    },
+    {
+      "href": "#S2.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Heo et al. (2020) B. Heo, S. Chun, S. J. Oh, D. Han, S. Yun, G. Kim, Y. Uh, and J. Ha Adamp: slowing down the slowdown for momentum optimizers on scale-invariant weights . arXiv preprint arXiv:2006.08217 . Cited by: §2",
+      "url": "https://arxiv.org/html/2610.37647v1#S2.p1.1"
+    },
+    {
+      "href": "#S4.SS1.p3.2.1",
+      "text": "§4.1",
+      "section": "References",
+      "context": "Heo et al. (2020) B. Heo, S. Chun, S. J. Oh, D. Han, S. Yun, G. Kim, Y. Uh, and J. Ha Adamp: slowing down the slowdown for momentum optimizers on scale-invariant weights . arXiv preprint arXiv:2006.08217 . Cited by: §2 , §4.1",
+      "url": "https://arxiv.org/html/2610.37647v1#S4.SS1.p3.2.1"
+    },
+    {
+      "href": "#S2.p2.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Hoffer et al. (2018) E. Hoffer, R. Banner, I. Golan, and D. Soudry Norm matters: efficient and accurate normalization schemes in deep networks . Advances in Neural Information Processing Systems 31 . Cited by: §2",
+      "url": "https://arxiv.org/html/2610.37647v1#S2.p2.1"
+    },
+    {
+      "href": "#S5.SS1.p2.1",
+      "text": "§5.1",
+      "section": "References",
+      "context": "Hoffmann et al. (2022) J. Hoffmann, S. Borgeaud, A. Mensch, E. Buchatskaya, T. Cai, E. Rutherford, D. de Las Casas, L. A. Hendricks, J. Welbl, A. Clark, et al. Training compute-optimal large language models (2022) . arXiv preprint arXiv:2203.15556 . Cited by: §5.1",
+      "url": "https://arxiv.org/html/2610.37647v1#S5.SS1.p2.1"
+    },
+    {
+      "href": "#S3.SS1.p1.1",
+      "text": "§3.1",
+      "section": "References",
+      "context": "Jordan et al. (2024) K. Jordan, Y. Jin, V. Boza, J. You, F. Cesista, L. Newhouse, and J. Bernstein Muon: an optimizer for hidden layers in neural networks, 2024 . URL https://kellerjordan. github. io/posts/muon 6 ( 3 ), pp. 4 . Cited by: §3.1",
+      "url": "https://arxiv.org/html/2610.37647v1#S3.SS1.p1.1"
+    },
+    {
+      "href": "#S3.SS2.p1.1",
+      "text": "§3.2",
+      "section": "References",
+      "context": "Jordan et al. (2024) K. Jordan, Y. Jin, V. Boza, J. You, F. Cesista, L. Newhouse, and J. Bernstein Muon: an optimizer for hidden layers in neural networks, 2024 . URL https://kellerjordan. github. io/posts/muon 6 ( 3 ), pp. 4 . Cited by: §3.1 , §3.2",
+      "url": "https://arxiv.org/html/2610.37647v1#S3.SS2.p1.1"
+    },
+    {
+      "href": "#footnote1",
+      "text": "footnote 1",
+      "section": "References",
+      "context": "Jordan et al. (2024) K. Jordan, Y. Jin, V. Boza, J. You, F. Cesista, L. Newhouse, and J. Bernstein Muon: an optimizer for hidden layers in neural networks, 2024 . URL https://kellerjordan. github. io/posts/muon 6 ( 3 ), pp. 4 . Cited by: §3.1 , §3.2 , footnote 1",
+      "url": "https://arxiv.org/html/2610.37647v1#footnote1"
+    },
+    {
+      "href": "https://github.com/KellerJordan/modded-nanogpt/tree/master/records/track_3_optimization",
+      "text": "Link",
+      "section": "References",
+      "context": "Jordan (2026) K. Jordan Modded-nanogpt optimization benchmark . External Links: Link",
+      "url": "https://github.com/KellerJordan/modded-nanogpt/tree/master/records/track_3_optimization"
+    },
+    {
+      "href": "#S5.SS1.p1.1",
+      "text": "§5.1",
+      "section": "References",
+      "context": "Jordan (2026) K. Jordan Modded-nanogpt optimization benchmark . External Links: Link Cited by: §5.1",
+      "url": "https://arxiv.org/html/2610.37647v1#S5.SS1.p1.1"
+    },
+    {
+      "href": "#S1.p2.1.2",
+      "text": "§1",
+      "section": "References",
+      "context": "Kodryan et al. (2022) M. Kodryan, E. Lobacheva, M. Nakhodnov, and D. Vetrov Training scale-invariant neural networks on the sphere can happen in three regimes . Advances in Neural Information Processing Systems 35 , pp. 14058–14070 . Cited by: §1",
+      "url": "https://arxiv.org/html/2610.37647v1#S1.p2.1.2"
+    },
+    {
+      "href": "#S2.p2.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Kosson et al. (2023) A. Kosson, B. Messmer, and M. Jaggi Rotational equilibrium: how weight decay balances learning across neural networks . arXiv preprint arXiv:2305.17212 . Cited by: §2",
+      "url": "https://arxiv.org/html/2610.37647v1#S2.p2.1"
+    },
+    {
+      "href": "#S2.p2.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Li and Arora (2019) Z. Li and S. Arora An exponential learning rate schedule for deep learning . arXiv preprint arXiv:1910.07454 . Cited by: §2",
+      "url": "https://arxiv.org/html/2610.37647v1#S2.p2.1"
+    },
+    {
+      "href": "#S1.p1.1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Liu et al. (2025) J. Liu, J. Su, X. Yao, Z. Jiang, G. Lai, Y. Du, Y. Qin, W. Xu, E. Lu, J. Yan, et al. Muon is scalable for llm training . arXiv preprint arXiv:2502.16982 . Cited by: §1",
+      "url": "https://arxiv.org/html/2610.37647v1#S1.p1.1.1"
+    },
+    {
+      "href": "#S1.p2.1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Liu et al. (2025) J. Liu, J. Su, X. Yao, Z. Jiang, G. Lai, Y. Du, Y. Qin, W. Xu, E. Lu, J. Yan, et al. Muon is scalable for llm training . arXiv preprint arXiv:2502.16982 . Cited by: §1 , §1",
+      "url": "https://arxiv.org/html/2610.37647v1#S1.p2.1.1"
+    },
+    {
+      "href": "#S3.SS2.p1.1",
+      "text": "§3.2",
+      "section": "References",
+      "context": "Liu et al. (2025) J. Liu, J. Su, X. Yao, Z. Jiang, G. Lai, Y. Du, Y. Qin, W. Xu, E. Lu, J. Yan, et al. Muon is scalable for llm training . arXiv preprint arXiv:2502.16982 . Cited by: §1 , §1 , §3.2",
+      "url": "https://arxiv.org/html/2610.37647v1#S3.SS2.p1.1"
+    },
+    {
+      "href": "#S3.SS2.p4.1",
+      "text": "§3.2",
+      "section": "References",
+      "context": "Liu et al. (2025) J. Liu, J. Su, X. Yao, Z. Jiang, G. Lai, Y. Du, Y. Qin, W. Xu, E. Lu, J. Yan, et al. Muon is scalable for llm training . arXiv preprint arXiv:2502.16982 . Cited by: §1 , §1 , §3.2 , §3.2",
+      "url": "https://arxiv.org/html/2610.37647v1#S3.SS2.p4.1"
+    },
+    {
+      "href": "#footnote1",
+      "text": "footnote 1",
+      "section": "References",
+      "context": "Liu et al. (2025) J. Liu, J. Su, X. Yao, Z. Jiang, G. Lai, Y. Du, Y. Qin, W. Xu, E. Lu, J. Yan, et al. Muon is scalable for llm training . arXiv preprint arXiv:2502.16982 . Cited by: §1 , §1 , §3.2 , §3.2 , footnote 1",
+      "url": "https://arxiv.org/html/2610.37647v1#footnote1"
+    },
+    {
+      "href": "https://arxiv.org/abs/2608.24814",
+      "text": "Link",
+      "section": "References",
+      "context": "Liu et al. (2026) Z. Liu, R. Zheng, S. Zhang, C. Tian, K. Chen, Z. Zhang, and L. Wu Effective learning rate governs loss dynamics in language model pretraining . arXiv preprint arXiv:2608.24814 . External Links: Link",
+      "url": "https://arxiv.org/abs/2608.24814"
+    },
+    {
+      "href": "#S1.p3.1.2",
+      "text": "§1",
+      "section": "References",
+      "context": "Liu et al. (2026) Z. Liu, R. Zheng, S. Zhang, C. Tian, K. Chen, Z. Zhang, and L. Wu Effective learning rate governs loss dynamics in language model pretraining . arXiv preprint arXiv:2608.24814 . External Links: Link Cited by: §1",
+      "url": "https://arxiv.org/html/2610.37647v1#S1.p3.1.2"
+    },
+    {
+      "href": "#S1.p4.1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Liu et al. (2026) Z. Liu, R. Zheng, S. Zhang, C. Tian, K. Chen, Z. Zhang, and L. Wu Effective learning rate governs loss dynamics in language model pretraining . arXiv preprint arXiv:2608.24814 . External Links: Link Cited by: §1 , §1",
+      "url": "https://arxiv.org/html/2610.37647v1#S1.p4.1.1"
+    },
+    {
+      "href": "#S2.p2.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Liu et al. (2026) Z. Liu, R. Zheng, S. Zhang, C. Tian, K. Chen, Z. Zhang, and L. Wu Effective learning rate governs loss dynamics in language model pretraining . arXiv preprint arXiv:2608.24814 . External Links: Link Cited by: §1 , §1 , §2",
+      "url": "https://arxiv.org/html/2610.37647v1#S2.p2.1"
+    },
+    {
+      "href": "#S3.SS1.p3.2",
+      "text": "§3.1",
+      "section": "References",
+      "context": "Liu et al. (2026) Z. Liu, R. Zheng, S. Zhang, C. Tian, K. Chen, Z. Zhang, and L. Wu Effective learning rate governs loss dynamics in language model pretraining . arXiv preprint arXiv:2608.24814 . External Links: Link Cited by: §1 , §1 , §2 , §3.1",
+      "url": "https://arxiv.org/html/2610.37647v1#S3.SS1.p3.2"
+    },
+    {
+      "href": "#S2.p2.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Lobacheva et al. (2021) E. Lobacheva, M. Kodryan, N. Chirkova, A. Malinin, and D. P. Vetrov On the periodic behavior of neural network training with batch normalization and weight decay . Advances in Neural Information Processing Systems 34 , pp. 21545–21556 . Cited by: §2",
+      "url": "https://arxiv.org/html/2610.37647v1#S2.p2.1"
+    },
+    {
+      "href": "#S1.p2.1.3",
+      "text": "§1",
+      "section": "References",
+      "context": "Loshchilov et al. (2024) I. Loshchilov, C. Hsieh, S. Sun, and B. Ginsburg nGPT: normalized transformer with representation learning on the hypersphere . arXiv preprint arXiv:2410.01131 . Cited by: §1",
+      "url": "https://arxiv.org/html/2610.37647v1#S1.p2.1.3"
+    },
+    {
+      "href": "#S2.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Loshchilov et al. (2024) I. Loshchilov, C. Hsieh, S. Sun, and B. Ginsburg nGPT: normalized transformer with representation learning on the hypersphere . arXiv preprint arXiv:2410.01131 . Cited by: §1 , §2",
+      "url": "https://arxiv.org/html/2610.37647v1#S2.p1.1"
+    },
+    {
+      "href": "#S1.p2.1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Loshchilov and Hutter (2017) I. Loshchilov and F. Hutter Decoupled weight decay regularization . arXiv preprint arXiv:1711.05101 . Cited by: §1",
+      "url": "https://arxiv.org/html/2610.37647v1#S1.p2.1.1"
+    },
+    {
+      "href": "#S2.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Loshchilov and Hutter (2017) I. Loshchilov and F. Hutter Decoupled weight decay regularization . arXiv preprint arXiv:1711.05101 . Cited by: §1 , §2",
+      "url": "https://arxiv.org/html/2610.37647v1#S2.p1.1"
+    },
+    {
+      "href": "#S2.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Loshchilov (2023) I. Loshchilov Weight norm control . arXiv preprint arXiv:2311.11446 . Cited by: §2",
+      "url": "https://arxiv.org/html/2610.37647v1#S2.p1.1"
+    },
+    {
+      "href": "#S5.SS1.p2.1",
+      "text": "§5.1",
+      "section": "References",
+      "context": "Penedo et al. (2024) G. Penedo, H. Kydlíček, L. B. allal, A. Lozhkov, M. Mitchell, C. Raffel, L. V. Werra, and T. Wolf The fineweb datasets: decanting the web for the finest text data at scale . External Links: 2406.17557 Cited by: §5.1",
+      "url": "https://arxiv.org/html/2610.37647v1#S5.SS1.p2.1"
+    },
+    {
+      "href": "#S5.SS3.p1.1",
+      "text": "§5.3",
+      "section": "References",
+      "context": "Qiu et al. (2026) Z. Qiu, Z. Wang, B. Zheng, Z. Huang, K. Wen, S. Yang, R. Men, L. Yu, F. Huang, S. Huang, et al. Gated attention for large language models: non-linearity, sparsity, and attention-sink-free . Advances in Neural Information Processing Systems 38 , pp. 100092–100118 . Cited by: §5.3",
+      "url": "https://arxiv.org/html/2610.37647v1#S5.SS3.p1.1"
+    },
+    {
+      "href": "#S2.p2.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Roburin et al. (2022) S. Roburin, Y. de Mont-Marin, A. Bursuc, R. Marlet, P. Perez, and M. Aubry Spherical perspective on learning with normalization layers . Neurocomputing 487 , pp. 66–74 . Cited by: §2",
+      "url": "https://arxiv.org/html/2610.37647v1#S2.p2.1"
+    },
+    {
+      "href": "#S2.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Salimans and Kingma (2016) T. Salimans and D. P. Kingma Weight normalization: a simple reparameterization to accelerate training of deep neural networks . Advances in neural information processing systems 29 . Cited by: §2",
+      "url": "https://arxiv.org/html/2610.37647v1#S2.p1.1"
+    },
+    {
+      "href": "#S5.SS3.p1.1",
+      "text": "§5.3",
+      "section": "References",
+      "context": "Team et al. (2026) K. Team, G. Chen, Y. Zhang, J. Su, W. Xu, S. Pan, Y. Wang, Y. Wang, G. Chen, B. Yin, et al. Attention residuals . arXiv preprint arXiv:2603.15031 . Cited by: §5.3",
+      "url": "https://arxiv.org/html/2610.37647v1#S5.SS3.p1.1"
+    },
+    {
+      "href": "#S2.p2.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Van Laarhoven (2017) T. Van Laarhoven L2 regularization versus batch and weight normalization . arXiv preprint arXiv:1706.05350 . Cited by: §2",
+      "url": "https://arxiv.org/html/2610.37647v1#S2.p2.1"
+    },
+    {
+      "href": "#S2.p2.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Wan et al. (2021) R. Wan, Z. Zhu, X. Zhang, and J. Sun Spherical motion dynamics: learning dynamics of normalized neural network using sgd and weight decay . Advances in Neural Information Processing Systems 34 , pp. 6380–6391 . Cited by: §2",
+      "url": "https://arxiv.org/html/2610.37647v1#S2.p2.1"
+    },
+    {
+      "href": "#S5.SS3.p1.1",
+      "text": "§5.3",
+      "section": "References",
+      "context": "Wang et al. (2025) Y. Wang, Z. Fu, J. Cai, P. Tang, H. Lyu, Y. Fang, Z. Zheng, J. Zhou, G. Zeng, C. Xiao, et al. Ultra-fineweb: efficient data filtering and verification for high-quality llm training data . arXiv preprint arXiv:2505.05427 . Cited by: §5.3",
+      "url": "https://arxiv.org/html/2610.37647v1#S5.SS3.p1.1"
+    },
+    {
+      "href": "#S1.p1.1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Wen et al. (2026) K. Wen, X. Dang, K. Lyu, T. Ma, and P. Liang Fantastic pretraining optimizers and where to find them ii: hyperball optimization . arXiv preprint arXiv:2606.16899 . Cited by: §1",
+      "url": "https://arxiv.org/html/2610.37647v1#S1.p1.1.1"
+    },
+    {
+      "href": "#S1.p2.1.4",
+      "text": "§1",
+      "section": "References",
+      "context": "Wen et al. (2026) K. Wen, X. Dang, K. Lyu, T. Ma, and P. Liang Fantastic pretraining optimizers and where to find them ii: hyperball optimization . arXiv preprint arXiv:2606.16899 . Cited by: §1 , §1",
+      "url": "https://arxiv.org/html/2610.37647v1#S1.p2.1.4"
+    },
+    {
+      "href": "#S2.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Wen et al. (2026) K. Wen, X. Dang, K. Lyu, T. Ma, and P. Liang Fantastic pretraining optimizers and where to find them ii: hyperball optimization . arXiv preprint arXiv:2606.16899 . Cited by: §1 , §1 , §2",
+      "url": "https://arxiv.org/html/2610.37647v1#S2.p1.1"
+    },
+    {
+      "href": "#S3.SS2.p1.1",
+      "text": "§3.2",
+      "section": "References",
+      "context": "Wen et al. (2026) K. Wen, X. Dang, K. Lyu, T. Ma, and P. Liang Fantastic pretraining optimizers and where to find them ii: hyperball optimization . arXiv preprint arXiv:2606.16899 . Cited by: §1 , §1 , §2 , §3.2",
+      "url": "https://arxiv.org/html/2610.37647v1#S3.SS2.p1.1"
+    },
+    {
+      "href": "#S5.SS1.p4.1",
+      "text": "§5.1",
+      "section": "References",
+      "context": "Wen et al. (2026) K. Wen, X. Dang, K. Lyu, T. Ma, and P. Liang Fantastic pretraining optimizers and where to find them ii: hyperball optimization . arXiv preprint arXiv:2606.16899 . Cited by: §1 , §1 , §2 , §3.2 , §5.1",
+      "url": "https://arxiv.org/html/2610.37647v1#S5.SS1.p4.1"
+    },
+    {
+      "href": "#S5.p1.1",
+      "text": "§5",
+      "section": "References",
+      "context": "Wen et al. (2026) K. Wen, X. Dang, K. Lyu, T. Ma, and P. Liang Fantastic pretraining optimizers and where to find them ii: hyperball optimization . arXiv preprint arXiv:2606.16899 . Cited by: §1 , §1 , §2 , §3.2 , §5.1 , §5",
+      "url": "https://arxiv.org/html/2610.37647v1#S5.p1.1"
+    },
+    {
+      "href": "#S5.SS2.p2.1",
+      "text": "§5.2",
+      "section": "References",
+      "context": "Wen et al. (2025) K. Wen, D. Hall, T. Ma, and P. Liang Fantastic pretraining optimizers and where to find them . arXiv preprint arXiv:2509.02046 . Cited by: §5.2",
+      "url": "https://arxiv.org/html/2610.37647v1#S5.SS2.p2.1"
+    },
+    {
+      "href": "#S2.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Xie et al. (2026) T. Xie, H. Luo, H. Tang, Y. Hu, J. K. Liu, Q. Ren, Y. Wang, W. X. Zhao, R. Yan, B. Su, et al. Controlled llm training on spectral sphere . arXiv preprint arXiv:2601.08393 . Cited by: §2",
+      "url": "https://arxiv.org/html/2610.37647v1#S2.p1.1"
+    },
+    {
+      "href": "#S5.SS2.p1.1",
+      "text": "§5.2",
+      "section": "References",
+      "context": "Yang et al. (2025) A. Yang, A. Li, B. Yang, B. Zhang, B. Hui, B. Zheng, B. Yu, C. Gao, C. Huang, C. Lv, et al. Qwen3 technical report . arXiv preprint arXiv:2505.09388 . Cited by: §5.2",
+      "url": "https://arxiv.org/html/2610.37647v1#S5.SS2.p1.1"
+    },
+    {
+      "href": "#S1.p3.1.2",
+      "text": "§1",
+      "section": "References",
+      "context": "Zhang et al. (2018) G. Zhang, C. Wang, B. Xu, and R. Grosse Three mechanisms of weight decay regularization . arXiv preprint arXiv:1810.12281 . Cited by: §1",
+      "url": "https://arxiv.org/html/2610.37647v1#S1.p3.1.2"
+    },
+    {
+      "href": "#S2.p2.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Zhang et al. (2018) G. Zhang, C. Wang, B. Xu, and R. Grosse Three mechanisms of weight decay regularization . arXiv preprint arXiv:1810.12281 . Cited by: §1 , §2",
+      "url": "https://arxiv.org/html/2610.37647v1#S2.p2.1"
+    },
+    {
+      "href": "#A1.F8",
+      "text": "8",
+      "section": "A.1 Experiments with Muon/MuonW",
+      "context": "In Figure 8",
+      "url": "https://arxiv.org/html/2610.37647v1#A1.F8"
+    },
+    {
+      "href": "#A1.F9",
+      "text": "9",
+      "section": "A.1 Experiments with Muon/MuonW",
+      "context": "We also compare the evolution of the norm of the combined matrix weights, ‖ w t ‖ 2 \\|w_{t}\\|_{2} , during training. As shown in Figure 9",
+      "url": "https://arxiv.org/html/2610.37647v1#A1.F9"
+    },
+    {
+      "href": "#A1.F8",
+      "text": "8",
+      "section": "A.1 Experiments with Muon/MuonW",
+      "context": "Figure 9 : Weight-norm evolution for the 160M (left) and 400M (right) models over 20k training steps, using each method’s best learning rate. Here, w t w_{t} concatenates the matrix weights updated by Muon variants, excluding auxiliary AdamW parameters. MuonW uses weight decay 0.0125 0.0125 which was found to be the best among the ones tested as shown 8",
+      "url": "https://arxiv.org/html/2610.37647v1#A1.F8"
+    },
+    {
+      "href": "#S3.Thmtheorem1",
+      "text": "3.1",
+      "section": "Appendix B Proofs and Examples",
+      "context": "",
+      "url": "https://arxiv.org/html/2610.37647v1#S3.Thmtheorem1"
+    },
+    {
+      "href": "#S3.E4",
+      "text": "4",
+      "section": "Proof.",
+      "context": "Applying this inequality along the iterates and then ( 4",
+      "url": "https://arxiv.org/html/2610.37647v1#S3.E4"
+    },
+    {
+      "href": "#S3.E7",
+      "text": "7",
+      "section": "Proof.",
+      "context": "which is ( 7",
+      "url": "https://arxiv.org/html/2610.37647v1#S3.E7"
+    },
+    {
+      "href": "#S3.E8",
+      "text": "8",
+      "section": "Proof.",
+      "context": "which is ( 7 ). For ( 8",
+      "url": "https://arxiv.org/html/2610.37647v1#S3.E8"
+    },
+    {
+      "href": "#S3.E7",
+      "text": "7",
+      "section": "Proof.",
+      "context": "Hence | F ⁡ ( W T ) − F ⁡ ( W s ) | ≤ L ​ ‖ W T / r T − W s / r s ‖ F ≤ 2 ​ L ​ d ​ ( W T , W s ) |F(W_{T})-F(W_{s})|\\leq L\\|W_{T}/r_{T}-W_{s}/r_{s}\\|_{F}\\leq 2L\\,d(W_{T},W_{s}) , and ( 7",
+      "url": "https://arxiv.org/html/2610.37647v1#S3.E7"
+    },
+    {
+      "href": "#S3.E8",
+      "text": "8",
+      "section": "Proof.",
+      "context": "Hence | F ⁡ ( W T ) − F ⁡ ( W s ) | ≤ L ​ ‖ W T / r T − W s / r s ‖ F ≤ 2 ​ L ​ d ​ ( W T , W s ) |F(W_{T})-F(W_{s})|\\leq L\\|W_{T}/r_{T}-W_{s}/r_{s}\\|_{F}\\leq 2L\\,d(W_{T},W_{s}) , and ( 7 ) gives ( 8",
+      "url": "https://arxiv.org/html/2610.37647v1#S3.E8"
+    },
+    {
+      "href": "#S3.Thmtheorem2",
+      "text": "3.2",
+      "section": "Proof.",
+      "context": "",
+      "url": "https://arxiv.org/html/2610.37647v1#S3.Thmtheorem2"
+    },
+    {
+      "href": "#A2.SS3",
+      "text": "B.3",
+      "section": "Proof.",
+      "context": "The tightness of (i) is shown by the example of Appendix B.3",
+      "url": "https://arxiv.org/html/2610.37647v1#A2.SS3"
+    },
+    {
+      "href": "#A2.SS2",
+      "text": "B.2",
+      "section": "Vanilla Muon.",
+      "context": "The applied update − η ​ O t -\\eta O_{t} is a positive multiple of W t W_{t} , so every step points directly away from the origin. In particular, − ⟨ W t , O t ⟩ F / r t = p -\\langle W_{t},O_{t}\\rangle_{F}/r_{t}=\\sqrt{p} , and the norm bound r t + 1 ≤ r t + η ​ p r_{t+1}\\leq r_{t}+\\eta\\sqrt{p} in Appendix B.2",
+      "url": "https://arxiv.org/html/2610.37647v1#A2.SS2"
+    },
+    {
+      "href": "#S3.Thmtheorem2",
+      "text": "3.2",
+      "section": "Vanilla Muon.",
+      "context": "Since r 0 = b ​ p r_{0}=b\\sqrt{p} , the logarithms for ( s , u ) = ( 0 , T ) (s,u)=(0,T) and ( T , 2 ​ T ) (T,2T) are exactly the two bounds of Proposition 3.2",
+      "url": "https://arxiv.org/html/2610.37647v1#S3.Thmtheorem2"
+    },
+    {
+      "href": "#S3.F2",
+      "text": "2",
+      "section": "MuonW and fixed norm.",
+      "context": "",
+      "url": "https://arxiv.org/html/2610.37647v1#S3.F2"
+    },
+    {
+      "href": "#S3.F2",
+      "text": "2",
+      "section": "Numerical illustration in Figure 2 .",
+      "context": "In Figure 2",
+      "url": "https://arxiv.org/html/2610.37647v1#S3.F2"
+    },
+    {
+      "href": "#S4.Thmtheorem1",
+      "text": "4.1",
+      "section": "Numerical illustration in Figure 2 .",
+      "context": "",
+      "url": "https://arxiv.org/html/2610.37647v1#S4.Thmtheorem1"
+    },
+    {
+      "href": "#S4.E14",
+      "text": "14",
+      "section": "Proof.",
+      "context": "This proves the radius bound ( 14",
+      "url": "https://arxiv.org/html/2610.37647v1#S4.E14"
+    },
+    {
+      "href": "#S4.E14",
+      "text": "14",
+      "section": "Proof.",
+      "context": "For η t = η \\eta_{t}=\\eta , ( 14",
+      "url": "https://arxiv.org/html/2610.37647v1#S4.E14"
+    },
+    {
+      "href": "#S4.E15",
+      "text": "15",
+      "section": "Proof.",
+      "context": "For fixed r 0 r_{0} , p p and η \\eta , the right-hand side equals 2 ​ T / p + O ⁡ ( 1 ) 2\\sqrt{T/p}+O(1) , proving ( 15",
+      "url": "https://arxiv.org/html/2610.37647v1#S4.E15"
+    },
+    {
+      "href": "#S4.E16",
+      "text": "16",
+      "section": "Proof.",
+      "context": "and the right-hand side equals T / ( 2 ​ p ) + O ⁡ ( 1 ) \\sqrt{T/(2p)}+O(1) , which proves ( 16",
+      "url": "https://arxiv.org/html/2610.37647v1#S4.E16"
+    },
+    {
+      "href": "#S4.Thmtheorem2",
+      "text": "4.2",
+      "section": "Proof.",
+      "context": "",
+      "url": "https://arxiv.org/html/2610.37647v1#S4.Thmtheorem2"
+    },
+    {
+      "href": "#S4.E18",
+      "text": "18",
+      "section": "Proof.",
+      "context": "If G t = 0 G_{t}=0 for some t < T t<T , all later iterates are stationary and ( 18",
+      "url": "https://arxiv.org/html/2610.37647v1#S4.E18"
+    },
+    {
+      "href": "#S4.E14",
+      "text": "14",
+      "section": "Proof.",
+      "context": "If G t = 0 G_{t}=0 for some t < T t<T , all later iterates are stationary and ( 18 ) holds. Otherwise ( 14",
+      "url": "https://arxiv.org/html/2610.37647v1#S4.E14"
+    },
+    {
+      "href": "#A2.E24",
+      "text": "24",
+      "section": "Proof.",
+      "context": "where B = p ⁡ ( L 1 + L 2 ) / 2 B=p(L_{1}+L_{2})/2 . If a stationary iterate occurs before T T , the claimed minimum is zero. Otherwise, the radius bounds in ( 24",
+      "url": "https://arxiv.org/html/2610.37647v1#A2.E24"
+    },
+    {
+      "href": "#A2.E25",
+      "text": "25",
+      "section": "Proof.",
+      "context": "Summing the one-step estimate ( 25",
+      "url": "https://arxiv.org/html/2610.37647v1#A2.E25"
+    },
+    {
+      "href": "#S3.SS2",
+      "text": "3.2",
+      "section": "Appendix C Dependence on the Nominal Learning Rate",
+      "context": "Section 3.2",
+      "url": "https://arxiv.org/html/2610.37647v1#S3.SS2"
+    },
+    {
+      "href": "#A3.E26",
+      "text": "26",
+      "section": "Proof.",
+      "context": "Meanwhile, the triangle inequality gives r t + 1 ≤ r t + η ​ p r_{t+1}\\leq r_{t}+\\eta\\sqrt{p} . Summing these increments gives ( 26",
+      "url": "https://arxiv.org/html/2610.37647v1#A3.E26"
+    },
+    {
+      "href": "#A3.E27",
+      "text": "27",
+      "section": "Proof.",
+      "context": "Meanwhile, the triangle inequality gives r t + 1 ≤ r t + η ​ p r_{t+1}\\leq r_{t}+\\eta\\sqrt{p} . Summing these increments gives ( 26 ). Dividing η \\eta by these bounds and summing over s ≤ t < T s\\leq t<T gives ( 27",
+      "url": "https://arxiv.org/html/2610.37647v1#A3.E27"
+    },
+    {
+      "href": "#A3.E28",
+      "text": "28",
+      "section": "Proof.",
+      "context": "Summing gives the norm bound, and dividing η \\eta by it gives ( 28",
+      "url": "https://arxiv.org/html/2610.37647v1#A3.E28"
+    },
+    {
+      "href": "#A3.Thmtheorem1",
+      "text": "C.1",
+      "section": "Proof.",
+      "context": "Proposition C.1",
+      "url": "https://arxiv.org/html/2610.37647v1#A3.Thmtheorem1"
+    },
+    {
+      "href": "#A3.E27",
+      "text": "27",
+      "section": "Proof.",
+      "context": "Summing them gives the last bounds in ( 27",
+      "url": "https://arxiv.org/html/2610.37647v1#A3.E27"
+    },
+    {
+      "href": "#A3.E28",
+      "text": "28",
+      "section": "Proof.",
+      "context": "Summing them gives the last bounds in ( 27 ) and ( 28",
+      "url": "https://arxiv.org/html/2610.37647v1#A3.E28"
+    },
+    {
+      "href": "#A3.E27",
+      "text": "27",
+      "section": "Proof.",
+      "context": "Summing them gives the last bounds in ( 27 ) and ( 28 ): whatever the value of η \\eta , C T − C s C_{T}-C_{s} stays below v − 1 ​ ∑ t = s T − 1 1 / t v^{-1}\\sum_{t=s}^{T-1}1/t in (i) and below μ − 1 ∑ t = s T − 1 t − 1 / 2 \\mu^{-1}\\sum_{t=s}^{T-1}t^{-1/2} in (ii). The middle sums in ( 27",
+      "url": "https://arxiv.org/html/2610.37647v1#A3.E27"
+    },
+    {
+      "href": "#A3.E28",
+      "text": "28",
+      "section": "Proof.",
+      "context": "Summing them gives the last bounds in ( 27 ) and ( 28 ): whatever the value of η \\eta , C T − C s C_{T}-C_{s} stays below v − 1 ​ ∑ t = s T − 1 1 / t v^{-1}\\sum_{t=s}^{T-1}1/t in (i) and below μ − 1 ∑ t = s T − 1 t − 1 / 2 \\mu^{-1}\\sum_{t=s}^{T-1}t^{-1/2} in (ii). The middle sums in ( 27 ) and ( 28",
+      "url": "https://arxiv.org/html/2610.37647v1#A3.E28"
+    },
+    {
+      "href": "#S3.F3",
+      "text": "3",
+      "section": "Appendix D Dependence on Scale and the Matrix Size",
+      "context": "In the previous sections, the value of C T C_{T} depends on the initialization scale, the matrix size and on how Muon’s updates are scaled, while the orders of growth that our bounds guarantee do not. Values can therefore be compared between runs that share the initialization and the update scale, as in Figures 3",
+      "url": "https://arxiv.org/html/2610.37647v1#S3.F3"
+    },
+    {
+      "href": "#S3.F4",
+      "text": "4",
+      "section": "Appendix D Dependence on Scale and the Matrix Size",
+      "context": "In the previous sections, the value of C T C_{T} depends on the initialization scale, the matrix size and on how Muon’s updates are scaled, while the orders of growth that our bounds guarantee do not. Values can therefore be compared between runs that share the initialization and the update scale, as in Figures 3 and 4",
+      "url": "https://arxiv.org/html/2610.37647v1#S3.F4"
+    },
+    {
+      "href": "#S3.Thmtheorem2",
+      "text": "3.2",
+      "section": "Normalized accumulation bounds.",
+      "context": "This quantity bounds the initial update size relative to the weight norm. By Proposition 3.2",
+      "url": "https://arxiv.org/html/2610.37647v1#S3.Thmtheorem2"
+    },
+    {
+      "href": "#S4.Thmtheorem1",
+      "text": "4.1",
+      "section": "Normalized accumulation bounds.",
+      "context": "This quantity bounds the initial update size relative to the weight norm. By Proposition 3.2 and Theorem 4.1",
+      "url": "https://arxiv.org/html/2610.37647v1#S4.Thmtheorem1"
+    },
+    {
+      "href": "#A4.E30",
+      "text": "30",
+      "section": "Independence of matrix size for Muon.",
+      "context": "is asymptotically independent of d d . Consequently, at a fixed ratio of p / m p/m , the normalized Muon -type bounds ( 30",
+      "url": "https://arxiv.org/html/2610.37647v1#A4.E30"
+    },
+    {
+      "href": "#A4.E32",
+      "text": "32",
+      "section": "Independence of matrix size for Muon.",
+      "context": "is asymptotically independent of d d . Consequently, at a fixed ratio of p / m p/m , the normalized Muon -type bounds ( 30 )-( 32",
+      "url": "https://arxiv.org/html/2610.37647v1#A4.E32"
+    }
+  ],
+  "note": "Extracted HTML text; equations and table formatting may be imperfect. No PDF extraction was attempted."
+}

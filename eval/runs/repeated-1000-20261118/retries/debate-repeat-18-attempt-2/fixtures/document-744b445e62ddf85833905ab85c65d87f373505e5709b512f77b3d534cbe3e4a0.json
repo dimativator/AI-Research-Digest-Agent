@@ -1,0 +1,864 @@
+{
+  "status": "ok",
+  "source": "https://arxiv.org/html/2610.37062v1",
+  "extractor_version": "article-v1",
+  "chunks": [
+    {
+      "chunk_id": "chunk-0001",
+      "section": "EnergyCal: Taming Loss Spikes in Muon-Family Optimizers for Sparse MoE Training",
+      "text": "Masato Fujitake",
+      "source": "https://arxiv.org/html/2610.37062v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0002",
+      "section": "Abstract",
+      "text": "Sparse mixture-of-experts (MoE) language-model training can exhibit large loss spikes with Muon-family optimizers. We introduce EnergyCal, a lightweight rule that attenuates routed-expert updates according to the normalized squared Frobenius norm of their finite-step Newton–Schulz directions. EnergyCal leaves the spectral transform unchanged and adds no persistent optimizer state. We evaluate it on a 4B-parameter MoE model. Against a development-selected, lower-learning-rate MuonH recipe, EnergyCal–MuonH reduces mean thresholded loss-spike burden by 99.51% and final geometric-mean perplexity by 4.06%, with a modest throughput cost. With plain Muon at matched nominal learning rate and weight decay, the reduction in mean spike burden averages 95.98% across the two tested exponents, accompanied by small endpoint improvements. These findings support stabilization both with and without Hyperball in the evaluated setting.",
+      "source": "https://arxiv.org/html/2610.37062v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0003",
+      "section": "Index Terms:",
+      "text": "Muon, MuonH, mixture-of-experts, energy calibration, training stability † † address: FA Research, Fast Accounting Co., Ltd. fujitake@fastaccounting.co.jp",
+      "source": "https://arxiv.org/html/2610.37062v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0004",
+      "section": "1 Introduction",
+      "text": "Figure 1: EnergyCal overview. (1) Sparse routing creates uneven expert traffic. (2) Each routed matrix’s post-NS energy determines q e q_{e} ; when q e > 0 q_{e}>0 , scaling preserves the individual NS direction, not necessarily the displacement after Hyperball projection or writeback. (3) Continuous calibration reduces observed thresholded loss-spike burden. Curves are schematic, not measurements; coefficients use direction energy, not token counts. Sparse mixture-of-experts (MoE) language models route tokens unevenly across experts, creating time-varying optimization conditions [ 1 ] . This setting can be challenging for Muon-family optimizers, which use Newton–Schulz (NS) iterations to transform momentum-based updates. Muon has shown promise for language-model pretraining [ 2 , 3 , 4 ] , while Hyperball introduces explicit control over weight and update norms [ 5 ] . Its Muon variant, MuonH, normalizes update directions and projects weights onto a fixed-radius sphere. In our custom 4B-parameter DeepSeekMoE-style model, both Muon and MuonH exhibit intermittent loss spikes, although all full-schedule runs complete. We investigate whether these loss excursions can be mitigated through a simple modification of routed-expert updates.",
+      "source": "https://arxiv.org/html/2610.37062v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0005",
+      "section": "1 Introduction",
+      "text": "An expert can retain nonzero momentum even when no tokens are assigned to it in the current step. This motivates examining expert-wise update magnitudes, particularly under MuonH’s fixed-norm normalization. We propose EnergyCal, a lightweight rule that attenuates each routed-expert update according to the normalized squared Frobenius norm of its finite-step NS direction. Figure 1 illustrates the method. The coefficient is bounded between zero and one and is applied continuously during training. EnergyCal leaves the NS transform, momentum, and router objective unchanged, requires no token-utilization statistics, and adds no persistent optimizer state. Its energy statistic is not scale-invariant stable rank: low energy can reflect direction concentration, amplitude, or both. We evaluate EnergyCal in two separate full-schedule studies, each using three initialization seeds. First, a frozen EnergyCal–MuonH recipe reduces mean thresholded loss-spike burden by 99.51% and final geometric-mean perplexity by 4.06% relative to a development-selected, lower-learning-rate MuonH recipe, with 1.62% lower mean throughput. Second, applying EnergyCal to plain Muon at matched nominal learning rate and weight decay reduces mean spike burden by 95.98% on average across the two tested exponents, with small endpoint improvements. Together, these results show that stabilization is observed both with and without Hyperball in the evaluated MoE setting. However, plain Muon retains intermediate-quality and speed advantages in the first study, and different evaluation banks prevent a direct ranking of the calibrated optimizer families.",
+      "source": "https://arxiv.org/html/2610.37062v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0006",
+      "section": "1 Introduction",
+      "text": "Our contribution is an empirical evaluation of one-sided, post-NS energy attenuation across MuonH and plain Muon. Unlike utilization- or alignment-guided expert scaling methods [ 6 , 7 ] , EnergyCal relies only on the energy of each logical matrix’s NS direction. The results do not establish general optimizer superiority or identify the cause of individual spikes: single-update interventions fail to rescue two examined events, and the plain-Muon study lacks a routed-only uniform-scaling control to separate energy-dependent attenuation from a simpler reduction in update magnitude. We therefore focus on the measured stability benefits and their practical trade-offs within the tested setting; Section 7 discusses these evidence boundaries.",
+      "source": "https://arxiv.org/html/2610.37062v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0007",
+      "section": "2 Related Work",
+      "text": "Muon-family optimization and Hyperball. Muon applies a short Newton–Schulz (NS) iteration to momentum-based matrix updates [ 2 ] . Large-scale studies identify weight decay and update scaling as important for Muon pretraining [ 4 ] . Our plain-Muon baseline uses a shape factor of one rather than the full Moonlight recipe. Hyperball controls update and weight radii; its Muon variant, MuonH, normalizes trial directions and projects weights onto a fixed-radius sphere [ 5 ] . EnergyCal changes routed-expert step magnitudes after NS without changing the spectral transform. Expert-wise update scaling. Existing methods scale expert updates using other signals. Excitation uses expert utilization [ 6 ] , while ExpertMuon-Compass uses post-orthogonalization gradient alignment across experts and rows [ 7 ] . EnergyCal instead computes an independent coefficient q ∈ [ 0 , 1 ] q\\in[0,1] from each routed matrix’s normalized squared post-NS Frobenius norm, without utilization inputs or cross-expert normalization. For q > 0 q>0 , scalar scaling preserves the NS direction; when q = 0 q=0 , the directional trial vanishes. Neither case guarantees the direction of the stored parameter displacement after Hyperball projection or low-precision writeback. Direction preservation itself is not unique to EnergyCal. Magnitude and spectral corrections. NorMuon uses neuron-level normalization after orthogonalization [ 8 ] , and TrasMuon uses RMS calibration and energy-based clipping [ 9 ] . Thus, energy-aware scaling is not new by itself. Pion changes NS iterations [ 10 ] , while SoftMuon uses smooth spectral relaxation [ 11 ] . EnergyCal instead applies a matrix-level scalar after the unchanged NS transform. We do not report native-method head-to-head comparisons with these alternatives.",
+      "source": "https://arxiv.org/html/2610.37062v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0008",
+      "section": "2 Related Work",
+      "text": "Training stability in sparse models. Training instability in sparse MoE models has motivated router-centered approaches, including ST-MoE’s router z-loss and methods for reducing routing fluctuations [ 12 , 13 ] . Spike-aware optimization has also been studied in dense language-model training through momentum resets and gradient clipping [ 14 ] . Unlike these approaches, EnergyCal attenuates routed-expert updates using post-NS direction energy without modifying routing objectives or introducing spike-triggered interventions. Finite-step orthogonalization. Recent analyses characterize the convergence and spectral behavior of Muon with finite-step Newton–Schulz iterations [ 15 , 16 ] . MuonEq further investigates pre-NS equilibration to improve the geometry of orthogonalized updates [ 17 ] . EnergyCal instead leaves the NS transform unchanged and applies a matrix-level attenuation coefficient to its returned direction. Evaluation and optimizer comparisons. Optimizer rankings depend on tuning and training budget [ 18 ] ; angular effective learning rates also complicate the interpretation of Hyperball’s nominal learning rate [ 19 ] . We therefore report final quality, intermediate quality, loss-spike burden, and throughput separately. Matched nominal learning rate does not imply matched parameter movement, and fixed-token quality is distinct from equal-wall-time quality.",
+      "source": "https://arxiv.org/html/2610.37062v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0009",
+      "section": "3.1 Logical matrices and the base update",
+      "text": "Let W ∈ ℝ m × n W\\in\\mathbb{R}^{m\\times n} denote a logical parameter matrix, G t G_{t} its gradient after accumulation, distributed reduction, and common clipping, and B t B_{t} its momentum. The evaluated implementation uses Nesterov momentum: B t = β ​ B t − 1 + G t , A t = G t + β ​ B t , B_{t}=\\beta B_{t-1}+G_{t},\\qquad A_{t}=G_{t}+\\beta B_{t}, (1) with β = 0.95 \\beta=0.95 . A five-step quintic Newton–Schulz (NS) map produces the update direction D t = NS 5 ⁡ ( A t ) D_{t}=\\operatorname{NS}_{5}(A_{t}) . NS arithmetic uses BF16, while momentum and norm calculations use FP32. Because the iteration is finite, D t D_{t} is an approximate orthogonalized direction, not an exact polar factor. Implementation details and numerical guards are provided in Appendix A . Gate and up projections share fused storage for efficient forward execution but are optimized as separate logical matrices by both MuonH and plain Muon. Each routed gate, up, and down matrix has d = min ⁡ ( m , n ) = 256 d=\\min(m,n)=256 . Attention and shared-expert matrices also receive matrix-optimizer updates, whereas embeddings/tied output weights, router weights, and vector parameters use the Adam fallback. MuonH additionally constrains weight and update norms. For the initial radius R = ‖ W 0 ‖ F R=\\left\\lVert W_{0}\\right\\rVert_{\\mathrm{F}} , define 𝒫 R ​ ( X ) = R ​ X / max ⁡ ( ‖ X ‖ F , ϵ H ) \\mathcal{P}_{R}(X)=RX/\\max(\\left\\lVert X\\right\\rVert_{\\mathrm{F}},\\epsilon_{H}) . The canonical MuonH update forms",
+      "source": "https://arxiv.org/html/2610.37062v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0010",
+      "section": "3.1 Logical matrices and the base update",
+      "text": "Δ t trial \\displaystyle\\Delta_{t}^{\\rm trial} = − η t ​ R ​ D t max ⁡ ( ‖ D t ‖ F , ϵ H ) , \\displaystyle=-\\eta_{t}R\\frac{D_{t}}{\\max(\\left\\lVert D_{t}\\right\\rVert_{\\mathrm{F}},\\epsilon_{H})}, (2) W ~ t + 1 \\displaystyle\\widetilde{W}_{t+1} = 𝒫 R ​ ( W t + Δ t trial ) , \\displaystyle=\\mathcal{P}_{R}(W_{t}+\\Delta_{t}^{\\rm trial}), (3) followed by BF16 parameter writeback using the common dithered precision policy. The trial update has a prescribed Frobenius length when its denominator guard is inactive, but the subsequent projection and writeback can change the resulting parameter displacement. We therefore distinguish the trial displacement, FP32 projected chord, BF16 stored chord, and resulting function change. All MuonH-family comparisons use the same projection and writeback policy.",
+      "source": "https://arxiv.org/html/2610.37062v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0011",
+      "section": "3.2 Expert-wise energy calibration",
+      "text": "EnergyCal introduces a one-sided attenuation of routed-expert updates based on the energy of their post-NS directions. For each logical matrix, define ρ t \\displaystyle\\rho_{t} = ‖ D t ‖ F 2 d , \\displaystyle=\\frac{\\left\\lVert D_{t}\\right\\rVert_{\\mathrm{F}}^{2}}{d}, (4) q t \\displaystyle q_{t} = clip ⁡ [ ( ρ t ρ ref ) p , q min , 1 ] . \\displaystyle=\\operatorname{clip}\\!\\left[\\left(\\frac{\\rho_{t}}{\\rho_{\\rm ref}}\\right)^{p},q_{\\min},1\\right]. (5) Here, ρ t \\rho_{t} is the normalized squared Frobenius norm of the finite-step NS direction, ρ ref \\rho_{\\rm ref} is a reference energy, and p p controls the strength of attenuation. With 0 ≤ q min ≤ 1 0\\leq q_{\\min}\\leq 1 and p > 0 p>0 , the coefficient satisfies q t ∈ [ 0 , 1 ] q_{t}\\in[0,1] . For the evaluated choice q min = 0 q_{\\min}=0 , directions with ρ t < ρ ref \\rho_{t}<\\rho_{\\rm ref} receive q t < 1 q_{t}<1 , while directions at or above the reference receive no additional attenuation from EnergyCal. For MuonH, EnergyCal replaces η t \\eta_{t} in Eq. ( 2 ) with q t ​ η t q_{t}\\eta_{t} only for routed-expert matrices. All other matrices retain q t = 1 q_{t}=1 . As illustrated in Fig. 1 , positive scaling preserves the orientation of the individual NS direction, but not necessarily that of the projected or stored parameter displacement. Setting q t = 0 q_{t}=0 nulls the trial update, not necessarily the final stored parameter change. The figure uses expert indices e e , whereas the equations use update indices t t .",
+      "source": "https://arxiv.org/html/2610.37062v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0012",
+      "section": "3.2 Expert-wise energy calibration",
+      "text": "The coefficient is computed independently for each routed logical matrix at every update. It uses neither token-utilization statistics nor comparisons across experts. The NS transform, momentum, router objective, attention and shared-expert updates, and Adam fallback remain unchanged. No additional gradient history or persistent optimizer state is introduced. MuonH reuses its existing direction norm, whereas plain Muon requires an additional norm reduction. The primary EnergyCal–MuonH recipe uses p = 1 p=1 , ρ ref = 0.8 \\rho_{\\rm ref}=0.8 , and q min = 0 q_{\\min}=0 , with calibration active from the first update and no sequence auxiliary loss. These settings were fixed during development and not reselected on the confirmation seeds. The energy statistic is used as an attenuation signal, not as a calibrated probability of update correctness or a validated signal-to-noise estimate. Algorithm 1 EnergyCal–MuonH on one logical matrix 0: W , G , B , R , η , β , p , ρ ref , q min W,G,B,R,\\eta,\\beta,p,\\rho_{\\rm ref},q_{\\min} 1: B ← β ​ B + G B\\leftarrow\\beta B+G ; A ← G + β ​ B A\\leftarrow G+\\beta B 2: D ← NS 5 ⁡ ( A ) D\\leftarrow\\operatorname{NS}_{5}(A) ; s ← ‖ D ‖ F s\\leftarrow\\left\\lVert D\\right\\rVert_{\\mathrm{F}} in FP32 3: q ← 1 q\\leftarrow 1 4: if W W is a routed-expert matrix then 5: q ← clip ⁡ ( ( s 2 / ( d ​ ρ ref ) ) p , q min , 1 ) q\\leftarrow\\operatorname{clip}((s^{2}/(d\\rho_{\\rm ref}))^{p},q_{\\min},1) 6: end if 7: V ← W − η ​ R ​ q ​ D / max ⁡ ( s , ϵ H ) V\\leftarrow W-\\eta RqD/\\max(s,\\epsilon_{H}) 8: W ~ ← R ​ V / max ⁡ ( ‖ V ‖ F , ϵ H ) \\widetilde{W}\\leftarrow RV/\\max(\\left\\lVert V\\right\\rVert_{\\mathrm{F}},\\epsilon_{H}) 9: Write W ~ \\widetilde{W} using the shared precision policy",
+      "source": "https://arxiv.org/html/2610.37062v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0013",
+      "section": "3.3 Transfer to plain Muon",
+      "text": "The same energy coefficient can be applied to plain Muon without Hyperball normalization or projection. The resulting update is W ~ t + 1 = ( 1 − η t ​ λ ) ​ W t − η t ​ s W ​ q t ​ D t , \\widetilde{W}_{t+1}=(1-\\eta_{t}\\lambda)W_{t}-\\eta_{t}s_{W}q_{t}D_{t}, (6) followed by the common writeback policy. Here, λ \\lambda denotes decoupled weight decay and s W s_{W} is the matrix-shape factor. All evaluated plain-Muon runs use s W = 1 s_{W}=1 , unlike the scale-adjusted large-model recipe of Liu et al. [ 4 ] . As in MuonH, energy is measured independently for each routed gate, up, and down matrix before any shape-factor scaling. Only routed matrices may have q t ≠ 1 q_{t}\\neq 1 ; weight decay, momentum, non-routed updates, and the Adam fallback remain unchanged. Unlike MuonH, plain Muon does not subsequently normalize the update to a prescribed Frobenius length or project the weights onto a sphere. Consequently, the same coefficient acts on a different base update and does not imply the same parameter displacement. In particular, q t = 0 q_{t}=0 removes the NS update term but does not disable weight decay. We evaluate p ∈ { 0.5 , 1 } p\\in\\{0.5,1\\} with ρ ref = 0.8 \\rho_{\\rm ref}=0.8 and q min = 0 q_{\\min}=0 , without retuning the nominal learning rate. In this setting, EnergyCal adds energy-dependent attenuation to plain Muon’s existing direction-magnitude dependence, rather than compensating for Hyperball normalization. Whether this improves training stability is therefore evaluated empirically.",
+      "source": "https://arxiv.org/html/2610.37062v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0014",
+      "section": "3.4 Geometric motivation, not a causal theorem",
+      "text": "The motivation for post-NS energy calibration is partly geometric. For a nonzero direction D D and an inactive denominator guard, the MuonH trial update satisfies sr ⁡ ( D ) = ‖ D ‖ F 2 ‖ D ‖ 2 2 , ‖ Δ trial ‖ 2 = η ​ R ​ q sr ⁡ ( D ) . \\operatorname{sr}(D)=\\frac{\\left\\lVert D\\right\\rVert_{\\mathrm{F}}^{2}}{\\left\\lVert D\\right\\rVert_{2}^{2}},\\qquad\\left\\lVert\\Delta^{\\rm trial}\\right\\rVert_{2}=\\frac{\\eta Rq}{\\sqrt{\\operatorname{sr}(D)}}. (7) Thus, at a fixed trial Frobenius length η ​ R ​ q \\eta Rq , a smaller stable rank corresponds to a larger spectral concentration of the update. However, the operator norm remains bounded by ‖ Δ trial ‖ 2 ≤ η ​ R ​ q \\left\\lVert\\Delta^{\\rm trial}\\right\\rVert_{2}\\leq\\eta Rq . This identity concerns the trial update, not the projected or BF16-stored displacement, and does not bound the nonlinear network’s loss change or identify the cause of individual spikes. Importantly, the energy used by EnergyCal is not stable rank. The two quantities satisfy ρ ⁡ ( D ) = sr ⁡ ( D ) d ​ ‖ D ‖ 2 2 . \\rho(D)=\\frac{\\operatorname{sr}(D)}{d}\\left\\lVert D\\right\\rVert_{2}^{2}. (8) Unlike stable rank, ρ ⁡ ( D ) \\rho(D) is not invariant under rescaling D ↦ a ​ D D\\mapsto aD . Small energy can therefore arise from concentrated singular values, small direction amplitude, or both. Energy and normalized stable rank become approximately proportional only when the operator norm is independently known to remain approximately constant. The exponent also changes how attenuation interacts with MuonH normalization. In the unclipped, unguarded regime, p = 1 / 2 p=1/2 gives q ​ D ‖ D ‖ F = D d ​ ρ ref , \\frac{qD}{\\left\\lVert D\\right\\rVert_{\\mathrm{F}}}=\\frac{D}{\\sqrt{d\\rho_{\\rm ref}}}, (9)",
+      "source": "https://arxiv.org/html/2610.37062v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0015",
+      "section": "3.4 Geometric motivation, not a causal theorem",
+      "text": "so the Frobenius normalization cancels algebraically. The trial operator norm still depends on ‖ D ‖ 2 \\left\\lVert D\\right\\rVert_{2} , however, and this identity does not predict which exponent yields better language-model training outcomes. The primary MuonH choice p = 1 p=1 is empirical. These relations motivate energy-dependent attenuation but do not establish a causal mechanism for loss spikes. In particular, Eq. ( 7 ) does not describe the unnormalized plain-Muon update, and a zero MuonH trial is not equivalent to an exact weight freeze because projection and low-precision writeback remain active. Our single-update intervention experiments explicitly distinguish these operations.",
+      "source": "https://arxiv.org/html/2610.37062v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0016",
+      "section": "4.1 Model, data, and training setup",
+      "text": "We train a custom 4B-parameter DeepSeekMoE-style language model from scratch, with 24 layers, hidden width 1,536, 128 routed experts of width 256 and top-2 routing, and one shared expert per layer. Its input and output embeddings are tied. The routed/shared design follows DeepSeekMoE [ 20 ] , with a separate traffic-driven router-bias controller [ 21 , 22 ] . Neither mechanism enters EnergyCal’s coefficient. Each run uses eight H100 80GB GPUs, 2,048-token sequences, and 131,072 tokens per optimizer update. A complete run has 10,000 updates (1.31B tokens), with 500 warmup updates followed by cosine decay to 10% of peak learning rate. All methods use gradient clipping at norm 1, five NS iterations, and the same logical matrix partitions. These experiments do not claim compute-optimal or fully converged pretraining. Appendix A gives the relevant implementation details. Training uses FineWeb sample-10BT [ 23 ] , with a deterministic train/validation partition. All final runs share the same data order; the independently varied initialization seeds do not constitute independently sampled corpora. Validation uses a fixed 524,288-token bank evaluated every 500 updates. Banks are fixed within each comparison but differ between development, Cohort H, and Cohort M. They are not certified previously unused external test sets across the complete exploratory history.",
+      "source": "https://arxiv.org/html/2610.37062v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0017",
+      "section": "4.2 Cohort H: development and confirmation",
+      "text": "Development screening evaluates the MuonH and plain-Muon learning-rate candidates over two initialization runs, using 3,000 updates of the 10,000-update schedule. Each baseline is selected by mean screening-endpoint validation cross-entropy (CE), not spike frequency. Both selected learning rates are 0.005, at the lower boundaries of their respective bounded search grids. The EnergyCal–MuonH recipe remains fixed at LR 0.01 and p = 1 p=1 ; its settings are not reselected using confirmation outcomes. Table 1: Frozen Cohort H recipes. These are development-selected, best-tested settings rather than a coefficient-only factorial. Fallback peak LR is 0.001; weight decay applies only to eligible parameters. Recipe Matrix LR Matrix WD Fallback WD MuonH 0.005 0 0 EnergyCal ( p = 1 p=1 ) 0.010 0 0 Muon + WD 0.005 0.1 0.1 Confirmation compares these recipes over three new initialization runs for the complete schedule. The primary quality endpoint is final validation CE at fixed token budget. Conditions are paired by initialization and use matched recorded hardware and environments, although host and initialization effects are not fully crossed. Because learning rate differs between MuonH recipes, and the plain-Muon comparator also differs in decay and optimizer formulation, Cohort H estimates recipe-level outcomes rather than the isolated effect of the coefficient.",
+      "source": "https://arxiv.org/html/2610.37062v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0018",
+      "section": "4.3 Cohort M: plain-Muon extension",
+      "text": "A separate study compares plain Muon with EnergyCal exponents p ∈ { 0.5 , 1 } p\\in\\{0.5,1\\} over three new initialization runs. All nine runs complete 10,000 updates. Within each initialization, the methods use the same host and evaluation bank. All conditions share matrix LR 0.005, eligible matrix/fallback weight decay 0.1, and fallback LR 0.001. The sole optimizer change is the routed coefficient in Eq. ( 6 ); the plain-Muon baseline is rerun under the same implementation as the calibrated variants. No learning-rate retuning or retrospective exponent selection is performed. Cohort M uses a different evaluation bank and implementation revision from Cohort H. Their absolute CE/PPL values cannot be pooled or used to rank calibrated Muon against MuonH. Appendix C gives additional results.",
+      "source": "https://arxiv.org/html/2610.37062v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0019",
+      "section": "4.4 Stability and statistical reporting",
+      "text": "We quantify excursions using a fixed adaptive training-loss detector. For each update t > 500 t>500 , let m t m_{t} and a t a_{t} denote the median and median absolute deviation of the preceding 101 logged losses, excluding the current observation. The detection threshold is τ t \\displaystyle\\tau_{t} = max ⁡ { m t + 0.5 , 1.2 ​ m t , m t + 8 ​ σ t } , \\displaystyle=\\max\\{m_{t}+0.5,\\ 1.2m_{t},\\ m_{t}+8\\sigma_{t}\\}, (10) σ t \\displaystyle\\sigma_{t} = max ⁡ { 1.4826 ​ a t , 10 − 6 } . \\displaystyle=\\max\\{1.4826a_{t},10^{-6}\\}. (11) At least 20 preceding observations are required. We flag L t > τ t L_{t}>\\tau_{t} and merge flags separated by at most 16 steps into an episode. The thresholded loss-spike burden is B 1 = ∑ t : L t > τ t , t > 500 ( L t − m t ) . B_{1}=\\sum_{t:\\,L_{t}>\\tau_{t},\\ t>500}(L_{t}-m_{t}). (12) It sums loss above the rolling median at flagged updates, not excess above the threshold or an integral over entire episodes. Its reduction is not a reduction in divergence probability. We also report episodes, maximum post-warmup training loss, and final validation CE, since persistent high loss can escape the adaptive detector. Repeated-run outcomes are reported as arithmetic mean ± \\pm sample standard deviation (SD). Final quality comparisons use n = 3 n=3 initialization runs per condition; development screening uses n = 2 n=2 and timing uses three execution repeats. For x 1 , … , x n x_{1},\\ldots,x_{n} , x ¯ = 1 n ​ ∑ j = 1 n x j , s x 2 = ∑ j = 1 n ( x j − x ¯ ) 2 n − 1 . \\overline{x}=\\frac{1}{n}\\sum_{j=1}^{n}x_{j},\\qquad s_{x}^{2}=\\frac{\\sum_{j=1}^{n}(x_{j}-\\overline{x})^{2}}{n-1}. (13)",
+      "source": "https://arxiv.org/html/2610.37062v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0020",
+      "section": "4.4 Stability and statistical reporting",
+      "text": "The reported SD is descriptive, not a confidence interval; tokens, experts, and correlated steps are not independent replicates. Paired differences are computed within initialization before aggregation. Tabulated PPL uses per-run exponentiation; percentage reductions in geometric-mean PPL use 1 − exp ⁡ ( Δ ​ L ¯ ) 1-\\exp(\\overline{\\Delta L}) . Burden percentages use ratios of condition-level mean burdens. The 95.98% Cohort M summary is the equally weighted average of the two exponent-specific reductions, not a pooled six-run estimate. With three initializations per condition, no general significance inference is claimed.",
+      "source": "https://arxiv.org/html/2610.37062v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0021",
+      "section": "4.5 Timing and integrity",
+      "text": "Throughput is measured separately for Cohort H using three execution repeats per recipe on one eight-GPU node in cyclic method order. Each repeat runs 1,000 updates with evaluation, checkpointing, and heavy diagnostics disabled. Tokens divided by elapsed time over updates 501–1000 gives the run-level throughput; its arithmetic mean and SD are then reported across repeats. Peak allocated memory is maximized across recorded ranks within each run before aggregation. These short benchmarks do not measure equal-wall-time training quality. All full-schedule runs finish. Recorded configurations, fixed validation banks, and selected state/input checks support within-comparison consistency, but not bitwise-identical trajectories or exhaustive data identity. Infrastructure failures and retries are not counted as optimizer divergence.",
+      "source": "https://arxiv.org/html/2610.37062v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0022",
+      "section": "5.1 Cohort H: recipe-level quality and stability",
+      "text": "Cohort H evaluates the frozen EnergyCal–MuonH recipe against development-selected MuonH and plain-Muon baselines over three confirmation seeds. As shown in Table 2 , EnergyCal improves both final validation quality and training stability relative to MuonH. Mean final validation cross-entropy (CE) decreases from 3.2760 ± 0.0270 3.2760\\pm 0.0270 to 3.2345 ± 0.0011 3.2345\\pm 0.0011 . The paired CE difference is − 0.0415 ± 0.0260 -0.0415\\pm 0.0260 nats/token, corresponding to 4.06% lower geometric-mean perplexity (PPL). All three paired endpoints favor EnergyCal. Table 2: Cohort H confirmation: complete 10k schedule, 1.3107B tokens per run. Values are arithmetic mean ± \\pm sample SD over n = 3 n=3 unused initialization seeds. PPL is computed per run before aggregation; episodes and burden B 1 B_{1} are per-run quantities. L max L_{\\max} is the maximum post-warmup training loss within each run before aggregation. LRs are selected within bounded development grids. Recipe Peak LR Final CE PPL Episodes B 1 B_{1} L max L_{\\max} MuonH 0.005 3.2760 ± 0.0270 3.2760\\pm 0.0270 26.476 ± 0.721 26.476\\pm 0.721 37.33 ± 4.04 37.33\\pm 4.04 2046.01 ± 1289.75 2046.01\\pm 1289.75 39.99 ± 12.64 39.99\\pm 12.64 EnergyCal ( p = 1 p=1 ) 0.010 3.2345 ± 0.0011 3.2345\\pm 0.0011 25.394 ± 0.027 25.394\\pm 0.027 3.33 ± 2.89 3.33\\pm 2.89 10.11 ± 9.65 10.11\\pm 9.65 5.92 ± 1.07 5.92\\pm 1.07 Muon + WD 0.005 3.2410 ± 0.0060 3.2410\\pm 0.0060 25.560 ± 0.152 25.560\\pm 0.152 8.33 ± 3.51 8.33\\pm 3.51 67.41 ± 52.76 67.41\\pm 52.76 7.66 ± 1.83 7.66\\pm 1.83",
+      "source": "https://arxiv.org/html/2610.37062v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0023",
+      "section": "5.1 Cohort H: recipe-level quality and stability",
+      "text": "The largest improvement is in loss-spike burden. Mean thresholded burden B 1 B_{1} decreases from 2046.01 ± 1289.75 2046.01\\pm 1289.75 for MuonH to 10.11 ± 9.65 10.11\\pm 9.65 for EnergyCal, a 99.51% reduction in the ratio of condition means. Mean spike episodes decrease from 37.33 ± 4.04 37.33\\pm 4.04 to 3.33 ± 2.89 3.33\\pm 2.89 . The maximum post-warmup training CE, summarized across runs, also falls from 39.99 ± 12.64 39.99\\pm 12.64 to 5.92 ± 1.07 5.92\\pm 1.07 , supporting smaller excursions independently of the burden metric. Both endpoint CE and burden improve in all three paired runs. No EnergyCal run triggers the detector between steps 4001 and 10,000, although this does not establish spike-free training. Plain Muon with weight decay (Muon + WD) provides a stronger comparator. EnergyCal has a paired endpoint CE difference of − 0.0065 ± 0.0057 -0.0065\\pm 0.0057 nats/token relative to Muon + WD, equivalent to 0.65% lower geometric-mean PPL. Its mean burden is 85.01% lower, but the burden comparison is not favorable in every seed: plain Muon has lower burden in one of the three runs. These percentages are reductions in condition-level mean burdens, not averages of per-run reductions. All compared recipes complete their training schedules. The results support an improved stability–quality trade-off for the tested EnergyCal–MuonH recipe relative to the development-selected MuonH baseline. Because the recipes differ in learning rate and, for plain Muon, weight decay and optimizer formulation, these comparisons do not isolate the effect of energy calibration or establish a reduction in optimizer failure probability.",
+      "source": "https://arxiv.org/html/2610.37062v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0024",
+      "section": "5.2 Intermediate quality and the late crossover",
+      "text": "EnergyCal’s final quality advantage does not extend uniformly across training. Figure 2 shows all fixed-bank validation measurements, including evaluations affected by loss excursions. At step 3000, mean CE is 3.7995 for EnergyCal versus 3.7437 for Muon + WD; at step 5000, the corresponding values are 3.6038 and 3.5479. The mean ordering reverses between the observed 8000- and 8500-step evaluations (supplementary Fig. 4 ). Thus, EnergyCal’s endpoint advantage emerges late in the schedule rather than persisting throughout training. Appendix B gives the run-level summaries and late-window comparison. Figure 2: Fixed-bank validation CE across Cohort H confirmation runs. Lines show means and shaded bands show ± 1 \\pm 1 sample SD over three initialization seeds. All 20 evaluations are included, including loss excursions. Bands describe run-to-run variation, not confidence intervals. The predefined primary endpoint is step 10,000; development observations are not concatenated with these curves. To summarize intermediate quality, we compute normalized trapezoidal CE over the observed evaluations from steps 500 to 10,000. The per-run summaries yield 3.6270 ± 0.0016 3.6270\\pm 0.0016 for EnergyCal, 3.6111 ± 0.0094 3.6111\\pm 0.0094 for Muon + WD, and 3.9923 ± 0.3394 3.9923\\pm 0.3394 for MuonH (mean ± \\pm sample SD). By this measure, plain Muon retains better intermediate quality than EnergyCal, despite EnergyCal’s better final endpoint.",
+      "source": "https://arxiv.org/html/2610.37062v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0025",
+      "section": "5.2 Intermediate quality and the late crossover",
+      "text": "This summary depends on evaluation spacing and the timing of individual spikes; it is not an integral of continuously measured validation loss. As a post hoc sensitivity check, averaging the evaluations at steps 9000, 9500, and 10,000 favors EnergyCal over both comparators in every paired run. The predefined final endpoint remains the primary quality measure.",
+      "source": "https://arxiv.org/html/2610.37062v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0026",
+      "section": "5.3 Throughput, memory, and equal-time interpretation",
+      "text": "EnergyCal’s stability improvements come with a modest throughput cost. Table 3 reports three execution repeats of each frozen Cohort H recipe. EnergyCal achieves 65,976.8 ± 353.3 65{,}976.8\\pm 353.3 tokens/s, compared with 67,061.4 ± 570.4 67{,}061.4\\pm 570.4 for MuonH and 68,458.9 ± 487.7 68{,}458.9\\pm 487.7 for Muon + WD. The ratios of mean throughput correspond to reductions of 1.62% and 3.63%, respectively, or increases of 1.64% and 3.76% in estimated fixed-token training time. Peak allocated memory is effectively unchanged relative to MuonH, consistent with the absence of additional persistent optimizer state. Table 3: Cohort H production-style benchmark: arithmetic mean ± \\pm sample SD over n = 3 n=3 execution repeats on one eight-H100 node, not three quality seeds. Throughput is aggregated within each run over steps 501–1000. Optimizer time is summarized first by its within-run median and then across repeats. Peak allocated memory is first maximized over recorded ranks, including initialization, and then summarized across repeats. SD 0.0000 indicates identical recorded peaks, not an absence of hardware variability. Recipe Tokens/s Optimizer (s) M alloc M_{\\rm alloc} (GiB) MuonH 67061.4 ± 570.4 67061.4\\pm 570.4 0.5460 ± 0.0017 0.5460\\pm 0.0017 39.7224 ± 0.0000 39.7224\\pm 0.0000 EnergyCal ( p = 1 p=1 ) 65976.8 ± 353.3 65976.8\\pm 353.3 0.5487 ± 0.0015 0.5487\\pm 0.0015 39.7224 ± 0.0000 39.7224\\pm 0.0000 Muon + WD 68458.9 ± 487.7 68458.9\\pm 487.7 0.4824 ± 0.0014 0.4824\\pm 0.0014 39.7245 ± 0.0000 39.7245\\pm 0.0000",
+      "source": "https://arxiv.org/html/2610.37062v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0027",
+      "section": "5.3 Throughput, memory, and equal-time interpretation",
+      "text": "Measured throughput reflects the full training execution, including routing and optimizer-state differences, rather than only the computational cost of the calibration coefficient. Moreover, these short benchmarks do not establish equal-wall-time training quality. We did not conduct a full wall-clock-matched accuracy experiment. As an illustrative sensitivity check, we assume constant mean throughput and linearly interpolate the measured validation curves. At the estimated time when plain Muon completes 10,000 steps, EnergyCal would reach approximately 9637 steps, with interpolated mean CE 3.2453, compared with plain Muon’s observed 3.2410. Under the same approximation, EnergyCal remains ahead of MuonH. These calculations are not measured time-to-quality results, and the small fixed-token endpoint advantage over plain Muon should not be interpreted as equal-time superiority.",
+      "source": "https://arxiv.org/html/2610.37062v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0028",
+      "section": "5.4 Cohort M: stabilization without Hyperball",
+      "text": "Cohort M tests whether EnergyCal also reduces loss excursions when applied to plain Muon, without Hyperball normalization or projection. Unlike Cohort H, this study holds nominal learning rate and weight decay fixed. Table 4 reports the results over three new initialization seeds. Relative to its plain-Muon baseline, EnergyCal reduces mean thresholded loss-spike burden by 95.98% on average across the two tested exponents. This is the equally weighted average of the two exponent-specific reductions in condition-level mean burden, not an average of per-seed percentage reductions (Appendix C.1 ). Both exponents reduce burden in all three paired runs. Endpoint improvements are smaller. For p = 0.5 p=0.5 and p = 1 p=1 , the paired CE differences relative to plain Muon are − 0.0042 ± 0.0042 -0.0042\\pm 0.0042 and − 0.0038 ± 0.0028 -0.0038\\pm 0.0028 nats/token, respectively. These correspond to 0.423% and 0.380% lower geometric-mean PPL. The p = 0.5 p=0.5 variant improves two of three paired endpoints, while p = 1 p=1 improves all three. With only three seeds, these small quality differences remain descriptive. The main finding is substantially reduced loss-spike burden without a large penalty in final validation quality. Table 4: Cohort M: EnergyCal added to plain Muon without Hyperball. All conditions share matrix LR 0.005, eligible matrix and fallback weight decay 0.1, and the same 10k-update token budget. Values are mean ± \\pm sample SD over n = 3 n=3 new initialization seeds; episodes and B 1 B_{1} are per-run quantities. The validation bank differs from Cohort H, so absolute CE and PPL values must not be compared directly with Table 2 .",
+      "source": "https://arxiv.org/html/2610.37062v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0029",
+      "section": "5.4 Cohort M: stabilization without Hyperball",
+      "text": "Recipe Final CE PPL Episodes B 1 B_{1} Muon + WD 3.189786 ± 0.002381 3.189786\\pm 0.002381 24.283 ± 0.058 24.283\\pm 0.058 11.67 ± 4.04 11.67\\pm 4.04 84.79 ± 33.13 84.79\\pm 33.13 Muon + EnergyCal ( p = 0.5 p=0.5 ) 3.185547 ± 0.001877 3.185547\\pm 0.001877 24.181 ± 0.045 24.181\\pm 0.045 3.00 ± 2.00 3.00\\pm 2.00 4.25 ± 4.06 4.25\\pm 4.06 Muon + EnergyCal ( p = 1 p=1 ) 3.185975 ± 0.001173 3.185975\\pm 0.001173 24.191 ± 0.028 24.191\\pm 0.028 1.67 ± 1.15 1.67\\pm 1.15 2.57 ± 2.46 2.57\\pm 2.46 Neither tested exponent consistently dominates the other. The paired endpoint CE difference between p = 0.5 p=0.5 and p = 1 p=1 is only − 0.0004 ± 0.0016 -0.0004\\pm 0.0016 nats/token. We therefore report both settings without selecting an optimal exponent. The observed-range mean validation CE is 3.5787 ± 0.0428 3.5787\\pm 0.0428 for plain Muon, 3.5490 ± 0.0027 3.5490\\pm 0.0027 for p = 0.5 p=0.5 , and 3.5508 ± 0.0008 3.5508\\pm 0.0008 for p = 1 p=1 . A plain-Muon spike at the 4000-step evaluation contributes substantially to this difference. Supplementary curves retain this observation and show that neither calibrated variant is best at every evaluation.",
+      "source": "https://arxiv.org/html/2610.37062v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0030",
+      "section": "5.4 Cohort M: stabilization without Hyperball",
+      "text": "Coefficient telemetry provides additional context. After averaging the recorded coefficients within each run, the mean coefficients across three initialization runs are 0.9679 ± 0.0021 0.9679\\pm 0.0021 for p = 0.5 p=0.5 and 0.9598 ± 0.0017 0.9598\\pm 0.0017 for p = 1 p=1 (mean ± \\pm sample SD). These summaries describe the applied attenuation, not its causal contribution to stabilization. Zero coefficients also occur, so not every routed direction is retained. However, a routed-only uniform-scaling control has not been evaluated. Consequently, matched nominal learning rate and weight decay do not establish whether the stability gains specifically require energy-dependent coefficient assignment or primarily reflect reduced routed-update magnitude. Appendix C.3 describes the missing control, and Section 7 discusses the resulting limitations.",
+      "source": "https://arxiv.org/html/2610.37062v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0031",
+      "section": "6.1 Energy, rank, and amplitude ablations",
+      "text": "A separate single-initialization audit compares six coefficient conditions at common matrix LR 0.01 over the first 3,000 updates (Table 5 ). EnergyCal with p = 1 p=1 has the lowest thresholded spike burden, whereas a power-iteration-based stable-rank coefficient has the lowest endpoint CE. The amplitude-only and near-zero-gate conditions do not match both outcomes. The amplitude-only run ends during a loss excursion; it is not labeled permanent divergence. These exploratory results are not extra confirmation seeds. Table 5: Single-initialization diagnostic audit at common matrix LR 0.01, over 3k updates. Alternative coefficients are not matched for effective update magnitude. An endpoint occurring during a spike is retained. Condition 3k CE Ep. B 1 B_{1} MuonH 3.791280 4 430.51 Energy ( p = 0.5 p=0.5 ) 3.774685 4 89.03 EnergyCal ( p = 1 p=1 ) 3.769136 3 10.59 Stable-rank 3.761237 4 76.17 Amplitude only 9.318367 9 364.67 Near-zero gate 3.814775 6 531.36 The audit independently measures NS direction spectra and actual projected and BF16-stored parameter displacements using CPU float64 SVD. Sampled routed-down matrices include fixed experts and low-positive-energy selections; the sample is biased toward low-energy directions and is not an all-expert census. Crucially, a routed expert can receive zero current tokens yet retain momentum. One such NS direction has ‖ D ‖ F = 0.9921 \\left\\lVert D\\right\\rVert_{\\mathrm{F}}=0.9921 , ‖ D ‖ 2 = 0.9724 \\left\\lVert D\\right\\rVert_{2}=0.9724 , and sr ⁡ ( D ) = 1.0409 \\operatorname{sr}(D)=1.0409 , illustrating that low stable rank does not imply small operator amplitude. Energy also depends on amplitude, as in Eq. ( 8 ).",
+      "source": "https://arxiv.org/html/2610.37062v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0032",
+      "section": "6.1 Energy, rank, and amplitude ablations",
+      "text": "Figure 3: Selected diagnostic measurements of direction stable rank and BF16-stored operator displacement. Stored movement is measured directly; the selected observations do not establish a general bound or a causal link to spikes. These measurements motivate studying post-NS energy but do not identify energy as a calibrated reliability estimate, select a universally optimal exponent, or show that Hyperball is the sole source of loss spikes. Appendix D specifies the ablations and interventions.",
+      "source": "https://arxiv.org/html/2610.37062v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0033",
+      "section": "6.2 Single-update interventions do not rescue two events",
+      "text": "We examine two baseline-scout loss excursions, events A and B. For each, candidate routed-down matrices were selected using low stable rank and traffic-weighted projected operator displacement, with same-bank controls. The heuristic was devised from exploratory captures but fixed before intervention outcomes. Seven branches per event modify one optimizer update and then return to the canonical training procedure (Appendix D ). These events were selected for diagnostic analysis and should not be treated as representative samples of loss spikes. All 14 branches complete. Initial state and recorded input checks agree within each event, although replays are not certified bitwise-identical. Exact weight freezing restores the original parameter bits while retaining momentum and ordinary writeback behavior; it does not remove an expert. Table 6: Next-step training CE after single-update interventions in two distinct saved-state events. Pre-intervention CE is 4.1928 (A) and 4.2143 (B). No tested branch eliminates the subsequent loss rise. Single-update intervention Event A Event B Canonical 6.3165 6.9069 Candidate: freeze 6.3172 6.9110 Control: freeze 6.3160 6.9085 All routed: EnergyCal 6.3024 6.9873",
+      "source": "https://arxiv.org/html/2610.37062v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0034",
+      "section": "6.2 Single-update interventions do not rescue two events",
+      "text": "Candidate-only EnergyCal reduces actual BF16-stored operator displacement by 86.3% (A) and 76.3% (B), while exact freezing eliminates that candidate displacement. Nevertheless, next-step CE remains near 6.3 and 6.9, respectively. In the common short windows, candidate freezing reduces burden by 3.09% and 0.76%, compared with 1.61% and 1.40% for control freezing. Applying EnergyCal to all routed matrices for a single update reduces short-window burden by 2.12% in event A but increases it by 3.41% in event B. This short-window burden is distinct from the full-schedule B 1 B_{1} defined in Eq. ( 12 ). A separate fixed-input 512-token probe shows no large reduction in output KL; probe CE decreases slightly in every branch. The probe differs from the next high-loss training batch and omits the subsequent router-bias update. These interventions therefore do not explain continuous calibration’s observed full-schedule benefit through immediate removal of the two examined spikes, but they do not establish that smaller or history-dependent effects are absent.",
+      "source": "https://arxiv.org/html/2610.37062v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0035",
+      "section": "7 Discussion and Limitations",
+      "text": "Empirical contribution and practical trade-offs. The main finding is a substantial reduction in thresholded loss-spike burden with both MuonH and plain Muon, accompanied by small improvements in final validation quality. In Cohort H, the frozen EnergyCal–MuonH recipe reduces mean burden by 99.51% relative to a development-selected, lower-rate MuonH recipe, with improved endpoint quality and 1.62% lower mean throughput. Because the learning rates differ, this comparison does not isolate the effect of calibration alone. The plain-Muon comparator is faster and achieves better intermediate quality; an illustrative equal-time estimate can also favor plain Muon. In Cohort M, EnergyCal reduces mean burden by 95.98% on average across two tested exponents at matched nominal learning rate and weight decay, showing that stabilization is also observed without Hyperball. However, different validation banks preclude a direct quality ranking of the calibrated optimizer families, and no production-style throughput benchmark is available for Cohort M. These results support empirical stabilization in the evaluated setting, not general optimizer superiority.",
+      "source": "https://arxiv.org/html/2610.37062v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0036",
+      "section": "7 Discussion and Limitations",
+      "text": "The unresolved uniform-scaling alternative. EnergyCal attenuates routed-expert updates, but the observed improvements need not arise specifically from assigning different coefficients according to direction energy. Cohort M lacks a routed-only uniform-scaling or update-budget-matched control, so it cannot distinguish energy-dependent attenuation from the benefit of reducing routed-update magnitudes more generally. A fixed coefficient near 0.96, leaving weight decay and non-routed updates unchanged, would provide an informative comparison, although it would not exactly match the update-norm budget. Appendix C.3 distinguishes these controls. Furthermore, we do not establish relative superiority over other expert-wise scaling methods, including Compass and Excitation, because native-method head-to-head comparisons were not performed.",
+      "source": "https://arxiv.org/html/2610.37062v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0037",
+      "section": "7 Discussion and Limitations",
+      "text": "Geometry and causal interpretation. The geometric analysis provides motivation for attenuation, not a causal explanation of loss spikes. The inverse-stable-rank identity describes the operator norm of MuonH’s trial update, not the final projected or stored parameter displacement, and does not directly apply to plain Muon. Moreover, the energy statistic depends on both spectral concentration and direction amplitude, rather than stable rank alone. In two examined events, single-update interventions substantially reduce the nominated parameter movements but fail to prevent the subsequent loss spikes. Thus, the full-schedule benefits cannot be explained simply as immediate removal of these two events through one-step attenuation. Effects accumulated over training, including changes in expert parameters or routing dynamics, remain possible explanations but are not established here. These negative interventions limit the mechanistic interpretation without negating the observed benefits of continuous calibration.",
+      "source": "https://arxiv.org/html/2610.37062v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0038",
+      "section": "7 Discussion and Limitations",
+      "text": "Scope, measurement, and generalizability. Both cohorts use one custom 4B-parameter, 128-expert, top-2 MoE model and 1.31B training tokens per run, with three initialization seeds and a shared data order. The results therefore do not establish generalization across architectures, scales, data distributions, or training budgets. Cohort H selects baselines within bounded learning-rate grids whose best-tested values lie at the lower boundaries; Cohort M fixes the plain-Muon recipe rather than independently retuning every variant. Reported standard deviations describe run-to-run variation, not confidence intervals. The adaptive spike detector can miss persistent loss elevation, while periodic validation may miss transient quality changes. Selected spectral measurements are not an all-layer census, and the local probes omit the subsequent router-bias-controller update.",
+      "source": "https://arxiv.org/html/2610.37062v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0039",
+      "section": "8 Conclusion",
+      "text": "EnergyCal applies a simple, one-sided attenuation to routed-expert updates using finite-step Newton–Schulz direction energy. In a 4B-parameter sparse MoE model, it substantially reduces thresholded loss-spike burden with both MuonH and plain Muon, showing that stabilization is also observed without Hyperball in the evaluated setting. The frozen EnergyCal–MuonH recipe reduces mean burden by 99.51% and final geometric-mean perplexity by 4.06% relative to a development-selected, lower-rate MuonH recipe, with 1.62% lower mean throughput. In a separate plain-Muon study at matched nominal learning rate and weight decay, reductions in mean burden average 95.98% across the two tested exponents, with small endpoint gains. These results support empirical stabilization in the evaluated MoE setting rather than general optimizer superiority. However, single-update interventions did not rescue two examined spikes, and the absence of a routed-only uniform-scaling control leaves the specific contribution of energy-dependent attenuation unresolved. Further controlled comparisons are needed to distinguish this contribution from reduced update magnitude.",
+      "source": "https://arxiv.org/html/2610.37062v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0040",
+      "section": "References",
+      "text": "[1] Masato Fujitake, “MESH: Memory-Efficient Sinkhorn Optimization for Mixture-of-Experts Training,” arXiv preprint arXiv:2608.04407 , 2026. [2] Keller Jordan, Yuchen Jin, Vlado Boza, Jiacheng You, Franz Cesista, Laker Newhouse, and Jeremy Bernstein, “Muon: An Optimizer for Hidden Layers in Neural Networks,” https://kellerjordan.github.io/posts/muon/ , 2024, December 8. [3] Ishaan Shah et al., “Practical Efficiency of Muon for Pretraining,” arXiv preprint arXiv:2505.02222 , 2025. [4] Jingyuan Liu, Jianlin Su, Xingcheng Yao, et al., “Muon is Scalable for LLM Training,” arXiv preprint arXiv:2502.16982 , 2025. [5] Kaiyue Wen, Xingyu Dang, Kaifeng Lyu, Tengyu Ma, and Percy Liang, “Fantastic Pretraining Optimizers and Where to Find Them II: Hyperball Optimization,” arXiv preprint arXiv:2606.16899 , 2026. [6] Sagi Shaier, “Excitation: Momentum For Experts,” arXiv preprint arXiv:2602.21798 , 2026. [7] Omatharv Bharat Vaidya, Ashwin Vinod, Pedram Akbarian, Aditya Sai Ellendula, Connor T. Jerzak, and Nhat Ho, “ExpertMuon-Compass: Alignment-Guided Step Sizes for Mixture-of-Experts Training,” arXiv preprint arXiv:2610.04140 , 2026. [8] Zichong Li, Liming Liu, Chen Liang, Weizhu Chen, and Tuo Zhao, “NorMuon: Making Muon More Efficient and Scalable,” in Proceedings of the 43rd International Conference on Machine Learning . 2026, vol. 306 of Proceedings of Machine Learning Research , pp. 68514–68533, PMLR. [9] Peng Cheng, Jiucheng Zang, Qingnan Li, Liheng Ma, Yufei Cui, Yingxue Zhang, Boxing Chen, Ming Jian, and Wen Tong, “TrasMuon: Trust-Region Adaptive Scaling for Orthogonalized Momentum Optimizers,” arXiv preprint arXiv:2602.13498 , 2026.",
+      "source": "https://arxiv.org/html/2610.37062v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0041",
+      "section": "References",
+      "text": "[10] Chongyu Fan, Gaowen Liu, Mingyi Hong, Ramana Rao Kompella, and Sijia Liu, “Rethinking Muon Beyond Pretraining: Spectral Failures and High-Pass Remedies for VLA and RLVR,” arXiv preprint arXiv:2605.19282 , 2026. [11] Dmitrii Feoktistov, Timofey Belinsky, Andrey Veprikov, Amir Zainullin, and Aleksandr Beznosikov, “Softsign: Smooth Sign in Your Optimizer For Better Parameter Heterogeneity Handling,” in Proceedings of the 43rd International Conference on Machine Learning . 2026, vol. 306 of Proceedings of Machine Learning Research , pp. 30720–30746, PMLR. [12] Barret Zoph, Irwan Bello, Sameer Kumar, Nan Du, Yanping Huang, Jeff Dean, Noam Shazeer, and William Fedus, “ST-MoE: Designing stable and transferable sparse expert models,” arXiv preprint arXiv:2202.08906 , 2022. [13] Damai Dai, Li Dong, Shuming Ma, Bo Zheng, Zhifang Sui, Baobao Chang, and Furu Wei, “StableMoE: Stable routing strategy for mixture of experts,” in Proceedings of the 60th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) . 2022, pp. 7085–7095, Association for Computational Linguistics. [14] Tianjin Huang, Ziquan Zhu, Gaojie Jin, Lu Liu, Zhangyang Wang, and Shiwei Liu, “SPAM: Spike-aware adam with momentum reset for stable LLM training,” in International Conference on Learning Representations , 2025. [15] Gyu Yeol Kim and Min-hwan Oh, “Convergence of Muon with Newton–Schulz,” in International Conference on Learning Representations , 2026. [16] Gagik Magakyan, Pablo Parrilo, and Asuman Ozdaglar, “Spectral scaling laws of Muon,” arXiv preprint arXiv:2606.04058 , 2026.",
+      "source": "https://arxiv.org/html/2610.37062v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0042",
+      "section": "References",
+      "text": "[17] Da Chang, Qiankun Shi, Lvgang Zhang, Yu Li, Ruijie Zhang, Yao Lu, Yongxiang Liu, and Ganzhao Yuan, “MuonEq: Balancing before orthogonalization with lightweight equilibration,” arXiv preprint arXiv:2603.28254 , 2026. [18] Kaiyue Wen, David Hall, Tengyu Ma, and Percy Liang, “Fantastic Pretraining Optimizers and Where to Find Them,” in International Conference on Learning Representations , 2026. [19] Yihao Xiao, Jialong Sun, Zitian Gao, Zeming Wei, Chutian Wang, Ran Tao, Jiaye Teng, and Bryan Dai, “Hyperball May Not Be a Free Lunch,” arXiv preprint arXiv:2607.22444 , 2026. [20] Damai Dai, Chengqi Deng, Chenggang Zhao, R. X. Xu, Huazuo Gao, Deli Chen, Jiashi Li, Wangding Zeng, Xingkai Yu, Y. Wu, Zhenda Xie, Y. K. Li, Panpan Huang, Fuli Luo, Chong Ruan, Zhifang Sui, and Wenfeng Liang, “DeepSeekMoE: Towards Ultimate Expert Specialization in Mixture-of-Experts Language Models,” arXiv preprint arXiv:2401.06066 , 2024. [21] Lean Wang, Huazuo Gao, Chenggang Zhao, Xu Sun, and Damai Dai, “Auxiliary-Loss-Free Load Balancing Strategy for Mixture-of-Experts,” arXiv preprint arXiv:2408.15664 , 2024. [22] DeepSeek-AI, “DeepSeek-V3 Technical Report,” arXiv preprint arXiv:2412.19437 , 2024. [23] Guilherme Penedo, Hynek Kydlíček, Loubna Ben Allal, Anton Lozhkov, Margaret Mitchell, Colin Raffel, Leandro von Werra, and Thomas Wolf, “The FineWeb Datasets: Decanting the Web for the Finest Text Data at Scale,” arXiv preprint arXiv:2406.17557 , 2024.",
+      "source": "https://arxiv.org/html/2610.37062v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0043",
+      "section": "Appendix A Implementation and Evaluation Details",
+      "text": "This appendix records the numerical and parameter-partition details needed to interpret EnergyCal. The model, training budget, and comparison design are described in Section 4 .",
+      "source": "https://arxiv.org/html/2610.37062v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0044",
+      "section": "A.1 Finite-step Newton–Schulz",
+      "text": "The matrix input to NS is cast to BF16 and, if needed, transposed so that the smaller dimension defines the Gram matrix. For the working matrix X X , normalization and five quintic iterations are X ← X / max ⁡ ( ‖ X ‖ F , 10 − 7 ) , X\\leftarrow X/\\max(\\left\\lVert X\\right\\rVert_{\\mathrm{F}},10^{-7}), (14) Q \\displaystyle Q = X ​ X ⊤ , \\displaystyle=XX^{\\top}, (15) X \\displaystyle X ← 3.4445 ​ X + ( − 4.7750 ​ Q + 2.0315 ​ Q 2 ) ​ X . \\displaystyle\\leftarrow 3.4445X+(-4.7750Q+2.0315Q^{2})X. (16) The norm is accumulated in FP32, and the output is returned in FP32 with its original orientation. Finite-step BF16 NS does not guarantee exact unit singular values, so post-NS direction energy remains informative. MuonH separately uses a denominator guard ϵ H = 10 − 12 \\epsilon_{H}=10^{-12} for normalization and projection.",
+      "source": "https://arxiv.org/html/2610.37062v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0045",
+      "section": "A.2 Logical matrices and writeback",
+      "text": "Fused gate/up storage is split into separate logical matrices for optimization; each routed gate, up, or down matrix has d = min ⁡ ( m , n ) = 256 d=\\min(m,n)=256 . EnergyCal acts only on routed matrices. Attention and shared-expert matrices retain their matrix-optimizer updates, and embeddings, router weights, and vectors use an Adam-style fallback. MuonH uses a fixed initial Frobenius radius and the trial update and projection of Eqs. ( 2 )–( 3 ). Plain Muon has no sphere projection and uses Eq. ( 6 ). Both use a common dithered BF16 writeback policy. Thus q = 0 q=0 suppresses the NS trial but need not produce an exact bitwise freeze: projection and writeback may change MuonH weights, while plain Muon can still apply weight decay.",
+      "source": "https://arxiv.org/html/2610.37062v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0046",
+      "section": "A.3 Geometry and coefficient interpretation",
+      "text": "For nonzero D D , sr ⁡ ( D ) = ‖ D ‖ F 2 / ‖ D ‖ 2 2 \\operatorname{sr}(D)=\\left\\lVert D\\right\\rVert_{\\mathrm{F}}^{2}/\\left\\lVert D\\right\\rVert_{2}^{2} . With the MuonH denominator guard, the trial operator norm is ‖ Δ trial ‖ 2 = η ​ R ​ q ​ ‖ D ‖ 2 max ⁡ ( ‖ D ‖ F , ϵ H ) . \\left\\lVert\\Delta^{\\rm trial}\\right\\rVert_{2}=\\frac{\\eta Rq\\,\\left\\lVert D\\right\\rVert_{2}}{\\max(\\left\\lVert D\\right\\rVert_{\\mathrm{F}},\\epsilon_{H})}. (17) Equation ( 7 ) follows when the guard is inactive. Stable rank is undefined at the zero matrix. For comparison, the unclipped, unguarded exact-stable-rank coefficient q r = sr ⁡ ( D ) / ( d ​ ρ ref ) q_{r}=\\sqrt{\\operatorname{sr}(D)/(d\\rho_{\\rm ref})} gives ‖ Δ trial ‖ 2 = η ​ R d ​ ρ ref . \\left\\lVert\\Delta^{\\rm trial}\\right\\rVert_{2}=\\frac{\\eta R}{\\sqrt{d\\rho_{\\rm ref}}}. (18) The tested stable-rank alternative estimates operator norm rather than computing an exact SVD during training. In contrast, EnergyCal with p = 1 / 2 p=1/2 yields ‖ Δ trial ‖ 2 = η ​ R ​ ‖ D ‖ 2 / d ​ ρ ref \\left\\lVert\\Delta^{\\rm trial}\\right\\rVert_{2}=\\eta R\\left\\lVert D\\right\\rVert_{2}/\\sqrt{d\\rho_{\\rm ref}} in the same regime. These identities characterize the trial, not the projected/stored displacement or a bound on the network’s loss change.",
+      "source": "https://arxiv.org/html/2610.37062v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0047",
+      "section": "A.4 Validation boundaries",
+      "text": "A deterministic partition of FineWeb sample-10BT reserves 0.5% of rows for validation. Evaluation uses fixed banks within each comparison, but development, Cohort H, and Cohort M use different banks. Different banks and implementation revisions prevent direct cross-cohort ranking of absolute CE/PPL. The validation observations are not certified as previously unused external test examples, and content-level near-duplicate contamination was not independently audited.",
+      "source": "https://arxiv.org/html/2610.37062v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0048",
+      "section": "B.1 Development screening",
+      "text": "The baseline learning-rate candidates are screened over two initialization runs, each observed after 3,000 updates. The selected baseline rate minimizes mean screening-endpoint validation CE. Both baseline choices are at the lower boundaries of their tested grids, so the comparison is best-tested within a bounded search. EnergyCal–MuonH is fixed at matrix LR 0.01, p = 1 p=1 , ρ ref = 0.8 \\rho_{\\rm ref}=0.8 , and q min = 0 q_{\\min}=0 before confirmation. Table 7: Completed development screen: mean ± \\pm sample SD over n = 2 n=2 initialization runs after 3,000 updates. All endpoints, including unfavorable ones, are retained. Episodes and burden are per-run quantities. Recipe LR Final CE Episodes B 1 B_{1} MuonH 0.005000 3.703740 ± 0.013658 3.703740\\pm 0.013658 8.00 ± 0.00 8.00\\pm 0.00 339.40 ± 379.07 339.40\\pm 379.07 MuonH 0.007071 3.733119 ± 0.013795 3.733119\\pm 0.013795 7.00 ± 1.41 7.00\\pm 1.41 562.76 ± 0.88 562.76\\pm 0.88 MuonH 0.010000 3.949324 ± 0.226689 3.949324\\pm 0.226689 11.50 ± 4.95 11.50\\pm 4.95 592.87 ± 99.21 592.87\\pm 99.21 EnergyCal ( p = 1 p=1 ) 0.010000 3.769425 ± 0.000647 3.769425\\pm 0.000647 2.50 ± 0.71 2.50\\pm 0.71 8.76 ± 0.24 8.76\\pm 0.24 Muon + WD 0.005000 3.703061 ± 0.004366 3.703061\\pm 0.004366 1.50 ± 0.71 1.50\\pm 0.71 1.84 ± 1.53 1.84\\pm 1.53 Muon + WD 0.010000 3.772394 ± 0.011707 3.772394\\pm 0.011707 5.50 ± 0.71 5.50\\pm 0.71 75.87 ± 0.14 75.87\\pm 0.14 Muon + WD 0.020000 3.909822 ± 0.017177 3.909822\\pm 0.017177 5.00 ± 1.41 5.00\\pm 1.41 69.51 ± 12.91 69.51\\pm 12.91 The selected lower-rate baselines have better development endpoints than EnergyCal. The independent full-schedule confirmation therefore tests a previously fixed recipe, not an extrapolation of the shorter screen. Development and confirmation validation banks are not combined.",
+      "source": "https://arxiv.org/html/2610.37062v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0049",
+      "section": "B.2 Confirmation effects",
+      "text": "Table 8: Paired EnergyCal-minus-baseline differences over n = 3 n=3 confirmation initializations (mean ± \\pm sample SD). Negative values favor EnergyCal. Pairing precedes aggregation. EnergyCal minus CE difference B 1 B_{1} difference Episode difference MuonH − 0.041491 ± 0.026043 -0.041491\\pm 0.026043 − 2035.91 ± 1297.37 -2035.91\\pm 1297.37 − 34.00 ± 1.73 -34.00\\pm 1.73 Muon + WD − 0.006510 ± 0.005709 -0.006510\\pm 0.005709 − 57.31 ± 55.57 -57.31\\pm 55.57 − 5.00 ± 6.24 -5.00\\pm 6.24 Percentage burden reductions use 1 − B ¯ E / B ¯ C 1-\\overline{B}_{E}/\\overline{B}_{C} , with B ¯ \\overline{B} denoting the condition-level mean burden. This gives 99.51% versus MuonH and 85.01% versus Muon + WD; neither is the average of run-wise percentage reductions. All confirmation runs contribute, including the zero-burden EnergyCal run and the unfavorable burden comparison against Muon + WD.",
+      "source": "https://arxiv.org/html/2610.37062v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0050",
+      "section": "B.3 Intermediate-quality summaries",
+      "text": "For evaluation steps s j ∈ { 500 , 1000 , … , 10000 } s_{j}\\in\\{500,1000,\\ldots,10000\\} , normalized trapezoidal CE is computed per run: L ¯ obs = 1 s K − s 1 ​ ∑ j = 1 K − 1 ( s j + 1 − s j ) ​ L s j + L s j + 1 2 , K = 20 . \\overline{L}_{\\rm obs}=\\frac{1}{s_{K}-s_{1}}\\sum_{j=1}^{K-1}(s_{j+1}-s_{j})\\frac{L_{s_{j}}+L_{s_{j+1}}}{2},\\qquad K=20. (19) Mean and sample SD are then computed across runs. A separate post hoc late-window check averages the last three evaluations within each run. Neither summary replaces the predefined final endpoint. The observed-range summary favors plain Muon over EnergyCal, whereas the late-window summary favors EnergyCal. Table 9: Cohort H curve summaries: mean ± \\pm sample SD of run-level results. The late-window comparison is post hoc. Recipe Observed-range CE Late-window CE MuonH 3.992289 ± 0.339400 3.992289\\pm 0.339400 3.278503 ± 0.007961 3.278503\\pm 0.007961 EnergyCal ( p = 1 p=1 ) 3.627002 ± 0.001572 3.627002\\pm 0.001572 3.251435 ± 0.000639 3.251435\\pm 0.000639 Muon + WD 3.611137 ± 0.009433 3.611137\\pm 0.009433 3.256059 ± 0.005045 3.256059\\pm 0.005045 Figure 4: Late-schedule validation CE (mean ± \\pm sample SD, n = 3 n=3 ). EnergyCal’s small endpoint advantage over plain Muon appears late; the full trajectory is shown in Fig. 2 . The adaptive spike detector may miss persistent high-loss periods, while narrow excursions can produce large maxima but modest burden. Final validation CE, maximum training loss, episodes, and thresholded burden therefore remain complementary outcomes. All final runs complete.",
+      "source": "https://arxiv.org/html/2610.37062v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0051",
+      "section": "Appendix C Plain-Muon Transfer",
+      "text": "Cohort M tests EnergyCal without Hyperball. Plain Muon and its p ∈ { 0.5 , 1 } p\\in\\{0.5,1\\} EnergyCal variants are rerun over three new initializations for the complete 10,000-update schedule. The same architecture, data order, and token budget are used as in Cohort H, but a separate implementation revision and validation bank preclude direct cross-cohort ranking. All Cohort M conditions share matrix LR 0.005, eligible matrix/fallback weight decay 0.1, and fallback peak LR 0.001. Only the routed coefficient in Eq. ( 6 ) changes; momentum, decay, non-routed updates, and the Adam fallback do not. EnergyCal uses ρ ref = 0.8 \\rho_{\\rm ref}=0.8 , q min = 0 q_{\\min}=0 , and the two stated exponents. Every run completes. Figure 5: Cohort M validation CE: mean ± \\pm sample SD over three runs on its own fixed evaluation bank. All observations, including the plain-Muon loss excursion at step 4000, are retained. Bands are not confidence intervals.",
+      "source": "https://arxiv.org/html/2610.37062v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0052",
+      "section": "C.1 Quality and stability",
+      "text": "Table 10: Additional Cohort M results: mean ± \\pm sample SD over n = 3 n=3 initialization runs. Observed-range CE integrates the 500–10,000 evaluations; late-window CE is a post hoc check over the final three evaluations. Recipe PPL L max L_{\\max} Observed-range CE Late-window CE Muon + WD 24.2833 ± 0.0578 24.2833\\pm 0.0578 8.54 ± 0.82 8.54\\pm 0.82 3.578701 ± 0.042809 3.578701\\pm 0.042809 3.203759 ± 0.002122 3.203759\\pm 0.002122 Muon + EnergyCal ( p = 0.5 p=0.5 ) 24.1805 ± 0.0454 24.1805\\pm 0.0454 5.61 ± 0.87 5.61\\pm 0.87 3.548957 ± 0.002669 3.548957\\pm 0.002669 3.200299 ± 0.001403 3.200299\\pm 0.001403 Muon + EnergyCal ( p = 1 p=1 ) 24.1909 ± 0.0284 24.1909\\pm 0.0284 5.49 ± 0.75 5.49\\pm 0.75 3.550821 ± 0.000788 3.550821\\pm 0.000788 3.200778 ± 0.001217 3.200778\\pm 0.001217 With B ¯ p \\overline{B}_{p} denoting the condition-level three-run mean burden for exponent p p and B ¯ 0 \\overline{B}_{0} the plain-Muon mean, the reduction is r p = 100 ​ ( 1 − B ¯ p / B ¯ 0 ) r_{p}=100(1-\\overline{B}_{p}/\\overline{B}_{0}) . The two reductions are 94.99% and 96.97%; their equal-weight average is 95.98%. This is not a mean of per-initialization percentages or an estimate using six independent replicates. Table 11: Cohort M paired effects: mean ± \\pm sample SD over three within-initialization differences (EnergyCal minus plain Muon). Negative values favor calibration. Coefficient Δ \\Delta CE Δ ​ B 1 \\Delta B_{1} p = 0.5 p=0.5 − 0.004239 ± 0.004194 -0.004239\\pm 0.004194 − 80.54 ± 36.44 -80.54\\pm 36.44 p = 1 p=1 − 0.003811 ± 0.002849 -0.003811\\pm 0.002849 − 82.23 ± 30.67 -82.23\\pm 30.67",
+      "source": "https://arxiv.org/html/2610.37062v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0053",
+      "section": "C.1 Quality and stability",
+      "text": "Both exponents reduce thresholded burden in all three paired runs. Endpoint CE improves in two of three runs for p = 0.5 p=0.5 and all three for p = 1 p=1 ; neither exponent is uniformly optimal. The paired endpoint CE difference between the calibrated variants is only − 0.0004 ± 0.0016 -0.0004\\pm 0.0016 nats/token. The mean observed-range advantage is partly influenced by a plain-Muon spike at one evaluation. Calibrated variants do not dominate at every point; the late-window check also remains post hoc. Final CE at 10,000 updates is the primary endpoint.",
+      "source": "https://arxiv.org/html/2610.37062v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0054",
+      "section": "C.2 Coefficient measurements",
+      "text": "Recorded coefficients are summarized within each run before aggregation across three initializations. Their means are 0.9679 ± 0.0021 0.9679\\pm 0.0021 for p = 0.5 p=0.5 and 0.9598 ± 0.0017 0.9598\\pm 0.0017 for p = 1 p=1 (mean ± \\pm sample SD). Some coefficients equal zero. Thus positive scaling preserves a nonzero NS direction, whereas q = 0 q=0 suppresses that direction without necessarily freezing the stored parameter. These summaries are not activation-weighted effective learning rates, and no diagnostic-off production-style throughput benchmark was performed for this cohort.",
+      "source": "https://arxiv.org/html/2610.37062v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0055",
+      "section": "C.3 Unperformed routed-only scalar controls",
+      "text": "The matched nominal LR/decay comparison measures the effect of adding the evaluated attenuation rule but does not identify whether expert-wise energy-dependent assignment is better than uniform routed-update reduction. A simple untested control would fix q e = α q_{e}=\\alpha for all routed matrices (e.g., α = 0.96 \\alpha=0.96 ), leaving other updates and decay unchanged. Equal average coefficients do not imply equal update-norm budgets. At a common state, let U e , t = − η t ​ s e ​ D e , t U_{e,t}=-\\eta_{t}s_{e}D_{e,t} denote the pre-decay, pre-writeback plain-Muon direction step for routed matrix e e . When the denominator is positive, a norm-budget-matched uniform coefficient would be α t = ( ∑ e ∈ ℛ q e , t 2 ​ ‖ U e , t ‖ F 2 ∑ e ∈ ℛ ‖ U e , t ‖ F 2 ) 1 / 2 . \\alpha_{t}=\\left(\\frac{\\sum_{e\\in\\mathcal{R}}q_{e,t}^{2}\\left\\lVert U_{e,t}\\right\\rVert_{\\mathrm{F}}^{2}}{\\sum_{e\\in\\mathcal{R}}\\left\\lVert U_{e,t}\\right\\rVert_{\\mathrm{F}}^{2}}\\right)^{1/2}. (20) This matches only the summed squared Frobenius norms of the direction steps at that state. It does not match stored parameter changes, decay, or future trajectories. Neither fixed-scalar nor norm-budget-matched controls were evaluated, so a specific causal advantage of assigning coefficients by energy remains unresolved.",
+      "source": "https://arxiv.org/html/2610.37062v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0056",
+      "section": "D.1 Alternative coefficients and spectral measurements",
+      "text": "A separate single-initialization audit compares six update rules at common matrix LR 0.01 over 3,000 updates, with additional scouts used only for diagnostic observations. The stable-rank, amplitude-only, and near-zero-gate controls use q rank \\displaystyle q_{\\rm rank} = min ⁡ { 1 , sr ^ ​ ( D ) 0.8 ​ d } , \\displaystyle=\\min\\left\\{1,\\sqrt{\\frac{\\widehat{\\operatorname{sr}}(D)}{0.8d}}\\right\\}, (21) q amp \\displaystyle q_{\\rm amp} = min ⁡ { 1 , ‖ D ‖ 2 ^ } , \\displaystyle=\\min\\{1,\\widehat{\\left\\lVert D\\right\\rVert_{2}}\\}, (22) q zero \\displaystyle q_{\\rm zero} = 𝟏 { ‖ D ‖ F > 10 − 7 } . \\displaystyle=\\mathbf{1}\\{\\left\\lVert D\\right\\rVert_{\\mathrm{F}}>10^{-7}\\}. (23) The spectral quantities used during optimization are estimated by power iteration rather than exact SVD. These alternatives were not independently tuned to equal update budgets. For diagnostics, NS spectra and projected/BF16-stored displacements are measured independently using CPU float64 SVD on selected routed-down matrices. Selection deliberately includes low-energy directions, so the sampled distribution is not an unbiased census. Norms reconstructed from the trial formula do not independently verify Eq. ( 7 ). A zero directional coefficient can still yield stored changes after projection and writeback, motivating exact-weight-freeze interventions.",
+      "source": "https://arxiv.org/html/2610.37062v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0057",
+      "section": "D.2 Single-update interventions",
+      "text": "Two saved-state spike events (A and B) are examined separately. Candidates are selected from routed-down matrices using low stable rank and traffic-weighted projected displacement, with comparable same-bank control matrices. This heuristic was informed by exploratory captures but fixed before treatment outcomes. Each event uses seven single-update branches: canonical update, candidate EnergyCal, candidate zero trial, candidate exact weight freeze, control freeze, all-routed EnergyCal, and all-routed EnergyCal with the candidate restored to canonical. Training then resumes normally. Exact freezing restores the selected weight bits after the ordinary update and writeback while retaining momentum evolution and RNG consumption. It differs from zero trial, which suppresses only the direction proposal. Branches start from matched saved states and input sequences, but independent recomputation does not guarantee identical numerical trajectories. Table 12: All intervention branches in events A and B ( n = 1 n=1 per branch and event). r A , r B r_{A},r_{B} are short-window burden improvements, not reductions in the full-schedule B 1 B_{1} . Intervention CE A CE B r A r_{A} (%) r B r_{B} (%) Canonical 6.3165 6.9069 0.00 0.00 Candidate ECal 6.3163 6.9068 +0.93 +0.22 Candidate zero 6.3160 6.9109 -1.25 +0.32 Candidate freeze 6.3172 6.9110 +3.09 +0.76 Control freeze 6.3160 6.9085 +1.61 +1.40 All routed ECal 6.3024 6.9873 +2.12 -3.41 All except cand. 6.3020 6.9840 +1.48 -3.15 For an event’s common short window 𝒲 \\mathcal{W} and fixed pre-intervention reference loss b b , the local burden and percent improvement relative to its canonical continuation are",
+      "source": "https://arxiv.org/html/2610.37062v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0058",
+      "section": "D.2 Single-update interventions",
+      "text": "A win \\displaystyle A_{\\rm win} = ∑ s ∈ 𝒲 max ⁡ ( 0 , L s − b ) , \\displaystyle=\\sum_{s\\in\\mathcal{W}}\\max(0,L_{s}-b), (24) r win \\displaystyle r_{\\rm win} = 100 ​ ( 1 − A arm A canonical ) . \\displaystyle=100\\left(1-\\frac{A_{\\rm arm}}{A_{\\rm canonical}}\\right). (25) Unlike B 1 B_{1} , A win A_{\\rm win} includes all positive deviations above the fixed reference in the short window, without threshold-flag filtering. It is used only for intervention comparisons. For events A and B, the evaluation windows are steps 1068–1100 and 926–957, with fixed reference losses b = 4.133466 b=4.133466 and b = 4.240423 b=4.240423 , respectively. Candidate-only EnergyCal reduces stored operator displacement by 86.3% in event A and 76.3% in event B, while exact freezing eliminates that displacement. The next-step loss rise persists. Candidate freeze reduces short-window burden by 3.09% and 0.76%, versus 1.61% and 1.40% for control freeze; all-routed EnergyCal reduces short-window burden by 2.12% in event A but increases it by 3.41% in event B. These small, inconsistent effects do not establish substantial immediate rescue or a zero causal effect.",
+      "source": "https://arxiv.org/html/2610.37062v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0059",
+      "section": "D.3 Fixed-input probes and causal limitations",
+      "text": "A fixed 512-token probe compares CE and output KL immediately before and after each treated update. Mean probe CE decreases slightly in every branch, with no large KL reduction from the tested corrections. The probe is different from the next high-loss training batch and omits the subsequent router-bias-controller update. Consequently, the local observations do not identify the combination of history, routing, and inputs responsible for the two events. They also do not negate the full-schedule improvement under continuous EnergyCal.",
+      "source": "https://arxiv.org/html/2610.37062v1",
+      "offset": 0
+    }
+  ],
+  "links": [
+    {
+      "href": "#bib.bib1",
+      "text": "1",
+      "section": "1 Introduction",
+      "context": "Sparse mixture-of-experts (MoE) language models route tokens unevenly across experts, creating time-varying optimization conditions [ 1",
+      "url": "https://arxiv.org/html/2610.37062v1#bib.bib1"
+    },
+    {
+      "href": "#bib.bib2",
+      "text": "2",
+      "section": "1 Introduction",
+      "context": "Sparse mixture-of-experts (MoE) language models route tokens unevenly across experts, creating time-varying optimization conditions [ 1 ] . This setting can be challenging for Muon-family optimizers, which use Newton–Schulz (NS) iterations to transform momentum-based updates. Muon has shown promise for language-model pretraining [ 2",
+      "url": "https://arxiv.org/html/2610.37062v1#bib.bib2"
+    },
+    {
+      "href": "#bib.bib3",
+      "text": "3",
+      "section": "1 Introduction",
+      "context": "Sparse mixture-of-experts (MoE) language models route tokens unevenly across experts, creating time-varying optimization conditions [ 1 ] . This setting can be challenging for Muon-family optimizers, which use Newton–Schulz (NS) iterations to transform momentum-based updates. Muon has shown promise for language-model pretraining [ 2 , 3",
+      "url": "https://arxiv.org/html/2610.37062v1#bib.bib3"
+    },
+    {
+      "href": "#bib.bib4",
+      "text": "4",
+      "section": "1 Introduction",
+      "context": "Sparse mixture-of-experts (MoE) language models route tokens unevenly across experts, creating time-varying optimization conditions [ 1 ] . This setting can be challenging for Muon-family optimizers, which use Newton–Schulz (NS) iterations to transform momentum-based updates. Muon has shown promise for language-model pretraining [ 2 , 3 , 4",
+      "url": "https://arxiv.org/html/2610.37062v1#bib.bib4"
+    },
+    {
+      "href": "#bib.bib5",
+      "text": "5",
+      "section": "1 Introduction",
+      "context": "Sparse mixture-of-experts (MoE) language models route tokens unevenly across experts, creating time-varying optimization conditions [ 1 ] . This setting can be challenging for Muon-family optimizers, which use Newton–Schulz (NS) iterations to transform momentum-based updates. Muon has shown promise for language-model pretraining [ 2 , 3 , 4 ] , while Hyperball introduces explicit control over weight and update norms [ 5",
+      "url": "https://arxiv.org/html/2610.37062v1#bib.bib5"
+    },
+    {
+      "href": "#S1.F1",
+      "text": "1",
+      "section": "1 Introduction",
+      "context": "An expert can retain nonzero momentum even when no tokens are assigned to it in the current step. This motivates examining expert-wise update magnitudes, particularly under MuonH’s fixed-norm normalization. We propose EnergyCal, a lightweight rule that attenuates each routed-expert update according to the normalized squared Frobenius norm of its finite-step NS direction. Figure 1",
+      "url": "https://arxiv.org/html/2610.37062v1#S1.F1"
+    },
+    {
+      "href": "#bib.bib6",
+      "text": "6",
+      "section": "1 Introduction",
+      "context": "Our contribution is an empirical evaluation of one-sided, post-NS energy attenuation across MuonH and plain Muon. Unlike utilization- or alignment-guided expert scaling methods [ 6",
+      "url": "https://arxiv.org/html/2610.37062v1#bib.bib6"
+    },
+    {
+      "href": "#bib.bib7",
+      "text": "7",
+      "section": "1 Introduction",
+      "context": "Our contribution is an empirical evaluation of one-sided, post-NS energy attenuation across MuonH and plain Muon. Unlike utilization- or alignment-guided expert scaling methods [ 6 , 7",
+      "url": "https://arxiv.org/html/2610.37062v1#bib.bib7"
+    },
+    {
+      "href": "#S7",
+      "text": "7",
+      "section": "1 Introduction",
+      "context": "Muon. Unlike utilization- or alignment-guided expert scaling methods [ 6 , 7 ] , EnergyCal relies only on the energy of each logical matrix’s NS direction. The results do not establish general optimizer superiority or identify the cause of individual spikes: single-update interventions fail to rescue two examined events, and the plain-Muon study lacks a routed-only uniform-scaling control to separate energy-dependent attenuation from a simpler reduction in update magnitude. We therefore focus on the measured stability benefits and their practical trade-offs within the tested setting; Section 7",
+      "url": "https://arxiv.org/html/2610.37062v1#S7"
+    },
+    {
+      "href": "#bib.bib2",
+      "text": "2",
+      "section": "2 Related Work",
+      "context": "Muon-family optimization and Hyperball. Muon applies a short Newton–Schulz (NS) iteration to momentum-based matrix updates [ 2",
+      "url": "https://arxiv.org/html/2610.37062v1#bib.bib2"
+    },
+    {
+      "href": "#bib.bib4",
+      "text": "4",
+      "section": "2 Related Work",
+      "context": "Muon-family optimization and Hyperball. Muon applies a short Newton–Schulz (NS) iteration to momentum-based matrix updates [ 2 ] . Large-scale studies identify weight decay and update scaling as important for Muon pretraining [ 4",
+      "url": "https://arxiv.org/html/2610.37062v1#bib.bib4"
+    },
+    {
+      "href": "#bib.bib5",
+      "text": "5",
+      "section": "2 Related Work",
+      "context": "Muon-family optimization and Hyperball. Muon applies a short Newton–Schulz (NS) iteration to momentum-based matrix updates [ 2 ] . Large-scale studies identify weight decay and update scaling as important for Muon pretraining [ 4 ] . Our plain-Muon baseline uses a shape factor of one rather than the full Moonlight recipe. Hyperball controls update and weight radii; its Muon variant, MuonH, normalizes trial directions and projects weights onto a fixed-radius sphere [ 5",
+      "url": "https://arxiv.org/html/2610.37062v1#bib.bib5"
+    },
+    {
+      "href": "#bib.bib6",
+      "text": "6",
+      "section": "2 Related Work",
+      "context": "Expert-wise update scaling. Existing methods scale expert updates using other signals. Excitation uses expert utilization [ 6",
+      "url": "https://arxiv.org/html/2610.37062v1#bib.bib6"
+    },
+    {
+      "href": "#bib.bib7",
+      "text": "7",
+      "section": "2 Related Work",
+      "context": "Expert-wise update scaling. Existing methods scale expert updates using other signals. Excitation uses expert utilization [ 6 ] , while ExpertMuon-Compass uses post-orthogonalization gradient alignment across experts and rows [ 7",
+      "url": "https://arxiv.org/html/2610.37062v1#bib.bib7"
+    },
+    {
+      "href": "#bib.bib8",
+      "text": "8",
+      "section": "2 Related Work",
+      "context": "Magnitude and spectral corrections. NorMuon uses neuron-level normalization after orthogonalization [ 8",
+      "url": "https://arxiv.org/html/2610.37062v1#bib.bib8"
+    },
+    {
+      "href": "#bib.bib9",
+      "text": "9",
+      "section": "2 Related Work",
+      "context": "Magnitude and spectral corrections. NorMuon uses neuron-level normalization after orthogonalization [ 8 ] , and TrasMuon uses RMS calibration and energy-based clipping [ 9",
+      "url": "https://arxiv.org/html/2610.37062v1#bib.bib9"
+    },
+    {
+      "href": "#bib.bib10",
+      "text": "10",
+      "section": "2 Related Work",
+      "context": "Magnitude and spectral corrections. NorMuon uses neuron-level normalization after orthogonalization [ 8 ] , and TrasMuon uses RMS calibration and energy-based clipping [ 9 ] . Thus, energy-aware scaling is not new by itself. Pion changes NS iterations [ 10",
+      "url": "https://arxiv.org/html/2610.37062v1#bib.bib10"
+    },
+    {
+      "href": "#bib.bib11",
+      "text": "11",
+      "section": "2 Related Work",
+      "context": "Magnitude and spectral corrections. NorMuon uses neuron-level normalization after orthogonalization [ 8 ] , and TrasMuon uses RMS calibration and energy-based clipping [ 9 ] . Thus, energy-aware scaling is not new by itself. Pion changes NS iterations [ 10 ] , while SoftMuon uses smooth spectral relaxation [ 11",
+      "url": "https://arxiv.org/html/2610.37062v1#bib.bib11"
+    },
+    {
+      "href": "#bib.bib12",
+      "text": "12",
+      "section": "2 Related Work",
+      "context": "Training stability in sparse models. Training instability in sparse MoE models has motivated router-centered approaches, including ST-MoE’s router z-loss and methods for reducing routing fluctuations [ 12",
+      "url": "https://arxiv.org/html/2610.37062v1#bib.bib12"
+    },
+    {
+      "href": "#bib.bib13",
+      "text": "13",
+      "section": "2 Related Work",
+      "context": "Training stability in sparse models. Training instability in sparse MoE models has motivated router-centered approaches, including ST-MoE’s router z-loss and methods for reducing routing fluctuations [ 12 , 13",
+      "url": "https://arxiv.org/html/2610.37062v1#bib.bib13"
+    },
+    {
+      "href": "#bib.bib14",
+      "text": "14",
+      "section": "2 Related Work",
+      "context": "Training stability in sparse models. Training instability in sparse MoE models has motivated router-centered approaches, including ST-MoE’s router z-loss and methods for reducing routing fluctuations [ 12 , 13 ] . Spike-aware optimization has also been studied in dense language-model training through momentum resets and gradient clipping [ 14",
+      "url": "https://arxiv.org/html/2610.37062v1#bib.bib14"
+    },
+    {
+      "href": "#bib.bib15",
+      "text": "15",
+      "section": "2 Related Work",
+      "context": "Finite-step orthogonalization. Recent analyses characterize the convergence and spectral behavior of Muon with finite-step Newton–Schulz iterations [ 15",
+      "url": "https://arxiv.org/html/2610.37062v1#bib.bib15"
+    },
+    {
+      "href": "#bib.bib16",
+      "text": "16",
+      "section": "2 Related Work",
+      "context": "Finite-step orthogonalization. Recent analyses characterize the convergence and spectral behavior of Muon with finite-step Newton–Schulz iterations [ 15 , 16",
+      "url": "https://arxiv.org/html/2610.37062v1#bib.bib16"
+    },
+    {
+      "href": "#bib.bib17",
+      "text": "17",
+      "section": "2 Related Work",
+      "context": "Finite-step orthogonalization. Recent analyses characterize the convergence and spectral behavior of Muon with finite-step Newton–Schulz iterations [ 15 , 16 ] . MuonEq further investigates pre-NS equilibration to improve the geometry of orthogonalized updates [ 17",
+      "url": "https://arxiv.org/html/2610.37062v1#bib.bib17"
+    },
+    {
+      "href": "#bib.bib18",
+      "text": "18",
+      "section": "2 Related Work",
+      "context": "Evaluation and optimizer comparisons. Optimizer rankings depend on tuning and training budget [ 18",
+      "url": "https://arxiv.org/html/2610.37062v1#bib.bib18"
+    },
+    {
+      "href": "#bib.bib19",
+      "text": "19",
+      "section": "2 Related Work",
+      "context": "Evaluation and optimizer comparisons. Optimizer rankings depend on tuning and training budget [ 18 ] ; angular effective learning rates also complicate the interpretation of Hyperball’s nominal learning rate [ 19",
+      "url": "https://arxiv.org/html/2610.37062v1#bib.bib19"
+    },
+    {
+      "href": "#A1",
+      "text": "A",
+      "section": "3.1 Logical matrices and the base update",
+      "context": "with β = 0.95 \\beta=0.95 . A five-step quintic Newton–Schulz (NS) map produces the update direction D t = NS 5 ⁡ ( A t ) D_{t}=\\operatorname{NS}_{5}(A_{t}) . NS arithmetic uses BF16, while momentum and norm calculations use FP32. Because the iteration is finite, D t D_{t} is an approximate orthogonalized direction, not an exact polar factor. Implementation details and numerical guards are provided in Appendix A",
+      "url": "https://arxiv.org/html/2610.37062v1#A1"
+    },
+    {
+      "href": "#S3.E2",
+      "text": "2",
+      "section": "3.2 Expert-wise energy calibration",
+      "context": "For MuonH, EnergyCal replaces η t \\eta_{t} in Eq. ( 2",
+      "url": "https://arxiv.org/html/2610.37062v1#S3.E2"
+    },
+    {
+      "href": "#S1.F1",
+      "text": "1",
+      "section": "3.2 Expert-wise energy calibration",
+      "context": "For MuonH, EnergyCal replaces η t \\eta_{t} in Eq. ( 2 ) with q t ​ η t q_{t}\\eta_{t} only for routed-expert matrices. All other matrices retain q t = 1 q_{t}=1 . As illustrated in Fig. 1",
+      "url": "https://arxiv.org/html/2610.37062v1#S1.F1"
+    },
+    {
+      "href": "#bib.bib4",
+      "text": "4",
+      "section": "3.3 Transfer to plain Muon",
+      "context": "followed by the common writeback policy. Here, λ \\lambda denotes decoupled weight decay and s W s_{W} is the matrix-shape factor. All evaluated plain-Muon runs use s W = 1 s_{W}=1 , unlike the scale-adjusted large-model recipe of Liu et al. [ 4",
+      "url": "https://arxiv.org/html/2610.37062v1#bib.bib4"
+    },
+    {
+      "href": "#S3.E7",
+      "text": "7",
+      "section": "3.4 Geometric motivation, not a causal theorem",
+      "context": "These relations motivate energy-dependent attenuation but do not establish a causal mechanism for loss spikes. In particular, Eq. ( 7",
+      "url": "https://arxiv.org/html/2610.37062v1#S3.E7"
+    },
+    {
+      "href": "#bib.bib20",
+      "text": "20",
+      "section": "4.1 Model, data, and training setup",
+      "context": "We train a custom 4B-parameter DeepSeekMoE-style language model from scratch, with 24 layers, hidden width 1,536, 128 routed experts of width 256 and top-2 routing, and one shared expert per layer. Its input and output embeddings are tied. The routed/shared design follows DeepSeekMoE [ 20",
+      "url": "https://arxiv.org/html/2610.37062v1#bib.bib20"
+    },
+    {
+      "href": "#bib.bib21",
+      "text": "21",
+      "section": "4.1 Model, data, and training setup",
+      "context": "We train a custom 4B-parameter DeepSeekMoE-style language model from scratch, with 24 layers, hidden width 1,536, 128 routed experts of width 256 and top-2 routing, and one shared expert per layer. Its input and output embeddings are tied. The routed/shared design follows DeepSeekMoE [ 20 ] , with a separate traffic-driven router-bias controller [ 21",
+      "url": "https://arxiv.org/html/2610.37062v1#bib.bib21"
+    },
+    {
+      "href": "#bib.bib22",
+      "text": "22",
+      "section": "4.1 Model, data, and training setup",
+      "context": "We train a custom 4B-parameter DeepSeekMoE-style language model from scratch, with 24 layers, hidden width 1,536, 128 routed experts of width 256 and top-2 routing, and one shared expert per layer. Its input and output embeddings are tied. The routed/shared design follows DeepSeekMoE [ 20 ] , with a separate traffic-driven router-bias controller [ 21 , 22",
+      "url": "https://arxiv.org/html/2610.37062v1#bib.bib22"
+    },
+    {
+      "href": "#A1",
+      "text": "A",
+      "section": "4.1 Model, data, and training setup",
+      "context": "Each run uses eight H100 80GB GPUs, 2,048-token sequences, and 131,072 tokens per optimizer update. A complete run has 10,000 updates (1.31B tokens), with 500 warmup updates followed by cosine decay to 10% of peak learning rate. All methods use gradient clipping at norm 1, five NS iterations, and the same logical matrix partitions. These experiments do not claim compute-optimal or fully converged pretraining. Appendix A",
+      "url": "https://arxiv.org/html/2610.37062v1#A1"
+    },
+    {
+      "href": "#bib.bib23",
+      "text": "23",
+      "section": "4.1 Model, data, and training setup",
+      "context": "Training uses FineWeb sample-10BT [ 23",
+      "url": "https://arxiv.org/html/2610.37062v1#bib.bib23"
+    },
+    {
+      "href": "#S3.E6",
+      "text": "6",
+      "section": "4.3 Cohort M: plain-Muon extension",
+      "context": "A separate study compares plain Muon with EnergyCal exponents p ∈ { 0.5 , 1 } p\\in\\{0.5,1\\} over three new initialization runs. All nine runs complete 10,000 updates. Within each initialization, the methods use the same host and evaluation bank. All conditions share matrix LR 0.005, eligible matrix/fallback weight decay 0.1, and fallback LR 0.001. The sole optimizer change is the routed coefficient in Eq. ( 6",
+      "url": "https://arxiv.org/html/2610.37062v1#S3.E6"
+    },
+    {
+      "href": "#A3",
+      "text": "C",
+      "section": "4.3 Cohort M: plain-Muon extension",
+      "context": "Cohort M uses a different evaluation bank and implementation revision from Cohort H. Their absolute CE/PPL values cannot be pooled or used to rank calibrated Muon against MuonH. Appendix C",
+      "url": "https://arxiv.org/html/2610.37062v1#A3"
+    },
+    {
+      "href": "#S5.T2",
+      "text": "2",
+      "section": "5.1 Cohort H: recipe-level quality and stability",
+      "context": "Cohort H evaluates the frozen EnergyCal–MuonH recipe against development-selected MuonH and plain-Muon baselines over three confirmation seeds. As shown in Table 2",
+      "url": "https://arxiv.org/html/2610.37062v1#S5.T2"
+    },
+    {
+      "href": "#S5.F2",
+      "text": "2",
+      "section": "5.2 Intermediate quality and the late crossover",
+      "context": "EnergyCal’s final quality advantage does not extend uniformly across training. Figure 2",
+      "url": "https://arxiv.org/html/2610.37062v1#S5.F2"
+    },
+    {
+      "href": "#A2.F4",
+      "text": "4",
+      "section": "5.2 Intermediate quality and the late crossover",
+      "context": "EnergyCal’s final quality advantage does not extend uniformly across training. Figure 2 shows all fixed-bank validation measurements, including evaluations affected by loss excursions. At step 3000, mean CE is 3.7995 for EnergyCal versus 3.7437 for Muon + WD; at step 5000, the corresponding values are 3.6038 and 3.5479. The mean ordering reverses between the observed 8000- and 8500-step evaluations (supplementary Fig. 4",
+      "url": "https://arxiv.org/html/2610.37062v1#A2.F4"
+    },
+    {
+      "href": "#A2",
+      "text": "B",
+      "section": "5.2 Intermediate quality and the late crossover",
+      "context": "EnergyCal’s final quality advantage does not extend uniformly across training. Figure 2 shows all fixed-bank validation measurements, including evaluations affected by loss excursions. At step 3000, mean CE is 3.7995 for EnergyCal versus 3.7437 for Muon + WD; at step 5000, the corresponding values are 3.6038 and 3.5479. The mean ordering reverses between the observed 8000- and 8500-step evaluations (supplementary Fig. 4 ). Thus, EnergyCal’s endpoint advantage emerges late in the schedule rather than persisting throughout training. Appendix B",
+      "url": "https://arxiv.org/html/2610.37062v1#A2"
+    },
+    {
+      "href": "#S5.T3",
+      "text": "3",
+      "section": "5.3 Throughput, memory, and equal-time interpretation",
+      "context": "EnergyCal’s stability improvements come with a modest throughput cost. Table 3",
+      "url": "https://arxiv.org/html/2610.37062v1#S5.T3"
+    },
+    {
+      "href": "#S5.T4",
+      "text": "4",
+      "section": "5.4 Cohort M: stabilization without Hyperball",
+      "context": "Cohort M tests whether EnergyCal also reduces loss excursions when applied to plain Muon, without Hyperball normalization or projection. Unlike Cohort H, this study holds nominal learning rate and weight decay fixed. Table 4",
+      "url": "https://arxiv.org/html/2610.37062v1#S5.T4"
+    },
+    {
+      "href": "#A3.SS1",
+      "text": "C.1",
+      "section": "5.4 Cohort M: stabilization without Hyperball",
+      "context": "Relative to its plain-Muon baseline, EnergyCal reduces mean thresholded loss-spike burden by 95.98% on average across the two tested exponents. This is the equally weighted average of the two exponent-specific reductions in condition-level mean burden, not an average of per-seed percentage reductions (Appendix C.1",
+      "url": "https://arxiv.org/html/2610.37062v1#A3.SS1"
+    },
+    {
+      "href": "#S5.T2",
+      "text": "2",
+      "section": "5.4 Cohort M: stabilization without Hyperball",
+      "context": "Table 4: Cohort M: EnergyCal added to plain Muon without Hyperball. All conditions share matrix LR 0.005, eligible matrix and fallback weight decay 0.1, and the same 10k-update token budget. Values are mean ± \\pm sample SD over n = 3 n=3 new initialization seeds; episodes and B 1 B_{1} are per-run quantities. The validation bank differs from Cohort H, so absolute CE and PPL values must not be compared directly with Table 2",
+      "url": "https://arxiv.org/html/2610.37062v1#S5.T2"
+    },
+    {
+      "href": "#A3.SS3",
+      "text": "C.3",
+      "section": "5.4 Cohort M: stabilization without Hyperball",
+      "context": " 0.9679 ± 0.0021 0.9679\\pm 0.0021 for p = 0.5 p=0.5 and 0.9598 ± 0.0017 0.9598\\pm 0.0017 for p = 1 p=1 (mean ± \\pm sample SD). These summaries describe the applied attenuation, not its causal contribution to stabilization. Zero coefficients also occur, so not every routed direction is retained. However, a routed-only uniform-scaling control has not been evaluated. Consequently, matched nominal learning rate and weight decay do not establish whether the stability gains specifically require energy-dependent coefficient assignment or primarily reflect reduced routed-update magnitude. Appendix C.3",
+      "url": "https://arxiv.org/html/2610.37062v1#A3.SS3"
+    },
+    {
+      "href": "#S7",
+      "text": "7",
+      "section": "5.4 Cohort M: stabilization without Hyperball",
+      "context": " p=0.5 and 0.9598 ± 0.0017 0.9598\\pm 0.0017 for p = 1 p=1 (mean ± \\pm sample SD). These summaries describe the applied attenuation, not its causal contribution to stabilization. Zero coefficients also occur, so not every routed direction is retained. However, a routed-only uniform-scaling control has not been evaluated. Consequently, matched nominal learning rate and weight decay do not establish whether the stability gains specifically require energy-dependent coefficient assignment or primarily reflect reduced routed-update magnitude. Appendix C.3 describes the missing control, and Section 7",
+      "url": "https://arxiv.org/html/2610.37062v1#S7"
+    },
+    {
+      "href": "#S6.T5",
+      "text": "5",
+      "section": "6.1 Energy, rank, and amplitude ablations",
+      "context": "A separate single-initialization audit compares six coefficient conditions at common matrix LR 0.01 over the first 3,000 updates (Table 5",
+      "url": "https://arxiv.org/html/2610.37062v1#S6.T5"
+    },
+    {
+      "href": "#S3.E8",
+      "text": "8",
+      "section": "6.1 Energy, rank, and amplitude ablations",
+      "context": "nts using CPU float64 SVD. Sampled routed-down matrices include fixed experts and low-positive-energy selections; the sample is biased toward low-energy directions and is not an all-expert census. Crucially, a routed expert can receive zero current tokens yet retain momentum. One such NS direction has ‖ D ‖ F = 0.9921 \\left\\lVert D\\right\\rVert_{\\mathrm{F}}=0.9921 , ‖ D ‖ 2 = 0.9724 \\left\\lVert D\\right\\rVert_{2}=0.9724 , and sr ⁡ ( D ) = 1.0409 \\operatorname{sr}(D)=1.0409 , illustrating that low stable rank does not imply small operator amplitude. Energy also depends on amplitude, as in Eq. ( 8",
+      "url": "https://arxiv.org/html/2610.37062v1#S3.E8"
+    },
+    {
+      "href": "#A4",
+      "text": "D",
+      "section": "6.1 Energy, rank, and amplitude ablations",
+      "context": "These measurements motivate studying post-NS energy but do not identify energy as a calibrated reliability estimate, select a universally optimal exponent, or show that Hyperball is the sole source of loss spikes. Appendix D",
+      "url": "https://arxiv.org/html/2610.37062v1#A4"
+    },
+    {
+      "href": "#A4",
+      "text": "D",
+      "section": "6.2 Single-update interventions do not rescue two events",
+      "context": "We examine two baseline-scout loss excursions, events A and B. For each, candidate routed-down matrices were selected using low stable rank and traffic-weighted projected operator displacement, with same-bank controls. The heuristic was devised from exploratory captures but fixed before intervention outcomes. Seven branches per event modify one optimizer update and then return to the canonical training procedure (Appendix D",
+      "url": "https://arxiv.org/html/2610.37062v1#A4"
+    },
+    {
+      "href": "#S4.E12",
+      "text": "12",
+      "section": "6.2 Single-update interventions do not rescue two events",
+      "context": "ndidate-only EnergyCal reduces actual BF16-stored operator displacement by 86.3% (A) and 76.3% (B), while exact freezing eliminates that candidate displacement. Nevertheless, next-step CE remains near 6.3 and 6.9, respectively. In the common short windows, candidate freezing reduces burden by 3.09% and 0.76%, compared with 1.61% and 1.40% for control freezing. Applying EnergyCal to all routed matrices for a single update reduces short-window burden by 2.12% in event A but increases it by 3.41% in event B. This short-window burden is distinct from the full-schedule B 1 B_{1} defined in Eq. ( 12",
+      "url": "https://arxiv.org/html/2610.37062v1#S4.E12"
+    },
+    {
+      "href": "#A3.SS3",
+      "text": "C.3",
+      "section": "7 Discussion and Limitations",
+      "context": "iform-scaling alternative. EnergyCal attenuates routed-expert updates, but the observed improvements need not arise specifically from assigning different coefficients according to direction energy. Cohort M lacks a routed-only uniform-scaling or update-budget-matched control, so it cannot distinguish energy-dependent attenuation from the benefit of reducing routed-update magnitudes more generally. A fixed coefficient near 0.96, leaving weight decay and non-routed updates unchanged, would provide an informative comparison, although it would not exactly match the update-norm budget. Appendix C.3",
+      "url": "https://arxiv.org/html/2610.37062v1#A3.SS3"
+    },
+    {
+      "href": "https://kellerjordan.github.io/posts/muon/",
+      "text": "https://kellerjordan.github.io/posts/muon/",
+      "section": "References",
+      "context": "[2] Keller Jordan, Yuchen Jin, Vlado Boza, Jiacheng You, Franz Cesista, Laker Newhouse, and Jeremy Bernstein, “Muon: An Optimizer for Hidden Layers in Neural Networks,” https://kellerjordan.github.io/posts/muon/",
+      "url": "https://kellerjordan.github.io/posts/muon/"
+    },
+    {
+      "href": "#S4",
+      "text": "4",
+      "section": "Appendix A Implementation and Evaluation Details",
+      "context": "This appendix records the numerical and parameter-partition details needed to interpret EnergyCal. The model, training budget, and comparison design are described in Section 4",
+      "url": "https://arxiv.org/html/2610.37062v1#S4"
+    },
+    {
+      "href": "#S3.E2",
+      "text": "2",
+      "section": "A.2 Logical matrices and writeback",
+      "context": "MuonH uses a fixed initial Frobenius radius and the trial update and projection of Eqs. ( 2",
+      "url": "https://arxiv.org/html/2610.37062v1#S3.E2"
+    },
+    {
+      "href": "#S3.E3",
+      "text": "3",
+      "section": "A.2 Logical matrices and writeback",
+      "context": "MuonH uses a fixed initial Frobenius radius and the trial update and projection of Eqs. ( 2 )–( 3",
+      "url": "https://arxiv.org/html/2610.37062v1#S3.E3"
+    },
+    {
+      "href": "#S3.E6",
+      "text": "6",
+      "section": "A.2 Logical matrices and writeback",
+      "context": "MuonH uses a fixed initial Frobenius radius and the trial update and projection of Eqs. ( 2 )–( 3 ). Plain Muon has no sphere projection and uses Eq. ( 6",
+      "url": "https://arxiv.org/html/2610.37062v1#S3.E6"
+    },
+    {
+      "href": "#S3.E7",
+      "text": "7",
+      "section": "A.3 Geometry and coefficient interpretation",
+      "context": "Equation ( 7",
+      "url": "https://arxiv.org/html/2610.37062v1#S3.E7"
+    },
+    {
+      "href": "#S5.F2",
+      "text": "2",
+      "section": "B.3 Intermediate-quality summaries",
+      "context": "Figure 4: Late-schedule validation CE (mean ± \\pm sample SD, n = 3 n=3 ). EnergyCal’s small endpoint advantage over plain Muon appears late; the full trajectory is shown in Fig. 2",
+      "url": "https://arxiv.org/html/2610.37062v1#S5.F2"
+    },
+    {
+      "href": "#S3.E6",
+      "text": "6",
+      "section": "Appendix C Plain-Muon Transfer",
+      "context": "All Cohort M conditions share matrix LR 0.005, eligible matrix/fallback weight decay 0.1, and fallback peak LR 0.001. Only the routed coefficient in Eq. ( 6",
+      "url": "https://arxiv.org/html/2610.37062v1#S3.E6"
+    },
+    {
+      "href": "#S3.E7",
+      "text": "7",
+      "section": "D.1 Alternative coefficients and spectral measurements",
+      "context": "For diagnostics, NS spectra and projected/BF16-stored displacements are measured independently using CPU float64 SVD on selected routed-down matrices. Selection deliberately includes low-energy directions, so the sampled distribution is not an unbiased census. Norms reconstructed from the trial formula do not independently verify Eq. ( 7",
+      "url": "https://arxiv.org/html/2610.37062v1#S3.E7"
+    }
+  ],
+  "note": "Extracted HTML text; equations and table formatting may be imperfect. No PDF extraction was attempted."
+}

@@ -1,0 +1,724 @@
+{
+  "status": "ok",
+  "source": "https://arxiv.org/html/2611.02529v1",
+  "extractor_version": "article-v1",
+  "chunks": [
+    {
+      "chunk_id": "chunk-0001",
+      "section": "Tune the Baseline First: Most of Muon’s Scaled Weight Decay Gain Is a Tuning Gap, but Its Small Real Advantage Grows With Model Size",
+      "text": "Esther Xin Affiliation: Independent Researcher Email: yixin@microsoft.com Affiliation: Code and data: https://github.com/ethxin0011/weight_decay_ladder",
+      "source": "https://arxiv.org/html/2611.02529v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0002",
+      "section": "Abstract",
+      "text": "Scaled weight decay for Muon (Muon-SW) has been reported to train language models more efficiently than constant decoupled weight decay, but such comparisons usually reuse one learning-rate (LR) and weight-decay (WD) setting for both methods. We re-run the comparison under the MAI-Base-2 protocol: LR and WD are tuned jointly through their product for each method, on a source-scaled mixture-of-experts (MoE) scaling ladder (1.9M to 15M active parameters) that holds tokens per active parameter and data repetition fixed across sizes. We find: (1) Most of the gain is a tuning gap. At the shared setting Muon-SW wins by 0.035 0.035 bits per byte (BPB), a 1.52 × 1.52\\times compute saving. After both methods are tuned, the gap is 0.0026 0.0026 BPB (95% CI [ 0.0018 , 0.0034 ] [0.0018,0.0034] ), a 1.03 × 1.03\\times saving: about 90% of the advantage disappears. (2) The small advantage that remains is real. At the smallest size, all four paired seeds favour Muon-SW at the tuned settings. (3) That advantage grows with model size. Across an 8 × 8\\times range of active parameters, the tuned gap rises from 0.0036 0.0036 to 0.0051 0.0051 BPB while the untuned gap shrinks from 0.035 0.035 to 0.024 0.024 , so the share of the advantage that survives tuning rises from about 10% to 21%. (4) The best weight decay moves with scale. The optimal LR ⋅ \\cdot WD product grows for both methods, faster for Muon-SW (ratio 1.40 → 1.91 1.40\\to 1.91 ). A law fitted on the two smallest sizes overshoots the third by 1.3 1.3 – 1.5 × 1.5\\times , costing up to 0.002 0.002 BPB. The whole study runs on one NVIDIA T4 GPU; we release the code and all run results.",
+      "source": "https://arxiv.org/html/2611.02529v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0003",
+      "section": "1 Introduction",
+      "text": "New optimizer variants are commonly evaluated by training a model with the variant and with a baseline, at one shared set of hyperparameters, and reporting the difference. When the variant changes how strongly a hyperparameter acts—as a weight-decay schedule does—the shared setting can be well tuned for one method and poorly tuned for the other, and part of the reported gain is then a tuning gap. This concern is old ( Choi et al., 2019 , Dahl et al., 2023 ) , but it is sharper for weight decay, whose effect is coupled to the learning rate ( Loshchilov and Hutter, 2019 , Kosson et al., 2023 , Wang and Aitchison, 2024 ) and whose optimum moves with model and data size. Muon ( Jordan et al., 2024 ) is now used for the hidden-layer matrices of large language models ( Liu et al., 2025 ) , including the 2.8T parameter MAI-Base-2 ( Microsoft AI, 2026 ) . Apte (2026) propose scaling Muon’s weight-decay coefficient over training (Muon-SW) and report gains over constant decay. MAI-Base-2 introduced two practices that make a cleaner test possible. First, LR and WD are swept jointly on a grid in (LR, LR ⋅ \\cdot WD), because good settings lie on a narrow diagonal of the (LR, WD) plane and a 2D quadratic fit gives the optimum. Second, models are compared on a scaling ladder with fixed tokens per active parameter (TPP) and source scaling , which keeps the number of repetitions of every data source fixed across rungs so that small models do not favour under-regularised settings. We ask one question: how much of Muon-SW’s advantage survives once the baseline is tuned as carefully as the method, and how does that share change with scale? Our contributions are:",
+      "source": "https://arxiv.org/html/2611.02529v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0004",
+      "section": "1 Introduction",
+      "text": "• A tuned comparison of Muon-SW and constant decay under the MAI-Base-2 LR ⋅ \\cdot WD protocol on a source-scaled MoE ladder (three rungs, 1.9M to 15M active parameters, 81 completed runs). • The finding that about 90% of Muon-SW’s untuned advantage disappears after joint tuning at the smallest rung (survival 7.4 % 7.4\\% in the full 2D analysis, 10.3 % 10.3\\% in the 1D slice), but that the residual is consistent across seeds and grows with scale (survival 10 % → 13 % → 21 % 10\\%\\to 13\\%\\to 21\\% ). • Measurements of how the optimal LR ⋅ \\cdot WD product moves with scale for each method, a test of three preregistered predictions for the ratio of optima, and an out-of-sample check of the fitted law at L6. • A pre-emption-safe pipeline that runs the full ladder on one T4 GPU.",
+      "source": "https://arxiv.org/html/2611.02529v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0005",
+      "section": "Fair optimizer comparison.",
+      "text": "Choi et al. (2019) showed that optimizer rankings change once every optimizer’s hyperparameters, including those usually held fixed, are tuned, and AlgoPerf ( Dahl et al., 2023 ) builds tuning budgets into the benchmark. We apply the same principle to a single optimizer modification and measure the surviving share explicitly.",
+      "source": "https://arxiv.org/html/2611.02529v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0006",
+      "section": "Weight decay and scale.",
+      "text": "Decoupled weight decay ( Loshchilov and Hutter, 2019 ) interacts with the learning rate through their product, which sets the equilibrium norm and effective rotation of weights ( Kosson et al., 2023 ) . Wang and Aitchison (2024) derive how WD should change with model and dataset size for AdamW, and Wortsman et al. (2023) study LR and WD sensitivity with small proxies. For Muon, Liu et al. (2025) find weight decay important at scale; Apte (2026) propose scaling it over training. MAI-Base-2 ( Microsoft AI, 2026 ) fits the joint LR ⋅ \\cdot WD optimum as a function of size and TPP.",
+      "source": "https://arxiv.org/html/2611.02529v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0007",
+      "section": "Scaling ladders and data repetition.",
+      "text": "Scaling laws ( Kaplan et al., 2020 , Hoffmann et al., 2022 ) motivate comparing methods across sizes rather than at one point. Repeating data changes what is optimal ( Muennighoff et al., 2023 ) ; source scaling holds repetition fixed across rungs. Our models use sparse MoE layers ( Shazeer et al., 2017 , Fedus et al., 2021 ) ; we also test the warmup–stable–decay (WSD) schedule ( Hu et al., 2024 ) .",
+      "source": "https://arxiv.org/html/2611.02529v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0008",
+      "section": "3.1 Methods compared",
+      "text": "Both methods use Muon for non-embedding 2D parameters and AdamW for all other parameters, as in MAI-Base-2. Let η t = η ​ f ​ ( t ) \\eta_{t}=\\eta\\,f(t) be the learning rate at step t t , where f ⁡ ( t ) ∈ [ 0.1 , 1 ] f(t)\\in[0.1,1] is the schedule (linear warmup, then cosine or WSD decay to 10 % 10\\% of the peak). Constant applies decoupled weight decay with a fixed coefficient λ \\lambda : θ ← θ ⁡ ( 1 − η t ​ λ ) \\theta\\leftarrow\\theta\\,(1-\\eta_{t}\\lambda) . Muon-SW ( Apte, 2026 ) multiplies the coefficient at step t t by s ⁡ ( t ) = η t / η max = f ⁡ ( t ) s(t)=\\eta_{t}/\\eta_{\\max}=f(t) , so the decay step becomes θ ← θ ⁡ ( 1 − η t 2 ​ λ / η max ) \\theta\\leftarrow\\theta\\,(1-\\eta_{t}^{2}\\lambda/\\eta_{\\max}) : decay is applied at full strength at the peak learning rate and weakens as the learning rate anneals. Both methods share the same η \\eta and λ \\lambda at a given grid point. We write s ¯ \\bar{s} for the ratio of total decay applied by Muon-SW to that applied by constant decay over a run, s ¯ = ∑ t f ⁡ ( t ) ​ s ​ ( t ) / ∑ t f ⁡ ( t ) \\bar{s}=\\sum_{t}f(t)\\,s(t)/\\sum_{t}f(t) ; under our cosine schedule s ¯ = 0.733 \\bar{s}=0.733 and under WSD s ¯ = 0.956 \\bar{s}=0.956 .",
+      "source": "https://arxiv.org/html/2611.02529v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0009",
+      "section": "3.2 Joint LR ⋅ \\cdot WD tuning",
+      "text": "Following MAI-Base-2, each rung has a law-predicted learning rate η 0 \\eta_{0} and product ( η ​ λ ) 0 (\\eta\\lambda)_{0} . We sweep multipliers on both: an LR multiplier and a product multiplier p p , so a run uses η = m η ​ η 0 \\eta=m_{\\eta}\\eta_{0} and η ​ λ = p ​ ( η ​ λ ) 0 \\eta\\lambda=p\\,(\\eta\\lambda)_{0} . At L3 we sweep the full 2D grid ( m η ∈ { 0.5 , 1 , 2 } m_{\\eta}\\in\\{0.5,1,2\\} , p p on a factor-of-2 grid), fit a 2D quadratic in ( log 2 ⁡ m η , log 2 ⁡ p ) (\\log_{2}m_{\\eta},\\log_{2}p) per method, and extend the grid wherever the fitted optimum falls on its edge. At L4 and L6 we sweep p p at m η = 1 m_{\\eta}=1 and fit a 1D quadratic in log 2 ⁡ p \\log_{2}p . The same 1D slice is extracted at L3 so that all three rungs can be compared on equal terms.",
+      "source": "https://arxiv.org/html/2611.02529v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0010",
+      "section": "3.3 Quantities reported",
+      "text": "For each rung, the untuned gap is the constant-decay BPB minus the Muon-SW BPB, both at p = 1 p=1 ; the tuned gap is the difference between the two methods’ tuned BPB. Survival is tuned gap divided by untuned gap. At L3 we also convert gaps into a compute-equivalent speedup with the loss-versus-compute fit used by our analysis pipeline.",
+      "source": "https://arxiv.org/html/2611.02529v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0011",
+      "section": "3.4 Hypotheses for the ratio of optima",
+      "text": "We preregistered three predictions for r = p SW ⋆ / p const ⋆ r=p^{\\star}_{\\rm SW}/p^{\\star}_{\\rm const} . H none H_{\\rm none} : the schedule does not change the optimal product, r = 1 r=1 . H int H_{\\rm int} : the optimum matches total decay applied over training, r = 1 / s ¯ r=1/\\bar{s} ( 1.364 1.364 cosine, 1.046 1.046 WSD). H end H_{\\rm end} : the optimum matches the final-step coefficient, r = 10 r=10 .",
+      "source": "https://arxiv.org/html/2611.02529v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0012",
+      "section": "3.5 Ladder, data and training",
+      "text": "Each rung is named by its layer count L L , which fixes the hidden size, head counts and MoE layout (Appendix Table 3 ). All rungs train for 120 tokens per active parameter. The data pool has three public sources: web text from FineWeb-Edu ( Penedo et al., 2024 ) ( sample-10BT ; 1,174.8M training tokens, 60% of each batch), Python code from CodeParrot-clean ( CodeParrot, 2022 ) (122.0M tokens, 25%) and mathematical web text from OpenWebMath ( Paster et al., 2023 ) (79.3M tokens, 15%). Documents shorter than 200 characters and exact duplicates are removed, and 3,000 documents per source are held out for evaluation. We train an 8,192-token byte-level BPE tokenizer on the pool. Under source scaling, web data is seen once and code and math four times at every rung; lower rungs therefore draw a proportionally smaller unique subset of each source. The metric is held-out bits per byte, pooled over the three sources. Main runs use a cosine schedule; WSD is used for the schedule-robustness check.",
+      "source": "https://arxiv.org/html/2611.02529v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0013",
+      "section": "3.6 Compute",
+      "text": "All runs train on a single NVIDIA T4 (16 GB) in a low-priority (Spot) cluster. A self-resubmitting job chain checkpoints every 15 minutes and on eviction; after a pre-emption a queued successor job resumes from the last checkpoint. Resumed runs reproduce uninterrupted runs exactly in our tests. The L6 runs (1.8B tokens each, about 23 GPU-hours) survived 19 evictions without loss. Measured T4 throughput is 29 × \\times that of one 16-core CPU node on L3, so all training was moved to the GPU.",
+      "source": "https://arxiv.org/html/2611.02529v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0014",
+      "section": "4 Experimental design",
+      "text": "The study proceeded through preregistered gates. Gate 1 (L3, untuned) tested whether Muon-SW beats constant decay at p = 1 p=1 by more than seed noise (6 runs). Stage 2 (L3 grid) swept the 2D grid with edge extensions (39 runs). Stage 3 (L3 confirmation) retrained both methods at their fitted optima with paired seeds (four seeds per method) and ran the WSD comparison. Stage 4 (L4) and Stage 5 (L6) swept p p for each method. A planned L9 rung was not run (§ 7 ).",
+      "source": "https://arxiv.org/html/2611.02529v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0015",
+      "section": "5 Results",
+      "text": "Table 1: Main result. Untuned gap : constant-WD BPB minus Muon-SW BPB, both at the MAI-law setting ( p = 1 p=1 ). Tuned gap : the same difference after each method is tuned over the LR ⋅ \\cdot WD multiplier p p (quadratic fit in log 2 ⁡ p \\log_{2}p ). Survival = tuned gap / untuned gap. p ⋆ p^{\\star} is the fitted optimal multiplier; Ratio is p SW ⋆ / p const ⋆ p^{\\star}_{\\rm SW}/p^{\\star}_{\\rm const} . Upper block: one-dimensional sweep at learning-rate multiplier 1 for every rung. Lower block: the full two-dimensional (LR × \\times LR ⋅ \\cdot WD) L3 analysis, confirmed by four paired seeds at the fitted optima. † Fitted optimum lies outside the sampled range; the tuned BPB is the better of the fitted and best observed value. All BPB values are on held-out data. Table 2: Measured ratio of optimal LR ⋅ \\cdot WD products (Muon-SW over constant decay) at L3, with bootstrap 95% intervals, against the three preregistered predictions (§ 3.4 ). Under the cosine schedule the data are consistent with no change and with matched integrated decay, and rule out endpoint matching. Under WSD the ratio falls below every prediction. Figure 1: Held-out BPB against the LR ⋅ \\cdot WD multiplier p p (log scale) for each rung. Points are runs; curves are quadratic fits in log 2 ⁡ p \\log_{2}p ; dotted lines mark fitted optima; the dashed line marks the MAI-law setting p = 1 p=1 . At p = 1 p=1 Muon-SW (orange) is far better, but constant decay (blue) recovers most of the gap by moving to a smaller p p .",
+      "source": "https://arxiv.org/html/2611.02529v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0016",
+      "section": "At the shared setting, Muon-SW is clearly better.",
+      "text": "Gate 1 passed: at p = 1 p=1 on L3 the gap is 0.0350 0.0350 BPB, against a seed noise of 0.0010 0.0010 , and it is also positive at TPP 30 ( 0.046 0.046 ). This reproduces the direction and size of the reported gain and corresponds to a 1.52 × 1.52\\times compute-equivalent speedup.",
+      "source": "https://arxiv.org/html/2611.02529v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0017",
+      "section": "After joint tuning, most of the gap disappears.",
+      "text": "Figure 1 shows why. Both methods’ optima lie below p = 1 p=1 , and constant decay’s lies much further below it. Once each is evaluated at its own optimum, the L3 gap from the full 2D analysis is 0.0026 0.0026 BPB (Table 1 , lower block), 7.4 % 7.4\\% of the untuned gap, and the speedup falls to 1.03 × 1.03\\times . The 1D slice gives a similar 10.3 % 10.3\\% .",
+      "source": "https://arxiv.org/html/2611.02529v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0018",
+      "section": "The residual is small but real.",
+      "text": "At the fitted optima, all four paired seeds favour Muon-SW (Figure 2 ); the 95% interval [ 0.0018 , 0.0034 ] [0.0018,0.0034] excludes zero. It does not clear our preregistered practical-significance threshold of 0.002 0.002 BPB, so we describe the residual as consistent rather than large. Figure 2: Tuned gap at L3 for each of four paired seeds at the 2D-fitted optima. Black line: mean; grey band: 95% CI; dashed: the preregistered 0.002 0.002 BPB threshold.",
+      "source": "https://arxiv.org/html/2611.02529v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0019",
+      "section": "The share that survives tuning grows with scale.",
+      "text": "Across rungs (Table 1 , Figure 3 ) the untuned gap shrinks ( 0.0350 → 0.0311 → 0.0241 0.0350\\to 0.0311\\to 0.0241 ) while the tuned gap grows ( 0.0036 → 0.0040 → 0.0051 0.0036\\to 0.0040\\to 0.0051 ). Survival therefore rises from about 10% to 13% to 21%. Both trends are monotone over an 8 × 8\\times range of active parameters, but the L4 and L6 values come from one seed and from optima at or just beyond the sweep edge (§ 7 ). Figure 3: Left: untuned and tuned gaps against active parameters; the diamond is the four-seed L3 estimate with its 95% CI. Right: share of the untuned gap that survives tuning.",
+      "source": "https://arxiv.org/html/2611.02529v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0020",
+      "section": "Optimal decay moves with scale, faster for Muon-SW.",
+      "text": "The fitted optimal multiplier rises with size for both methods (Figure 4 ): from 0.19 0.19 to 0.33 0.33 for constant decay and from 0.27 0.27 to 0.63 0.63 for Muon-SW. Their ratio grows from 1.40 1.40 to 1.91 1.91 . A baseline tuned at small scale and reused at larger scale would therefore be increasingly mis-tuned, and the direction of that error depends on the method. Figure 4: Left: fitted optimal LR ⋅ \\cdot WD multiplier per method (circles) and the L6 values predicted from L3 and L4 (crosses). Right: ratio of the two optima with the H none H_{\\rm none} and H int H_{\\rm int} predictions for the cosine schedule.",
+      "source": "https://arxiv.org/html/2611.02529v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0021",
+      "section": "Which hypothesis explains the ratio?",
+      "text": "Under cosine at L3 the ratio is 1.41 1.41 (95% CI [ 0.88 , 2.25 ] [0.88,2.25] ; Table 2 ): consistent with matched integrated decay ( H int = 1.36 H_{\\rm int}=1.36 ) and, given its width, with no change; endpoint matching ( r = 10 r=10 ) is ruled out. Under WSD the ratio is 0.29 0.29 ( [ 0.19 , 0.43 ] [0.19,0.43] ), below every prediction. We have not resolved this anomaly; it may reflect an interaction between the long constant-LR phase of WSD and the decay schedule, and we report it as an open question.",
+      "source": "https://arxiv.org/html/2611.02529v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0022",
+      "section": "The LR ⋅ \\cdot WD law transfers approximately.",
+      "text": "Extrapolating the L3 and L4 optima to L6 predicts multipliers of 0.44 0.44 (constant) and 0.95 0.95 (Muon-SW), against fitted values of 0.33 0.33 and 0.63 0.63 (Appendix Table 4 ). Using the predicted value costs 0.0014 0.0014 and 0.0020 0.0020 BPB respectively—comparable to the tuned gap itself. Comparisons at transferred rather than measured optima would therefore misstate the gap at the scale of interest.",
+      "source": "https://arxiv.org/html/2611.02529v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0023",
+      "section": "What practitioners should take away.",
+      "text": "At small scale, almost all of Muon-SW’s reported benefit can be obtained by tuning the LR ⋅ \\cdot WD product of ordinary constant decay. Optimizer comparisons that hold this product fixed overstate gains roughly tenfold in our setting. At the same time, the benefit that remains after tuning grows with scale, which is the regime that matters for large models; our data are consistent with Muon-SW being a small genuine improvement whose importance increases with size.",
+      "source": "https://arxiv.org/html/2611.02529v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0024",
+      "section": "Why the untuned gap shrinks.",
+      "text": "The MAI-law setting p = 1 p=1 is too high for both methods on our ladder, but less so at larger rungs, where both optima move toward 1 1 . Because constant decay is penalised more by an over-large product, the untuned gap mostly measures how far p = 1 p=1 is from constant decay’s optimum, and that distance shrinks with scale.",
+      "source": "https://arxiv.org/html/2611.02529v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0025",
+      "section": "7 Limitations",
+      "text": "• Scale. Our largest rung has 15M active (94M total) parameters, far below production models. The planned L9 rung (51M active) was not run for compute reasons; extrapolating the growth of the residual beyond L6 is not supported by our data. • Seeds. Only L3 has multiple paired seeds. L4 and L6 use one seed per setting; at L3 the seed standard deviation of the gap is about 0.0007 0.0007 BPB, small relative to the L4 and L6 tuned gaps, but the scale trend rests on three points. • Sweep edges. The fitted optimum lies outside the sampled range for Muon-SW at L4 and for both methods at L6. We use the better of the fitted and best observed values; finer sweeps could move the L4 and L6 tuned gaps. • One dimension above L3. L4 and L6 sweep only the product at the law-predicted LR. The L3 1D slice gives a slightly larger survival ( 10.3 % 10.3\\% ) than the full 2D fit ( 7.4 % 7.4\\% ), so the 1D numbers may overstate survival somewhat. • Schedule. The WSD result does not match any hypothesis and was tested only at L3. • Data. One data mixture and one tokenizer; results on other mixtures or with more data repetition may differ.",
+      "source": "https://arxiv.org/html/2611.02529v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0026",
+      "section": "8 Conclusion",
+      "text": "Most of the advantage reported for Muon’s scaled weight decay is a tuning gap: when constant decay’s LR ⋅ \\cdot WD product is tuned as carefully as the method’s, about 90% of the gain disappears at small scale. What remains is small but consistent, and it grows with model size, from about 10% to 21% of the untuned gap across an 8 × 8\\times range of active parameters, while the optimal products of the two methods move apart. Optimizer comparisons should tune the baseline at every scale they report, and claims about scaled weight decay should be made from tuned comparisons at the target scale.",
+      "source": "https://arxiv.org/html/2611.02529v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0027",
+      "section": "Reproducibility",
+      "text": "Code, run configurations, all 81 run summaries and the script that regenerates every figure and table ( make_figures.py ) are available at https://github.com/ethxin0011/weight_decay_ladder .",
+      "source": "https://arxiv.org/html/2611.02529v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0028",
+      "section": "References",
+      "text": "Apte (2026) Apte Scaled weight decay for the Muon optimizer . arXiv preprint arXiv:2607.23777 . Cited by: §1 , §2 , §3.1 . Choi et al. (2019) D. Choi, C. J. Shallue, Z. Nado, J. Lee, C. J. Maddison, and G. E. Dahl On empirical comparisons of optimizers for deep learning . arXiv preprint arXiv:1910.05446 . Cited by: §1 , §2 . CodeParrot (2022) CodeParrot CodeParrot-clean: deduplicated Python code from GitHub . Note: https://huggingface.co/datasets/codeparrot/codeparrot-clean Cited by: §3.5 . Dahl et al. (2023) G. E. Dahl, F. Schneider, Z. Nado, et al. Benchmarking neural network training algorithms . arXiv preprint arXiv:2306.07179 . Cited by: §1 , §2 . Fedus et al. (2021) W. Fedus, B. Zoph, and N. Shazeer Switch transformers: scaling to trillion parameter models with simple and efficient sparsity . arXiv preprint arXiv:2101.03961 . Cited by: §2 . Hoffmann et al. (2022) J. Hoffmann, S. Borgeaud, A. Mensch, et al. Training compute-optimal large language models . arXiv preprint arXiv:2203.15556 . Cited by: §2 . Hu et al. (2024) S. Hu, Y. Tu, X. Han, et al. MiniCPM: unveiling the potential of small language models with scalable training strategies . arXiv preprint arXiv:2404.06395 . Cited by: §2 . Jordan et al. (2024) K. Jordan, Y. Jin, V. Boza, J. You, F. Cesista, L. Newhouse, and J. Bernstein Muon: an optimizer for hidden layers in neural networks . Note: Blog post, https://kellerjordan.github.io/posts/muon/ Cited by: §1 . Kaplan et al. (2020) J. Kaplan, S. McCandlish, T. Henighan, et al. Scaling laws for neural language models . arXiv preprint arXiv:2001.08361 . Cited by: §2 . Kosson et al. (2023) A. Kosson, B. Messmer, and M. Jaggi Rotational equilibrium: how weight decay balances learning across neural networks . arXiv preprint arXiv:2305.17212 . Cited by: §1 , §2 .",
+      "source": "https://arxiv.org/html/2611.02529v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0029",
+      "section": "References",
+      "text": "Liu et al. (2025) J. Liu, J. Su, X. Yao, et al. Muon is scalable for LLM training . arXiv preprint arXiv:2502.16982 . Cited by: §1 , §2 . Loshchilov and Hutter (2019) I. Loshchilov and F. Hutter Decoupled weight decay regularization . In International Conference on Learning Representations (ICLR) , Cited by: §1 , §2 . Microsoft AI (2026) Microsoft AI MAI-Base-2: technical report . Note: Technical report / blog post Cited by: §1 , §2 . Muennighoff et al. (2023) N. Muennighoff, A. M. Rush, B. Barak, et al. Scaling data-constrained language models . arXiv preprint arXiv:2305.16264 . Cited by: §2 . Paster et al. (2023) K. Paster, M. Dos Santos, Z. Azerbayev, and J. Ba OpenWebMath: an open dataset of high-quality mathematical web text . arXiv preprint arXiv:2310.06786 . Cited by: §3.5 . Penedo et al. (2024) G. Penedo, H. Kydlíček, L. Ben Allal, et al. The FineWeb datasets: decanting the web for the finest text data at scale . arXiv preprint arXiv:2406.17557 . Cited by: §3.5 . Shazeer et al. (2017) N. Shazeer, A. Mirhoseini, K. Maziarz, et al. Outrageously large neural networks: the sparsely-gated mixture-of-experts layer . arXiv preprint arXiv:1701.06538 . Cited by: §2 . Wang and Aitchison (2024) X. Wang and L. Aitchison How to set AdamW’s weight decay as you scale model and dataset size . arXiv preprint arXiv:2405.13698 . Cited by: §1 , §2 . Wortsman et al. (2023) M. Wortsman, P. J. Liu, L. Xiao, et al. Small-scale proxies for large-scale transformer training instabilities . arXiv preprint arXiv:2309.14322 . Cited by: §2 .",
+      "source": "https://arxiv.org/html/2611.02529v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0030",
+      "section": "Appendix A Ladder configuration and transfer check",
+      "text": "Table 3 lists the rungs and measured T4 throughput; Table 4 gives the L6 transfer check. Table 3: Scaling-ladder rungs. Each rung is defined by its layer count L L , which fixes the rest of the architecture. Tokens are for 120 training tokens per active parameter. Throughput is measured on one NVIDIA T4 (§ 3.6 ). L9 was planned but not trained. Table 4: Transfer of the LR ⋅ \\cdot WD law to L6. The optimal multiplier predicted by extrapolating the L3 and L4 optima overshoots the fitted L6 optimum by 1.3 1.3 – 1.5 × 1.5\\times for both methods. Regret is the BPB lost by using the predicted rather than the fitted value.",
+      "source": "https://arxiv.org/html/2611.02529v1",
+      "offset": 0
+    }
+  ],
+  "links": [
+    {
+      "href": "mailto:",
+      "text": "yixin@microsoft.com",
+      "section": "Tune the Baseline First: Most of Muon’s Scaled Weight Decay Gain Is a Tuning Gap, but Its Small Real Advantage Grows With Model Size",
+      "context": "Esther Xin Affiliation: Independent Researcher Email: yixin@microsoft.com",
+      "url": "mailto:"
+    },
+    {
+      "href": "#bib.bib9",
+      "text": "Choi et al., 2019",
+      "section": "1 Introduction",
+      "context": "New optimizer variants are commonly evaluated by training a model with the variant and with a baseline, at one shared set of hyperparameters, and reporting the difference. When the variant changes how strongly a hyperparameter acts—as a weight-decay schedule does—the shared setting can be well tuned for one method and poorly tuned for the other, and part of the reported gain is then a tuning gap. This concern is old ( Choi et al., 2019",
+      "url": "https://arxiv.org/html/2611.02529v1#bib.bib9"
+    },
+    {
+      "href": "#bib.bib10",
+      "text": "Dahl et al., 2023",
+      "section": "1 Introduction",
+      "context": "New optimizer variants are commonly evaluated by training a model with the variant and with a baseline, at one shared set of hyperparameters, and reporting the difference. When the variant changes how strongly a hyperparameter acts—as a weight-decay schedule does—the shared setting can be well tuned for one method and poorly tuned for the other, and part of the reported gain is then a tuning gap. This concern is old ( Choi et al., 2019 , Dahl et al., 2023",
+      "url": "https://arxiv.org/html/2611.02529v1#bib.bib10"
+    },
+    {
+      "href": "#bib.bib5",
+      "text": "Loshchilov and Hutter, 2019",
+      "section": "1 Introduction",
+      "context": "New optimizer variants are commonly evaluated by training a model with the variant and with a baseline, at one shared set of hyperparameters, and reporting the difference. When the variant changes how strongly a hyperparameter acts—as a weight-decay schedule does—the shared setting can be well tuned for one method and poorly tuned for the other, and part of the reported gain is then a tuning gap. This concern is old ( Choi et al., 2019 , Dahl et al., 2023 ) , but it is sharper for weight decay, whose effect is coupled to the learning rate ( Loshchilov and Hutter, 2019",
+      "url": "https://arxiv.org/html/2611.02529v1#bib.bib5"
+    },
+    {
+      "href": "#bib.bib7",
+      "text": "Kosson et al., 2023",
+      "section": "1 Introduction",
+      "context": "New optimizer variants are commonly evaluated by training a model with the variant and with a baseline, at one shared set of hyperparameters, and reporting the difference. When the variant changes how strongly a hyperparameter acts—as a weight-decay schedule does—the shared setting can be well tuned for one method and poorly tuned for the other, and part of the reported gain is then a tuning gap. This concern is old ( Choi et al., 2019 , Dahl et al., 2023 ) , but it is sharper for weight decay, whose effect is coupled to the learning rate ( Loshchilov and Hutter, 2019 , Kosson et al., 2023",
+      "url": "https://arxiv.org/html/2611.02529v1#bib.bib7"
+    },
+    {
+      "href": "#bib.bib6",
+      "text": "Wang and Aitchison, 2024",
+      "section": "1 Introduction",
+      "context": "are commonly evaluated by training a model with the variant and with a baseline, at one shared set of hyperparameters, and reporting the difference. When the variant changes how strongly a hyperparameter acts—as a weight-decay schedule does—the shared setting can be well tuned for one method and poorly tuned for the other, and part of the reported gain is then a tuning gap. This concern is old ( Choi et al., 2019 , Dahl et al., 2023 ) , but it is sharper for weight decay, whose effect is coupled to the learning rate ( Loshchilov and Hutter, 2019 , Kosson et al., 2023 , Wang and Aitchison, 2024",
+      "url": "https://arxiv.org/html/2611.02529v1#bib.bib6"
+    },
+    {
+      "href": "#bib.bib3",
+      "text": "Jordan et al., 2024",
+      "section": "1 Introduction",
+      "context": "Muon ( Jordan et al., 2024",
+      "url": "https://arxiv.org/html/2611.02529v1#bib.bib3"
+    },
+    {
+      "href": "#bib.bib4",
+      "text": "Liu et al., 2025",
+      "section": "1 Introduction",
+      "context": "Muon ( Jordan et al., 2024 ) is now used for the hidden-layer matrices of large language models ( Liu et al., 2025",
+      "url": "https://arxiv.org/html/2611.02529v1#bib.bib4"
+    },
+    {
+      "href": "#bib.bib2",
+      "text": "Microsoft AI, 2026",
+      "section": "1 Introduction",
+      "context": "Muon ( Jordan et al., 2024 ) is now used for the hidden-layer matrices of large language models ( Liu et al., 2025 ) , including the 2.8T parameter MAI-Base-2 ( Microsoft AI, 2026",
+      "url": "https://arxiv.org/html/2611.02529v1#bib.bib2"
+    },
+    {
+      "href": "#bib.bib1",
+      "text": "Apte (2026)",
+      "section": "1 Introduction",
+      "context": "Muon ( Jordan et al., 2024 ) is now used for the hidden-layer matrices of large language models ( Liu et al., 2025 ) , including the 2.8T parameter MAI-Base-2 ( Microsoft AI, 2026 ) . Apte (2026)",
+      "url": "https://arxiv.org/html/2611.02529v1#bib.bib1"
+    },
+    {
+      "href": "#bib.bib9",
+      "text": "Choi et al. (2019)",
+      "section": "Fair optimizer comparison.",
+      "context": "Choi et al. (2019)",
+      "url": "https://arxiv.org/html/2611.02529v1#bib.bib9"
+    },
+    {
+      "href": "#bib.bib10",
+      "text": "Dahl et al., 2023",
+      "section": "Fair optimizer comparison.",
+      "context": "Choi et al. (2019) showed that optimizer rankings change once every optimizer’s hyperparameters, including those usually held fixed, are tuned, and AlgoPerf ( Dahl et al., 2023",
+      "url": "https://arxiv.org/html/2611.02529v1#bib.bib10"
+    },
+    {
+      "href": "#bib.bib5",
+      "text": "Loshchilov and Hutter, 2019",
+      "section": "Weight decay and scale.",
+      "context": "Decoupled weight decay ( Loshchilov and Hutter, 2019",
+      "url": "https://arxiv.org/html/2611.02529v1#bib.bib5"
+    },
+    {
+      "href": "#bib.bib7",
+      "text": "Kosson et al., 2023",
+      "section": "Weight decay and scale.",
+      "context": "Decoupled weight decay ( Loshchilov and Hutter, 2019 ) interacts with the learning rate through their product, which sets the equilibrium norm and effective rotation of weights ( Kosson et al., 2023",
+      "url": "https://arxiv.org/html/2611.02529v1#bib.bib7"
+    },
+    {
+      "href": "#bib.bib6",
+      "text": "Wang and Aitchison (2024)",
+      "section": "Weight decay and scale.",
+      "context": "Decoupled weight decay ( Loshchilov and Hutter, 2019 ) interacts with the learning rate through their product, which sets the equilibrium norm and effective rotation of weights ( Kosson et al., 2023 ) . Wang and Aitchison (2024)",
+      "url": "https://arxiv.org/html/2611.02529v1#bib.bib6"
+    },
+    {
+      "href": "#bib.bib8",
+      "text": "Wortsman et al. (2023)",
+      "section": "Weight decay and scale.",
+      "context": "Decoupled weight decay ( Loshchilov and Hutter, 2019 ) interacts with the learning rate through their product, which sets the equilibrium norm and effective rotation of weights ( Kosson et al., 2023 ) . Wang and Aitchison (2024) derive how WD should change with model and dataset size for AdamW, and Wortsman et al. (2023)",
+      "url": "https://arxiv.org/html/2611.02529v1#bib.bib8"
+    },
+    {
+      "href": "#bib.bib4",
+      "text": "Liu et al. (2025)",
+      "section": "Weight decay and scale.",
+      "context": "Decoupled weight decay ( Loshchilov and Hutter, 2019 ) interacts with the learning rate through their product, which sets the equilibrium norm and effective rotation of weights ( Kosson et al., 2023 ) . Wang and Aitchison (2024) derive how WD should change with model and dataset size for AdamW, and Wortsman et al. (2023) study LR and WD sensitivity with small proxies. For Muon, Liu et al. (2025)",
+      "url": "https://arxiv.org/html/2611.02529v1#bib.bib4"
+    },
+    {
+      "href": "#bib.bib1",
+      "text": "Apte (2026)",
+      "section": "Weight decay and scale.",
+      "context": "Decoupled weight decay ( Loshchilov and Hutter, 2019 ) interacts with the learning rate through their product, which sets the equilibrium norm and effective rotation of weights ( Kosson et al., 2023 ) . Wang and Aitchison (2024) derive how WD should change with model and dataset size for AdamW, and Wortsman et al. (2023) study LR and WD sensitivity with small proxies. For Muon, Liu et al. (2025) find weight decay important at scale; Apte (2026)",
+      "url": "https://arxiv.org/html/2611.02529v1#bib.bib1"
+    },
+    {
+      "href": "#bib.bib2",
+      "text": "Microsoft AI, 2026",
+      "section": "Weight decay and scale.",
+      "context": "Decoupled weight decay ( Loshchilov and Hutter, 2019 ) interacts with the learning rate through their product, which sets the equilibrium norm and effective rotation of weights ( Kosson et al., 2023 ) . Wang and Aitchison (2024) derive how WD should change with model and dataset size for AdamW, and Wortsman et al. (2023) study LR and WD sensitivity with small proxies. For Muon, Liu et al. (2025) find weight decay important at scale; Apte (2026) propose scaling it over training. MAI-Base-2 ( Microsoft AI, 2026",
+      "url": "https://arxiv.org/html/2611.02529v1#bib.bib2"
+    },
+    {
+      "href": "#bib.bib11",
+      "text": "Kaplan et al., 2020",
+      "section": "Scaling ladders and data repetition.",
+      "context": "Scaling laws ( Kaplan et al., 2020",
+      "url": "https://arxiv.org/html/2611.02529v1#bib.bib11"
+    },
+    {
+      "href": "#bib.bib12",
+      "text": "Hoffmann et al., 2022",
+      "section": "Scaling ladders and data repetition.",
+      "context": "Scaling laws ( Kaplan et al., 2020 , Hoffmann et al., 2022",
+      "url": "https://arxiv.org/html/2611.02529v1#bib.bib12"
+    },
+    {
+      "href": "#bib.bib13",
+      "text": "Muennighoff et al., 2023",
+      "section": "Scaling ladders and data repetition.",
+      "context": "Scaling laws ( Kaplan et al., 2020 , Hoffmann et al., 2022 ) motivate comparing methods across sizes rather than at one point. Repeating data changes what is optimal ( Muennighoff et al., 2023",
+      "url": "https://arxiv.org/html/2611.02529v1#bib.bib13"
+    },
+    {
+      "href": "#bib.bib15",
+      "text": "Shazeer et al., 2017",
+      "section": "Scaling ladders and data repetition.",
+      "context": "Scaling laws ( Kaplan et al., 2020 , Hoffmann et al., 2022 ) motivate comparing methods across sizes rather than at one point. Repeating data changes what is optimal ( Muennighoff et al., 2023 ) ; source scaling holds repetition fixed across rungs. Our models use sparse MoE layers ( Shazeer et al., 2017",
+      "url": "https://arxiv.org/html/2611.02529v1#bib.bib15"
+    },
+    {
+      "href": "#bib.bib16",
+      "text": "Fedus et al., 2021",
+      "section": "Scaling ladders and data repetition.",
+      "context": "Scaling laws ( Kaplan et al., 2020 , Hoffmann et al., 2022 ) motivate comparing methods across sizes rather than at one point. Repeating data changes what is optimal ( Muennighoff et al., 2023 ) ; source scaling holds repetition fixed across rungs. Our models use sparse MoE layers ( Shazeer et al., 2017 , Fedus et al., 2021",
+      "url": "https://arxiv.org/html/2611.02529v1#bib.bib16"
+    },
+    {
+      "href": "#bib.bib14",
+      "text": "Hu et al., 2024",
+      "section": "Scaling ladders and data repetition.",
+      "context": "Scaling laws ( Kaplan et al., 2020 , Hoffmann et al., 2022 ) motivate comparing methods across sizes rather than at one point. Repeating data changes what is optimal ( Muennighoff et al., 2023 ) ; source scaling holds repetition fixed across rungs. Our models use sparse MoE layers ( Shazeer et al., 2017 , Fedus et al., 2021 ) ; we also test the warmup–stable–decay (WSD) schedule ( Hu et al., 2024",
+      "url": "https://arxiv.org/html/2611.02529v1#bib.bib14"
+    },
+    {
+      "href": "#bib.bib1",
+      "text": "Apte, 2026",
+      "section": "3.1 Methods compared",
+      "context": "Both methods use Muon for non-embedding 2D parameters and AdamW for all other parameters, as in MAI-Base-2. Let η t = η ​ f ​ ( t ) \\eta_{t}=\\eta\\,f(t) be the learning rate at step t t , where f ⁡ ( t ) ∈ [ 0.1 , 1 ] f(t)\\in[0.1,1] is the schedule (linear warmup, then cosine or WSD decay to 10 % 10\\% of the peak). Constant applies decoupled weight decay with a fixed coefficient λ \\lambda : θ ← θ ⁡ ( 1 − η t ​ λ ) \\theta\\leftarrow\\theta\\,(1-\\eta_{t}\\lambda) . Muon-SW ( Apte, 2026",
+      "url": "https://arxiv.org/html/2611.02529v1#bib.bib1"
+    },
+    {
+      "href": "#A1.T3",
+      "text": "3",
+      "section": "3.5 Ladder, data and training",
+      "context": "Each rung is named by its layer count L L , which fixes the hidden size, head counts and MoE layout (Appendix Table 3",
+      "url": "https://arxiv.org/html/2611.02529v1#A1.T3"
+    },
+    {
+      "href": "#bib.bib17",
+      "text": "Penedo et al., 2024",
+      "section": "3.5 Ladder, data and training",
+      "context": "Each rung is named by its layer count L L , which fixes the hidden size, head counts and MoE layout (Appendix Table 3 ). All rungs train for 120 tokens per active parameter. The data pool has three public sources: web text from FineWeb-Edu ( Penedo et al., 2024",
+      "url": "https://arxiv.org/html/2611.02529v1#bib.bib17"
+    },
+    {
+      "href": "#bib.bib19",
+      "text": "CodeParrot, 2022",
+      "section": "3.5 Ladder, data and training",
+      "context": "Each rung is named by its layer count L L , which fixes the hidden size, head counts and MoE layout (Appendix Table 3 ). All rungs train for 120 tokens per active parameter. The data pool has three public sources: web text from FineWeb-Edu ( Penedo et al., 2024 ) ( sample-10BT ; 1,174.8M training tokens, 60% of each batch), Python code from CodeParrot-clean ( CodeParrot, 2022",
+      "url": "https://arxiv.org/html/2611.02529v1#bib.bib19"
+    },
+    {
+      "href": "#bib.bib18",
+      "text": "Paster et al., 2023",
+      "section": "3.5 Ladder, data and training",
+      "context": "Each rung is named by its layer count L L , which fixes the hidden size, head counts and MoE layout (Appendix Table 3 ). All rungs train for 120 tokens per active parameter. The data pool has three public sources: web text from FineWeb-Edu ( Penedo et al., 2024 ) ( sample-10BT ; 1,174.8M training tokens, 60% of each batch), Python code from CodeParrot-clean ( CodeParrot, 2022 ) (122.0M tokens, 25%) and mathematical web text from OpenWebMath ( Paster et al., 2023",
+      "url": "https://arxiv.org/html/2611.02529v1#bib.bib18"
+    },
+    {
+      "href": "#S7",
+      "text": "7",
+      "section": "4 Experimental design",
+      "context": "The study proceeded through preregistered gates. Gate 1 (L3, untuned) tested whether Muon-SW beats constant decay at p = 1 p=1 by more than seed noise (6 runs). Stage 2 (L3 grid) swept the 2D grid with edge extensions (39 runs). Stage 3 (L3 confirmation) retrained both methods at their fitted optima with paired seeds (four seeds per method) and ran the WSD comparison. Stage 4 (L4) and Stage 5 (L6) swept p p for each method. A planned L9 rung was not run (§ 7",
+      "url": "https://arxiv.org/html/2611.02529v1#S7"
+    },
+    {
+      "href": "#S3.SS4",
+      "text": "3.4",
+      "section": "5 Results",
+      "context": "Table 2: Measured ratio of optimal LR ⋅ \\cdot WD products (Muon-SW over constant decay) at L3, with bootstrap 95% intervals, against the three preregistered predictions (§ 3.4",
+      "url": "https://arxiv.org/html/2611.02529v1#S3.SS4"
+    },
+    {
+      "href": "#S5.F1",
+      "text": "1",
+      "section": "After joint tuning, most of the gap disappears.",
+      "context": "Figure 1",
+      "url": "https://arxiv.org/html/2611.02529v1#S5.F1"
+    },
+    {
+      "href": "#S5.T1",
+      "text": "1",
+      "section": "After joint tuning, most of the gap disappears.",
+      "context": "Figure 1 shows why. Both methods’ optima lie below p = 1 p=1 , and constant decay’s lies much further below it. Once each is evaluated at its own optimum, the L3 gap from the full 2D analysis is 0.0026 0.0026 BPB (Table 1",
+      "url": "https://arxiv.org/html/2611.02529v1#S5.T1"
+    },
+    {
+      "href": "#S5.F2",
+      "text": "2",
+      "section": "The residual is small but real.",
+      "context": "At the fitted optima, all four paired seeds favour Muon-SW (Figure 2",
+      "url": "https://arxiv.org/html/2611.02529v1#S5.F2"
+    },
+    {
+      "href": "#S5.T1",
+      "text": "1",
+      "section": "The share that survives tuning grows with scale.",
+      "context": "Across rungs (Table 1",
+      "url": "https://arxiv.org/html/2611.02529v1#S5.T1"
+    },
+    {
+      "href": "#S5.F3",
+      "text": "3",
+      "section": "The share that survives tuning grows with scale.",
+      "context": "Across rungs (Table 1 , Figure 3",
+      "url": "https://arxiv.org/html/2611.02529v1#S5.F3"
+    },
+    {
+      "href": "#S7",
+      "text": "7",
+      "section": "The share that survives tuning grows with scale.",
+      "context": "Across rungs (Table 1 , Figure 3 ) the untuned gap shrinks ( 0.0350 → 0.0311 → 0.0241 0.0350\\to 0.0311\\to 0.0241 ) while the tuned gap grows ( 0.0036 → 0.0040 → 0.0051 0.0036\\to 0.0040\\to 0.0051 ). Survival therefore rises from about 10% to 13% to 21%. Both trends are monotone over an 8 × 8\\times range of active parameters, but the L4 and L6 values come from one seed and from optima at or just beyond the sweep edge (§ 7",
+      "url": "https://arxiv.org/html/2611.02529v1#S7"
+    },
+    {
+      "href": "#S5.F4",
+      "text": "4",
+      "section": "Optimal decay moves with scale, faster for Muon-SW.",
+      "context": "The fitted optimal multiplier rises with size for both methods (Figure 4",
+      "url": "https://arxiv.org/html/2611.02529v1#S5.F4"
+    },
+    {
+      "href": "#S5.T2",
+      "text": "2",
+      "section": "Which hypothesis explains the ratio?",
+      "context": "Under cosine at L3 the ratio is 1.41 1.41 (95% CI [ 0.88 , 2.25 ] [0.88,2.25] ; Table 2",
+      "url": "https://arxiv.org/html/2611.02529v1#S5.T2"
+    },
+    {
+      "href": "#A1.T4",
+      "text": "4",
+      "section": "The LR ⋅ \\cdot WD law transfers approximately.",
+      "context": "Extrapolating the L3 and L4 optima to L6 predicts multipliers of 0.44 0.44 (constant) and 0.95 0.95 (Muon-SW), against fitted values of 0.33 0.33 and 0.63 0.63 (Appendix Table 4",
+      "url": "https://arxiv.org/html/2611.02529v1#A1.T4"
+    },
+    {
+      "href": "#S1.p2.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Apte (2026) Apte Scaled weight decay for the Muon optimizer . arXiv preprint arXiv:2607.23777 . Cited by: §1",
+      "url": "https://arxiv.org/html/2611.02529v1#S1.p2.1"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px2.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Apte (2026) Apte Scaled weight decay for the Muon optimizer . arXiv preprint arXiv:2607.23777 . Cited by: §1 , §2",
+      "url": "https://arxiv.org/html/2611.02529v1#S2.SS0.SSS0.Px2.p1.1"
+    },
+    {
+      "href": "#S3.SS1.p1.1",
+      "text": "§3.1",
+      "section": "References",
+      "context": "Apte (2026) Apte Scaled weight decay for the Muon optimizer . arXiv preprint arXiv:2607.23777 . Cited by: §1 , §2 , §3.1",
+      "url": "https://arxiv.org/html/2611.02529v1#S3.SS1.p1.1"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Choi et al. (2019) D. Choi, C. J. Shallue, Z. Nado, J. Lee, C. J. Maddison, and G. E. Dahl On empirical comparisons of optimizers for deep learning . arXiv preprint arXiv:1910.05446 . Cited by: §1",
+      "url": "https://arxiv.org/html/2611.02529v1#S1.p1.1"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px1.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Choi et al. (2019) D. Choi, C. J. Shallue, Z. Nado, J. Lee, C. J. Maddison, and G. E. Dahl On empirical comparisons of optimizers for deep learning . arXiv preprint arXiv:1910.05446 . Cited by: §1 , §2",
+      "url": "https://arxiv.org/html/2611.02529v1#S2.SS0.SSS0.Px1.p1.1"
+    },
+    {
+      "href": "#S3.SS5.p1.1",
+      "text": "§3.5",
+      "section": "References",
+      "context": "CodeParrot (2022) CodeParrot CodeParrot-clean: deduplicated Python code from GitHub . Note: https://huggingface.co/datasets/codeparrot/codeparrot-clean Cited by: §3.5",
+      "url": "https://arxiv.org/html/2611.02529v1#S3.SS5.p1.1"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Dahl et al. (2023) G. E. Dahl, F. Schneider, Z. Nado, et al. Benchmarking neural network training algorithms . arXiv preprint arXiv:2306.07179 . Cited by: §1",
+      "url": "https://arxiv.org/html/2611.02529v1#S1.p1.1"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px1.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Dahl et al. (2023) G. E. Dahl, F. Schneider, Z. Nado, et al. Benchmarking neural network training algorithms . arXiv preprint arXiv:2306.07179 . Cited by: §1 , §2",
+      "url": "https://arxiv.org/html/2611.02529v1#S2.SS0.SSS0.Px1.p1.1"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px3.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Fedus et al. (2021) W. Fedus, B. Zoph, and N. Shazeer Switch transformers: scaling to trillion parameter models with simple and efficient sparsity . arXiv preprint arXiv:2101.03961 . Cited by: §2",
+      "url": "https://arxiv.org/html/2611.02529v1#S2.SS0.SSS0.Px3.p1.1"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px3.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Hoffmann et al. (2022) J. Hoffmann, S. Borgeaud, A. Mensch, et al. Training compute-optimal large language models . arXiv preprint arXiv:2203.15556 . Cited by: §2",
+      "url": "https://arxiv.org/html/2611.02529v1#S2.SS0.SSS0.Px3.p1.1"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px3.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Hu et al. (2024) S. Hu, Y. Tu, X. Han, et al. MiniCPM: unveiling the potential of small language models with scalable training strategies . arXiv preprint arXiv:2404.06395 . Cited by: §2",
+      "url": "https://arxiv.org/html/2611.02529v1#S2.SS0.SSS0.Px3.p1.1"
+    },
+    {
+      "href": "#S1.p2.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Jordan et al. (2024) K. Jordan, Y. Jin, V. Boza, J. You, F. Cesista, L. Newhouse, and J. Bernstein Muon: an optimizer for hidden layers in neural networks . Note: Blog post, https://kellerjordan.github.io/posts/muon/ Cited by: §1",
+      "url": "https://arxiv.org/html/2611.02529v1#S1.p2.1"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px3.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Kaplan et al. (2020) J. Kaplan, S. McCandlish, T. Henighan, et al. Scaling laws for neural language models . arXiv preprint arXiv:2001.08361 . Cited by: §2",
+      "url": "https://arxiv.org/html/2611.02529v1#S2.SS0.SSS0.Px3.p1.1"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Kosson et al. (2023) A. Kosson, B. Messmer, and M. Jaggi Rotational equilibrium: how weight decay balances learning across neural networks . arXiv preprint arXiv:2305.17212 . Cited by: §1",
+      "url": "https://arxiv.org/html/2611.02529v1#S1.p1.1"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px2.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Kosson et al. (2023) A. Kosson, B. Messmer, and M. Jaggi Rotational equilibrium: how weight decay balances learning across neural networks . arXiv preprint arXiv:2305.17212 . Cited by: §1 , §2",
+      "url": "https://arxiv.org/html/2611.02529v1#S2.SS0.SSS0.Px2.p1.1"
+    },
+    {
+      "href": "#S1.p2.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Liu et al. (2025) J. Liu, J. Su, X. Yao, et al. Muon is scalable for LLM training . arXiv preprint arXiv:2502.16982 . Cited by: §1",
+      "url": "https://arxiv.org/html/2611.02529v1#S1.p2.1"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px2.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Liu et al. (2025) J. Liu, J. Su, X. Yao, et al. Muon is scalable for LLM training . arXiv preprint arXiv:2502.16982 . Cited by: §1 , §2",
+      "url": "https://arxiv.org/html/2611.02529v1#S2.SS0.SSS0.Px2.p1.1"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Loshchilov and Hutter (2019) I. Loshchilov and F. Hutter Decoupled weight decay regularization . In International Conference on Learning Representations (ICLR) , Cited by: §1",
+      "url": "https://arxiv.org/html/2611.02529v1#S1.p1.1"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px2.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Loshchilov and Hutter (2019) I. Loshchilov and F. Hutter Decoupled weight decay regularization . In International Conference on Learning Representations (ICLR) , Cited by: §1 , §2",
+      "url": "https://arxiv.org/html/2611.02529v1#S2.SS0.SSS0.Px2.p1.1"
+    },
+    {
+      "href": "#S1.p2.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Microsoft AI (2026) Microsoft AI MAI-Base-2: technical report . Note: Technical report / blog post Cited by: §1",
+      "url": "https://arxiv.org/html/2611.02529v1#S1.p2.1"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px2.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Microsoft AI (2026) Microsoft AI MAI-Base-2: technical report . Note: Technical report / blog post Cited by: §1 , §2",
+      "url": "https://arxiv.org/html/2611.02529v1#S2.SS0.SSS0.Px2.p1.1"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px3.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Muennighoff et al. (2023) N. Muennighoff, A. M. Rush, B. Barak, et al. Scaling data-constrained language models . arXiv preprint arXiv:2305.16264 . Cited by: §2",
+      "url": "https://arxiv.org/html/2611.02529v1#S2.SS0.SSS0.Px3.p1.1"
+    },
+    {
+      "href": "#S3.SS5.p1.1",
+      "text": "§3.5",
+      "section": "References",
+      "context": "Paster et al. (2023) K. Paster, M. Dos Santos, Z. Azerbayev, and J. Ba OpenWebMath: an open dataset of high-quality mathematical web text . arXiv preprint arXiv:2310.06786 . Cited by: §3.5",
+      "url": "https://arxiv.org/html/2611.02529v1#S3.SS5.p1.1"
+    },
+    {
+      "href": "#S3.SS5.p1.1",
+      "text": "§3.5",
+      "section": "References",
+      "context": "Penedo et al. (2024) G. Penedo, H. Kydlíček, L. Ben Allal, et al. The FineWeb datasets: decanting the web for the finest text data at scale . arXiv preprint arXiv:2406.17557 . Cited by: §3.5",
+      "url": "https://arxiv.org/html/2611.02529v1#S3.SS5.p1.1"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px3.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Shazeer et al. (2017) N. Shazeer, A. Mirhoseini, K. Maziarz, et al. Outrageously large neural networks: the sparsely-gated mixture-of-experts layer . arXiv preprint arXiv:1701.06538 . Cited by: §2",
+      "url": "https://arxiv.org/html/2611.02529v1#S2.SS0.SSS0.Px3.p1.1"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Wang and Aitchison (2024) X. Wang and L. Aitchison How to set AdamW’s weight decay as you scale model and dataset size . arXiv preprint arXiv:2405.13698 . Cited by: §1",
+      "url": "https://arxiv.org/html/2611.02529v1#S1.p1.1"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px2.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Wang and Aitchison (2024) X. Wang and L. Aitchison How to set AdamW’s weight decay as you scale model and dataset size . arXiv preprint arXiv:2405.13698 . Cited by: §1 , §2",
+      "url": "https://arxiv.org/html/2611.02529v1#S2.SS0.SSS0.Px2.p1.1"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px2.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Wortsman et al. (2023) M. Wortsman, P. J. Liu, L. Xiao, et al. Small-scale proxies for large-scale transformer training instabilities . arXiv preprint arXiv:2309.14322 . Cited by: §2",
+      "url": "https://arxiv.org/html/2611.02529v1#S2.SS0.SSS0.Px2.p1.1"
+    },
+    {
+      "href": "#A1.T3",
+      "text": "3",
+      "section": "Appendix A Ladder configuration and transfer check",
+      "context": "Table 3",
+      "url": "https://arxiv.org/html/2611.02529v1#A1.T3"
+    },
+    {
+      "href": "#A1.T4",
+      "text": "4",
+      "section": "Appendix A Ladder configuration and transfer check",
+      "context": "Table 3 lists the rungs and measured T4 throughput; Table 4",
+      "url": "https://arxiv.org/html/2611.02529v1#A1.T4"
+    },
+    {
+      "href": "#S3.SS6",
+      "text": "3.6",
+      "section": "Appendix A Ladder configuration and transfer check",
+      "context": "Table 3: Scaling-ladder rungs. Each rung is defined by its layer count L L , which fixes the rest of the architecture. Tokens are for 120 training tokens per active parameter. Throughput is measured on one NVIDIA T4 (§ 3.6",
+      "url": "https://arxiv.org/html/2611.02529v1#S3.SS6"
+    }
+  ],
+  "note": "Extracted HTML text; equations and table formatting may be imperfect. No PDF extraction was attempted."
+}

@@ -1,0 +1,871 @@
+{
+  "status": "ok",
+  "source": "https://arxiv.org/html/2610.10965v1",
+  "extractor_version": "article-v1",
+  "chunks": [
+    {
+      "chunk_id": "chunk-0001",
+      "section": "Spectrally Targeted Muon",
+      "text": "Vishrut Goyal Affiliation: Department of Computer Science, Stanford University Correspondence to: vishrutg@stanford.edu Rohan Ramkumar Affiliation: Department of Electrical Engineering, Stanford University Correspondence to: rohansr@stanford.edu",
+      "source": "https://arxiv.org/html/2610.10965v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0002",
+      "section": "Abstract",
+      "text": "The Muon optimizer orthogonalizes each update matrix, setting all of its singular values to one, and has proven highly effective for training large language models. It remains unclear, however, whether this success comes from amplifying small singular directions that gradient descent neglects or from suppressing large, degenerate directions that disrupt training. We introduce Spectrally Targeted Muon, which orthogonalizes only the singular values above or below a threshold τ \\tau , so that varying τ \\tau interpolates between normalized SGD and Muon. It isolates the relevant singular subspaces with projections computed by Newton-Schulz iteration on a shifted Gram matrix, so no SVD is needed. We evaluate these variants on the CIFAR-10 and NanoGPT speedruns, tracking the effective rank of gradient, update, and weight matrices and a new metric, the alignment of updates with the tangent space of the weight matrix’s isospectral manifold. We find three things. First, the small singular values of the momentum are not noise. Orthogonalizing everything except the few largest singular values of each matrix nearly matches Muon while touching only a small fraction of the momentum, whereas orthogonalizing only the top falls well short even though it holds almost all of it. On language models every momentum singular value is far below one, so targeted orthogonalization can only amplify, and Muon wins by making directions that are too small to train on at their raw scale trainable. Second, shrinking the largest singular values is what keeps the parameter spectrum flat; this is cheap, and it is not what drives the loss. Third, AdamW differs from Muon mainly in how slowly it builds structure, which explains its slower start and why warmup helps AdamW but only hurts Muon.",
+      "source": "https://arxiv.org/html/2610.10965v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0003",
+      "section": "Keywords:",
+      "text": "Muon, orthogonalized updates, Newton-Schulz, effective rank",
+      "source": "https://arxiv.org/html/2610.10965v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0004",
+      "section": "1 Introduction",
+      "text": "The Muon optimizer for deep learning works by orthogonalizing the update matrix ( Jordan et al., 2024b ) . Unlike many other proposed optimizers, this has been highly successful empirically for training large language models, especially when coupled with weight decay ( Liu et al., 2025 ) . This is because the matrix can be orthogonalized relatively efficiently, using methods such as Newton-Schulz or Polar Express ( Amsel et al., 2026 ) . The orthogonalization step can be thought of as applying the matrix sign function to the gradient matrix, which normalizes all the singular values to one, prompting the question of whether Muon’s success comes from amplifying small but important directions with small singular values ignored by standard gradient descent, or from normalizing large, degenerate directions with large singular values that misdirect the training. In this paper, we will explore a method to target this orthogonalization to singular values either above or below a certain threshold τ \\tau , and we will also experiment with different values for this threshold, thus allowing us to interpolate between SGD and Muon with a spectrally targeted version. Specifically, we will apply these Muon variants to the two speedrun tasks originally used to show Muon’s performance, the CIFAR-10 dataset with a convolutional network, and the NanoGPT large language model, just as in Jordan et al. (2024b) . In addition to standard performance metrics, we will examine other metrics more pertinent to the linear-algebraic structure of our weight and update matrices. This allows us to explore what characteristics of matrix optimizers lead to richer learning.",
+      "source": "https://arxiv.org/html/2610.10965v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0005",
+      "section": "2 Related Work",
+      "text": "Recent Muon variants like NorMuon and Aurora mitigate neural death in Muon via sophisticated row-wise (neuron) normalization ( Li et al., 2025 ; Dewulf et al., 2026 ) . In contrast, our approach normalizes singular values to explicitly target the weights’ underlying linear structure. While state-of-the-art orthogonalization uses the adaptive Polar Express algorithm ( Amsel et al., 2026 ) , we instead build on Newton-Schulz iterations using both the speedrun polynomial which yields singular values distributed as Uniform ⁡ ( 0.5 , 1.5 ) \\mathrm{Uniform}(0.5,1.5) and the convergent polynomial which iterates to the exact matrix sign function ( Jordan et al., 2024b ) .",
+      "source": "https://arxiv.org/html/2610.10965v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0006",
+      "section": "2 Related Work",
+      "text": "Other works also attempt to reshape the singular value distribution to something in between the raw momentum distribution and the flat distribution from Muon. While MuCon and spectral gradient clipping bound singular values ( Yi, 2026 ; Yukhimchuk et al., 2026 ) at some threshold, our method discontinuously forces them to one based on the τ \\tau threshold. This isolates whether Muon’s success stems from amplifying minor components or suppressing dominant ones by applying full Muon in one subspace and raw SGD in another. Furthermore, our approach relies entirely on efficient matrix multiplications, bypassing costly SVD computations. Several works also reshape Muon’s update spectrum with a continuous transform instead ( Massena et al., 2026 ; Dong and Sawin, 2026 ; Wu et al., 2026 ; Fan et al., 2026 ; Shi et al., 2026 ) . In particular, Shumaylov et al. (2026) smoothly interpolates between Muon and SGD by varying decay terms. That work also shows that randomly set singular values can perform almost comparably to Muon. This motivates our question of which shifts in the spectrum relative to Muon have actual impact.",
+      "source": "https://arxiv.org/html/2610.10965v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0007",
+      "section": "3 Methods",
+      "text": "The fundamental algorithm underlying Muon’s orthogonalization step is the Newton-Schulz algorithm for calculating the matrix sign function. For an n × n n\\times n diagonal matrix Σ , \\Sigma, with diagonal elements σ 1 , … , σ n , \\sigma_{1},\\dots,\\sigma_{n}, the matrix sign function sign \\mathrm{sign} applied to Σ \\Sigma is given by the n × n n\\times n diagonal matrix with entries sign ⁡ ( σ 1 ) , … , sign ⁡ ( σ n ) , \\mathrm{sign}(\\sigma_{1}),\\dots,\\mathrm{sign}(\\sigma_{n}), which is orthogonal. Given an arbitrary matrix M M with (reduced/thin) singular value decomposition U ​ Σ ​ V ⊤ , U\\Sigma V^{\\top}, we define sign ⁡ ( M ) = sign ⁡ ( U ​ Σ ​ V ⊤ ) = U ​ sign ​ ( Σ ) ​ V ⊤ = U ​ V ⊤ , \\mathrm{sign}(M)=\\mathrm{sign}(U\\Sigma V^{\\top})=U\\mathrm{sign}(\\Sigma)V^{\\top}=UV^{\\top}, as Σ \\Sigma consists of positive singular values on the diagonal and thus sign ⁡ ( Σ ) = I . \\mathrm{sign}(\\Sigma)=I.",
+      "source": "https://arxiv.org/html/2610.10965v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0008",
+      "section": "3.1 Classical Newton-Schulz",
+      "text": "The standard method computes this via polynomial iteration. Odd polynomials like p ⁡ ( x ) = 3 ​ x − 16 5 ​ x 3 + 6 5 ​ x 5 p(x)=3x-\\frac{16}{5}x^{3}+\\frac{6}{5}x^{5} asymptotically converge to sign ⁡ ( x ) \\mathrm{sign}(x) on the interval [ − 1 , 1 ] \\left[-1,1\\right] . Extended to matrices, the polynomial acts like p ⁡ ( M ) = 3 ​ M − 16 5 ​ ( M ​ M ⊤ ) ​ M + 6 5 ​ ( M ​ M ⊤ ) 2 ​ M p(M)=3M-\\frac{16}{5}(MM^{\\top})M+\\frac{6}{5}(MM^{\\top})^{2}M Iterating p ⁡ ( M ) p(M) converges to sign ⁡ ( M ) \\mathrm{sign}(M) . To guarantee convergence, M M must first be normalized by its Frobenius norm tr ⁡ ( M ⊤ ​ M ) \\sqrt{\\mathrm{tr}(M^{\\top}M)} , which ensures all singular values are bounded above by 1. For performance, p ⁡ ( M ) p(M) is usually iterated only a few times. As a result, alternative polynomials are often chosen to optimize short-term convergence rather than perfect asymptotic convergence, and as Frobenius scaling shrinks the singular values of poorly conditioned matrices close to 0, their early iterative behavior is heavily dominated by the polynomial’s linear term.",
+      "source": "https://arxiv.org/html/2610.10965v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0009",
+      "section": "3.2 Spectrally Targeted Newton-Schulz",
+      "text": "To selectively orthogonalize singular values separated by a threshold τ > 0 \\tau>0 , we isolate the relevant subspaces using projection matrices. Consider the shifted symmetric matrix A = M ⊤ ​ M − τ 2 ​ I A=M^{\\top}M-\\tau^{2}I . The eigenvalues of A A are the squared singular values of M M shifted down by τ 2 \\tau^{2} ; thus, its negative and positive eigenvalues neatly partition the singular values of M M below and above τ \\tau . By computing S = sign ⁡ ( A ) S=\\mathrm{sign}(A) , we can define the projection matrices for the bottom and top singular subspaces as P bot = 1 2 ​ ( I − S ) P^{\\mathrm{bot}}=\\frac{1}{2}(I-S) and P top = 1 2 ​ ( I + S ) P^{\\mathrm{top}}=\\frac{1}{2}(I+S) . Finally, we selectively apply Newton-Schulz orthogonalization to the desired subspace by calculating either sign ⁡ ( M ) ​ P top + M ​ P bot \\mathrm{sign}(M)P^{\\mathrm{top}}+MP^{\\mathrm{bot}} (targeting top) or M ​ P top + sign ⁡ ( M ) ​ P bot MP^{\\mathrm{top}}+\\mathrm{sign}(M)P^{\\mathrm{bot}} (targeting bottom), as summarized in Algorithm 1 . Since this algorithm requires orthogonalizing M t ⊤ ​ M t − τ 2 ​ I M_{t}^{\\top}M_{t}-\\tau^{2}I , which can be far more poorly conditioned than M M , for NanoGPT we use the convergent polynomial for both Newton-Schulz calls, iterated 20 times in fp32, so that the sign is resolved even near τ \\tau . In the training runs the lifted singular values land within 0.1 % 0.1\\% of one, and the number lifted matches the number on the targeted side of τ \\tau to within one per matrix. Since τ \\tau is absolute, a matrix with no singular value above τ \\tau just receives its raw momentum. Algorithm 1 Spectrally Targeted Muon",
+      "source": "https://arxiv.org/html/2610.10965v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0010",
+      "section": "3.2 Spectrally Targeted Newton-Schulz",
+      "text": "1: Learning rate η \\eta , momentum μ \\mu , threshold τ \\tau 2: Initialize B 0 ← 0 B_{0}\\leftarrow 0 3: for t = 1 , … t=1,\\dots do 4: Compute gradient G t ← ∇ θ ℒ t ​ ( θ t − 1 ) G_{t}\\leftarrow\\nabla_{\\theta}\\mathcal{L}_{t}(\\theta_{t-1}) 5: B t ← μ ​ B t − 1 + G t B_{t}\\leftarrow\\mu B_{t-1}+G_{t} 6: M t ← G t + μ ​ B t M_{t}\\leftarrow G_{t}+\\mu B_{t} ⊳ \\triangleright Nesterov momentum 7: S t ← NewtonSchulz ​ ( M t ⊤ ​ M t − τ 2 ​ I ) S_{t}\\leftarrow\\text{NewtonSchulz}(M_{t}^{\\top}M_{t}-\\tau^{2}I) 8: P t top ← 1 2 ​ ( I + S t ) P^{\\mathrm{top}}_{t}\\leftarrow\\frac{1}{2}(I+S_{t}) , P t bot ← 1 2 ​ ( I − S t ) P^{\\mathrm{bot}}_{t}\\leftarrow\\frac{1}{2}(I-S_{t}) 9: if Targeting Top then 10: O t ← NewtonSchulz ​ ( M t ) ​ P t top + M t ​ P t bot O_{t}\\leftarrow\\text{NewtonSchulz}(M_{t})P^{\\mathrm{top}}_{t}+M_{t}P^{\\mathrm{bot}}_{t} 11: else if Targeting Bottom then 12: O t ← M t ​ P t top + NewtonSchulz ​ ( M t ) ​ P t bot O_{t}\\leftarrow M_{t}P^{\\mathrm{top}}_{t}+\\text{NewtonSchulz}(M_{t})P^{\\mathrm{bot}}_{t} 13: end if 14: Update parameters θ t ← θ t − 1 − η ​ O t \\theta_{t}\\leftarrow\\theta_{t-1}-\\eta O_{t} 15: end for 16: return θ t \\theta_{t}",
+      "source": "https://arxiv.org/html/2610.10965v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0011",
+      "section": "3.3 Evaluation",
+      "text": "We used two special metrics to study the linear-algebraic structure of the learning, namely effective rank and projection onto the tangent space of the isospectral manifold.",
+      "source": "https://arxiv.org/html/2610.10965v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0012",
+      "section": "Effective Rank",
+      "text": "The effective rank is defined as the exponent of the spectral entropy. That is, if you normalize the singular values { s 1 , … , s n } \\{s_{1},...,s_{n}\\} by ∑ i = 1 n s i \\sum_{i=1}^{n}s_{i} to get probabilities { p 1 , … , p n } \\{p_{1},...,p_{n}\\} , the effective rank is exp ( − ∑ i = 1 n p i log p i ) \\exp(-\\sum_{i=1}^{n}p_{i}\\log p_{i}) . Similar to perplexity, this number can be interpreted as the effective number of equally likely directions a random vector can be mapped to ( Roy and Vetterli, 2007 ) .",
+      "source": "https://arxiv.org/html/2610.10965v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0013",
+      "section": "Isospectral Projection",
+      "text": "Muon orthogonalizes the update matrix, but how this affects the spectrum of the parameter matrix is unclear. Random initialization yields approximately dynamically isometric weight matrices, whose singular values are well-conditioned ( Pennington et al., 2017 ) , so training must move the parameters away from this state, and an optimizer’s influence on the spectrum determines how much it does so. Consider a weight matrix W W , and let ℳ \\mathcal{M} be its isospectral manifold, consisting of matrices with the same singular values as W . W. Given an update Z Z , we measure ρ ⁡ ( Z , W ) , \\rho(Z;W), which is the fraction of Z Z that lies in T W ​ ℳ , T_{W}\\mathcal{M}, the tangent space of ℳ \\mathcal{M} at W W (see Appendix for a derivation or ρ \\rho ). A value of ρ \\rho near one means the update mostly rotates the singular bases of W W while preserving its spectrum, and a smaller value means more of the update changes the singular values. In practice ρ \\rho is very close to one, so we report the log-barrier − log ⁡ ( 1 − ρ ) -\\log(1-\\rho) to make small differences across training steps and optimizers visible.",
+      "source": "https://arxiv.org/html/2610.10965v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0014",
+      "section": "4.1 CIFAR-10 Training",
+      "text": "We train a six-layer convolutional neural network on the CIFAR-10 dataset, building off of Keller Jordan’s original speedrun using Muon ( Jordan, 2024 ) . We chose this approach because the speedrun ensures exhaustively tuned learning rates and architectures, making it less likely that our results are artifacts of hyperparameters. This dataset includes 50,000 training images divided into 10 classes, along with 10,000 images for validation ( Krizhevsky, 2009 ) . Figure 1: Mean evaluation accuracy across 20 trials for each variant, with error bars representing ± \\pm 2 standard deviations away from the mean. Validation accuracy was used as the primary metric for model performance. Learning rates were held constant across all optimizers, including SGD, and equal Nesterov momentum was applied. Instead of random flips for augmentation, all data is flipped every epoch, which leads to faster training. Our standard Muon run was therefore nearly identical to the speedrun implementation, aside from a batch size of 500 rather than 2000 due to GPU limitations. Therefore, we achieved an accuracy of 93.6% as opposed to the 94% in Jordan’s paper. This aligns with existing work arguing that Muon takes particular advantage of large batch sizes in much larger models ( Shah et al., 2025 ) .",
+      "source": "https://arxiv.org/html/2610.10965v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0015",
+      "section": "4.1 CIFAR-10 Training",
+      "text": "We also measured the effect of switching to the convergent Newton-Schulz polynomial, and increasing the number of iterations used from 3 to 7. For pure Muon, this left mean accuracy over 20 runs unchanged at 93.5%. However, for top targeted Muon with τ = 1 \\tau=1 , it brought mean accuracy from 91.2% to 93.4%. This is because our method orthogonalizes something near M ⊤ ​ M M^{\\top}M , which has a condition number squared compared to M M , requiring more accuracy near 0. Thus, this setup was used for all CIFAR experiments. (a) Log-barrier of tangent alignment for Muon targeted on bottom (b) Log-barrier of tangent alignment for Muon targeted on top (c) Final weight spectrum for Muon targeted on bottom (d) Final weight spectrum for Muon targeted on top Figure 2: Tangent alignment and weight spectrum plots for CNN trained with bottom and top targeted Muon over 8 training epochs.",
+      "source": "https://arxiv.org/html/2610.10965v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0016",
+      "section": "4.1 CIFAR-10 Training",
+      "text": "Comparing different levels of top singular value thresholds, we see a smooth decline from the performance of Muon towards the performance of SGD. This includes a statistically significant drop from τ = 1 \\tau=1 to τ = 5 \\tau=5 , another significant drop from 5 to 10, and finally a drop from 10 to pure SGD with momentum. On the other side, τ ≤ 1 \\tau\\leq 1 all had performance which was statistically indistinguishable from Muon. This aligns with our intuition that clipping at a value above the maximum singular value behaves like no orthogonalization at all, and clipping at a value below the majority of singular values will behave like full orthogonalization. Further support for this is provided by the spectrum of the final trained weight, which aligns nearly completely with the weight trained using Muon. Also, note that even clipping at high levels still produces very well-conditioned final weight matrices compared to SGD. Examining the tangent alignment, an interesting behavior is that alignment strongly increases after 150 to 200 steps, for all top clipped versions. This suggests that Muon’s positive impact on condition comes largely from suppressing the largest gradient singular values.",
+      "source": "https://arxiv.org/html/2610.10965v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0017",
+      "section": "4.1 CIFAR-10 Training",
+      "text": "Looking at the tangent alignment in subplots (a) and (b) of Figure 2 , we see that targeting Muon on the bottom singular values consistently yields worse alignment than even standard SGD, while targeting the top clears Muon, especially toward the end of training. This fits with the observed performance, which is similar to raw SGD, and becomes worse as we clip at higher and higher levels. This is because our first experiment shows that the significant singular values are largely greater than 1. This means that clipping lower singular values to 1 makes the top singular value subspace make up a more disproportionate part of the update mass. This supports our hypothesis that the top singular value subspace is the least aligned with the isospectral tangent. Intuitively, we can think of this as reinforcing information already contained within the parameter, rather than learning new facts.",
+      "source": "https://arxiv.org/html/2610.10965v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0018",
+      "section": "4.2 NanoGPT Training",
+      "text": "We train a 12-layer transformer with 768-dimensional embeddings on 0.80B tokens of FineWeb, validating on 10.5M held-out tokens ( Penedo et al., 2024 ) . Similar to CIFAR-10, we build on Jordan’s modded-nanogpt speedrun ( Jordan et al., 2024a ) , which trains to a 3.28 validation loss in 1530 steps with Muon. Each transformer block consists of W Q W_{Q} , W K W_{K} , and W V W_{V} matrices which generate the query, key and value for multi-head self-attention, before passing through output matrix W O W_{O} . The MLP block contains two projection matrices in and out of the hidden space. In addition, there are skip connections connecting layers from the first and second half, similar to U-Net ( Ronneberger et al., 2015 ) . All output matrices were initialized to 0, making the model initialize to the identity function and allowing rapid gradient flow to layers during initialization. All runs use a linear learning rate cooldown over the last 600 steps. Muon and its variants use a learning rate of 0.05 with no warmup, except for one warmup control, and no rescaling between variants, and AdamW uses the speedrun’s tuned learning rate of 0.0018 ( Karpathy, 2022 ) , with and without the canonical 250-step warmup. As the unorthogonalized endpoint we use NSGD, the Nesterov momentum divided by its spectral norm, at the same learning rate. 1 1 1 Our power-iteration estimate of the spectral norm fails on matrices with very small momentum (about 5–10% of matrix-steps) and produces oversized updates there, so NSGD is an imperfect endpoint; a correct implementation would likely do at least as well. We run both top and bottom targeting at τ ∈ { 10 − 4 , 2 × 10 − 4 , 4 × 10 − 4 , 10 − 3 , 3 × 10 − 3 } \\tau\\in\\{10^{-4},2\\times 10^{-4},4\\times 10^{-4},10^{-3},3\\times 10^{-3}\\} with three",
+      "source": "https://arxiv.org/html/2610.10965v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0019",
+      "section": "4.2 NanoGPT Training",
+      "text": "st as well. We run both top and bottom targeting at τ ∈ { 10 − 4 , 2 × 10 − 4 , 4 × 10 − 4 , 10 − 3 , 3 × 10 − 3 } \\tau\\in\\{10^{-4},2\\times 10^{-4},4\\times 10^{-4},10^{-3},3\\times 10^{-3}\\} with three seeds each, three for Muon, two for the other optimizers, and one for the learning rate controls.",
+      "source": "https://arxiv.org/html/2610.10965v1",
+      "offset": 1596
+    },
+    {
+      "chunk_id": "chunk-0020",
+      "section": "4.2 NanoGPT Training",
+      "text": "(a) Gradient and momentum singular values (b) Train loss comparison (c) Final loss vs. threshold (d) Final loss vs. fraction of momentum orthogonalized Figure 3: Singular values of the raw gradient and of the momentum that is orthogonalized (a; dotted lines mark the smallest and largest τ \\tau ), training loss (b), and final validation loss against the threshold (c) and against the fraction of the momentum that is orthogonalized (d; by squared Frobenius norm, matrix average). Every momentum singular value lies far below one, so the targeted band is always amplified to one; Muon and NSGD are the endpoints of the family. Table 1: Final FineWeb validation loss at step 1530, mean ± \\pm half-range over seeds (three seeds for the targeted family and Muon, two for the other optimizers, one for the learning rate controls). † \\dagger : at least one seed shows a loss spike; for the bottom arm these are carried by the MLP output matrices, which these thresholds never lift, when a hard batch near step 1020 passes through them un-normalized. τ = 3 × 10 − 3 \\tau=3\\times 10^{-3} τ = 10 − 3 \\tau=10^{-3} τ = 4 × 10 − 4 \\tau=4\\times 10^{-4} τ = 2 × 10 − 4 \\tau=2\\times 10^{-4} τ = 10 − 4 \\tau=10^{-4} Top-targeted 3.875 ± \\pm .011 3.714 ± \\pm .002 3.573 ± \\pm .013 3.486 ± \\pm .004 3.425 ± \\pm .012 Bottom-targeted 3.309 ± \\pm .002 3.409 ± \\pm .003 3.633 ± \\pm .127 † 3.739 ± \\pm .022 † 3.772 ± \\pm .033 † Muon 3.280 ± \\pm .008 AdamW w/ warmup 3.396 ± \\pm .004 Muon w/ warmup 3.309 ± \\pm .001 AdamW w/ warmup, wd 0 3.397 ± \\pm .004 Muon, lr 0.005 3.332 AdamW 3.468 ± \\pm .008 NSGD 3.591 ± \\pm .038 † Top τ = 3 × 10 − 3 \\tau=3\\times 10^{-3} , lr 0.49 4.800 Top τ = 10 − 3 \\tau=10^{-3} , lr 0.29 4.392 Top τ = 10 − 4 \\tau=10^{-4} , lr 0.095 3.521",
+      "source": "https://arxiv.org/html/2610.10965v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0021",
+      "section": "4.2 NanoGPT Training",
+      "text": "Figure 3 (a) shows that the singular values are spread across many orders of magnitude, indicating that gradient matrices in the language model setting are very poorly conditioned. This variation does not stem from variation between different matrices: as we can see in Figure 4 (a), the effective rank of the gradient stays below about 280 for most of training. This implies a low-entropy and highly nonuniform distribution within each matrix. Figure 3 (a) also displays the distribution of the gradients after Nesterov momentum is applied. Momentum thins out the low end of the spectrum, suggesting that it suppresses some noisy directions, but otherwise leaves its shape alone and simply shifts scale. This distribution was used to select the absolute thresholds τ \\tau for targeted Muon. Averaged over matrices, the top arm lifts about 1% to 28% of the singular directions, and the bottom arm lifts from nearly all of the directions down to about 30%. In terms of squared Frobenius norm, the lifted band holds 32–96% of the momentum in the top arm and at most 13% in the bottom arm. Note that τ \\tau is absolute while the bulk of the spectrum sits at different levels in different matrices, so the same τ \\tau lifts very different fractions of different matrices. In the top arm this compounds: a matrix whose spectrum falls below τ \\tau only gets its raw momentum and effectively stops training, so at the larger thresholds most of the deeper layers are left untouched. Also note that every momentum singular value is far below one, so the targeted region is always amplified, not suppressed.",
+      "source": "https://arxiv.org/html/2610.10965v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0022",
+      "section": "4.2 NanoGPT Training",
+      "text": "Validation loss was monitored throughout and remained almost exactly at training loss, so overfitting is not a concern. Every Muon variant drops the loss faster than AdamW over the first hundred steps (Figure 3 (b)), and the lead grows with how much of the spectrum is lifted. Lifting only the top few directions with a high τ \\tau already gets much of Muon’s early advantage, but the lead reverses within a few hundred steps, and every top dose ends up behind AdamW with warmup, the smallest ones even behind NSGD (Table 1 ). This is not a matter of step size. Raising the learning rate of the top variants only makes them worse and collapses their rank further (Figure 5 (c)), while Muon at a tenth of its learning rate loses just 0.05. Figure 3 (c,d) plots the final loss against τ \\tau and against the fraction of the momentum that is orthogonalized. For both top and bottom targeting, loss falls monotonically with the portion of directions orthogonalized. However, the two arms are not symmetric. Orthogonalizing everything except the few largest singular values of each matrix gets within 0.03 of Muon while orthogonalizing only about 13% of the momentum matrix’s magnitude, while lifting only the top directions remains well short even when they make up 96% of it, and the smallest top doses do worse than lifting nothing. This answers one part of our original question. Despite being a very small portion of the momentum magnitude, the small singular values are not noise. The model can be usefully trained on them, but only once they are amplified to full scale. (a) Gradient effective rank (b) Update effective rank (c) Value matrix effective rank (d) Output matrix effective rank (e) MLP effective rank",
+      "source": "https://arxiv.org/html/2610.10965v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0023",
+      "section": "4.2 NanoGPT Training",
+      "text": "Figure 4: Effective rank of the gradient (a) and update (b), averaged over all matrices, and of the value (c), attention-output (d) and MLP (e) parameters, averaged over layers (seed 0). Dashed lines are the warmup variants, the dotted line in (a) marks the start of the learning rate cooldown, and the legend in (b) applies to all panels. We use the effective rank of the gradient and update matrix to help explain our optimizer performances. Since the gradient depends only on the surrounding loss landscape and not the optimizer, it tells us which optimizers enter parts of the loss landscape where many directions are available. This happens quickly for Muon and the targeted variants, while AdamW takes a few hundred steps to get there. During learning rate cooldown, this effective rank grows for every optimizer, because the leading singular values of the gradient shrink while its bulk stays put. In the river-valley picture of Wen et al. (2024) , the component of the gradient along the sharp valley walls dies with the learning rate while the component along the flat floor remains. Gradient rank thus tells us where the iterate sits in the valley, bouncing between the walls or settled on the floor. Meanwhile, the effective rank of the update shows the difference between the different types of targeting, with bottom targeting creating an update shaped like Muon’s, while top targeting creates an even lower rank update than AdamW. (a) Tangent alignment (b) Spectrum-changing update by singular direction (c) Final loss vs. parameter rank",
+      "source": "https://arxiv.org/html/2610.10965v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0024",
+      "section": "4.2 NanoGPT Training",
+      "text": "Figure 5: How much of the update changes the spectrum, and where. (a) Log-barrier of the isospectral tangent fraction, averaged over matrices; the grey dotted line is the value for a random rotation, the orange dotted line marks the start of the learning rate cooldown, and dashed lines are the warmup variants. (b) Share of the spectrum-changing part of the update at each singular direction of the parameter, ranked by singular value, averaged over matrices and steps 100–1500; the dotted line is uniform. (c) Final validation loss against final parameter effective rank, including the learning rate controls; the bottom-targeted runs at τ ≤ 4 × 10 − 4 \\tau\\leq 4\\times 10^{-4} leave their MLP output matrices barely trained. Next, we examined the parameter effective ranks across different types of Transformer parameters in Figure 4 (c)–(e). We were able to observe the same results as Wang et al. (2025) , who found that AdamW heavily reduces the effective rank of parameters, unlike Muon, giving Muon a richer associative memory and better performance on tail classes. However, top targeted variants fall the most, and their zero-initialized output projections never gain much rank at all. This implies that the rich learning is a direct consequence of participation by the small singular values.",
+      "source": "https://arxiv.org/html/2610.10965v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0025",
+      "section": "4.2 NanoGPT Training",
+      "text": "The parameter effective rank depends on the part of the update that changes the spectrum, meaning the part aligned with the parameter’s own singular basis, and how concentrated it is in the leading directions of this basis. Figure 5 (b) shows this directly: the top targeted and AdamW curves peak at the leading directions, while Muon and the bottom arm stay near uniform. Intuitively, an update that keeps pushing along the leading singular directions of a matrix reinforces what is already there, while a full-spectrum update mostly rotates the basis and leaves the spectrum unchanged. Figure 5 (c) plots these against the final loss. Figure 5 (a) shows the same thing with the isospectral tangent metric of Section 3.3 . Every optimizer puts more of its update into the parameter’s own basis than a random update would, and tangent alignment rises for every optimizer over training, fastest during the cooldown. Among the targeted variants of Muon, the bottom targeted versions show higher alignment than Muon, while the top targeted versions show lower alignment. This is reversed compared to the CIFAR experiments, but it reveals the same underlying phenomenon. In the NanoGPT domain, the targeted region has its magnitude raised, while the remaining regions are relatively suppressed. Therefore, it is simply the top few directions of the gradient which lie within the existing basis of the parameter, and the more you shrink them in the update, the less poorly conditioned the parameter matrices become. Note that structure and performance don’t move together: AdamW collapses rank and still performs well, the bottom targeted variants keep Muon’s rank without matching its loss, and full-spectrum updates keep the spectrum flat for free. This suggests that keeping the spectrum flat is",
+      "source": "https://arxiv.org/html/2610.10965v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0026",
+      "section": "4.2 NanoGPT Training",
+      "text": "still performs well, the bottom targeted variants keep Muon’s rank without matching its loss, and full-spectrum updates keep the spectrum flat for free. This suggests that keeping the spectrum flat is cheap, but isn’t what drives performance.",
+      "source": "https://arxiv.org/html/2610.10965v1",
+      "offset": 1593
+    },
+    {
+      "chunk_id": "chunk-0027",
+      "section": "4.2 NanoGPT Training",
+      "text": "Our work also suggests an explanation as to why warmup costs Muon but helps AdamW, using the structural plots. AdamW is slow to build structure: its zero-initialized output projections take the whole run to build rank and are still rising at the end (Figure 4 (d)), its early updates lie almost entirely in the parameters’ own frame (Figure 5 (a)), and its gradients have the lowest effective rank of any optimizer over the first hundred steps, lower than any Muon variant that builds structure at all. An elementwise normalized update builds a matrix one bounded increment at a time, so how well it builds depends on how big the first steps are, and with warmup AdamW ends with higher parameter rank and lower loss. An orthogonalized update writes a full-rank matrix in a single step, so Muon’s structure is the same with or without warmup and warmup only throws away full-rate steps.",
+      "source": "https://arxiv.org/html/2610.10965v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0028",
+      "section": "5 Conclusion and Future Work",
+      "text": "In this paper, we developed a spectrally targeted variant of the Muon optimizer in order to explore why Muon has so much experimental success. By targeting Muon to act on certain singular values either above or below a certain threshold τ , \\tau, we were able to do more specific experiments on Muon’s behavior. From our experiments on CIFAR-10, we concluded that Muon’s accuracy improvement requires normalization of all the singular values; by varying τ , \\tau, we found that if we normalize singular values, we will measure better evaluation accuracies. However, normalizing only the top singular values yields better tangent alignment and stable weight spectra, hence the primary structural improvements of Muon result from normalizing large singular values, although normalizing smaller ones is important as well.",
+      "source": "https://arxiv.org/html/2610.10965v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0029",
+      "section": "5 Conclusion and Future Work",
+      "text": "From our experiments on NanoGPT, we concluded that the small singular values of the momentum are not noise but directions the model can feasibly train on once they are amplified. Orthogonalizing everything but the few largest singular values nearly matches Muon, while orthogonalizing only the top buys an early lead over AdamW and then falls behind even normalized SGD. Keeping the top from dominating the update is what keeps the parameter spectrum flat; the tangent alignment shows that the top singular directions are the ones that lie outside the tangent space of the isospectral manifold, so they are what changes the spectrum. This is cheap, however, and is not what drives the loss, as AdamW collapses rank and still performs well. AdamW differs from Muon mainly in how slowly it builds structure, because an elementwise normalized update must build a matrix out of many low rank steps, where an orthogonalized update writes a full-rank matrix in a single step. This explains AdamW’s slower start and why warmup helps it but hurts Muon. Finally, the effective rank of the gradient becomes an effective tool to determine position in the loss landscape, and also shows the difference between optimizers in where the early steps take the parameters.",
+      "source": "https://arxiv.org/html/2610.10965v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0030",
+      "section": "5 Conclusion and Future Work",
+      "text": "In future work, we could study the effect on larger transformers to see if our observations scale. Also, since matrices spectra sit at different scale, a threshold relative to the bulk of each spectrum would remove the impact of orthogonalizing a different fraction of directions for each matrix. The radial component of the update also defines an equilibrium weight decay that varies over training and across optimizers, which could be used to create some form of preconditioned weight decay which would prevent change in the spectrum. Given our results, it would also be interesting to consider whether dynamically adapting τ \\tau might improve results, as we could normalize either small or large singular values depending on how far along we are in our training.",
+      "source": "https://arxiv.org/html/2610.10965v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0031",
+      "section": "6 Appendix",
+      "text": "Given W = U 0 ​ Σ ​ V 0 ⊤ W=U_{0}\\Sigma V_{0}^{\\top} (in unreduced SVD), its isospectral manifold ℳ \\mathcal{M} is defined as ℳ = { U Σ V ⊤ ∣ U ∈ O ( m ) , V ∈ O ( n ) } . \\mathcal{M}=\\{U\\Sigma V^{\\top}\\mid U\\in O(m),V\\in O(n)\\}. A path γ : ( − ε , ε ) → ℳ \\gamma:(-\\varepsilon,\\varepsilon)\\to\\mathcal{M} with γ ⁡ ( 0 ) = W \\gamma(0)=W can be written as γ ⁡ ( t ) = U ⁡ ( t ) ​ Σ ​ V ​ ( t ) ⊤ , \\gamma(t)=U(t)\\Sigma V(t)^{\\top}, with U ⁡ ( 0 ) = U 0 , U(0)=U_{0}, and V ⁡ ( 0 ) = V 0 . V(0)=V_{0}. We can calculate γ ′ ​ ( 0 ) \\displaystyle\\gamma^{\\prime}(0) = U ′ ​ ( 0 ) ​ Σ ​ ( V ⁡ ( 0 ) ) ⊤ + U ⁡ ( 0 ) ​ Σ ​ V ′ ​ ( 0 ) ⊤ \\displaystyle=U^{\\prime}(0)\\Sigma(V(0))^{\\top}+U(0)\\Sigma V^{\\prime}(0)^{\\top} = U ′ ​ ( 0 ) ​ Σ ​ V 0 ⊤ + U 0 ​ Σ ​ V ′ ​ ( 0 ) ⊤ . \\displaystyle=U^{\\prime}(0)\\Sigma V_{0}^{\\top}+U_{0}\\Sigma V^{\\prime}(0)^{\\top}. A basic result in Lie theory yields that the vector space of possible U ′ ​ ( 0 ) U^{\\prime}(0) is given by U ⁡ ( 0 ) ​ A U(0)A for A ∈ 𝔰 ​ 𝔬 ​ ( m ) , A\\in\\mathfrak{so}(m), the skew-symmetric m × m m\\times m matrices. Similarly, V ′ ​ ( 0 ) = V ​ ( 0 ) ​ B V^{\\prime}(0)=V(0)B for B ∈ 𝔰 ​ 𝔬 ​ ( n ) . B\\in\\mathfrak{so}(n). Thus, as B ⊤ = − B , B^{\\top}=-B, we see that γ ′ ​ ( 0 ) = U 0 ​ ( A ​ Σ − Σ ​ B ) ​ V 0 ⊤ , \\gamma^{\\prime}(0)=U_{0}(A\\Sigma-\\Sigma B)V_{0}^{\\top}, so T W ℳ = { U 0 ( A Σ − Σ B ) V 0 ⊤ ∣ A ∈ 𝔰 𝔬 ( m ) , B ∈ 𝔰 𝔬 ( n ) } . T_{W}\\mathcal{M}=\\{U_{0}(A\\Sigma-\\Sigma B)V_{0}^{\\top}\\mid A\\in\\mathfrak{so}(m),B\\in\\mathfrak{so}(n)\\}.",
+      "source": "https://arxiv.org/html/2610.10965v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0032",
+      "section": "6 Appendix",
+      "text": "For simplicity, assume that the diagonal elements of Σ \\Sigma are distinct and nonzero, as in the generic case. Given an update matrix Z ∈ ℝ m × n , Z\\in\\mathbb{R}^{m\\times n}, we wish to project Z Z onto T W ​ ℳ T_{W}\\mathcal{M} with respect to the Frobenius norm, which means that we wish to choose A ∈ 𝔰 ​ 𝔬 ​ ( m ) , B ∈ 𝔰 ​ 𝔬 ​ ( n ) A\\in\\mathfrak{so}(m),B\\in\\mathfrak{so}(n) that minimizes ‖ Z − U 0 ​ ( A ​ Σ − Σ ​ B ) ​ V 0 ⊤ ‖ F 2 , \\|Z-U_{0}(A\\Sigma-\\Sigma B)V_{0}^{\\top}\\|^{2}_{F}, with the projection given by U 0 ​ ( A ​ Σ − Σ ​ B ) ​ V 0 ⊤ . U_{0}(A\\Sigma-\\Sigma B)V_{0}^{\\top}. By unitary-invariance of the Frobenius norm, this is equivalent to minimizing ‖ Z ~ − ( A ​ Σ − Σ ​ B ) ‖ F 2 , \\|\\tilde{Z}-(A\\Sigma-\\Sigma B)\\|^{2}_{F}, where Z ~ = U 0 ⊤ ​ Z ​ V 0 . \\tilde{Z}=U_{0}^{\\top}ZV_{0}. We see that the i ​ j ij th entry of A ​ Σ − Σ ​ B A\\Sigma-\\Sigma B is A i ​ j ​ σ j − σ i ​ B i ​ j , A_{ij}\\sigma_{j}-\\sigma_{i}B_{ij}, so the diagonal entries must all be zero. However, it can be determined that A A and B B together have enough degrees of freedom to generate the off-diagonal entries of Z ~ \\tilde{Z} , as the singular values are positive and distinct, so we see that the projection of Z Z onto the tangent space is given by U 0 ​ Z ~ ′ ​ V 0 ⊤ , U_{0}\\tilde{Z}^{\\prime}V_{0}^{\\top}, where the matrix Z ~ ′ \\tilde{Z}^{\\prime} is just Z ~ \\tilde{Z} with the diagonal zeroed out. If some singular values are zero or repeated, the projection computation is more intricate, but this is not relevant for the generic scenario. Once we calculate the projection, we can use the Frobenius inner product to determine the fraction ρ ⁡ ( Z , W ) \\rho(Z;W) of the update matrix lies in the tangent space.",
+      "source": "https://arxiv.org/html/2610.10965v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0033",
+      "section": "References",
+      "text": "Amsel et al. (2026) N. Amsel, D. Persson, C. Musco, and R. M. Gower The polar express: optimal matrix sign methods and their application to the muon algorithm . External Links: 2505.16932 , Link Cited by: §1 , §2 . Dewulf et al. (2026) A. Dewulf, D. Pai, L. Yang, A. Zhang, and B. Keigwin Aurora: a leverage-aware optimizer for rectangular matrices . External Links: Link Cited by: §2 . Dong and Sawin (2026) Y. Dong and W. Sawin Muon p {}^{p} : muon with fractional spectral powers . External Links: 2606.13867 Cited by: §2 . Fan et al. (2026) C. Fan, G. Liu, M. Hong, R. R. Kompella, and S. Liu Rethinking muon beyond pretraining: spectral failures and high-pass remedies for vla and rlvr . External Links: 2605.19282 Cited by: §2 . Jordan et al. (2024a) K. Jordan, J. Bernstein, B. Rappazzo, et al. Modded-nanogpt: speedrunning the nanogpt baseline . Note: https://github.com/KellerJordan/modded-nanogpt Cited by: §4.2 . Jordan et al. (2024b) K. Jordan, Y. Jin, V. Boza, J. You, F. Cesista, L. Newhouse, and J. Bernstein Muon: an optimizer for hidden layers in neural networks . External Links: Link Cited by: §1 , §1 , §2 . Jordan (2024) K. Jordan 94% on cifar-10 in 3.29 seconds on a single gpu . arXiv preprint arXiv:2404.00498 . Cited by: §4.1 . Karpathy (2022) A. Karpathy NanoGPT . GitHub . Note: https://github.com/karpathy/nanoGPT Cited by: §4.2 . Krizhevsky (2009) A. Krizhevsky Learning multiple layers of features from tiny images . Technical report University of Toronto . Cited by: §4.1 . Li et al. (2025) Z. Li, L. Liu, C. Liang, W. Chen, and T. Zhao NorMuon: making muon more efficient and scalable . External Links: 2510.05491 , Link Cited by: §2 .",
+      "source": "https://arxiv.org/html/2610.10965v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0034",
+      "section": "References",
+      "text": "Liu et al. (2025) J. Liu, J. Su, X. Yao, Z. Jiang, G. Lai, Y. Du, Y. Qin, W. Xu, E. Lu, J. Yan, Y. Chen, H. Zheng, Y. Liu, S. Liu, B. Yin, W. He, H. Zhu, Y. Wang, J. Wang, M. Dong, Z. Zhang, Y. Kang, H. Zhang, X. Xu, Y. Zhang, Y. Wu, X. Zhou, and Z. Yang Muon is scalable for llm training . External Links: 2502.16982 , Link Cited by: §1 . Massena et al. (2026) T. Massena, C. Friedrich, and M. Serrurier From sgd to muon: adaptive optimization via schatten-p norms . External Links: 2605.19781 Cited by: §2 . Penedo et al. (2024) G. Penedo, H. Kydlíček, L. B. allal, A. Lozhkov, M. Mitchell, C. Raffel, L. V. Werra, and T. Wolf The fineweb datasets: decanting the web for the finest text data at scale . External Links: 2406.17557 , Link Cited by: §4.2 . Pennington et al. (2017) J. Pennington, S. S. Schoenholz, and S. Ganguli Resurrecting the sigmoid in deep learning through dynamical isometry: theory and practice . External Links: 1711.04735 , Link Cited by: §3.3 . Ronneberger et al. (2015) O. Ronneberger, P. Fischer, and T. Brox U-net: convolutional networks for biomedical image segmentation . CoRR abs/1505.04597 . External Links: Link , 1505.04597 Cited by: §4.2 . Roy and Vetterli (2007) O. Roy and M. Vetterli The effective rank: a measure of effective dimensionality . In 2007 15th European Signal Processing Conference , Vol. , pp. 606–610 . External Links: Document Cited by: §3.3 . Shah et al. (2025) I. Shah, A. M. Polloreno, K. Stratos, P. Monk, A. Chaluvaraju, A. Hojel, A. Ma, A. Thomas, A. Tanwer, D. J. Shah, K. Nguyen, K. Smith, M. Callahan, M. Pust, M. Parmar, P. Rushton, P. Mazarakis, R. Kapila, S. Srivastava, S. Singla, T. Romanski, Y. Vanjani, and A. Vaswani Practical efficiency of muon for pretraining . External Links: 2505.02222 , Link Cited by: §4.1 .",
+      "source": "https://arxiv.org/html/2610.10965v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0035",
+      "section": "References",
+      "text": "Shi et al. (2026) K. Shi, H. Li, Z. Qiu, Y. Wen, S. Buchholz, and W. Liu Pion: a spectrum-preserving optimizer via orthogonal equivalence transformation . External Links: 2605.12492 Cited by: §2 . Shumaylov et al. (2026) Z. Shumaylov, N. D. Costa, P. Zaika, B. Mucsányi, A. Massucco, Y. Gelberg, C. Schönlieb, Y. Gal, and P. Hennig Muon is not that special: random or inverted spectra work just as well . External Links: 2605.11181 Cited by: §2 . Wang et al. (2025) S. Wang, F. Zhang, J. Li, C. Du, C. Du, T. Pang, Z. Yang, M. Hong, and V. Y. F. Tan Muon outperforms adam in tail-end associative memory learning . External Links: 2509.26030 , Link Cited by: §4.2 . Wen et al. (2024) K. Wen, Z. Li, J. Wang, D. Hall, P. Liang, and T. Ma Understanding warmup-stable-decay learning rates: a river valley loss landscape perspective . External Links: 2410.05192 Cited by: §4.2 . Wu et al. (2026) F. Wu, R. Shah, S. Silwal, and Q. Zhang DynMuon: a dynamic spectral shaping view of muon . External Links: 2605.17109 Cited by: §2 . Yi (2026) A. Yi MuCon: clipped muon updates for llm training . External Links: 2605.26459 , Link Cited by: §2 . Yukhimchuk et al. (2026) A. Yukhimchuk, M. Kolar, M. Takáč, and S. Choudhury Gradient clipping beyond vector norms: a spectral approach for matrix-valued parameters . External Links: 2605.11838 , Link Cited by: §2 .",
+      "source": "https://arxiv.org/html/2610.10965v1",
+      "offset": 0
+    }
+  ],
+  "links": [
+    {
+      "href": "mailto:vishrutg@stanford.edu",
+      "text": "vishrutg@stanford.edu",
+      "section": "Spectrally Targeted Muon",
+      "context": "Vishrut Goyal Affiliation: Department of Computer Science, Stanford University Correspondence to: vishrutg@stanford.edu",
+      "url": "mailto:vishrutg@stanford.edu"
+    },
+    {
+      "href": "mailto:rohansr@stanford.edu",
+      "text": "rohansr@stanford.edu",
+      "section": "Spectrally Targeted Muon",
+      "context": "Vishrut Goyal Affiliation: Department of Computer Science, Stanford University Correspondence to: vishrutg@stanford.edu Rohan Ramkumar Affiliation: Department of Electrical Engineering, Stanford University Correspondence to: rohansr@stanford.edu",
+      "url": "mailto:rohansr@stanford.edu"
+    },
+    {
+      "href": "#bib.bib1",
+      "text": "Jordan et al., 2024b",
+      "section": "1 Introduction",
+      "context": "The Muon optimizer for deep learning works by orthogonalizing the update matrix ( Jordan et al., 2024b",
+      "url": "https://arxiv.org/html/2610.10965v1#bib.bib1"
+    },
+    {
+      "href": "#bib.bib2",
+      "text": "Liu et al., 2025",
+      "section": "1 Introduction",
+      "context": "The Muon optimizer for deep learning works by orthogonalizing the update matrix ( Jordan et al., 2024b ) . Unlike many other proposed optimizers, this has been highly successful empirically for training large language models, especially when coupled with weight decay ( Liu et al., 2025",
+      "url": "https://arxiv.org/html/2610.10965v1#bib.bib2"
+    },
+    {
+      "href": "#bib.bib4",
+      "text": "Amsel et al., 2026",
+      "section": "1 Introduction",
+      "context": "The Muon optimizer for deep learning works by orthogonalizing the update matrix ( Jordan et al., 2024b ) . Unlike many other proposed optimizers, this has been highly successful empirically for training large language models, especially when coupled with weight decay ( Liu et al., 2025 ) . This is because the matrix can be orthogonalized relatively efficiently, using methods such as Newton-Schulz or Polar Express ( Amsel et al., 2026",
+      "url": "https://arxiv.org/html/2610.10965v1#bib.bib4"
+    },
+    {
+      "href": "#bib.bib1",
+      "text": "Jordan et al. (2024b)",
+      "section": "1 Introduction",
+      "context": "In this paper, we will explore a method to target this orthogonalization to singular values either above or below a certain threshold τ \\tau , and we will also experiment with different values for this threshold, thus allowing us to interpolate between SGD and Muon with a spectrally targeted version. Specifically, we will apply these Muon variants to the two speedrun tasks originally used to show Muon’s performance, the CIFAR-10 dataset with a convolutional network, and the NanoGPT large language model, just as in Jordan et al. (2024b)",
+      "url": "https://arxiv.org/html/2610.10965v1#bib.bib1"
+    },
+    {
+      "href": "#bib.bib5",
+      "text": "Li et al., 2025",
+      "section": "2 Related Work",
+      "context": "Recent Muon variants like NorMuon and Aurora mitigate neural death in Muon via sophisticated row-wise (neuron) normalization ( Li et al., 2025",
+      "url": "https://arxiv.org/html/2610.10965v1#bib.bib5"
+    },
+    {
+      "href": "#bib.bib6",
+      "text": "Dewulf et al., 2026",
+      "section": "2 Related Work",
+      "context": "Recent Muon variants like NorMuon and Aurora mitigate neural death in Muon via sophisticated row-wise (neuron) normalization ( Li et al., 2025 ; Dewulf et al., 2026",
+      "url": "https://arxiv.org/html/2610.10965v1#bib.bib6"
+    },
+    {
+      "href": "#bib.bib4",
+      "text": "Amsel et al., 2026",
+      "section": "2 Related Work",
+      "context": "While state-of-the-art orthogonalization uses the adaptive Polar Express algorithm ( Amsel et al., 2026",
+      "url": "https://arxiv.org/html/2610.10965v1#bib.bib4"
+    },
+    {
+      "href": "#bib.bib1",
+      "text": "Jordan et al., 2024b",
+      "section": "2 Related Work",
+      "context": "While state-of-the-art orthogonalization uses the adaptive Polar Express algorithm ( Amsel et al., 2026 ) , we instead build on Newton-Schulz iterations using both the speedrun polynomial which yields singular values distributed as Uniform ⁡ ( 0.5 , 1.5 ) \\mathrm{Uniform}(0.5,1.5) and the convergent polynomial which iterates to the exact matrix sign function ( Jordan et al., 2024b",
+      "url": "https://arxiv.org/html/2610.10965v1#bib.bib1"
+    },
+    {
+      "href": "#bib.bib8",
+      "text": "Yi, 2026",
+      "section": "2 Related Work",
+      "context": "Other works also attempt to reshape the singular value distribution to something in between the raw momentum distribution and the flat distribution from Muon. While MuCon and spectral gradient clipping bound singular values ( Yi, 2026",
+      "url": "https://arxiv.org/html/2610.10965v1#bib.bib8"
+    },
+    {
+      "href": "#bib.bib7",
+      "text": "Yukhimchuk et al., 2026",
+      "section": "2 Related Work",
+      "context": "Other works also attempt to reshape the singular value distribution to something in between the raw momentum distribution and the flat distribution from Muon. While MuCon and spectral gradient clipping bound singular values ( Yi, 2026 ; Yukhimchuk et al., 2026",
+      "url": "https://arxiv.org/html/2610.10965v1#bib.bib7"
+    },
+    {
+      "href": "#bib.bib19",
+      "text": "Massena et al., 2026",
+      "section": "2 Related Work",
+      "context": "from Muon. While MuCon and spectral gradient clipping bound singular values ( Yi, 2026 ; Yukhimchuk et al., 2026 ) at some threshold, our method discontinuously forces them to one based on the τ \\tau threshold. This isolates whether Muon’s success stems from amplifying minor components or suppressing dominant ones by applying full Muon in one subspace and raw SGD in another. Furthermore, our approach relies entirely on efficient matrix multiplications, bypassing costly SVD computations. Several works also reshape Muon’s update spectrum with a continuous transform instead ( Massena et al., 2026",
+      "url": "https://arxiv.org/html/2610.10965v1#bib.bib19"
+    },
+    {
+      "href": "#bib.bib20",
+      "text": "Dong and Sawin, 2026",
+      "section": "2 Related Work",
+      "context": "and spectral gradient clipping bound singular values ( Yi, 2026 ; Yukhimchuk et al., 2026 ) at some threshold, our method discontinuously forces them to one based on the τ \\tau threshold. This isolates whether Muon’s success stems from amplifying minor components or suppressing dominant ones by applying full Muon in one subspace and raw SGD in another. Furthermore, our approach relies entirely on efficient matrix multiplications, bypassing costly SVD computations. Several works also reshape Muon’s update spectrum with a continuous transform instead ( Massena et al., 2026 ; Dong and Sawin, 2026",
+      "url": "https://arxiv.org/html/2610.10965v1#bib.bib20"
+    },
+    {
+      "href": "#bib.bib21",
+      "text": "Wu et al., 2026",
+      "section": "2 Related Work",
+      "context": "ent clipping bound singular values ( Yi, 2026 ; Yukhimchuk et al., 2026 ) at some threshold, our method discontinuously forces them to one based on the τ \\tau threshold. This isolates whether Muon’s success stems from amplifying minor components or suppressing dominant ones by applying full Muon in one subspace and raw SGD in another. Furthermore, our approach relies entirely on efficient matrix multiplications, bypassing costly SVD computations. Several works also reshape Muon’s update spectrum with a continuous transform instead ( Massena et al., 2026 ; Dong and Sawin, 2026 ; Wu et al., 2026",
+      "url": "https://arxiv.org/html/2610.10965v1#bib.bib21"
+    },
+    {
+      "href": "#bib.bib22",
+      "text": "Fan et al., 2026",
+      "section": "2 Related Work",
+      "context": "singular values ( Yi, 2026 ; Yukhimchuk et al., 2026 ) at some threshold, our method discontinuously forces them to one based on the τ \\tau threshold. This isolates whether Muon’s success stems from amplifying minor components or suppressing dominant ones by applying full Muon in one subspace and raw SGD in another. Furthermore, our approach relies entirely on efficient matrix multiplications, bypassing costly SVD computations. Several works also reshape Muon’s update spectrum with a continuous transform instead ( Massena et al., 2026 ; Dong and Sawin, 2026 ; Wu et al., 2026 ; Fan et al., 2026",
+      "url": "https://arxiv.org/html/2610.10965v1#bib.bib22"
+    },
+    {
+      "href": "#bib.bib23",
+      "text": "Shi et al., 2026",
+      "section": "2 Related Work",
+      "context": "i, 2026 ; Yukhimchuk et al., 2026 ) at some threshold, our method discontinuously forces them to one based on the τ \\tau threshold. This isolates whether Muon’s success stems from amplifying minor components or suppressing dominant ones by applying full Muon in one subspace and raw SGD in another. Furthermore, our approach relies entirely on efficient matrix multiplications, bypassing costly SVD computations. Several works also reshape Muon’s update spectrum with a continuous transform instead ( Massena et al., 2026 ; Dong and Sawin, 2026 ; Wu et al., 2026 ; Fan et al., 2026 ; Shi et al., 2026",
+      "url": "https://arxiv.org/html/2610.10965v1#bib.bib23"
+    },
+    {
+      "href": "#bib.bib18",
+      "text": "Shumaylov et al. (2026)",
+      "section": "2 Related Work",
+      "context": " threshold, our method discontinuously forces them to one based on the τ \\tau threshold. This isolates whether Muon’s success stems from amplifying minor components or suppressing dominant ones by applying full Muon in one subspace and raw SGD in another. Furthermore, our approach relies entirely on efficient matrix multiplications, bypassing costly SVD computations. Several works also reshape Muon’s update spectrum with a continuous transform instead ( Massena et al., 2026 ; Dong and Sawin, 2026 ; Wu et al., 2026 ; Fan et al., 2026 ; Shi et al., 2026 ) . In particular, Shumaylov et al. (2026)",
+      "url": "https://arxiv.org/html/2610.10965v1#bib.bib18"
+    },
+    {
+      "href": "#alg1",
+      "text": "1",
+      "section": "3.2 Spectrally Targeted Newton-Schulz",
+      "context": "By computing S = sign ⁡ ( A ) S=\\mathrm{sign}(A) , we can define the projection matrices for the bottom and top singular subspaces as P bot = 1 2 ​ ( I − S ) P^{\\mathrm{bot}}=\\frac{1}{2}(I-S) and P top = 1 2 ​ ( I + S ) P^{\\mathrm{top}}=\\frac{1}{2}(I+S) . Finally, we selectively apply Newton-Schulz orthogonalization to the desired subspace by calculating either sign ⁡ ( M ) ​ P top + M ​ P bot \\mathrm{sign}(M)P^{\\mathrm{top}}+MP^{\\mathrm{bot}} (targeting top) or M ​ P top + sign ⁡ ( M ) ​ P bot MP^{\\mathrm{top}}+\\mathrm{sign}(M)P^{\\mathrm{bot}} (targeting bottom), as summarized in Algorithm 1",
+      "url": "https://arxiv.org/html/2610.10965v1#alg1"
+    },
+    {
+      "href": "#bib.bib12",
+      "text": "Roy and Vetterli, 2007",
+      "section": "Effective Rank",
+      "context": "The effective rank is defined as the exponent of the spectral entropy. That is, if you normalize the singular values { s 1 , … , s n } \\{s_{1},...,s_{n}\\} by ∑ i = 1 n s i \\sum_{i=1}^{n}s_{i} to get probabilities { p 1 , … , p n } \\{p_{1},...,p_{n}\\} , the effective rank is exp ( − ∑ i = 1 n p i log p i ) \\exp(-\\sum_{i=1}^{n}p_{i}\\log p_{i}) . Similar to perplexity, this number can be interpreted as the effective number of equally likely directions a random vector can be mapped to ( Roy and Vetterli, 2007",
+      "url": "https://arxiv.org/html/2610.10965v1#bib.bib12"
+    },
+    {
+      "href": "#bib.bib3",
+      "text": "Pennington et al., 2017",
+      "section": "Isospectral Projection",
+      "context": "Muon orthogonalizes the update matrix, but how this affects the spectrum of the parameter matrix is unclear. Random initialization yields approximately dynamically isometric weight matrices, whose singular values are well-conditioned ( Pennington et al., 2017",
+      "url": "https://arxiv.org/html/2610.10965v1#bib.bib3"
+    },
+    {
+      "href": "#S6",
+      "text": "Appendix",
+      "section": "Isospectral Projection",
+      "context": " yields approximately dynamically isometric weight matrices, whose singular values are well-conditioned ( Pennington et al., 2017 ) , so training must move the parameters away from this state, and an optimizer’s influence on the spectrum determines how much it does so. Consider a weight matrix W W , and let ℳ \\mathcal{M} be its isospectral manifold, consisting of matrices with the same singular values as W . W. Given an update Z Z , we measure ρ ⁡ ( Z , W ) , \\rho(Z;W), which is the fraction of Z Z that lies in T W ​ ℳ , T_{W}\\mathcal{M}, the tangent space of ℳ \\mathcal{M} at W W (see Appendix",
+      "url": "https://arxiv.org/html/2610.10965v1#S6"
+    },
+    {
+      "href": "#bib.bib11",
+      "text": "Jordan, 2024",
+      "section": "4.1 CIFAR-10 Training",
+      "context": "We train a six-layer convolutional neural network on the CIFAR-10 dataset, building off of Keller Jordan’s original speedrun using Muon ( Jordan, 2024",
+      "url": "https://arxiv.org/html/2610.10965v1#bib.bib11"
+    },
+    {
+      "href": "#bib.bib10",
+      "text": "Krizhevsky, 2009",
+      "section": "4.1 CIFAR-10 Training",
+      "context": "We train a six-layer convolutional neural network on the CIFAR-10 dataset, building off of Keller Jordan’s original speedrun using Muon ( Jordan, 2024 ) . We chose this approach because the speedrun ensures exhaustively tuned learning rates and architectures, making it less likely that our results are artifacts of hyperparameters. This dataset includes 50,000 training images divided into 10 classes, along with 10,000 images for validation ( Krizhevsky, 2009",
+      "url": "https://arxiv.org/html/2610.10965v1#bib.bib10"
+    },
+    {
+      "href": "#bib.bib14",
+      "text": "Shah et al., 2025",
+      "section": "4.1 CIFAR-10 Training",
+      "context": "Learning rates were held constant across all optimizers, including SGD, and equal Nesterov momentum was applied. Instead of random flips for augmentation, all data is flipped every epoch, which leads to faster training. Our standard Muon run was therefore nearly identical to the speedrun implementation, aside from a batch size of 500 rather than 2000 due to GPU limitations. Therefore, we achieved an accuracy of 93.6% as opposed to the 94% in Jordan’s paper. This aligns with existing work arguing that Muon takes particular advantage of large batch sizes in much larger models ( Shah et al., 2025",
+      "url": "https://arxiv.org/html/2610.10965v1#bib.bib14"
+    },
+    {
+      "href": "#S4.F2",
+      "text": "2",
+      "section": "4.1 CIFAR-10 Training",
+      "context": "Looking at the tangent alignment in subplots (a) and (b) of Figure 2",
+      "url": "https://arxiv.org/html/2610.10965v1#S4.F2"
+    },
+    {
+      "href": "#bib.bib15",
+      "text": "Penedo et al., 2024",
+      "section": "4.2 NanoGPT Training",
+      "context": "We train a 12-layer transformer with 768-dimensional embeddings on 0.80B tokens of FineWeb, validating on 10.5M held-out tokens ( Penedo et al., 2024",
+      "url": "https://arxiv.org/html/2610.10965v1#bib.bib15"
+    },
+    {
+      "href": "#bib.bib17",
+      "text": "Jordan et al., 2024a",
+      "section": "4.2 NanoGPT Training",
+      "context": "We train a 12-layer transformer with 768-dimensional embeddings on 0.80B tokens of FineWeb, validating on 10.5M held-out tokens ( Penedo et al., 2024 ) . Similar to CIFAR-10, we build on Jordan’s modded-nanogpt speedrun ( Jordan et al., 2024a",
+      "url": "https://arxiv.org/html/2610.10965v1#bib.bib17"
+    },
+    {
+      "href": "#bib.bib16",
+      "text": "Ronneberger et al., 2015",
+      "section": "4.2 NanoGPT Training",
+      "context": "ns ( Penedo et al., 2024 ) . Similar to CIFAR-10, we build on Jordan’s modded-nanogpt speedrun ( Jordan et al., 2024a ) , which trains to a 3.28 validation loss in 1530 steps with Muon. Each transformer block consists of W Q W_{Q} , W K W_{K} , and W V W_{V} matrices which generate the query, key and value for multi-head self-attention, before passing through output matrix W O W_{O} . The MLP block contains two projection matrices in and out of the hidden space. In addition, there are skip connections connecting layers from the first and second half, similar to U-Net ( Ronneberger et al., 2015",
+      "url": "https://arxiv.org/html/2610.10965v1#bib.bib16"
+    },
+    {
+      "href": "#bib.bib9",
+      "text": "Karpathy, 2022",
+      "section": "4.2 NanoGPT Training",
+      "context": " of the hidden space. In addition, there are skip connections connecting layers from the first and second half, similar to U-Net ( Ronneberger et al., 2015 ) . All output matrices were initialized to 0, making the model initialize to the identity function and allowing rapid gradient flow to layers during initialization. All runs use a linear learning rate cooldown over the last 600 steps. Muon and its variants use a learning rate of 0.05 with no warmup, except for one warmup control, and no rescaling between variants, and AdamW uses the speedrun’s tuned learning rate of 0.0018 ( Karpathy, 2022",
+      "url": "https://arxiv.org/html/2610.10965v1#bib.bib9"
+    },
+    {
+      "href": "#S4.F3",
+      "text": "3",
+      "section": "4.2 NanoGPT Training",
+      "context": "Figure 3",
+      "url": "https://arxiv.org/html/2610.10965v1#S4.F3"
+    },
+    {
+      "href": "#S4.F4",
+      "text": "4",
+      "section": "4.2 NanoGPT Training",
+      "context": "Figure 3 (a) shows that the singular values are spread across many orders of magnitude, indicating that gradient matrices in the language model setting are very poorly conditioned. This variation does not stem from variation between different matrices: as we can see in Figure 4",
+      "url": "https://arxiv.org/html/2610.10965v1#S4.F4"
+    },
+    {
+      "href": "#S4.F3",
+      "text": "3",
+      "section": "4.2 NanoGPT Training",
+      "context": "Figure 3 (a) shows that the singular values are spread across many orders of magnitude, indicating that gradient matrices in the language model setting are very poorly conditioned. This variation does not stem from variation between different matrices: as we can see in Figure 4 (a), the effective rank of the gradient stays below about 280 for most of training. This implies a low-entropy and highly nonuniform distribution within each matrix. Figure 3",
+      "url": "https://arxiv.org/html/2610.10965v1#S4.F3"
+    },
+    {
+      "href": "#S4.F3",
+      "text": "3",
+      "section": "4.2 NanoGPT Training",
+      "context": "Validation loss was monitored throughout and remained almost exactly at training loss, so overfitting is not a concern. Every Muon variant drops the loss faster than AdamW over the first hundred steps (Figure 3",
+      "url": "https://arxiv.org/html/2610.10965v1#S4.F3"
+    },
+    {
+      "href": "#S4.T1",
+      "text": "1",
+      "section": "4.2 NanoGPT Training",
+      "context": "Validation loss was monitored throughout and remained almost exactly at training loss, so overfitting is not a concern. Every Muon variant drops the loss faster than AdamW over the first hundred steps (Figure 3 (b)), and the lead grows with how much of the spectrum is lifted. Lifting only the top few directions with a high τ \\tau already gets much of Muon’s early advantage, but the lead reverses within a few hundred steps, and every top dose ends up behind AdamW with warmup, the smallest ones even behind NSGD (Table 1",
+      "url": "https://arxiv.org/html/2610.10965v1#S4.T1"
+    },
+    {
+      "href": "#S4.F5",
+      "text": "5",
+      "section": "4.2 NanoGPT Training",
+      "context": "training loss, so overfitting is not a concern. Every Muon variant drops the loss faster than AdamW over the first hundred steps (Figure 3 (b)), and the lead grows with how much of the spectrum is lifted. Lifting only the top few directions with a high τ \\tau already gets much of Muon’s early advantage, but the lead reverses within a few hundred steps, and every top dose ends up behind AdamW with warmup, the smallest ones even behind NSGD (Table 1 ). This is not a matter of step size. Raising the learning rate of the top variants only makes them worse and collapses their rank further (Figure 5",
+      "url": "https://arxiv.org/html/2610.10965v1#S4.F5"
+    },
+    {
+      "href": "#S4.F3",
+      "text": "3",
+      "section": "4.2 NanoGPT Training",
+      "context": "Figure 3",
+      "url": "https://arxiv.org/html/2610.10965v1#S4.F3"
+    },
+    {
+      "href": "#bib.bib24",
+      "text": "Wen et al. (2024)",
+      "section": "4.2 NanoGPT Training",
+      "context": "fective rank of the gradient and update matrix to help explain our optimizer performances. Since the gradient depends only on the surrounding loss landscape and not the optimizer, it tells us which optimizers enter parts of the loss landscape where many directions are available. This happens quickly for Muon and the targeted variants, while AdamW takes a few hundred steps to get there. During learning rate cooldown, this effective rank grows for every optimizer, because the leading singular values of the gradient shrink while its bulk stays put. In the river-valley picture of Wen et al. (2024)",
+      "url": "https://arxiv.org/html/2610.10965v1#bib.bib24"
+    },
+    {
+      "href": "#S4.F4",
+      "text": "4",
+      "section": "4.2 NanoGPT Training",
+      "context": "Next, we examined the parameter effective ranks across different types of Transformer parameters in Figure 4",
+      "url": "https://arxiv.org/html/2610.10965v1#S4.F4"
+    },
+    {
+      "href": "#bib.bib13",
+      "text": "Wang et al. (2025)",
+      "section": "4.2 NanoGPT Training",
+      "context": "Next, we examined the parameter effective ranks across different types of Transformer parameters in Figure 4 (c)–(e). We were able to observe the same results as Wang et al. (2025)",
+      "url": "https://arxiv.org/html/2610.10965v1#bib.bib13"
+    },
+    {
+      "href": "#S4.F5",
+      "text": "5",
+      "section": "4.2 NanoGPT Training",
+      "context": "The parameter effective rank depends on the part of the update that changes the spectrum, meaning the part aligned with the parameter’s own singular basis, and how concentrated it is in the leading directions of this basis. Figure 5",
+      "url": "https://arxiv.org/html/2610.10965v1#S4.F5"
+    },
+    {
+      "href": "#S4.F5",
+      "text": "5",
+      "section": "4.2 NanoGPT Training",
+      "context": "The parameter effective rank depends on the part of the update that changes the spectrum, meaning the part aligned with the parameter’s own singular basis, and how concentrated it is in the leading directions of this basis. Figure 5 (b) shows this directly: the top targeted and AdamW curves peak at the leading directions, while Muon and the bottom arm stay near uniform. Intuitively, an update that keeps pushing along the leading singular directions of a matrix reinforces what is already there, while a full-spectrum update mostly rotates the basis and leaves the spectrum unchanged. Figure 5",
+      "url": "https://arxiv.org/html/2610.10965v1#S4.F5"
+    },
+    {
+      "href": "#S4.F5",
+      "text": "5",
+      "section": "4.2 NanoGPT Training",
+      "context": "art of the update that changes the spectrum, meaning the part aligned with the parameter’s own singular basis, and how concentrated it is in the leading directions of this basis. Figure 5 (b) shows this directly: the top targeted and AdamW curves peak at the leading directions, while Muon and the bottom arm stay near uniform. Intuitively, an update that keeps pushing along the leading singular directions of a matrix reinforces what is already there, while a full-spectrum update mostly rotates the basis and leaves the spectrum unchanged. Figure 5 (c) plots these against the final loss. Figure 5",
+      "url": "https://arxiv.org/html/2610.10965v1#S4.F5"
+    },
+    {
+      "href": "#S3.SS3",
+      "text": "3.3",
+      "section": "4.2 NanoGPT Training",
+      "context": "he parameter’s own singular basis, and how concentrated it is in the leading directions of this basis. Figure 5 (b) shows this directly: the top targeted and AdamW curves peak at the leading directions, while Muon and the bottom arm stay near uniform. Intuitively, an update that keeps pushing along the leading singular directions of a matrix reinforces what is already there, while a full-spectrum update mostly rotates the basis and leaves the spectrum unchanged. Figure 5 (c) plots these against the final loss. Figure 5 (a) shows the same thing with the isospectral tangent metric of Section 3.3",
+      "url": "https://arxiv.org/html/2610.10965v1#S3.SS3"
+    },
+    {
+      "href": "#S4.F4",
+      "text": "4",
+      "section": "4.2 NanoGPT Training",
+      "context": "Our work also suggests an explanation as to why warmup costs Muon but helps AdamW, using the structural plots. AdamW is slow to build structure: its zero-initialized output projections take the whole run to build rank and are still rising at the end (Figure 4",
+      "url": "https://arxiv.org/html/2610.10965v1#S4.F4"
+    },
+    {
+      "href": "#S4.F5",
+      "text": "5",
+      "section": "4.2 NanoGPT Training",
+      "context": "Our work also suggests an explanation as to why warmup costs Muon but helps AdamW, using the structural plots. AdamW is slow to build structure: its zero-initialized output projections take the whole run to build rank and are still rising at the end (Figure 4 (d)), its early updates lie almost entirely in the parameters’ own frame (Figure 5",
+      "url": "https://arxiv.org/html/2610.10965v1#S4.F5"
+    },
+    {
+      "href": "https://arxiv.org/abs/2505.16932",
+      "text": "Link",
+      "section": "References",
+      "context": "Amsel et al. (2026) N. Amsel, D. Persson, C. Musco, and R. M. Gower The polar express: optimal matrix sign methods and their application to the muon algorithm . External Links: 2505.16932 , Link",
+      "url": "https://arxiv.org/abs/2505.16932"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Amsel et al. (2026) N. Amsel, D. Persson, C. Musco, and R. M. Gower The polar express: optimal matrix sign methods and their application to the muon algorithm . External Links: 2505.16932 , Link Cited by: §1",
+      "url": "https://arxiv.org/html/2610.10965v1#S1.p1.1"
+    },
+    {
+      "href": "#S2.p2.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Amsel et al. (2026) N. Amsel, D. Persson, C. Musco, and R. M. Gower The polar express: optimal matrix sign methods and their application to the muon algorithm . External Links: 2505.16932 , Link Cited by: §1 , §2",
+      "url": "https://arxiv.org/html/2610.10965v1#S2.p2.1"
+    },
+    {
+      "href": "https://tilderesearch.com/blog/aurora",
+      "text": "Link",
+      "section": "References",
+      "context": "Dewulf et al. (2026) A. Dewulf, D. Pai, L. Yang, A. Zhang, and B. Keigwin Aurora: a leverage-aware optimizer for rectangular matrices . External Links: Link",
+      "url": "https://tilderesearch.com/blog/aurora"
+    },
+    {
+      "href": "#S2.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Dewulf et al. (2026) A. Dewulf, D. Pai, L. Yang, A. Zhang, and B. Keigwin Aurora: a leverage-aware optimizer for rectangular matrices . External Links: Link Cited by: §2",
+      "url": "https://arxiv.org/html/2610.10965v1#S2.p1.1"
+    },
+    {
+      "href": "#S2.p3.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Dong and Sawin (2026) Y. Dong and W. Sawin Muon p {}^{p} : muon with fractional spectral powers . External Links: 2606.13867 Cited by: §2",
+      "url": "https://arxiv.org/html/2610.10965v1#S2.p3.1"
+    },
+    {
+      "href": "#S2.p3.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Fan et al. (2026) C. Fan, G. Liu, M. Hong, R. R. Kompella, and S. Liu Rethinking muon beyond pretraining: spectral failures and high-pass remedies for vla and rlvr . External Links: 2605.19282 Cited by: §2",
+      "url": "https://arxiv.org/html/2610.10965v1#S2.p3.1"
+    },
+    {
+      "href": "https://github.com/KellerJordan/modded-nanogpt",
+      "text": "https://github.com/KellerJordan/modded-nanogpt",
+      "section": "References",
+      "context": "Jordan et al. (2024a) K. Jordan, J. Bernstein, B. Rappazzo, et al. Modded-nanogpt: speedrunning the nanogpt baseline . Note: https://github.com/KellerJordan/modded-nanogpt",
+      "url": "https://github.com/KellerJordan/modded-nanogpt"
+    },
+    {
+      "href": "#S4.SS2.p1.1",
+      "text": "§4.2",
+      "section": "References",
+      "context": "Jordan et al. (2024a) K. Jordan, J. Bernstein, B. Rappazzo, et al. Modded-nanogpt: speedrunning the nanogpt baseline . Note: https://github.com/KellerJordan/modded-nanogpt Cited by: §4.2",
+      "url": "https://arxiv.org/html/2610.10965v1#S4.SS2.p1.1"
+    },
+    {
+      "href": "https://kellerjordan.github.io/posts/muon/",
+      "text": "Link",
+      "section": "References",
+      "context": "Jordan et al. (2024b) K. Jordan, Y. Jin, V. Boza, J. You, F. Cesista, L. Newhouse, and J. Bernstein Muon: an optimizer for hidden layers in neural networks . External Links: Link",
+      "url": "https://kellerjordan.github.io/posts/muon/"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Jordan et al. (2024b) K. Jordan, Y. Jin, V. Boza, J. You, F. Cesista, L. Newhouse, and J. Bernstein Muon: an optimizer for hidden layers in neural networks . External Links: Link Cited by: §1",
+      "url": "https://arxiv.org/html/2610.10965v1#S1.p1.1"
+    },
+    {
+      "href": "#S1.p3.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Jordan et al. (2024b) K. Jordan, Y. Jin, V. Boza, J. You, F. Cesista, L. Newhouse, and J. Bernstein Muon: an optimizer for hidden layers in neural networks . External Links: Link Cited by: §1 , §1",
+      "url": "https://arxiv.org/html/2610.10965v1#S1.p3.1"
+    },
+    {
+      "href": "#S2.p2.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Jordan et al. (2024b) K. Jordan, Y. Jin, V. Boza, J. You, F. Cesista, L. Newhouse, and J. Bernstein Muon: an optimizer for hidden layers in neural networks . External Links: Link Cited by: §1 , §1 , §2",
+      "url": "https://arxiv.org/html/2610.10965v1#S2.p2.1"
+    },
+    {
+      "href": "#S4.SS1.p1.1",
+      "text": "§4.1",
+      "section": "References",
+      "context": "Jordan (2024) K. Jordan 94% on cifar-10 in 3.29 seconds on a single gpu . arXiv preprint arXiv:2404.00498 . Cited by: §4.1",
+      "url": "https://arxiv.org/html/2610.10965v1#S4.SS1.p1.1"
+    },
+    {
+      "href": "https://github.com/karpathy/nanoGPT",
+      "text": "https://github.com/karpathy/nanoGPT",
+      "section": "References",
+      "context": "Karpathy (2022) A. Karpathy NanoGPT . GitHub . Note: https://github.com/karpathy/nanoGPT",
+      "url": "https://github.com/karpathy/nanoGPT"
+    },
+    {
+      "href": "#S4.SS2.p1.1",
+      "text": "§4.2",
+      "section": "References",
+      "context": "Karpathy (2022) A. Karpathy NanoGPT . GitHub . Note: https://github.com/karpathy/nanoGPT Cited by: §4.2",
+      "url": "https://arxiv.org/html/2610.10965v1#S4.SS2.p1.1"
+    },
+    {
+      "href": "#S4.SS1.p1.1",
+      "text": "§4.1",
+      "section": "References",
+      "context": "Krizhevsky (2009) A. Krizhevsky Learning multiple layers of features from tiny images . Technical report University of Toronto . Cited by: §4.1",
+      "url": "https://arxiv.org/html/2610.10965v1#S4.SS1.p1.1"
+    },
+    {
+      "href": "https://arxiv.org/abs/2510.05491",
+      "text": "Link",
+      "section": "References",
+      "context": "Li et al. (2025) Z. Li, L. Liu, C. Liang, W. Chen, and T. Zhao NorMuon: making muon more efficient and scalable . External Links: 2510.05491 , Link",
+      "url": "https://arxiv.org/abs/2510.05491"
+    },
+    {
+      "href": "#S2.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Li et al. (2025) Z. Li, L. Liu, C. Liang, W. Chen, and T. Zhao NorMuon: making muon more efficient and scalable . External Links: 2510.05491 , Link Cited by: §2",
+      "url": "https://arxiv.org/html/2610.10965v1#S2.p1.1"
+    },
+    {
+      "href": "https://arxiv.org/abs/2502.16982",
+      "text": "Link",
+      "section": "References",
+      "context": "Liu et al. (2025) J. Liu, J. Su, X. Yao, Z. Jiang, G. Lai, Y. Du, Y. Qin, W. Xu, E. Lu, J. Yan, Y. Chen, H. Zheng, Y. Liu, S. Liu, B. Yin, W. He, H. Zhu, Y. Wang, J. Wang, M. Dong, Z. Zhang, Y. Kang, H. Zhang, X. Xu, Y. Zhang, Y. Wu, X. Zhou, and Z. Yang Muon is scalable for llm training . External Links: 2502.16982 , Link",
+      "url": "https://arxiv.org/abs/2502.16982"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Liu et al. (2025) J. Liu, J. Su, X. Yao, Z. Jiang, G. Lai, Y. Du, Y. Qin, W. Xu, E. Lu, J. Yan, Y. Chen, H. Zheng, Y. Liu, S. Liu, B. Yin, W. He, H. Zhu, Y. Wang, J. Wang, M. Dong, Z. Zhang, Y. Kang, H. Zhang, X. Xu, Y. Zhang, Y. Wu, X. Zhou, and Z. Yang Muon is scalable for llm training . External Links: 2502.16982 , Link Cited by: §1",
+      "url": "https://arxiv.org/html/2610.10965v1#S1.p1.1"
+    },
+    {
+      "href": "#S2.p3.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Massena et al. (2026) T. Massena, C. Friedrich, and M. Serrurier From sgd to muon: adaptive optimization via schatten-p norms . External Links: 2605.19781 Cited by: §2",
+      "url": "https://arxiv.org/html/2610.10965v1#S2.p3.1"
+    },
+    {
+      "href": "https://arxiv.org/abs/2406.17557",
+      "text": "Link",
+      "section": "References",
+      "context": "Penedo et al. (2024) G. Penedo, H. Kydlíček, L. B. allal, A. Lozhkov, M. Mitchell, C. Raffel, L. V. Werra, and T. Wolf The fineweb datasets: decanting the web for the finest text data at scale . External Links: 2406.17557 , Link",
+      "url": "https://arxiv.org/abs/2406.17557"
+    },
+    {
+      "href": "#S4.SS2.p1.1",
+      "text": "§4.2",
+      "section": "References",
+      "context": "Penedo et al. (2024) G. Penedo, H. Kydlíček, L. B. allal, A. Lozhkov, M. Mitchell, C. Raffel, L. V. Werra, and T. Wolf The fineweb datasets: decanting the web for the finest text data at scale . External Links: 2406.17557 , Link Cited by: §4.2",
+      "url": "https://arxiv.org/html/2610.10965v1#S4.SS2.p1.1"
+    },
+    {
+      "href": "https://arxiv.org/abs/1711.04735",
+      "text": "Link",
+      "section": "References",
+      "context": "Pennington et al. (2017) J. Pennington, S. S. Schoenholz, and S. Ganguli Resurrecting the sigmoid in deep learning through dynamical isometry: theory and practice . External Links: 1711.04735 , Link",
+      "url": "https://arxiv.org/abs/1711.04735"
+    },
+    {
+      "href": "#S3.SS3.SSSx2.p1.1",
+      "text": "§3.3",
+      "section": "References",
+      "context": "Pennington et al. (2017) J. Pennington, S. S. Schoenholz, and S. Ganguli Resurrecting the sigmoid in deep learning through dynamical isometry: theory and practice . External Links: 1711.04735 , Link Cited by: §3.3",
+      "url": "https://arxiv.org/html/2610.10965v1#S3.SS3.SSSx2.p1.1"
+    },
+    {
+      "href": "http://arxiv.org/abs/1505.04597",
+      "text": "Link",
+      "section": "References",
+      "context": "Ronneberger et al. (2015) O. Ronneberger, P. Fischer, and T. Brox U-net: convolutional networks for biomedical image segmentation . CoRR abs/1505.04597 . External Links: Link",
+      "url": "http://arxiv.org/abs/1505.04597"
+    },
+    {
+      "href": "#S4.SS2.p1.1",
+      "text": "§4.2",
+      "section": "References",
+      "context": "Ronneberger et al. (2015) O. Ronneberger, P. Fischer, and T. Brox U-net: convolutional networks for biomedical image segmentation . CoRR abs/1505.04597 . External Links: Link , 1505.04597 Cited by: §4.2",
+      "url": "https://arxiv.org/html/2610.10965v1#S4.SS2.p1.1"
+    },
+    {
+      "href": "https://dx.doi.org/",
+      "text": "Document",
+      "section": "References",
+      "context": "Roy and Vetterli (2007) O. Roy and M. Vetterli The effective rank: a measure of effective dimensionality . In 2007 15th European Signal Processing Conference , Vol. , pp. 606–610 . External Links: Document",
+      "url": "https://dx.doi.org/"
+    },
+    {
+      "href": "#S3.SS3.SSSx1.p1.1",
+      "text": "§3.3",
+      "section": "References",
+      "context": "Roy and Vetterli (2007) O. Roy and M. Vetterli The effective rank: a measure of effective dimensionality . In 2007 15th European Signal Processing Conference , Vol. , pp. 606–610 . External Links: Document Cited by: §3.3",
+      "url": "https://arxiv.org/html/2610.10965v1#S3.SS3.SSSx1.p1.1"
+    },
+    {
+      "href": "https://arxiv.org/abs/2505.02222",
+      "text": "Link",
+      "section": "References",
+      "context": "Shah et al. (2025) I. Shah, A. M. Polloreno, K. Stratos, P. Monk, A. Chaluvaraju, A. Hojel, A. Ma, A. Thomas, A. Tanwer, D. J. Shah, K. Nguyen, K. Smith, M. Callahan, M. Pust, M. Parmar, P. Rushton, P. Mazarakis, R. Kapila, S. Srivastava, S. Singla, T. Romanski, Y. Vanjani, and A. Vaswani Practical efficiency of muon for pretraining . External Links: 2505.02222 , Link",
+      "url": "https://arxiv.org/abs/2505.02222"
+    },
+    {
+      "href": "#S4.SS1.p2.1",
+      "text": "§4.1",
+      "section": "References",
+      "context": "Shah et al. (2025) I. Shah, A. M. Polloreno, K. Stratos, P. Monk, A. Chaluvaraju, A. Hojel, A. Ma, A. Thomas, A. Tanwer, D. J. Shah, K. Nguyen, K. Smith, M. Callahan, M. Pust, M. Parmar, P. Rushton, P. Mazarakis, R. Kapila, S. Srivastava, S. Singla, T. Romanski, Y. Vanjani, and A. Vaswani Practical efficiency of muon for pretraining . External Links: 2505.02222 , Link Cited by: §4.1",
+      "url": "https://arxiv.org/html/2610.10965v1#S4.SS1.p2.1"
+    },
+    {
+      "href": "#S2.p3.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Shi et al. (2026) K. Shi, H. Li, Z. Qiu, Y. Wen, S. Buchholz, and W. Liu Pion: a spectrum-preserving optimizer via orthogonal equivalence transformation . External Links: 2605.12492 Cited by: §2",
+      "url": "https://arxiv.org/html/2610.10965v1#S2.p3.1"
+    },
+    {
+      "href": "#S2.p3.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Shumaylov et al. (2026) Z. Shumaylov, N. D. Costa, P. Zaika, B. Mucsányi, A. Massucco, Y. Gelberg, C. Schönlieb, Y. Gal, and P. Hennig Muon is not that special: random or inverted spectra work just as well . External Links: 2605.11181 Cited by: §2",
+      "url": "https://arxiv.org/html/2610.10965v1#S2.p3.1"
+    },
+    {
+      "href": "https://arxiv.org/abs/2509.26030",
+      "text": "Link",
+      "section": "References",
+      "context": "Wang et al. (2025) S. Wang, F. Zhang, J. Li, C. Du, C. Du, T. Pang, Z. Yang, M. Hong, and V. Y. F. Tan Muon outperforms adam in tail-end associative memory learning . External Links: 2509.26030 , Link",
+      "url": "https://arxiv.org/abs/2509.26030"
+    },
+    {
+      "href": "#S4.SS2.p7.1",
+      "text": "§4.2",
+      "section": "References",
+      "context": "Wang et al. (2025) S. Wang, F. Zhang, J. Li, C. Du, C. Du, T. Pang, Z. Yang, M. Hong, and V. Y. F. Tan Muon outperforms adam in tail-end associative memory learning . External Links: 2509.26030 , Link Cited by: §4.2",
+      "url": "https://arxiv.org/html/2610.10965v1#S4.SS2.p7.1"
+    },
+    {
+      "href": "#S4.SS2.p6.1",
+      "text": "§4.2",
+      "section": "References",
+      "context": "Wen et al. (2024) K. Wen, Z. Li, J. Wang, D. Hall, P. Liang, and T. Ma Understanding warmup-stable-decay learning rates: a river valley loss landscape perspective . External Links: 2410.05192 Cited by: §4.2",
+      "url": "https://arxiv.org/html/2610.10965v1#S4.SS2.p6.1"
+    },
+    {
+      "href": "#S2.p3.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Wu et al. (2026) F. Wu, R. Shah, S. Silwal, and Q. Zhang DynMuon: a dynamic spectral shaping view of muon . External Links: 2605.17109 Cited by: §2",
+      "url": "https://arxiv.org/html/2610.10965v1#S2.p3.1"
+    },
+    {
+      "href": "https://arxiv.org/abs/2605.26459",
+      "text": "Link",
+      "section": "References",
+      "context": "Yi (2026) A. Yi MuCon: clipped muon updates for llm training . External Links: 2605.26459 , Link",
+      "url": "https://arxiv.org/abs/2605.26459"
+    },
+    {
+      "href": "#S2.p3.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Yi (2026) A. Yi MuCon: clipped muon updates for llm training . External Links: 2605.26459 , Link Cited by: §2",
+      "url": "https://arxiv.org/html/2610.10965v1#S2.p3.1"
+    },
+    {
+      "href": "https://arxiv.org/abs/2605.11838",
+      "text": "Link",
+      "section": "References",
+      "context": "Yukhimchuk et al. (2026) A. Yukhimchuk, M. Kolar, M. Takáč, and S. Choudhury Gradient clipping beyond vector norms: a spectral approach for matrix-valued parameters . External Links: 2605.11838 , Link",
+      "url": "https://arxiv.org/abs/2605.11838"
+    },
+    {
+      "href": "#S2.p3.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Yukhimchuk et al. (2026) A. Yukhimchuk, M. Kolar, M. Takáč, and S. Choudhury Gradient clipping beyond vector norms: a spectral approach for matrix-valued parameters . External Links: 2605.11838 , Link Cited by: §2",
+      "url": "https://arxiv.org/html/2610.10965v1#S2.p3.1"
+    }
+  ],
+  "note": "Extracted HTML text; equations and table formatting may be imperfect. No PDF extraction was attempted."
+}

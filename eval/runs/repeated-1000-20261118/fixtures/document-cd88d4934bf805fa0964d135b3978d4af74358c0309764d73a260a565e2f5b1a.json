@@ -1,0 +1,1018 @@
+{
+  "status": "ok",
+  "source": "https://arxiv.org/html/2610.37206v1",
+  "extractor_version": "article-v1",
+  "chunks": [
+    {
+      "chunk_id": "chunk-0001",
+      "section": "Article",
+      "text": "BRAIn Lab EMNLP 2026 SimplexLoRA: Dynamic Rank Updating via Alternating Minimization with Simplex Projection Igor Shalygin 1,2,* , Grigorii Davydenko 1,2,3,* , Andrey Veprikov 1,2,3 , Aleksey Antonov 1,2,4 Nikolay Bushkov 4 , Stanislav Moiseev 4 , Aleksandr Beznosikov 1,2,5 1 Moscow Independent Research Institute of Artificial Intelligence (MIRAI) 2 Basic Research of Artificial Intelligence Laboratory (BRAIn Lab) 3 SB AI Lab 4 T-Technologies 5 Innopolis University * Equal contribution. The success of large language models in real-world applications relies on parameter-efficient fine-tuning methods such as Low-Rank Adaptation ( LoRA ), which inserts compact, trainable adapters into selected layers. In this paper, we propose SimplexLoRA , a LoRA variant that adaptively adjusts adapter ranks during fine-tuning based on their learned importance. Unlike standard LoRA , which employs a fixed rank across all layers, SimplexLoRA optimizes per-adapter importance weights on the n n -scaled simplex during a short warm-up and then freezes them, dynamically allocating capacity where it is most beneficial without increasing the overall parameter budget or inference cost. We evaluate SimplexLoRA across 12 language understanding, summarization, and reasoning tasks using DeBERTaV3, BART-large, Llama 3.1 8B, and Qwen3-8B. Our results show that SimplexLoRA consistently matches or outperforms standard LoRA and recent adaptive baselines, with the largest gains at low ranks. Our code is available at https://github.com/brain-lab-research/SimplexLoRA .",
+      "source": "https://arxiv.org/html/2610.37206v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0002",
+      "section": "1 Introduction",
+      "text": "LoRA [ Hu et al., 2021 ] is a widely used parameter-efficient fine-tuning method [ Han et al., 2024 ] that parameterizes weight updates as 𝑾 ′ = 𝑾 0 + 𝑨 ​ 𝑩 {\\bm{W}}^{\\prime}={\\bm{W}}^{0}+{\\bm{A}}{\\bm{B}} , with 𝑾 0 ∈ ℝ m × d {\\bm{W}}^{0}\\in\\mathbb{R}^{m\\times d} frozen and trainable 𝑨 ∈ ℝ m × r , 𝑩 ∈ ℝ r × d {\\bm{A}}\\in\\mathbb{R}^{m\\times r},{\\bm{B}}\\in\\mathbb{R}^{r\\times d} , r ≪ m , d r\\ll m,d . This approach achieves low inference overhead and substantially reduces memory during fine-tuning. Figure 1: SimplexLoRA framework. Per-adapter importance weights are constrained to the n n -scaled simplex, enabling dynamic allocation of a fixed rank budget across layers. Despite its efficiency, standard LoRA uses a fixed rank across all layers, ignoring layer-wise differences in convergence and representation learning. Existing adaptive rank allocation methods attempt to address this issue but suffer from the critical drawbacks: (i) substantially more trainable parameters [ Sheng et al., 2025 ] , (ii) non-negligible inference-time overhead caused by dynamic pruning or gating mechanisms [ Zhang et al., 2025 ] , and (iii) deviations from the standard LoRA pipeline that hinder compatibility [ Zhang et al., 2023b ] . See Section 2 for further discussion. To address this limitation, we propose SimplexLoRA , which assigns an importance weight to each of the n n LoRA adapters, constrained to the n n -scaled simplex to enforce a fixed parameter budget. Key properties: (i) ranks learned automatically during fine-tuning; (ii) simplex constraint preserves the LoRA parameter budget; (iii) full LoRA compatibility; (iv) negligible training and inference overhead.",
+      "source": "https://arxiv.org/html/2610.37206v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0003",
+      "section": "2.1 Classical low-rank approaches",
+      "text": "While LoRA has popularized parameter-efficient fine-tuning, it is not the only method to explore low-rank or structured adaptations. Earlier approaches include LoHA [ Nam et al., 2022 ] , which utilizes element-wise (Hadamard) interactions between low-rank matrices to reduce the parameter count without sacrificing expressivity, and Krona [ Edalati et al., 2022 ] , which employs the Kronecker product in place of the conventional low-rank matrix product to improve parameter efficiency while maintaining model capacity. Subsequent methods extended or refined the LoRA framework. VERA [ Kopiczko et al., 2023 ] reduces adapter storage by sharing frozen random projection matrices across layers and learning small scaling vectors. rsLoRA [ Kalajdzievski, 2023 ] replaces the original LoRA scaling factor α / r \\alpha/r [ Hu et al., 2021 ] with the rank-stabilized factor α / r \\alpha/\\sqrt{r} . A complementary direction is taken by DoRA [ Liu et al., 2024 ] , which decomposes the adapted weight into magnitude and direction components and learns the magnitude together with a low-rank correction of the direction. Another line of work improves LoRA optimization and numerical efficiency. LoRA+ [ Hayou et al., 2024 ] uses different learning rates for the two adapter matrices, while QLoRA [ Dettmers et al., 2023 ] enables memory-efficient fine-tuning through 4-bit quantization of frozen base-model weights. Both are orthogonal to our adaptive rank allocation method and can be combined with it.",
+      "source": "https://arxiv.org/html/2610.37206v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0004",
+      "section": "2.2 Dynamic LoRA rank allocation",
+      "text": "This topic is of particular relevance in the context of our work, as we focus on adaptive rank learning, enabling the model to automatically adjust the capacity of each adapter during fine-tuning. It has attracted significant attention in recent research [ Zhang et al., 2023a ; Zhang et al., 2023b ; Sheng et al., 2025 ] , as exploiting dynamically changing ranks allows models to utilize newly allocated parameters more efficiently. The SVD-like representation of LoRA adapters proposed in AdaLoRA [ Zhang et al., 2023b ] replaces the standard two-matrix adapter with the parameterization 𝑷 ​ Λ ​ 𝑸 {\\bm{P}}\\Lambda{\\bm{Q}} and enables the construction of importance scores for individual singular components. Components outside the global importance budget are masked by setting the corresponding entries of Λ \\Lambda to zero. To encourage the SVD-like structure, the method applies the orthogonality regularizer R ⁡ ( 𝑷 , 𝑸 ) = ‖ 𝑷 ⊤ ​ 𝑷 − 𝑰 ‖ F 2 + ‖ 𝑸 ⊤ ​ 𝑸 − 𝑰 ‖ F 2 . R({\\bm{P}},{\\bm{Q}})=\\|{\\bm{P}}^{\\top}{\\bm{P}}-{\\bm{I}}\\|_{F}^{2}+\\|{\\bm{Q}}^{\\top}{\\bm{Q}}-{\\bm{I}}\\|_{F}^{2}. During training, all three matrices 𝑷 {\\bm{P}} , Λ \\Lambda , and 𝑸 {\\bm{Q}} are updated simultaneously. Although this parameterization avoids explicitly computing an SVD at every fine-tuning step, maintaining an initial rank above the target budget, regularly evaluating importance scores, and applying orthogonality regularization increase the training complexity compared with standard LoRA .",
+      "source": "https://arxiv.org/html/2610.37206v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0005",
+      "section": "2.2 Dynamic LoRA rank allocation",
+      "text": "Several methods manage the rank budget more flexibly. ElaLoRA [ Chang et al., 2025 ] uses SVD-based adaptation and gradient-derived importance scores to prune and expand ranks at scheduled intervals. FlexLoRA [ Liu et al., 2026 ] uses normalized spectral entropy to guide rank pruning and expansion under a global budget. The dynamic-rank DoRA of Mao et al. [2024] decomposes adapters into structured rank-one components and prunes them based on per-component importance. NormAL LoRA [ Aastik et al., 2025 ] uses rank-norm regularization to determine an appropriate rank for each module. In a similar way, Sheng et al. [2025] proposes a rank-one LoRA series representation of the increment matrix: Δ ​ 𝑾 = 𝒃 1 ​ 𝒂 1 + … + 𝒃 p ​ 𝒂 p = [ 𝑩 p − 1 𝒃 p ] ​ [ 𝑨 p − 1 𝒂 p ] , \\Delta{\\bm{W}}={\\bm{b}}_{1}{\\bm{a}}_{1}+\\ldots+{\\bm{b}}_{p}{\\bm{a}}_{p}=\\begin{bmatrix}{\\bm{B}}_{p-1}&{\\bm{b}}_{p}\\end{bmatrix}\\begin{bmatrix}{\\bm{A}}_{p-1}\\\\ {\\bm{a}}_{p}\\end{bmatrix}, where p p denotes the number of outer-loop iterations. This representation is applied to several layers, and after each outer-loop step a convergence criterion is evaluated: if the relative change between the ( p − 1 ) (p-1) -th and p p -th solutions is sufficiently small, the training of Δ ​ 𝑾 \\Delta{\\bm{W}} is terminated. Unlike IncreLoRA , which expands modules according to gradient-based importance scores, AROMA uses the relative Frobenius-norm change between consecutive solutions as a stopping criterion.",
+      "source": "https://arxiv.org/html/2610.37206v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0006",
+      "section": "2.2 Dynamic LoRA rank allocation",
+      "text": "Compared with these works, SimplexLoRA does not force adapter ranks to strictly increase or rely on expensive SVD computations. Instead, we allow the ranks to be learned as continuous parameters, enabling the model to respond dynamically to the task’s complexity. By leveraging simplex projection and weight freezing, we obtain a direct form of rank adaptation that avoids explicit importance scoring and iterative pruning.",
+      "source": "https://arxiv.org/html/2610.37206v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0007",
+      "section": "3 SimplexLoRA Framework",
+      "text": "For the LoRA method, we introduce trainable layer-wise scaling factors: 𝑾 i 0 + 𝑨 i ​ 𝑩 i → 𝑾 i 0 + ω i ​ 𝑨 i ​ 𝑩 i , \\displaystyle{\\bm{W}}_{i}^{0}+\\displaystyle{\\bm{A}}_{i}\\displaystyle{\\bm{B}}_{i}\\rightarrow\\displaystyle{\\bm{W}}_{i}^{0}+\\omega_{i}\\displaystyle{\\bm{A}}_{i}\\displaystyle{\\bm{B}}_{i}, where ω i ≥ 0 \\omega_{i}\\geq 0 represents the importance coefficient assigned to the i i -th adapter. The weights ω = ( ω 1 , … , ω n ) \\omega=(\\omega_{1},\\dots,\\omega_{n}) are constrained to the n n -scaled simplex, where n n is the number of LoRA adapters. This preserves LoRA magnitude, with ω = ( 1 , … , 1 ) = 𝟏 \\omega=(1,\\dots,1)=\\mathbf{1} recovering standard LoRA initialization [ Hu et al., 2021 ] . Motivated by the theoretical analysis in Appendix A , SimplexLoRA formulates the following alternating optimization problem: min ω ∈ n ⋅ Δ n − 1 ⁡ min 𝒜 , ℬ ⁡ ℒ ⁡ ( ω , 𝒜 , ℬ ) + ( λ / 2 ) ​ ‖ ω − 𝟏 ‖ 2 2 , \\displaystyle\\min_{\\omega\\in n\\cdot\\Delta_{n-1}}\\min_{\\mathcal{A},\\mathcal{B}}\\mathcal{L}(\\omega,\\mathcal{A},\\mathcal{B})+(\\lambda/2)\\|\\omega-\\mathbf{1}\\|_{2}^{2}, (1) where 𝒜 , ℬ = { 𝑨 i } i = 1 n , { 𝑩 i } i = 1 n \\mathcal{A},\\mathcal{B}=\\{\\displaystyle{\\bm{A}}_{i}\\}_{i=1}^{n},\\{\\displaystyle{\\bm{B}}_{i}\\}_{i=1}^{n} denote the sets of all LoRA adapters, ℒ \\mathcal{L} is the loss, and the term ( λ / 2 ) ​ ‖ ω − 𝟏 ‖ 2 2 (\\lambda/2)\\|\\omega-\\mathbf{1}\\|_{2}^{2} prevents overfitting of the importance weights ω \\omega .",
+      "source": "https://arxiv.org/html/2610.37206v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0008",
+      "section": "3.1 SimplexLoRA Training Process",
+      "text": "The SimplexLoRA algorithm employs an alternating optimization scheme with three phases, repeated for K K iterations.",
+      "source": "https://arxiv.org/html/2610.37206v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0009",
+      "section": "Phase 1. Warm-up.",
+      "text": "For T T steps, we perform standard LoRA fine-tuning by jointly optimizing the adapter parameters 𝒜 , ℬ \\mathcal{A},\\mathcal{B} and the importance weights ω \\omega using gradient-based methods.",
+      "source": "https://arxiv.org/html/2610.37206v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0010",
+      "section": "Phase 2. Simplex projection.",
+      "text": "The weight vector ω \\omega is projected onto the scaled simplex n ⋅ Δ n − 1 n\\cdot\\Delta_{n-1} via Euclidean projection [ Blondel et al., 2014 ] : min ω ^ ∈ n ⋅ Δ n − 1 ⁡ ‖ ω − ω ^ ‖ 2 2 . \\min_{\\hat{\\omega}\\in n\\cdot\\Delta_{n-1}}\\|\\omega-\\hat{\\omega}\\|_{2}^{2}.",
+      "source": "https://arxiv.org/html/2610.37206v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0011",
+      "section": "Phase 3. Rank update.",
+      "text": "Adapter ranks are dynamically resized while preserving the total parameter budget: r i new = ⌊ r 0 ⋅ ω i ⌋ r_{i}^{\\text{new}}=\\lfloor r_{0}\\cdot\\omega_{i}\\rfloor , where r 0 r_{0} is the initial (uniform) LoRA rank. When ranks change, the corresponding adapter matrices are resized and reinitialized following the standard LoRA scheme (see Appendix B ).",
+      "source": "https://arxiv.org/html/2610.37206v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0012",
+      "section": "Phase 4. Standard LoRA training with new ranks.",
+      "text": "After K K repetitions, we fix ω \\omega to 𝟏 \\mathbf{1} and reinitialize the adapter matrices 𝒜 \\mathcal{A} and ℬ \\mathcal{B} (Appendix B ). In this sense Phases 1–3 act as a short rank-search procedure: their role is to determine the per-layer rank allocation, while the warm-up adapter weights are intentionally discarded so that the final stage is functionally identical to standard LoRA with a non-uniform rank profile. Standard training then resumes with these fixed ranks, and any LoRA -based optimization algorithm can be applied. Figure 2: Scheduler for SimplexLoRA parameters.",
+      "source": "https://arxiv.org/html/2610.37206v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0013",
+      "section": "Scheduler.",
+      "text": "To ensure that the model resumes training after freezing the weights, we employ a linear scheduler with two training phases (see Figure 2 ). The first phase includes rank training with reduced learning rate. Once rank training is complete, the learning rate is reset to zero, and the warm-up begins to train the resulting LoRA layers. Note, however, that the learning rate for ω \\omega is fixed during training, the scheduler exclusively adjusts the LoRA weights. As a result, the subsequent fine-tuning phase is functionally identical to the standard LoRA training process.",
+      "source": "https://arxiv.org/html/2610.37206v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0014",
+      "section": "Discussion.",
+      "text": "The total number of rank updates, K ⋅ T K\\cdot T , is kept small to avoid rank collapse and to ensure that the majority of training focuses on optimizing the LoRA adapters. In practice, T T is negligible compared to the overall training duration. In the ablation study (Section 4.3 ), we analyze the sensitivity of SimplexLoRA to both hyperparameters K K and T T , evaluating their impact on performance. Table 1: Comparative performance of \"out-of-the-box\" algorithms on DeBERTaV3 base . The best results are shown in bold , and the second-best are underlined . All experiment details are provided in Appendix D .",
+      "source": "https://arxiv.org/html/2610.37206v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0015",
+      "section": "Discussion.",
+      "text": "Method # Params MNLI SST-2 CoLA QQP QNLI RTE MRPC ALL Acc Acc Mcc Acc/F1 Acc Acc Acc/F1 Avg Full Fine-Tuning 184M (100%) 0.8910 0.9541 0.6806 0.8962/0.8644 0.9383 0.8376 0.8848/0.9165 0.8689 LoRA r = 8 \\texttt{LoRA}_{r=8} [ Hu et al., 2021 ] 442K (0.24%) 0.8797 0.9450 0.6913 0.8802/0.8437 0.9301 0.8448 0.8897/ 0.9220 0.8696 LoHA r = 8 \\texttt{LoHA}_{r=8} [ Nam et al., 2022 ] 884K (0.48%) 0.8560 0.9392 0.6295 0.8674/0.8269 0.9085 0.8051 0.8628/0.9007 0.8440 Krona r = 32 \\texttt{Krona}_{r=32} [ Edalati et al., 2022 ] 57.6K (0.03%) 0.7587 0.9289 0.5907 0.8275/0.7816 0.8605 0.7509 0.7500/0.8416 0.7878 VERA r = 1024 \\texttt{VERA}_{r=1024} [ Kopiczko et al., 2023 ] 1.64M (0.88%) 0.8355 0.9404 0.6252 0.8592/0.8203 0.8975 0.7581 0.8529/0.8962 0.8317 rsLoRA r = 8 \\texttt{rsLoRA}_{r=8} [ Kalajdzievski, 2023 ] 442K (0.24%) 0.8814 0.9564 0.6414 0.8853/0.8506 0.9325 0.8267 0.8750/0.9122 0.8624 DoRA r = 8 \\texttt{DoRA}_{r=8} [ Liu et al., 2024 ] 442K (0.24%) 0.8811 0.9473 0.6748 0.8809/0.8451 0.9295 0.7978 0.8799/0.9139 0.8611 AdaLoRA r = 8 \\texttt{AdaLoRA}_{r=8} [ Zhang et al., 2023b ] 664K (0.36%) 0.8390 0.9392 0.6222 0.8534/0.8083 0.8999 0.7834 0.8859/0.9178 0.8388 NormAL LoRA r = 8 \\texttt{NormAL LoRA}_{r=8} [ Aastik et al., 2025 ] 442K (0.24%) 0.8814 0.9328 0.6857 0.8768/0.8403 0.9282 0.8292 0.8870/0.9195 0.8645 ElaLoRA r = 8 \\texttt{ElaLoRA}_{r=8} [ Chang et al., 2025 ] 442K (0.24%) 0.8853 0.9501 0.6638 0.8979 /0.8628 0.9146 0.8031 0.8782/0.9113 0.8630 FlexLoRA r = 8 \\texttt{FlexLoRA}_{r=8} [ Liu et al., 2026 ] 664K (0.36%) 0.8711 0.9557 0.6331 0.8684/ 0.8658 0.9343 0.8392 0.9014 /0.9217 0.8656 SimplexLoRA r = 8 \\texttt{SimplexLoRA}_{r=8} 442K (0.24%) 0.8984 0.9587 0.6572 0.9124 / 0.8844 0.9362 0.8339 0.8987 / 0.9289 0.8788",
+      "source": "https://arxiv.org/html/2610.37206v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0016",
+      "section": "3.2 Motivating Example of Rank Scaling",
+      "text": "Figure 3: Illustration of the rank distribution of SimplexLoRA . Figure 3 shows the final rank distribution from fine-tuning DeBERTaV3 base [ He et al., 2021 ] on the MRPC dataset from GLUE [ Wang et al., 2018 ] , tuning only self-attention layers. The learned distribution reveals a clear pattern: value projection matrices in self-attention layers consistently receive the highest ranks, indicating their critical role. Rather than eliminating ranks of adapters with low weights, the method reduces their magnitude, which helps mitigate underfitting.",
+      "source": "https://arxiv.org/html/2610.37206v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0017",
+      "section": "4 Experiments",
+      "text": "We evaluate SimplexLoRA on a diverse set of benchmarks, including GLUE [ Wang et al., 2018 ] , XSum [ Narayan et al., 2018 ] , CNN/Daily Mail [ Chen et al., 2016 ] , GSM8K [ Cobbe et al., 2021 ] , BoolQ [ Clark et al., 2019 ] , and HellaSwag [ Zellers et al., 2019 ] . We exclude GLUE STS-B, whose regression metric requires custom evaluation and which overlaps with the QQP/MRPC similarity tasks. Experiments are conducted using DeBERTaV3 base [ He et al., 2021 ] , Llama 3.1 8B [ AI@Meta, 2024 ] , Qwen3-8B [ Yang et al., 2025 ] , and BART-large [ Lewis et al., 2020 ] models. Hardware and hyperparameters are provided in Appendix D .",
+      "source": "https://arxiv.org/html/2610.37206v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0018",
+      "section": "4.1 Out-of-the-box Comparison",
+      "text": "We benchmark against baselines in default configurations under a number of training iterations. These span foundational PEFT methods (a performance floor) and recent dynamic-rank methods comparable to SimplexLoRA : Standard PEFT methods: LoRA [ Hu et al., 2021 ] , LoHA [ Nam et al., 2022 ] , Krona [ Edalati et al., 2022 ] , rsLoRA [ Kalajdzievski, 2023 ] , DoRA [ Liu et al., 2024 ] , and VERA [ Kopiczko et al., 2023 ] . Dynamic rank methods: AdaLoRA [ Zhang et al., 2023b ] , NormAL LoRA [ Aastik et al., 2025 ] , ElaLoRA [ Chang et al., 2025 ] , and FlexLoRA [ Liu et al., 2026 ] . In this setting (Table 1 ), where adapters are applied only to self-attention layers, full fine-tuning, standard LoRA , and SimplexLoRA emerge as the most robust methods, with SimplexLoRA achieving the best average score at the same 0.24 % 0.24\\% parameter budget as standard LoRA . Other approaches require extensive hyperparameter tuning to achieve competitive performance. Consequently, we select standard LoRA as our primary baseline for further detailed comparison due to its widespread adoption and stability. Table 2: Comparative results of top-performing algorithms: LoRA (L) and SimplexLoRA (S) on DeBERTaV3 base and Llama 3.1 8B. Results are averaged over 3 runs with different seeds. The best results per rank are shown in bold . All experiment details are provided in Appendix D .",
+      "source": "https://arxiv.org/html/2610.37206v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0019",
+      "section": "4.1 Out-of-the-box Comparison",
+      "text": "Model Rank Method MNLI SST-2 CoLA QQP QNLI RTE MRPC ALL Acc Acc Mcc Acc/F1 Acc Acc Acc/F1 Avg DeBERTaV3 base r = 1 r=1 L 0.8912 0.9488 0.6558 0.8905/0.8544 0.9250 0.7943 0.8905/0.9213 0.8562 S 0.8913 0.9576 0.6775 0.9018 / 0.8709 0.9317 0.8159 0.9093 / 0.9359 0.8690 r = 2 r=2 L 0.9004 0.9413 0.6600 0.9077/0.8631 0.9369 0.8068 0.9003/0.9193 0.8629 S 0.8946 0.9608 0.6658 0.9178 / 0.8842 0.9338 0.8252 0.9103 / 0.9314 0.8717 r = 4 r=4 L 0.8780 0.9562 0.6809 0.9153/0.8866 0.9582 0.7816 0.9207 / 0.9471 0.8700 S 0.9002 0.9610 0.6807 0.9244 / 0.8903 0.9358 0.8259 0.9044/0.9322 0.8756 r = 8 r=8 L 0.9030 0.9641 0.6965 0.9092/0.8723 0.9449 0.8537 0.9064/0.9127 0.8804 S 0.9047 0.9619 0.6978 0.9129 / 0.8901 0.9447 0.8305 0.9267 / 0.9475 0.8826 Llama 3.1 8B r = 1 r=1 L 0.8961 0.9751 0.7015 0.8891 /0.8370 0.9411 0.9016 0.9154/ 0.9408 0.8886 S 0.8861 0.9801 0.6829 0.8891 / 0.8379 0.9431 0.9204 0.9278 /0.9404 0.8898 r = 2 r=2 L 0.8996 0.9751 0.6967 0.8851 /0.8311 0.9421 0.9154 0.9204/0.9441 0.8900 S 0.8998 0.9801 0.6981 0.8851 / 0.8316 0.9381 0.9353 0.9254 / 0.9466 0.8933 r = 4 r=4 L 0.8993 0.9800 0.6902 0.8851/0.8286 0.9391 0.9154 0.9254 / 0.9462 0.8899 S 0.9004 0.9823 0.7069 0.8891 / 0.8325 0.9421 0.9304 0.9204/0.9429 0.8941 r = 8 r=8 L 0.8995 0.9851 0.6928 0.8851/0.8306 0.9421 0.9104 0.9154/0.9419 0.8892 S 0.9016 0.9851 0.7058 0.8881 / 0.8343 0.9431 0.9353 0.9204 / 0.9429 0.8952",
+      "source": "https://arxiv.org/html/2610.37206v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0020",
+      "section": "4.2 Comparison with LoRA",
+      "text": "Table 2 compares SimplexLoRA with standard LoRA at multiple ranks on DeBERTaV3 base and Llama 3.1 8B (adapters in all linear layers, hyperparameters tuned per method). Across most GLUE tasks, SimplexLoRA consistently outperforms LoRA while maintaining the same computational cost. For generality, we also evaluate Qwen3-8B (GSM8K, BoolQ, HellaSwag) and BART-large (XSum, CNN/DailyMail) in Table 3 . As on GLUE, SimplexLoRA matches or outperforms LoRA on most of these tasks, confirming the trend across architectures and task types. The improvement is most pronounced at low ranks ( r ∈ { 1 , 2 } r\\in\\{1,2\\} ), where the tight capacity budget of standard LoRA gives adaptive allocation the most room to help. Table 3: Comparative results: LoRA (L) and SimplexLoRA (S) on Qwen3-8B and BART-large. The best results per rank and model are shown in bold . All details are provided in Appendix D . Rank Method Qwen3-8B BART-large GSM8K BoolQ HellaSwag ALL XSum CNN/DailyMail Acc Acc Acc Avg ROUGE-1 ROUGE-1 r = 1 r=1 L 0.8522 0.655 0.772 0.760 0.372 0.245 S 0.8666 0.680 0.775 0.774 0.373 0.249 r = 2 r=2 L 0.8681 0.662 0.776 0.769 0.374 0.250 S 0.8673 0.682 0.791 0.780 0.376 0.254 r = 4 r=4 L 0.8537 0.691 0.777 0.774 0.375 0.255 S 0.8719 0.700 0.780 0.784 0.378 0.256 r = 8 r=8 L 0.8681 0.691 0.782 0.780 0.380 0.257 S 0.8741 0.699 0.790 0.788 0.379 0.259",
+      "source": "https://arxiv.org/html/2610.37206v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0021",
+      "section": "4.3 Ablation Study",
+      "text": "Figure 4: The influence of hyperparameters on SimplexLoRA performance. As supplementary analysis, we grid-search hyperparameters on MNLI with DeBERTa to assess the robustness (Figure 4 ). Both methods are trained for 2048 steps using the best configuration from the main experiments; each cell reports the validation-accuracy difference. The results show that SimplexLoRA is stable under a limited optimization budget ( K ⋅ T < 100 K\\cdot T<100 , i.e., less than 5% of total training). Very small values (e.g., K = 3 K=3 , T = 5 T=5 ) lead to underfitting due to insufficient rank adaptation, while larger values (e.g., K ≥ 10 K\\geq 10 or T ≥ 15 T\\geq 15 ) tend to cause rank overfitting. Beyond these thresholds, we find that increasing the number of projection steps and inner iterations results in a performance plateau, with values showing minimal deviation from the average. This confirms the importance of keeping K ⋅ T K\\cdot T low to maintain efficiency without performance loss. In all experiments, we use K = 5 K=5 and T = 10 T=10 , which consistently yields strong performance.",
+      "source": "https://arxiv.org/html/2610.37206v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0022",
+      "section": "5 Conclusion",
+      "text": "We presented SimplexLoRA , a LoRA variant that allocates a fixed rank budget non-uniformly across layers via short alternating optimization on the n n -scaled simplex. Across 12 tasks and four backbones up to 8B parameters, SimplexLoRA matches or outperforms standard LoRA and recent adaptive baselines at the same parameter count and inference cost, with the largest gains in the low-rank regime.",
+      "source": "https://arxiv.org/html/2610.37206v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0023",
+      "section": "Limitations",
+      "text": "The limitations of the proposed strategy are as follows. First, SimplexLoRA introduces three additional hyperparameters: the number of iterations between simplex projection steps T T , the total number of such projections K K , and the weight decay coefficient used for regularization; the ablation in Section 4.3 indicates that the method is robust within a broad range but does not eliminate the need to set these values. Second, the lack of experiments on models substantially larger than 8B parameters limits the generalizability of our findings. Third, while the per-task averages over three seeds consistently favor SimplexLoRA , on a few individual tasks (e.g., CoLA and RTE in the out-of-the-box DeBERTaV3 comparison) standard LoRA remains competitive or slightly better, indicating that the benefit of adaptive rank allocation is task-dependent. Fourth, a fundamental ambiguity remains during training: a small gradient norm in a layer may indicate either that the weights are well-optimized or that the gradients have vanished by the time they reach that layer, which can in principle bias the learned importance weights. On the ethical side, we see no specific risks beyond those already inherent to fine-tuning large language models: this work studies a parameter-efficient adaptation procedure, introduces no new data sources, uses only publicly available benchmarks with no proprietary or personal data and no human subjects, and reduces rather than increases the compute and memory footprint of fine-tuning.",
+      "source": "https://arxiv.org/html/2610.37206v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0024",
+      "section": "Acknowledgments",
+      "text": "The work of A. Beznosikov was supported by the Russian Science Foundation (project no. 21-71-30005-P).",
+      "source": "https://arxiv.org/html/2610.37206v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0025",
+      "section": "References",
+      "text": "Aastik et al. [2025] Aastik, Meghana Topu, Chinmay Kulkarni, and Pragya Paramita Sahu. NormAL LoRA: What is the perfect size? In Christos Christodoulopoulos, Tanmoy Chakraborty, Carolyn Rose, and Violet Peng, editors, Findings of the Association for Computational Linguistics: EMNLP 2025 , pages 19716–19731, Suzhou, China, November 2025. Association for Computational Linguistics. ISBN 979-8-89176-335-7. doi: 10.18653/v1/2025.findings-emnlp.1074 . URL https://aclanthology.org/2025.findings-emnlp.1074/ . AI@Meta [2024] AI@Meta. The llama 3 herd of models, 2024. URL https://arxiv.org/abs/2407.21783 . Blondel et al. [2014] Mathieu Blondel, Akinori Fujino, and Naonori Ueda. Large-scale multiclass support vector machine training via euclidean projection onto the simplex. In 2014 22nd International Conference on Pattern Recognition , pages 1289–1294, 2014. doi: 10.1109/ICPR.2014.231 . Chang et al. [2025] Huandong Chang, Zicheng Ma, Mingyuan Ma, Zhenting Qi, Andrew Sabot, Hong Jiang, and H. T. Kung. ElaLoRA: Elastic and learnable low-rank adaptation for efficient model fine-tuning. arXiv preprint arXiv:2504.00254 , 2025. Chen et al. [2016] Danqi Chen, Jason Bolton, and Christopher D. Manning. A thorough examination of the CNN/Daily Mail reading comprehension task. In Proceedings of the 54th Annual Meeting of the Association for Computational Linguistics (Volume 1: Long Papers) , pages 2358–2367, 2016. doi: 10.18653/v1/P16-1223 . Clark et al. [2019] Christopher Clark, Kenton Lee, Ming-Wei Chang, Tom Kwiatkowski, Michael Collins, and Kristina Toutanova. Boolq: Exploring the surprising difficulty of natural yes/no questions. arXiv preprint arXiv:1905.10044 , 2019.",
+      "source": "https://arxiv.org/html/2610.37206v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0026",
+      "section": "References",
+      "text": "Cobbe et al. [2021] Karl Cobbe, Vineet Kosaraju, Mohammad Bavarian, Mark Chen, Heewoo Jun, Lukasz Kaiser, Matthias Plappert, Jerry Tworek, Jacob Hilton, Reiichiro Nakano, Christopher Hesse, and John Schulman. Training verifiers to solve math word problems. arXiv preprint arXiv:2110.14168 , 2021. Dettmers et al. [2023] Tim Dettmers, Artidoro Pagnoni, Ari Holtzman, and Luke Zettlemoyer. QLoRA: Efficient finetuning of quantized llms. arXiv preprint arXiv:2305.14314 , 2023. Edalati et al. [2022] Ali Edalati, Marzieh Tahaei, Ivan Kobyzev, Vahid Partovi Nia, James J Clark, and Mehdi Rezagholizadeh. Krona: Parameter efficient tuning with kronecker adapter. arXiv preprint arXiv:2212.10650 , 2022. Fatkhullin et al. [2022] Ilyas Fatkhullin, Jalal Etesami, Niao He, and Negar Kiyavash. Sharp analysis of stochastic optimization under global kurdyka-lojasiewicz inequality. Advances in Neural Information Processing Systems , 35:15836–15848, 2022. Han et al. [2024] Zeyu Han, Chao Gao, Jinyang Liu, Jeff Zhang, and Sai Qian Zhang. Parameter-efficient fine-tuning for large models: A comprehensive survey. arXiv preprint arXiv:2403.14608 , 2024. Hayou et al. [2024] Soufiane Hayou, Nikhil Ghosh, and Bin Yu. LoRA+: Efficient low rank adaptation of large models. arXiv preprint arXiv:2402.12354 , 2024. He et al. [2015] Kaiming He, Xiangyu Zhang, Shaoqing Ren, and Jian Sun. Delving deep into rectifiers: Surpassing human-level performance on imagenet classification. In Proceedings of the IEEE international conference on computer vision , pages 1026–1034, 2015. He et al. [2021] Pengcheng He, Jianfeng Gao, and Weizhu Chen. Debertav3: Improving deberta using electra-style pre-training with gradient-disentangled embedding sharing. arXiv preprint arXiv:2111.09543 , 2021.",
+      "source": "https://arxiv.org/html/2610.37206v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0027",
+      "section": "References",
+      "text": "Hinder et al. [2020] Oliver Hinder, Aaron Sidford, and Nimit Sohoni. Near-optimal methods for minimizing star-convex functions and beyond. In Conference on learning theory , pages 1894–1938. PMLR, 2020. Hu et al. [2021] Edward J Hu, Yelong Shen, Phillip Wallis, Zeyuan Allen-Zhu, Yuanzhi Li, Shean Wang, Lu Wang, and Weizhu Chen. LoRA: Low-rank adaptation of large language models. arXiv preprint arXiv:2106.09685 , 2021. Kalajdzievski [2023] Damjan Kalajdzievski. A rank stabilization scaling factor for fine-tuning with lora. arXiv preprint arXiv:2312.03732 , 2023. Khaled et al. [2023] Ahmed Khaled, Othmane Sebbouh, Nicolas Loizou, Robert M Gower, and Peter Richtárik. Unified analysis of stochastic gradient methods for composite convex and smooth optimization. Journal of Optimization Theory and Applications , 199(2):499–540, 2023. Kleinberg et al. [2018] Bobby Kleinberg, Yuanzhi Li, and Yang Yuan. An alternative view: When does sgd escape local minima? In International conference on machine learning , pages 2698–2707. PMLR, 2018. Kopiczko et al. [2023] Dawid J Kopiczko, Tijmen Blankevoort, and Yuki M Asano. VeRA: Vector-based random matrix adaptation. arXiv preprint arXiv:2310.11454 , 2023. Lewis et al. [2020] Mike Lewis, Yinhan Liu, Naman Goyal, Marjan Ghazvininejad, Abdelrahman Mohamed, Omer Levy, Veselin Stoyanov, and Luke Zettlemoyer. BART: Denoising sequence-to-sequence pre-training for natural language generation, translation, and comprehension. In Proceedings of the 58th Annual Meeting of the Association for Computational Linguistics , pages 7871–7880. Association for Computational Linguistics, 2020. doi: 10.18653/v1/2020.acl-main.703 .",
+      "source": "https://arxiv.org/html/2610.37206v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0028",
+      "section": "References",
+      "text": "Liu et al. [2026] Muqing Liu, Chongjie Si, and Yuheng Jia. FlexLoRA: Entropy-guided flexible low-rank adaptation. In International Conference on Learning Representations , 2026. URL https://openreview.net/forum?id=tqnkbdYWWm . Liu et al. [2024] Shih-Yang Liu, Chien-Yi Wang, Hongxu Yin, Pavlo Molchanov, Yu-Chiang Frank Wang, Kwang-Ting Cheng, and Min-Hung Chen. DoRA: Weight-decomposed low-rank adaptation. arXiv preprint arXiv:2402.09353 , 2024. Loshchilov and Hutter [2019] Ilya Loshchilov and Frank Hutter. Decoupled weight decay regularization. In International Conference on Learning Representations , 2019. URL https://openreview.net/forum?id=Bkg6RiCqY7 . Mao et al. [2024] Yulong Mao, Kaiyu Huang, Changhao Guan, Ganglin Bao, Fengran Mo, and Jinan Xu. DoRA: Enhancing parameter-efficient fine-tuning with dynamic rank distribution. arXiv preprint arXiv:2405.17357 , 2024. Nam et al. [2022] Hyeon-Woo Nam, Ye-Bin Moon, and Tae-Hyun Oh. FedPara: Low-rank hadamard product for communication-efficient federated learning. In International Conference on Learning Representations , 2022. URL https://openreview.net/forum?id=d71n4ftoCBy . Narayan et al. [2018] Shashi Narayan, Shay B. Cohen, and Mirella Lapata. Don’t give me the details, just the summary! Topic-aware convolutional neural networks for extreme summarization. In Proceedings of the 2018 Conference on Empirical Methods in Natural Language Processing , pages 1797–1807, 2018. doi: 10.18653/v1/D18-1206 . Sheng et al. [2025] Hao Nan Sheng, Zhi yong Wang, Mingrui Yang, and Hing Cheung So. Aroma: Autonomous rank-one matrix adaptation, 2025. URL https://arxiv.org/abs/2504.05343 .",
+      "source": "https://arxiv.org/html/2610.37206v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0029",
+      "section": "References",
+      "text": "Wang et al. [2018] Alex Wang, Amanpreet Singh, Julian Michael, Felix Hill, Omer Levy, and Samuel R. Bowman. GLUE: A multi-task benchmark and analysis platform for natural language understanding. In Proceedings of the 2018 EMNLP Workshop BlackboxNLP , pages 353–355. Association for Computational Linguistics, 2018. doi: 10.18653/v1/W18-5446 . Yang et al. [2025] An Yang, Anfeng Li, Baosong Yang, Beichen Zhang, Binyuan Hui, Bo Zheng, Bowen Yu, Chang Gao, Chengen Huang, Chenxu Lv, Chujie Zheng, Dayiheng Liu, Fan Zhou, Fei Huang, Feng Hu, Hao Ge, Haoran Wei, Huan Lin, Jialong Tang, Jian Yang, Jianhong Tu, Jianwei Zhang, Jianxin Yang, Jiaxi Yang, Jing Zhou, Jingren Zhou, Junyang Lin, Kai Dang, Keqin Bao, Kexin Yang, Le Yu, Lianghao Deng, Mei Li, Mingfeng Xue, Mingze Li, Pei Zhang, Peng Wang, Qin Zhu, Rui Men, Ruize Gao, Shixuan Liu, Shuang Luo, Tianhao Li, Tianyi Tang, Wenbiao Yin, Xingzhang Ren, Xinyu Wang, Xinyu Zhang, Xuancheng Ren, Yang Fan, Yang Su, Yichang Zhang, Yinger Zhang, Yu Wan, Yuqiong Liu, Zekun Wang, Zeyu Cui, Zhenru Zhang, Zhipeng Zhou, and Zihan Qiu. Qwen3 technical report, 2025. URL https://arxiv.org/abs/2505.09388 . Zellers et al. [2019] Rowan Zellers, Ari Holtzman, Yonatan Bisk, Ali Farhadi, and Yejin Choi. Hellaswag: Can a machine really finish your sentence? arXiv preprint arXiv:1905.07830 , 2019. Zhang et al. [2025] Dacao Zhang, Kun Zhang, Shimao Chu, Le Wu, Xin Li, and Si Wei. More: A mixture of low-rank experts for adaptive multi-task learning. arXiv preprint arXiv:2505.22694 , 2025. Zhang et al. [2023a] Feiyu Zhang, Liangzhi Li, Junhao Chen, Zhouqiang Jiang, Bowen Wang, and Yiming Qian. Increlora: Incremental parameter allocation method for parameter-efficient fine-tuning, 2023a. URL https://arxiv.org/abs/2308.12043 .",
+      "source": "https://arxiv.org/html/2610.37206v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0030",
+      "section": "References",
+      "text": "Zhang et al. [2023b] Qingru Zhang, Minshuo Chen, Alexander Bukharin, Nikos Karampatziakis, Pengcheng He, Yu Cheng, Weizhu Chen, and Tuo Zhao. AdaLoRA: Adaptive budget allocation for parameter-efficient fine-tuning. arXiv preprint arXiv:2303.10512 , 2023b. Zhou et al. [2019] Yi Zhou, Junjie Yang, Huishuai Zhang, Yingbin Liang, and Vahid Tarokh. Sgd converges to global minimum in deep learning via star-convex path. arXiv preprint arXiv:1901.00451 , 2019. Appendix Supplementary Materials for SimplexLoRA: Dynamic Rank Updating via Alternating Minimization with Simplex Projection",
+      "source": "https://arxiv.org/html/2610.37206v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0031",
+      "section": "Appendix A SimplexLoRA : theoretical motivation",
+      "text": "This section presents a heuristic argument that motivates the simplex-constrained reparameterization of Section 3 . We do not claim a formal optimization guarantee in the non-convex setting; the goal is to clarify why importance weights on a simplex are a natural device for redistributing adapter capacity. Consider a loss function ℒ ⁡ ( 𝑾 1 , … , 𝑾 n ) \\mathcal{L}(\\displaystyle{\\bm{W}}^{1},\\dots,\\displaystyle{\\bm{W}}^{n}) for a machine learning model with n n layers. In the context of fine-tuning an LLM using the LoRA algorithm, the optimization problem can be formulated as min 𝒜 , ℬ { ℒ ( 𝒜 , ℬ ) := ℒ ( 𝑨 1 𝑩 1 , … , 𝑨 n 𝑩 n ) } , \\min_{\\mathcal{A},\\mathcal{B}}\\left\\{\\mathcal{L}(\\mathcal{A},\\mathcal{B}):=\\mathcal{L}(\\displaystyle{\\bm{A}}^{1}\\displaystyle{\\bm{B}}^{1},\\dots,\\displaystyle{\\bm{A}}^{n}\\displaystyle{\\bm{B}}^{n})\\right\\}, where 𝒜 \\mathcal{A} and ℬ \\mathcal{B} denote the sets of all LoRA adapters. To generalize this formulation, we introduce a non-negative scaling factor ω i ≥ 0 \\omega_{i}\\geq 0 for each layer i i , which can be interpreted as rescaling the adapter matrix 𝑨 i \\displaystyle{\\bm{A}}^{i} by ω i \\omega_{i} . For the purposes of the present derivation, we constrain the vector ω := ( ω 1 , … , ω n ) \\omega:=(\\omega_{1},\\dots,\\omega_{n}) to lie on the probability simplex Δ n − 1 \\Delta_{n-1} , i.e., ∑ i = 1 n ω i = 1 \\sum_{i=1}^{n}\\omega_{i}=1 ; the n n -scaled simplex used in the algorithm (Section 3 ) is the same object up to a factor of n n , chosen so that the uniform vector ω = 𝟏 \\omega=\\mathbf{1} recovers standard LoRA . The resulting optimization problem is then",
+      "source": "https://arxiv.org/html/2610.37206v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0032",
+      "section": "Appendix A SimplexLoRA : theoretical motivation",
+      "text": "min 𝒜 , ℬ ⁡ { ℒ ⁡ ( ω 1 ​ 𝑨 1 ​ 𝑩 1 , … , ω n ​ 𝑨 n ​ 𝑩 n ) } . \\min_{\\mathcal{A},\\mathcal{B}}\\left\\{\\mathcal{L}(\\omega_{1}\\displaystyle{\\bm{A}}^{1}\\displaystyle{\\bm{B}}^{1},\\dots,\\omega_{n}\\displaystyle{\\bm{A}}^{n}\\displaystyle{\\bm{B}}^{n})\\right\\}. Note that this reparameterization does not alter the expressive power of the model, as the scaling factors can be absorbed into the adapter matrices. A classical simplifying assumption in the optimization literature is that ℒ \\mathcal{L} is convex [ Khaled et al., 2023 ] with respect to all parameters { 𝑾 1 , … , 𝑾 n } \\{\\displaystyle{\\bm{W}}^{1},\\dots,\\displaystyle{\\bm{W}}^{n}\\} . For deep networks this is generally false, but convex analysis is still commonly used as a guiding lens: empirical studies report local convexity along training trajectories [ Kleinberg et al., 2018 ; Zhou et al., 2019 ] , and many non-convex results build on convex foundations [ Hinder et al., 2020 ; Fatkhullin et al., 2022 ] . We adopt this assumption only to derive the upper bound below; the resulting prescription on ω \\omega is then transferred back to the non-convex setting as a design heuristic, not as a guarantee. Therefore, if we take 𝒜 i ⋅ ℬ i := { 0 , … , 𝑨 i ​ 𝑩 i , … , 0 } \\mathcal{A}^{i}\\cdot\\mathcal{B}^{i}:=\\{0,\\dots,\\displaystyle{\\bm{A}}^{i}\\displaystyle{\\bm{B}}^{i},\\dots,0\\} , that is, we fine-tune only the i i -th layer, then, by the convexity of ℒ \\mathcal{L} (Jensen’s inequality), we obtain:",
+      "source": "https://arxiv.org/html/2610.37206v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0033",
+      "section": "Appendix A SimplexLoRA : theoretical motivation",
+      "text": "min 𝒜 , ℬ ⁡ { ℒ ⁡ ( 𝒜 , ℬ ) } \\displaystyle\\min_{\\mathcal{A},\\mathcal{B}}\\left\\{\\mathcal{L}(\\mathcal{A},\\mathcal{B})\\right\\} = min 𝒜 , ℬ ⁡ { ℒ ⁡ ( ω 1 ​ 𝑨 1 ​ 𝑩 1 , … , ω n ​ 𝑨 n ​ 𝑩 n ) } \\displaystyle=\\min_{\\mathcal{A},\\mathcal{B}}\\left\\{\\mathcal{L}(\\omega_{1}\\displaystyle{\\bm{A}}^{1}\\displaystyle{\\bm{B}}^{1},\\dots,\\omega_{n}\\displaystyle{\\bm{A}}^{n}\\displaystyle{\\bm{B}}^{n})\\right\\} = min 𝒜 , ℬ ⁡ { ℒ ⁡ ( ∑ i = 1 n ω i ⋅ { 0 , … , 𝑨 i ​ 𝑩 i , … , 0 } ) } \\displaystyle=\\min_{\\mathcal{A},\\mathcal{B}}\\left\\{\\mathcal{L}\\left(\\sum_{i=1}^{n}\\omega_{i}\\cdot\\{0,\\dots,\\displaystyle{\\bm{A}}^{i}\\displaystyle{\\bm{B}}^{i},\\dots,0\\}\\right)\\right\\} ≤ min 𝒜 , ℬ ⁡ { ∑ i = 1 n ω i ​ ℒ ​ ( 𝒜 i ⋅ ℬ i ) } \\displaystyle\\leq\\min_{\\mathcal{A},\\mathcal{B}}\\left\\{\\sum_{i=1}^{n}\\omega_{i}\\mathcal{L}\\left(\\mathcal{A}^{i}\\cdot\\mathcal{B}^{i}\\right)\\right\\} = ∑ i = 1 n ω i ​ min 𝑨 i , 𝑩 i ​ { ℒ ⁡ ( 0 , … , 𝑨 i ​ 𝑩 i , … , 0 ) } . \\displaystyle=\\sum_{i=1}^{n}\\omega_{i}\\min_{\\displaystyle{\\bm{A}}^{i},\\displaystyle{\\bm{B}}^{i}}\\left\\{\\mathcal{L}(0,\\dots,\\displaystyle{\\bm{A}}^{i}\\displaystyle{\\bm{B}}^{i},\\dots,0)\\right\\}. Thus, the original fine-tuning problem is upper-bounded by a weighted sum of n n single-layer fine-tuning problems. Minimizing this upper bound over ω ∈ Δ n − 1 \\omega\\in\\Delta_{n-1} allocates weight to the layer with the smallest single-layer minimum: the i i -th coordinate of the resulting ω \\omega exceeds the j j -th if and only if min 𝒜 i , ℬ i ⁡ ℒ ⁡ ( 𝒜 i ⋅ ℬ i ) ≤ min 𝒜 j , ℬ j ⁡ ℒ ⁡ ( 𝒜 j ⋅ ℬ j ) , \\displaystyle\\min_{\\mathcal{A}^{i},\\mathcal{B}^{i}}\\mathcal{L}(\\mathcal{A}^{i}\\cdot\\mathcal{B}^{i})\\leq\\min_{\\mathcal{A}^{j},\\mathcal{B}^{j}}\\mathcal{L}(\\mathcal{A}^{j}\\cdot\\mathcal{B}^{j}),",
+      "source": "https://arxiv.org/html/2610.37206v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0034",
+      "section": "Appendix A SimplexLoRA : theoretical motivation",
+      "text": "since otherwise swapping their positions would yield a smaller upper bound. Reading this in reverse, components of ω \\omega rank the layers by their single-layer \"fitting potential\". SimplexLoRA uses this ranking as a proxy for layer importance and reallocates adapter rank accordingly: well-adapted layers receive higher ranks, weaker ones lower. We emphasize that this argument bounds the loss, not the rank distribution itself, so the connection to optimal ranks remains a heuristic; its empirical effectiveness is reported in Section 3 and the ablation in Section 4.3 . Note that to prevent ω \\omega from degenerating into a one-hot vector, which is a common issue in simplex-constrained optimization where a single component dominates, one can apply regularization. In our implementation, we use a standard Euclidean regularization term to encourage ω \\omega to remain closer to a uniform distribution across all components.",
+      "source": "https://arxiv.org/html/2610.37206v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0035",
+      "section": "Appendix B Adapter Reinitialization",
+      "text": "To ensure that the reinitialized adapters do not introduce immediate perturbations to the model’s output, we follow the standard LoRA initialization scheme. ∙ \\bullet 𝑨 i {\\bm{A}}^{i} initialized using the Kaiming uniform distribution [ He et al., 2015 ] to preserve the variance of activations: 𝑨 i ∼ U ⁡ ( − d i ​ n − 0.5 , d i ​ n − 0.5 ) , {\\bm{A}}^{i}\\sim U\\left(-d_{in}^{-0.5},d_{in}^{-0.5}\\right), ∙ \\bullet 𝑩 i {\\bm{B}}^{i} initialized to zero. This combination ensures that the initial product 𝑨 i ​ 𝑩 i = 𝟎 {\\bm{A}}^{i}{\\bm{B}}^{i}=\\mathbf{0} , maintaining the model’s performance at the start of the final training stage while providing a stable gradient flow for the new parameters.",
+      "source": "https://arxiv.org/html/2610.37206v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0036",
+      "section": "Appendix C Simplex Projections",
+      "text": "While softmax and weighted softmax transformations are commonly used for projecting onto the simplex, we observed severe performance degradation during training when applying these methods. Their behavior is highly sensitive to temperature scaling: low temperatures tend to produce nearly one-hot distributions, whereas high temperatures result in almost uniform outputs. Such degeneracies are particularly problematic in our setting, where the goal is to efficiently allocate the rank budget across multiple adapters without inducing excessive sparsity or uniformity. For these reasons, we utilize the standard Euclidean regularization in the optimization problem formulation equation 1 , rather than alternatives such as KL divergence.",
+      "source": "https://arxiv.org/html/2610.37206v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0037",
+      "section": "Appendix D Experimental Details",
+      "text": "The core algorithm is implemented in PyTorch using the Huggingface library. All experiments are conducted on NVIDIA A100-SXM4-80GB GPUs. Following standard LoRA practice, we use the scaling factor α / r \\alpha/r with α = 32 \\alpha=32 and dynamically updated ranks r i new r_{i}^{\\text{new}} [ Hu et al., 2021 ] . To support simplex projection and dynamic rank reallocation, we employ a modified AdamW optimizer [ Loshchilov and Hutter, 2019 ] with specialized update steps for ω \\omega , rank resizing, and a custom learning rate schedule. Training and optimization hyperparameters for each experimental setup are summarized in Tables 4 , 5 , 6 , 7 , and 8 . The LR warm-up values reported in these tables refer to the learning-rate scheduler and are not SimplexLoRA rank-search hyperparameters. For the first table, the learning rate was either adopted from the original publications or selected via a small grid search. For the DeBERTa, Llama, and Qwen setups, the optimal configuration for each task was determined via an independent grid search over the specified hyperparameter ranges. For GSM8K, we use few-shot chain-of-thought prompting with flexible answer extraction during evaluation. All the results were averaged across 3 random seeds.",
+      "source": "https://arxiv.org/html/2610.37206v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0038",
+      "section": "Appendix D Experimental Details",
+      "text": "Table 4: Hyperparameters for out-of-the-box comparison (Table 1 ). Hyperparameter Value Optimizer AdamW β 1 , β 2 \\beta_{1},\\beta_{2} 0.9 , 0.999 0.9,0.999 Model learning rate Tuned (PEFT) Learning rate ( ω \\omega ) 5 5 LR warm-up 30 30 Reg. weight decay 0 Dropout 0.05 0.05 Grad. accumulation 6 6 Training budget 512 512 iterations Batch size 32 32 Scheduler Linear Target layers Query, Key, Value Table 5: Hyperparameters for DeBERTaV3 base experiments (Table 2 ). Hyperparameter Value / Grid Optimizer AdamW β 1 , β 2 \\beta_{1},\\beta_{2} 0.9 , 0.999 0.9,0.999 Model learning rate { 3 , 5 , 8 , 10 , 30 , 50 , 80 , 100 } × 10 − 5 \\{3,5,8,10,30,50,80,100\\}\\!\\times\\!10^{-5} Learning rate ( ω \\omega ) 5 5 LR warm-up { 0 , 20 , 30 , 50 , 70 , 100 , 200 } \\{0,20,30,50,70,100,200\\} Reg. weight decay { 0 , 10 0 , 10 − 1 , … , 10 − 6 } \\{0,10^{0},10^{-1},\\dots,10^{-6}\\} Dropout 0.05 0.05 Grad. accumulation 6 6 Training budget task-specific Batch size task-specific Scheduler Two-phase (Linear) Target layers All linear layers Task-specific (# epochs / batch size) MNLI / SST-2 / QNLI / QQP (7 / 32), (10 / 32), (5 / 32), (5 / 32) CoLA / RTE / MRPC (15 / 64), (50 / 64), (30 / 64) Table 6: Hyperparameters for Llama 3.1 8B experiments (Table 2 ). Hyperparameter Value / Grid Optimizer AdamW β 1 , β 2 \\beta_{1},\\beta_{2} 0.9 , 0.999 0.9,0.999 Model learning rate { 3 , 5 , 8 , 10 , 30 , 50 , 80 , 100 } × 10 − 5 \\{3,5,8,10,30,50,80,100\\}\\!\\times\\!10^{-5} Learning rate ( ω \\omega ) 5 LR warm-up 50 Reg. weight decay { 0 , 10 0 , 10 − 1 , … , 10 − 6 } \\{0,10^{0},10^{-1},\\dots,10^{-6}\\} Dropout 0.05 0.05 Grad. accumulation 1 1 Training budget 1024 1024 iterations Batch size 16 16 Scheduler Two-phase (Cosine) Target layers All linear layers Table 7: Hyperparameters for Qwen3-8B experiments (Table 3",
+      "source": "https://arxiv.org/html/2610.37206v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0039",
+      "section": "Appendix D Experimental Details",
+      "text": ".05 Grad. accumulation 1 1 Training budget 1024 1024 iterations Batch size 16 16 Scheduler Two-phase (Cosine) Target layers All linear layers Table 7: Hyperparameters for Qwen3-8B experiments (Table 3 ). Hyperparameter Value / Grid Optimizer AdamW β 1 , β 2 \\beta_{1},\\beta_{2} 0.9 , 0.999 0.9,0.999 Model learning rate { 3 , 5 , 8 , 10 , 30 , 50 , 80 , 100 } × 10 − 5 \\{3,5,8,10,30,50,80,100\\}\\!\\times\\!10^{-5} Learning rate ( ω \\omega ) 5 LR warm-up 350 Reg. weight decay { 0 , 10 0 , 10 − 1 , … , 10 − 6 } \\{0,10^{0},10^{-1},\\dots,10^{-6}\\} Dropout 0.05 0.05 Grad. accumulation 1 1 Training budget 3500 3500 iterations Batch size 4 4 Scheduler Two-phase (Linear) Target layers All linear layers Table 8: Hyperparameters for BART-large experiments (Table 3 ). Hyperparameter Value / Grid Optimizer AdamW β 1 , β 2 \\beta_{1},\\beta_{2} 0.9 , 0.999 0.9,0.999 Model learning rate Tuned (PEFT) Learning rate ( ω \\omega ) 5 5 LR warm-up 50 50 Reg. weight decay 10 − 4 10^{-4} Model weight decay 10 − 1 10^{-1} Dropout 0.05 0.05 Grad. accumulation 16 16 Training budget 15 15 epochs Batch size 8 8 Scheduler Two-phase (Linear) Beam size 8 8 Max source / target length 256 / 160 256/160 Target layers All linear layers",
+      "source": "https://arxiv.org/html/2610.37206v1",
+      "offset": 1599
+    },
+    {
+      "chunk_id": "chunk-0040",
+      "section": "Appendix E Use of AI Assistants",
+      "text": "During the preparation of this work, the authors used a LLM to assist with several tasks. Specifically, the LLM was employed for code generation to create data visualization scripts, debugging existing code, and for proofreading the paper to improve grammatical accuracy and stylistic consistency. After using this tool, the authors reviewed and edited the content as needed for the final publication.",
+      "source": "https://arxiv.org/html/2610.37206v1",
+      "offset": 0
+    }
+  ],
+  "links": [
+    {
+      "href": "https://github.com/brain-lab-research/SimplexLoRA",
+      "text": "https://github.com/brain-lab-research/SimplexLoRA",
+      "section": "Article",
+      "context": "pter importance weights on the n n -scaled simplex during a short warm-up and then freezes them, dynamically allocating capacity where it is most beneficial without increasing the overall parameter budget or inference cost. We evaluate SimplexLoRA across 12 language understanding, summarization, and reasoning tasks using DeBERTaV3, BART-large, Llama 3.1 8B, and Qwen3-8B. Our results show that SimplexLoRA consistently matches or outperforms standard LoRA and recent adaptive baselines, with the largest gains at low ranks. Our code is available at https://github.com/brain-lab-research/SimplexLoRA",
+      "url": "https://github.com/brain-lab-research/SimplexLoRA"
+    },
+    {
+      "href": "#bib.bib16",
+      "text": "Hu et al., 2021",
+      "section": "1 Introduction",
+      "context": "LoRA [ Hu et al., 2021",
+      "url": "https://arxiv.org/html/2610.37206v1#bib.bib16"
+    },
+    {
+      "href": "#bib.bib11",
+      "text": "Han et al., 2024",
+      "section": "1 Introduction",
+      "context": "LoRA [ Hu et al., 2021 ] is a widely used parameter-efficient fine-tuning method [ Han et al., 2024",
+      "url": "https://arxiv.org/html/2610.37206v1#bib.bib11"
+    },
+    {
+      "href": "#bib.bib28",
+      "text": "Sheng et al., 2025",
+      "section": "1 Introduction",
+      "context": "Despite its efficiency, standard LoRA uses a fixed rank across all layers, ignoring layer-wise differences in convergence and representation learning. Existing adaptive rank allocation methods attempt to address this issue but suffer from the critical drawbacks: (i) substantially more trainable parameters [ Sheng et al., 2025",
+      "url": "https://arxiv.org/html/2610.37206v1#bib.bib28"
+    },
+    {
+      "href": "#bib.bib32",
+      "text": "Zhang et al., 2025",
+      "section": "1 Introduction",
+      "context": "Despite its efficiency, standard LoRA uses a fixed rank across all layers, ignoring layer-wise differences in convergence and representation learning. Existing adaptive rank allocation methods attempt to address this issue but suffer from the critical drawbacks: (i) substantially more trainable parameters [ Sheng et al., 2025 ] , (ii) non-negligible inference-time overhead caused by dynamic pruning or gating mechanisms [ Zhang et al., 2025",
+      "url": "https://arxiv.org/html/2610.37206v1#bib.bib32"
+    },
+    {
+      "href": "#bib.bib34",
+      "text": "Zhang et al., 2023b",
+      "section": "1 Introduction",
+      "context": "Despite its efficiency, standard LoRA uses a fixed rank across all layers, ignoring layer-wise differences in convergence and representation learning. Existing adaptive rank allocation methods attempt to address this issue but suffer from the critical drawbacks: (i) substantially more trainable parameters [ Sheng et al., 2025 ] , (ii) non-negligible inference-time overhead caused by dynamic pruning or gating mechanisms [ Zhang et al., 2025 ] , and (iii) deviations from the standard LoRA pipeline that hinder compatibility [ Zhang et al., 2023b",
+      "url": "https://arxiv.org/html/2610.37206v1#bib.bib34"
+    },
+    {
+      "href": "#S2",
+      "text": "2",
+      "section": "1 Introduction",
+      "context": "Despite its efficiency, standard LoRA uses a fixed rank across all layers, ignoring layer-wise differences in convergence and representation learning. Existing adaptive rank allocation methods attempt to address this issue but suffer from the critical drawbacks: (i) substantially more trainable parameters [ Sheng et al., 2025 ] , (ii) non-negligible inference-time overhead caused by dynamic pruning or gating mechanisms [ Zhang et al., 2025 ] , and (iii) deviations from the standard LoRA pipeline that hinder compatibility [ Zhang et al., 2023b ] . See Section 2",
+      "url": "https://arxiv.org/html/2610.37206v1#S2"
+    },
+    {
+      "href": "#bib.bib26",
+      "text": "Nam et al., 2022",
+      "section": "2.1 Classical low-rank approaches",
+      "context": "While LoRA has popularized parameter-efficient fine-tuning, it is not the only method to explore low-rank or structured adaptations. Earlier approaches include LoHA [ Nam et al., 2022",
+      "url": "https://arxiv.org/html/2610.37206v1#bib.bib26"
+    },
+    {
+      "href": "#bib.bib9",
+      "text": "Edalati et al., 2022",
+      "section": "2.1 Classical low-rank approaches",
+      "context": "While LoRA has popularized parameter-efficient fine-tuning, it is not the only method to explore low-rank or structured adaptations. Earlier approaches include LoHA [ Nam et al., 2022 ] , which utilizes element-wise (Hadamard) interactions between low-rank matrices to reduce the parameter count without sacrificing expressivity, and Krona [ Edalati et al., 2022",
+      "url": "https://arxiv.org/html/2610.37206v1#bib.bib9"
+    },
+    {
+      "href": "#bib.bib20",
+      "text": "Kopiczko et al., 2023",
+      "section": "2.1 Classical low-rank approaches",
+      "context": "Subsequent methods extended or refined the LoRA framework. VERA [ Kopiczko et al., 2023",
+      "url": "https://arxiv.org/html/2610.37206v1#bib.bib20"
+    },
+    {
+      "href": "#bib.bib17",
+      "text": "Kalajdzievski, 2023",
+      "section": "2.1 Classical low-rank approaches",
+      "context": "Subsequent methods extended or refined the LoRA framework. VERA [ Kopiczko et al., 2023 ] reduces adapter storage by sharing frozen random projection matrices across layers and learning small scaling vectors. rsLoRA [ Kalajdzievski, 2023",
+      "url": "https://arxiv.org/html/2610.37206v1#bib.bib17"
+    },
+    {
+      "href": "#bib.bib16",
+      "text": "Hu et al., 2021",
+      "section": "2.1 Classical low-rank approaches",
+      "context": "Subsequent methods extended or refined the LoRA framework. VERA [ Kopiczko et al., 2023 ] reduces adapter storage by sharing frozen random projection matrices across layers and learning small scaling vectors. rsLoRA [ Kalajdzievski, 2023 ] replaces the original LoRA scaling factor α / r \\alpha/r [ Hu et al., 2021",
+      "url": "https://arxiv.org/html/2610.37206v1#bib.bib16"
+    },
+    {
+      "href": "#bib.bib23",
+      "text": "Liu et al., 2024",
+      "section": "2.1 Classical low-rank approaches",
+      "context": "Subsequent methods extended or refined the LoRA framework. VERA [ Kopiczko et al., 2023 ] reduces adapter storage by sharing frozen random projection matrices across layers and learning small scaling vectors. rsLoRA [ Kalajdzievski, 2023 ] replaces the original LoRA scaling factor α / r \\alpha/r [ Hu et al., 2021 ] with the rank-stabilized factor α / r \\alpha/\\sqrt{r} . A complementary direction is taken by DoRA [ Liu et al., 2024",
+      "url": "https://arxiv.org/html/2610.37206v1#bib.bib23"
+    },
+    {
+      "href": "#bib.bib12",
+      "text": "Hayou et al., 2024",
+      "section": "2.1 Classical low-rank approaches",
+      "context": "Another line of work improves LoRA optimization and numerical efficiency. LoRA+ [ Hayou et al., 2024",
+      "url": "https://arxiv.org/html/2610.37206v1#bib.bib12"
+    },
+    {
+      "href": "#bib.bib8",
+      "text": "Dettmers et al., 2023",
+      "section": "2.1 Classical low-rank approaches",
+      "context": "Another line of work improves LoRA optimization and numerical efficiency. LoRA+ [ Hayou et al., 2024 ] uses different learning rates for the two adapter matrices, while QLoRA [ Dettmers et al., 2023",
+      "url": "https://arxiv.org/html/2610.37206v1#bib.bib8"
+    },
+    {
+      "href": "#bib.bib33",
+      "text": "Zhang et al., 2023a",
+      "section": "2.2 Dynamic LoRA rank allocation",
+      "context": "This topic is of particular relevance in the context of our work, as we focus on adaptive rank learning, enabling the model to automatically adjust the capacity of each adapter during fine-tuning. It has attracted significant attention in recent research [ Zhang et al., 2023a",
+      "url": "https://arxiv.org/html/2610.37206v1#bib.bib33"
+    },
+    {
+      "href": "#bib.bib34",
+      "text": "Zhang et al., 2023b",
+      "section": "2.2 Dynamic LoRA rank allocation",
+      "context": "This topic is of particular relevance in the context of our work, as we focus on adaptive rank learning, enabling the model to automatically adjust the capacity of each adapter during fine-tuning. It has attracted significant attention in recent research [ Zhang et al., 2023a ; Zhang et al., 2023b",
+      "url": "https://arxiv.org/html/2610.37206v1#bib.bib34"
+    },
+    {
+      "href": "#bib.bib28",
+      "text": "Sheng et al., 2025",
+      "section": "2.2 Dynamic LoRA rank allocation",
+      "context": "This topic is of particular relevance in the context of our work, as we focus on adaptive rank learning, enabling the model to automatically adjust the capacity of each adapter during fine-tuning. It has attracted significant attention in recent research [ Zhang et al., 2023a ; Zhang et al., 2023b ; Sheng et al., 2025",
+      "url": "https://arxiv.org/html/2610.37206v1#bib.bib28"
+    },
+    {
+      "href": "#bib.bib34",
+      "text": "Zhang et al., 2023b",
+      "section": "2.2 Dynamic LoRA rank allocation",
+      "context": "The SVD-like representation of LoRA adapters proposed in AdaLoRA [ Zhang et al., 2023b",
+      "url": "https://arxiv.org/html/2610.37206v1#bib.bib34"
+    },
+    {
+      "href": "#bib.bib4",
+      "text": "Chang et al., 2025",
+      "section": "2.2 Dynamic LoRA rank allocation",
+      "context": "Several methods manage the rank budget more flexibly. ElaLoRA [ Chang et al., 2025",
+      "url": "https://arxiv.org/html/2610.37206v1#bib.bib4"
+    },
+    {
+      "href": "#bib.bib22",
+      "text": "Liu et al., 2026",
+      "section": "2.2 Dynamic LoRA rank allocation",
+      "context": "Several methods manage the rank budget more flexibly. ElaLoRA [ Chang et al., 2025 ] uses SVD-based adaptation and gradient-derived importance scores to prune and expand ranks at scheduled intervals. FlexLoRA [ Liu et al., 2026",
+      "url": "https://arxiv.org/html/2610.37206v1#bib.bib22"
+    },
+    {
+      "href": "#bib.bib25",
+      "text": "Mao et al. [2024]",
+      "section": "2.2 Dynamic LoRA rank allocation",
+      "context": "Several methods manage the rank budget more flexibly. ElaLoRA [ Chang et al., 2025 ] uses SVD-based adaptation and gradient-derived importance scores to prune and expand ranks at scheduled intervals. FlexLoRA [ Liu et al., 2026 ] uses normalized spectral entropy to guide rank pruning and expansion under a global budget. The dynamic-rank DoRA of Mao et al. [2024]",
+      "url": "https://arxiv.org/html/2610.37206v1#bib.bib25"
+    },
+    {
+      "href": "#bib.bib1",
+      "text": "Aastik et al., 2025",
+      "section": "2.2 Dynamic LoRA rank allocation",
+      "context": "Several methods manage the rank budget more flexibly. ElaLoRA [ Chang et al., 2025 ] uses SVD-based adaptation and gradient-derived importance scores to prune and expand ranks at scheduled intervals. FlexLoRA [ Liu et al., 2026 ] uses normalized spectral entropy to guide rank pruning and expansion under a global budget. The dynamic-rank DoRA of Mao et al. [2024] decomposes adapters into structured rank-one components and prunes them based on per-component importance. NormAL LoRA [ Aastik et al., 2025",
+      "url": "https://arxiv.org/html/2610.37206v1#bib.bib1"
+    },
+    {
+      "href": "#bib.bib28",
+      "text": "Sheng et al. [2025]",
+      "section": "2.2 Dynamic LoRA rank allocation",
+      "context": "In a similar way, Sheng et al. [2025]",
+      "url": "https://arxiv.org/html/2610.37206v1#bib.bib28"
+    },
+    {
+      "href": "#bib.bib16",
+      "text": "Hu et al., 2021",
+      "section": "3 SimplexLoRA Framework",
+      "context": " 𝑨 i ​ 𝑩 i , \\displaystyle{\\bm{W}}_{i}^{0}+\\displaystyle{\\bm{A}}_{i}\\displaystyle{\\bm{B}}_{i}\\rightarrow\\displaystyle{\\bm{W}}_{i}^{0}+\\omega_{i}\\displaystyle{\\bm{A}}_{i}\\displaystyle{\\bm{B}}_{i}, where ω i ≥ 0 \\omega_{i}\\geq 0 represents the importance coefficient assigned to the i i -th adapter. The weights ω = ( ω 1 , … , ω n ) \\omega=(\\omega_{1},\\dots,\\omega_{n}) are constrained to the n n -scaled simplex, where n n is the number of LoRA adapters. This preserves LoRA magnitude, with ω = ( 1 , … , 1 ) = 𝟏 \\omega=(1,\\dots,1)=\\mathbf{1} recovering standard LoRA initialization [ Hu et al., 2021",
+      "url": "https://arxiv.org/html/2610.37206v1#bib.bib16"
+    },
+    {
+      "href": "#A1",
+      "text": "A",
+      "section": "3 SimplexLoRA Framework",
+      "context": "Motivated by the theoretical analysis in Appendix A",
+      "url": "https://arxiv.org/html/2610.37206v1#A1"
+    },
+    {
+      "href": "#bib.bib3",
+      "text": "Blondel et al., 2014",
+      "section": "Phase 2. Simplex projection.",
+      "context": "The weight vector ω \\omega is projected onto the scaled simplex n ⋅ Δ n − 1 n\\cdot\\Delta_{n-1} via Euclidean projection [ Blondel et al., 2014",
+      "url": "https://arxiv.org/html/2610.37206v1#bib.bib3"
+    },
+    {
+      "href": "#A2",
+      "text": "B",
+      "section": "Phase 3. Rank update.",
+      "context": "Adapter ranks are dynamically resized while preserving the total parameter budget: r i new = ⌊ r 0 ⋅ ω i ⌋ r_{i}^{\\text{new}}=\\lfloor r_{0}\\cdot\\omega_{i}\\rfloor , where r 0 r_{0} is the initial (uniform) LoRA rank. When ranks change, the corresponding adapter matrices are resized and reinitialized following the standard LoRA scheme (see Appendix B",
+      "url": "https://arxiv.org/html/2610.37206v1#A2"
+    },
+    {
+      "href": "#A2",
+      "text": "B",
+      "section": "Phase 4. Standard LoRA training with new ranks.",
+      "context": "After K K repetitions, we fix ω \\omega to 𝟏 \\mathbf{1} and reinitialize the adapter matrices 𝒜 \\mathcal{A} and ℬ \\mathcal{B} (Appendix B",
+      "url": "https://arxiv.org/html/2610.37206v1#A2"
+    },
+    {
+      "href": "#S3.F2",
+      "text": "2",
+      "section": "Scheduler.",
+      "context": "To ensure that the model resumes training after freezing the weights, we employ a linear scheduler with two training phases (see Figure 2",
+      "url": "https://arxiv.org/html/2610.37206v1#S3.F2"
+    },
+    {
+      "href": "#S4.SS3",
+      "text": "4.3",
+      "section": "Discussion.",
+      "context": "The total number of rank updates, K ⋅ T K\\cdot T , is kept small to avoid rank collapse and to ensure that the majority of training focuses on optimizing the LoRA adapters. In practice, T T is negligible compared to the overall training duration. In the ablation study (Section 4.3",
+      "url": "https://arxiv.org/html/2610.37206v1#S4.SS3"
+    },
+    {
+      "href": "#A4",
+      "text": "D",
+      "section": "Discussion.",
+      "context": "Table 1: Comparative performance of \"out-of-the-box\" algorithms on DeBERTaV3 base . The best results are shown in bold , and the second-best are underlined . All experiment details are provided in Appendix D",
+      "url": "https://arxiv.org/html/2610.37206v1#A4"
+    },
+    {
+      "href": "#bib.bib16",
+      "text": "Hu et al., 2021",
+      "section": "Discussion.",
+      "context": "Method # Params MNLI SST-2 CoLA QQP QNLI RTE MRPC ALL Acc Acc Mcc Acc/F1 Acc Acc Acc/F1 Avg Full Fine-Tuning 184M (100%) 0.8910 0.9541 0.6806 0.8962/0.8644 0.9383 0.8376 0.8848/0.9165 0.8689 LoRA r = 8 \\texttt{LoRA}_{r=8} [ Hu et al., 2021",
+      "url": "https://arxiv.org/html/2610.37206v1#bib.bib16"
+    },
+    {
+      "href": "#bib.bib26",
+      "text": "Nam et al., 2022",
+      "section": "Discussion.",
+      "context": "Method # Params MNLI SST-2 CoLA QQP QNLI RTE MRPC ALL Acc Acc Mcc Acc/F1 Acc Acc Acc/F1 Avg Full Fine-Tuning 184M (100%) 0.8910 0.9541 0.6806 0.8962/0.8644 0.9383 0.8376 0.8848/0.9165 0.8689 LoRA r = 8 \\texttt{LoRA}_{r=8} [ Hu et al., 2021 ] 442K (0.24%) 0.8797 0.9450 0.6913 0.8802/0.8437 0.9301 0.8448 0.8897/ 0.9220 0.8696 LoHA r = 8 \\texttt{LoHA}_{r=8} [ Nam et al., 2022",
+      "url": "https://arxiv.org/html/2610.37206v1#bib.bib26"
+    },
+    {
+      "href": "#bib.bib9",
+      "text": "Edalati et al., 2022",
+      "section": "Discussion.",
+      "context": "Method # Params MNLI SST-2 CoLA QQP QNLI RTE MRPC ALL Acc Acc Mcc Acc/F1 Acc Acc Acc/F1 Avg Full Fine-Tuning 184M (100%) 0.8910 0.9541 0.6806 0.8962/0.8644 0.9383 0.8376 0.8848/0.9165 0.8689 LoRA r = 8 \\texttt{LoRA}_{r=8} [ Hu et al., 2021 ] 442K (0.24%) 0.8797 0.9450 0.6913 0.8802/0.8437 0.9301 0.8448 0.8897/ 0.9220 0.8696 LoHA r = 8 \\texttt{LoHA}_{r=8} [ Nam et al., 2022 ] 884K (0.48%) 0.8560 0.9392 0.6295 0.8674/0.8269 0.9085 0.8051 0.8628/0.9007 0.8440 Krona r = 32 \\texttt{Krona}_{r=32} [ Edalati et al., 2022",
+      "url": "https://arxiv.org/html/2610.37206v1#bib.bib9"
+    },
+    {
+      "href": "#bib.bib20",
+      "text": "Kopiczko et al., 2023",
+      "section": "Discussion.",
+      "context": " Acc/F1 Acc Acc Acc/F1 Avg Full Fine-Tuning 184M (100%) 0.8910 0.9541 0.6806 0.8962/0.8644 0.9383 0.8376 0.8848/0.9165 0.8689 LoRA r = 8 \\texttt{LoRA}_{r=8} [ Hu et al., 2021 ] 442K (0.24%) 0.8797 0.9450 0.6913 0.8802/0.8437 0.9301 0.8448 0.8897/ 0.9220 0.8696 LoHA r = 8 \\texttt{LoHA}_{r=8} [ Nam et al., 2022 ] 884K (0.48%) 0.8560 0.9392 0.6295 0.8674/0.8269 0.9085 0.8051 0.8628/0.9007 0.8440 Krona r = 32 \\texttt{Krona}_{r=32} [ Edalati et al., 2022 ] 57.6K (0.03%) 0.7587 0.9289 0.5907 0.8275/0.7816 0.8605 0.7509 0.7500/0.8416 0.7878 VERA r = 1024 \\texttt{VERA}_{r=1024} [ Kopiczko et al., 2023",
+      "url": "https://arxiv.org/html/2610.37206v1#bib.bib20"
+    },
+    {
+      "href": "#bib.bib17",
+      "text": "Kalajdzievski, 2023",
+      "section": "Discussion.",
+      "context": "t{LoRA}_{r=8} [ Hu et al., 2021 ] 442K (0.24%) 0.8797 0.9450 0.6913 0.8802/0.8437 0.9301 0.8448 0.8897/ 0.9220 0.8696 LoHA r = 8 \\texttt{LoHA}_{r=8} [ Nam et al., 2022 ] 884K (0.48%) 0.8560 0.9392 0.6295 0.8674/0.8269 0.9085 0.8051 0.8628/0.9007 0.8440 Krona r = 32 \\texttt{Krona}_{r=32} [ Edalati et al., 2022 ] 57.6K (0.03%) 0.7587 0.9289 0.5907 0.8275/0.7816 0.8605 0.7509 0.7500/0.8416 0.7878 VERA r = 1024 \\texttt{VERA}_{r=1024} [ Kopiczko et al., 2023 ] 1.64M (0.88%) 0.8355 0.9404 0.6252 0.8592/0.8203 0.8975 0.7581 0.8529/0.8962 0.8317 rsLoRA r = 8 \\texttt{rsLoRA}_{r=8} [ Kalajdzievski, 2023",
+      "url": "https://arxiv.org/html/2610.37206v1#bib.bib17"
+    },
+    {
+      "href": "#bib.bib23",
+      "text": "Liu et al., 2024",
+      "section": "Discussion.",
+      "context": "t{LoHA}_{r=8} [ Nam et al., 2022 ] 884K (0.48%) 0.8560 0.9392 0.6295 0.8674/0.8269 0.9085 0.8051 0.8628/0.9007 0.8440 Krona r = 32 \\texttt{Krona}_{r=32} [ Edalati et al., 2022 ] 57.6K (0.03%) 0.7587 0.9289 0.5907 0.8275/0.7816 0.8605 0.7509 0.7500/0.8416 0.7878 VERA r = 1024 \\texttt{VERA}_{r=1024} [ Kopiczko et al., 2023 ] 1.64M (0.88%) 0.8355 0.9404 0.6252 0.8592/0.8203 0.8975 0.7581 0.8529/0.8962 0.8317 rsLoRA r = 8 \\texttt{rsLoRA}_{r=8} [ Kalajdzievski, 2023 ] 442K (0.24%) 0.8814 0.9564 0.6414 0.8853/0.8506 0.9325 0.8267 0.8750/0.9122 0.8624 DoRA r = 8 \\texttt{DoRA}_{r=8} [ Liu et al., 2024",
+      "url": "https://arxiv.org/html/2610.37206v1#bib.bib23"
+    },
+    {
+      "href": "#bib.bib34",
+      "text": "Zhang et al., 2023b",
+      "section": "Discussion.",
+      "context": "}_{r=32} [ Edalati et al., 2022 ] 57.6K (0.03%) 0.7587 0.9289 0.5907 0.8275/0.7816 0.8605 0.7509 0.7500/0.8416 0.7878 VERA r = 1024 \\texttt{VERA}_{r=1024} [ Kopiczko et al., 2023 ] 1.64M (0.88%) 0.8355 0.9404 0.6252 0.8592/0.8203 0.8975 0.7581 0.8529/0.8962 0.8317 rsLoRA r = 8 \\texttt{rsLoRA}_{r=8} [ Kalajdzievski, 2023 ] 442K (0.24%) 0.8814 0.9564 0.6414 0.8853/0.8506 0.9325 0.8267 0.8750/0.9122 0.8624 DoRA r = 8 \\texttt{DoRA}_{r=8} [ Liu et al., 2024 ] 442K (0.24%) 0.8811 0.9473 0.6748 0.8809/0.8451 0.9295 0.7978 0.8799/0.9139 0.8611 AdaLoRA r = 8 \\texttt{AdaLoRA}_{r=8} [ Zhang et al., 2023b",
+      "url": "https://arxiv.org/html/2610.37206v1#bib.bib34"
+    },
+    {
+      "href": "#bib.bib1",
+      "text": "Aastik et al., 2025",
+      "section": "Discussion.",
+      "context": "4} [ Kopiczko et al., 2023 ] 1.64M (0.88%) 0.8355 0.9404 0.6252 0.8592/0.8203 0.8975 0.7581 0.8529/0.8962 0.8317 rsLoRA r = 8 \\texttt{rsLoRA}_{r=8} [ Kalajdzievski, 2023 ] 442K (0.24%) 0.8814 0.9564 0.6414 0.8853/0.8506 0.9325 0.8267 0.8750/0.9122 0.8624 DoRA r = 8 \\texttt{DoRA}_{r=8} [ Liu et al., 2024 ] 442K (0.24%) 0.8811 0.9473 0.6748 0.8809/0.8451 0.9295 0.7978 0.8799/0.9139 0.8611 AdaLoRA r = 8 \\texttt{AdaLoRA}_{r=8} [ Zhang et al., 2023b ] 664K (0.36%) 0.8390 0.9392 0.6222 0.8534/0.8083 0.8999 0.7834 0.8859/0.9178 0.8388 NormAL LoRA r = 8 \\texttt{NormAL LoRA}_{r=8} [ Aastik et al., 2025",
+      "url": "https://arxiv.org/html/2610.37206v1#bib.bib1"
+    },
+    {
+      "href": "#bib.bib4",
+      "text": "Chang et al., 2025",
+      "section": "Discussion.",
+      "context": "r=8} [ Kalajdzievski, 2023 ] 442K (0.24%) 0.8814 0.9564 0.6414 0.8853/0.8506 0.9325 0.8267 0.8750/0.9122 0.8624 DoRA r = 8 \\texttt{DoRA}_{r=8} [ Liu et al., 2024 ] 442K (0.24%) 0.8811 0.9473 0.6748 0.8809/0.8451 0.9295 0.7978 0.8799/0.9139 0.8611 AdaLoRA r = 8 \\texttt{AdaLoRA}_{r=8} [ Zhang et al., 2023b ] 664K (0.36%) 0.8390 0.9392 0.6222 0.8534/0.8083 0.8999 0.7834 0.8859/0.9178 0.8388 NormAL LoRA r = 8 \\texttt{NormAL LoRA}_{r=8} [ Aastik et al., 2025 ] 442K (0.24%) 0.8814 0.9328 0.6857 0.8768/0.8403 0.9282 0.8292 0.8870/0.9195 0.8645 ElaLoRA r = 8 \\texttt{ElaLoRA}_{r=8} [ Chang et al., 2025",
+      "url": "https://arxiv.org/html/2610.37206v1#bib.bib4"
+    },
+    {
+      "href": "#bib.bib22",
+      "text": "Liu et al., 2026",
+      "section": "Discussion.",
+      "context": " Liu et al., 2024 ] 442K (0.24%) 0.8811 0.9473 0.6748 0.8809/0.8451 0.9295 0.7978 0.8799/0.9139 0.8611 AdaLoRA r = 8 \\texttt{AdaLoRA}_{r=8} [ Zhang et al., 2023b ] 664K (0.36%) 0.8390 0.9392 0.6222 0.8534/0.8083 0.8999 0.7834 0.8859/0.9178 0.8388 NormAL LoRA r = 8 \\texttt{NormAL LoRA}_{r=8} [ Aastik et al., 2025 ] 442K (0.24%) 0.8814 0.9328 0.6857 0.8768/0.8403 0.9282 0.8292 0.8870/0.9195 0.8645 ElaLoRA r = 8 \\texttt{ElaLoRA}_{r=8} [ Chang et al., 2025 ] 442K (0.24%) 0.8853 0.9501 0.6638 0.8979 /0.8628 0.9146 0.8031 0.8782/0.9113 0.8630 FlexLoRA r = 8 \\texttt{FlexLoRA}_{r=8} [ Liu et al., 2026",
+      "url": "https://arxiv.org/html/2610.37206v1#bib.bib22"
+    },
+    {
+      "href": "#S3.F3",
+      "text": "3",
+      "section": "3.2 Motivating Example of Rank Scaling",
+      "context": "Figure 3",
+      "url": "https://arxiv.org/html/2610.37206v1#S3.F3"
+    },
+    {
+      "href": "#bib.bib14",
+      "text": "He et al., 2021",
+      "section": "3.2 Motivating Example of Rank Scaling",
+      "context": "Figure 3 shows the final rank distribution from fine-tuning DeBERTaV3 base [ He et al., 2021",
+      "url": "https://arxiv.org/html/2610.37206v1#bib.bib14"
+    },
+    {
+      "href": "#bib.bib29",
+      "text": "Wang et al., 2018",
+      "section": "3.2 Motivating Example of Rank Scaling",
+      "context": "Figure 3 shows the final rank distribution from fine-tuning DeBERTaV3 base [ He et al., 2021 ] on the MRPC dataset from GLUE [ Wang et al., 2018",
+      "url": "https://arxiv.org/html/2610.37206v1#bib.bib29"
+    },
+    {
+      "href": "#bib.bib29",
+      "text": "Wang et al., 2018",
+      "section": "4 Experiments",
+      "context": "We evaluate SimplexLoRA on a diverse set of benchmarks, including GLUE [ Wang et al., 2018",
+      "url": "https://arxiv.org/html/2610.37206v1#bib.bib29"
+    },
+    {
+      "href": "#bib.bib27",
+      "text": "Narayan et al., 2018",
+      "section": "4 Experiments",
+      "context": "We evaluate SimplexLoRA on a diverse set of benchmarks, including GLUE [ Wang et al., 2018 ] , XSum [ Narayan et al., 2018",
+      "url": "https://arxiv.org/html/2610.37206v1#bib.bib27"
+    },
+    {
+      "href": "#bib.bib5",
+      "text": "Chen et al., 2016",
+      "section": "4 Experiments",
+      "context": "We evaluate SimplexLoRA on a diverse set of benchmarks, including GLUE [ Wang et al., 2018 ] , XSum [ Narayan et al., 2018 ] , CNN/Daily Mail [ Chen et al., 2016",
+      "url": "https://arxiv.org/html/2610.37206v1#bib.bib5"
+    },
+    {
+      "href": "#bib.bib7",
+      "text": "Cobbe et al., 2021",
+      "section": "4 Experiments",
+      "context": "We evaluate SimplexLoRA on a diverse set of benchmarks, including GLUE [ Wang et al., 2018 ] , XSum [ Narayan et al., 2018 ] , CNN/Daily Mail [ Chen et al., 2016 ] , GSM8K [ Cobbe et al., 2021",
+      "url": "https://arxiv.org/html/2610.37206v1#bib.bib7"
+    },
+    {
+      "href": "#bib.bib6",
+      "text": "Clark et al., 2019",
+      "section": "4 Experiments",
+      "context": "We evaluate SimplexLoRA on a diverse set of benchmarks, including GLUE [ Wang et al., 2018 ] , XSum [ Narayan et al., 2018 ] , CNN/Daily Mail [ Chen et al., 2016 ] , GSM8K [ Cobbe et al., 2021 ] , BoolQ [ Clark et al., 2019",
+      "url": "https://arxiv.org/html/2610.37206v1#bib.bib6"
+    },
+    {
+      "href": "#bib.bib31",
+      "text": "Zellers et al., 2019",
+      "section": "4 Experiments",
+      "context": "We evaluate SimplexLoRA on a diverse set of benchmarks, including GLUE [ Wang et al., 2018 ] , XSum [ Narayan et al., 2018 ] , CNN/Daily Mail [ Chen et al., 2016 ] , GSM8K [ Cobbe et al., 2021 ] , BoolQ [ Clark et al., 2019 ] , and HellaSwag [ Zellers et al., 2019",
+      "url": "https://arxiv.org/html/2610.37206v1#bib.bib31"
+    },
+    {
+      "href": "#bib.bib14",
+      "text": "He et al., 2021",
+      "section": "4 Experiments",
+      "context": "We evaluate SimplexLoRA on a diverse set of benchmarks, including GLUE [ Wang et al., 2018 ] , XSum [ Narayan et al., 2018 ] , CNN/Daily Mail [ Chen et al., 2016 ] , GSM8K [ Cobbe et al., 2021 ] , BoolQ [ Clark et al., 2019 ] , and HellaSwag [ Zellers et al., 2019 ] . We exclude GLUE STS-B, whose regression metric requires custom evaluation and which overlaps with the QQP/MRPC similarity tasks. Experiments are conducted using DeBERTaV3 base [ He et al., 2021",
+      "url": "https://arxiv.org/html/2610.37206v1#bib.bib14"
+    },
+    {
+      "href": "#bib.bib2",
+      "text": "AI@Meta, 2024",
+      "section": "4 Experiments",
+      "context": "We evaluate SimplexLoRA on a diverse set of benchmarks, including GLUE [ Wang et al., 2018 ] , XSum [ Narayan et al., 2018 ] , CNN/Daily Mail [ Chen et al., 2016 ] , GSM8K [ Cobbe et al., 2021 ] , BoolQ [ Clark et al., 2019 ] , and HellaSwag [ Zellers et al., 2019 ] . We exclude GLUE STS-B, whose regression metric requires custom evaluation and which overlaps with the QQP/MRPC similarity tasks. Experiments are conducted using DeBERTaV3 base [ He et al., 2021 ] , Llama 3.1 8B [ AI@Meta, 2024",
+      "url": "https://arxiv.org/html/2610.37206v1#bib.bib2"
+    },
+    {
+      "href": "#bib.bib30",
+      "text": "Yang et al., 2025",
+      "section": "4 Experiments",
+      "context": "We evaluate SimplexLoRA on a diverse set of benchmarks, including GLUE [ Wang et al., 2018 ] , XSum [ Narayan et al., 2018 ] , CNN/Daily Mail [ Chen et al., 2016 ] , GSM8K [ Cobbe et al., 2021 ] , BoolQ [ Clark et al., 2019 ] , and HellaSwag [ Zellers et al., 2019 ] . We exclude GLUE STS-B, whose regression metric requires custom evaluation and which overlaps with the QQP/MRPC similarity tasks. Experiments are conducted using DeBERTaV3 base [ He et al., 2021 ] , Llama 3.1 8B [ AI@Meta, 2024 ] , Qwen3-8B [ Yang et al., 2025",
+      "url": "https://arxiv.org/html/2610.37206v1#bib.bib30"
+    },
+    {
+      "href": "#bib.bib21",
+      "text": "Lewis et al., 2020",
+      "section": "4 Experiments",
+      "context": "We evaluate SimplexLoRA on a diverse set of benchmarks, including GLUE [ Wang et al., 2018 ] , XSum [ Narayan et al., 2018 ] , CNN/Daily Mail [ Chen et al., 2016 ] , GSM8K [ Cobbe et al., 2021 ] , BoolQ [ Clark et al., 2019 ] , and HellaSwag [ Zellers et al., 2019 ] . We exclude GLUE STS-B, whose regression metric requires custom evaluation and which overlaps with the QQP/MRPC similarity tasks. Experiments are conducted using DeBERTaV3 base [ He et al., 2021 ] , Llama 3.1 8B [ AI@Meta, 2024 ] , Qwen3-8B [ Yang et al., 2025 ] , and BART-large [ Lewis et al., 2020",
+      "url": "https://arxiv.org/html/2610.37206v1#bib.bib21"
+    },
+    {
+      "href": "#A4",
+      "text": "D",
+      "section": "4 Experiments",
+      "context": "se set of benchmarks, including GLUE [ Wang et al., 2018 ] , XSum [ Narayan et al., 2018 ] , CNN/Daily Mail [ Chen et al., 2016 ] , GSM8K [ Cobbe et al., 2021 ] , BoolQ [ Clark et al., 2019 ] , and HellaSwag [ Zellers et al., 2019 ] . We exclude GLUE STS-B, whose regression metric requires custom evaluation and which overlaps with the QQP/MRPC similarity tasks. Experiments are conducted using DeBERTaV3 base [ He et al., 2021 ] , Llama 3.1 8B [ AI@Meta, 2024 ] , Qwen3-8B [ Yang et al., 2025 ] , and BART-large [ Lewis et al., 2020 ] models. Hardware and hyperparameters are provided in Appendix D",
+      "url": "https://arxiv.org/html/2610.37206v1#A4"
+    },
+    {
+      "href": "#bib.bib16",
+      "text": "Hu et al., 2021",
+      "section": "4.1 Out-of-the-box Comparison",
+      "context": "Standard PEFT methods: LoRA [ Hu et al., 2021",
+      "url": "https://arxiv.org/html/2610.37206v1#bib.bib16"
+    },
+    {
+      "href": "#bib.bib26",
+      "text": "Nam et al., 2022",
+      "section": "4.1 Out-of-the-box Comparison",
+      "context": "Standard PEFT methods: LoRA [ Hu et al., 2021 ] , LoHA [ Nam et al., 2022",
+      "url": "https://arxiv.org/html/2610.37206v1#bib.bib26"
+    },
+    {
+      "href": "#bib.bib9",
+      "text": "Edalati et al., 2022",
+      "section": "4.1 Out-of-the-box Comparison",
+      "context": "Standard PEFT methods: LoRA [ Hu et al., 2021 ] , LoHA [ Nam et al., 2022 ] , Krona [ Edalati et al., 2022",
+      "url": "https://arxiv.org/html/2610.37206v1#bib.bib9"
+    },
+    {
+      "href": "#bib.bib17",
+      "text": "Kalajdzievski, 2023",
+      "section": "4.1 Out-of-the-box Comparison",
+      "context": "Standard PEFT methods: LoRA [ Hu et al., 2021 ] , LoHA [ Nam et al., 2022 ] , Krona [ Edalati et al., 2022 ] , rsLoRA [ Kalajdzievski, 2023",
+      "url": "https://arxiv.org/html/2610.37206v1#bib.bib17"
+    },
+    {
+      "href": "#bib.bib23",
+      "text": "Liu et al., 2024",
+      "section": "4.1 Out-of-the-box Comparison",
+      "context": "Standard PEFT methods: LoRA [ Hu et al., 2021 ] , LoHA [ Nam et al., 2022 ] , Krona [ Edalati et al., 2022 ] , rsLoRA [ Kalajdzievski, 2023 ] , DoRA [ Liu et al., 2024",
+      "url": "https://arxiv.org/html/2610.37206v1#bib.bib23"
+    },
+    {
+      "href": "#bib.bib20",
+      "text": "Kopiczko et al., 2023",
+      "section": "4.1 Out-of-the-box Comparison",
+      "context": "Standard PEFT methods: LoRA [ Hu et al., 2021 ] , LoHA [ Nam et al., 2022 ] , Krona [ Edalati et al., 2022 ] , rsLoRA [ Kalajdzievski, 2023 ] , DoRA [ Liu et al., 2024 ] , and VERA [ Kopiczko et al., 2023",
+      "url": "https://arxiv.org/html/2610.37206v1#bib.bib20"
+    },
+    {
+      "href": "#bib.bib34",
+      "text": "Zhang et al., 2023b",
+      "section": "4.1 Out-of-the-box Comparison",
+      "context": "Dynamic rank methods: AdaLoRA [ Zhang et al., 2023b",
+      "url": "https://arxiv.org/html/2610.37206v1#bib.bib34"
+    },
+    {
+      "href": "#bib.bib1",
+      "text": "Aastik et al., 2025",
+      "section": "4.1 Out-of-the-box Comparison",
+      "context": "Dynamic rank methods: AdaLoRA [ Zhang et al., 2023b ] , NormAL LoRA [ Aastik et al., 2025",
+      "url": "https://arxiv.org/html/2610.37206v1#bib.bib1"
+    },
+    {
+      "href": "#bib.bib4",
+      "text": "Chang et al., 2025",
+      "section": "4.1 Out-of-the-box Comparison",
+      "context": "Dynamic rank methods: AdaLoRA [ Zhang et al., 2023b ] , NormAL LoRA [ Aastik et al., 2025 ] , ElaLoRA [ Chang et al., 2025",
+      "url": "https://arxiv.org/html/2610.37206v1#bib.bib4"
+    },
+    {
+      "href": "#bib.bib22",
+      "text": "Liu et al., 2026",
+      "section": "4.1 Out-of-the-box Comparison",
+      "context": "Dynamic rank methods: AdaLoRA [ Zhang et al., 2023b ] , NormAL LoRA [ Aastik et al., 2025 ] , ElaLoRA [ Chang et al., 2025 ] , and FlexLoRA [ Liu et al., 2026",
+      "url": "https://arxiv.org/html/2610.37206v1#bib.bib22"
+    },
+    {
+      "href": "#S3.T1",
+      "text": "1",
+      "section": "4.1 Out-of-the-box Comparison",
+      "context": "In this setting (Table 1",
+      "url": "https://arxiv.org/html/2610.37206v1#S3.T1"
+    },
+    {
+      "href": "#A4",
+      "text": "D",
+      "section": "4.1 Out-of-the-box Comparison",
+      "context": "Table 2: Comparative results of top-performing algorithms: LoRA (L) and SimplexLoRA (S) on DeBERTaV3 base and Llama 3.1 8B. Results are averaged over 3 runs with different seeds. The best results per rank are shown in bold . All experiment details are provided in Appendix D",
+      "url": "https://arxiv.org/html/2610.37206v1#A4"
+    },
+    {
+      "href": "#S4.T2",
+      "text": "2",
+      "section": "4.2 Comparison with LoRA",
+      "context": "Table 2",
+      "url": "https://arxiv.org/html/2610.37206v1#S4.T2"
+    },
+    {
+      "href": "#S4.T3",
+      "text": "3",
+      "section": "4.2 Comparison with LoRA",
+      "context": "Table 2 compares SimplexLoRA with standard LoRA at multiple ranks on DeBERTaV3 base and Llama 3.1 8B (adapters in all linear layers, hyperparameters tuned per method). Across most GLUE tasks, SimplexLoRA consistently outperforms LoRA while maintaining the same computational cost. For generality, we also evaluate Qwen3-8B (GSM8K, BoolQ, HellaSwag) and BART-large (XSum, CNN/DailyMail) in Table 3",
+      "url": "https://arxiv.org/html/2610.37206v1#S4.T3"
+    },
+    {
+      "href": "#A4",
+      "text": "D",
+      "section": "4.2 Comparison with LoRA",
+      "context": "Table 3: Comparative results: LoRA (L) and SimplexLoRA (S) on Qwen3-8B and BART-large. The best results per rank and model are shown in bold . All details are provided in Appendix D",
+      "url": "https://arxiv.org/html/2610.37206v1#A4"
+    },
+    {
+      "href": "#S4.F4",
+      "text": "4",
+      "section": "4.3 Ablation Study",
+      "context": "As supplementary analysis, we grid-search hyperparameters on MNLI with DeBERTa to assess the robustness (Figure 4",
+      "url": "https://arxiv.org/html/2610.37206v1#S4.F4"
+    },
+    {
+      "href": "#S4.SS3",
+      "text": "4.3",
+      "section": "Limitations",
+      "context": "The limitations of the proposed strategy are as follows. First, SimplexLoRA introduces three additional hyperparameters: the number of iterations between simplex projection steps T T , the total number of such projections K K , and the weight decay coefficient used for regularization; the ablation in Section 4.3",
+      "url": "https://arxiv.org/html/2610.37206v1#S4.SS3"
+    },
+    {
+      "href": "https://aclanthology.org/2025.findings-emnlp.1074/",
+      "text": "https://aclanthology.org/2025.findings-emnlp.1074/",
+      "section": "References",
+      "context": "Aastik et al. [2025] Aastik, Meghana Topu, Chinmay Kulkarni, and Pragya Paramita Sahu. NormAL LoRA: What is the perfect size? In Christos Christodoulopoulos, Tanmoy Chakraborty, Carolyn Rose, and Violet Peng, editors, Findings of the Association for Computational Linguistics: EMNLP 2025 , pages 19716–19731, Suzhou, China, November 2025. Association for Computational Linguistics. ISBN 979-8-89176-335-7. doi: 10.18653/v1/2025.findings-emnlp.1074 . URL https://aclanthology.org/2025.findings-emnlp.1074/",
+      "url": "https://aclanthology.org/2025.findings-emnlp.1074/"
+    },
+    {
+      "href": "https://arxiv.org/abs/2407.21783",
+      "text": "https://arxiv.org/abs/2407.21783",
+      "section": "References",
+      "context": "AI@Meta [2024] AI@Meta. The llama 3 herd of models, 2024. URL https://arxiv.org/abs/2407.21783",
+      "url": "https://arxiv.org/abs/2407.21783"
+    },
+    {
+      "href": "https://openreview.net/forum?id=tqnkbdYWWm",
+      "text": "https://openreview.net/forum?id=tqnkbdYWWm",
+      "section": "References",
+      "context": "Liu et al. [2026] Muqing Liu, Chongjie Si, and Yuheng Jia. FlexLoRA: Entropy-guided flexible low-rank adaptation. In International Conference on Learning Representations , 2026. URL https://openreview.net/forum?id=tqnkbdYWWm",
+      "url": "https://openreview.net/forum?id=tqnkbdYWWm"
+    },
+    {
+      "href": "https://openreview.net/forum?id=Bkg6RiCqY7",
+      "text": "https://openreview.net/forum?id=Bkg6RiCqY7",
+      "section": "References",
+      "context": "Loshchilov and Hutter [2019] Ilya Loshchilov and Frank Hutter. Decoupled weight decay regularization. In International Conference on Learning Representations , 2019. URL https://openreview.net/forum?id=Bkg6RiCqY7",
+      "url": "https://openreview.net/forum?id=Bkg6RiCqY7"
+    },
+    {
+      "href": "https://openreview.net/forum?id=d71n4ftoCBy",
+      "text": "https://openreview.net/forum?id=d71n4ftoCBy",
+      "section": "References",
+      "context": "Nam et al. [2022] Hyeon-Woo Nam, Ye-Bin Moon, and Tae-Hyun Oh. FedPara: Low-rank hadamard product for communication-efficient federated learning. In International Conference on Learning Representations , 2022. URL https://openreview.net/forum?id=d71n4ftoCBy",
+      "url": "https://openreview.net/forum?id=d71n4ftoCBy"
+    },
+    {
+      "href": "https://arxiv.org/abs/2504.05343",
+      "text": "https://arxiv.org/abs/2504.05343",
+      "section": "References",
+      "context": "Sheng et al. [2025] Hao Nan Sheng, Zhi yong Wang, Mingrui Yang, and Hing Cheung So. Aroma: Autonomous rank-one matrix adaptation, 2025. URL https://arxiv.org/abs/2504.05343",
+      "url": "https://arxiv.org/abs/2504.05343"
+    },
+    {
+      "href": "https://arxiv.org/abs/2505.09388",
+      "text": "https://arxiv.org/abs/2505.09388",
+      "section": "References",
+      "context": "Ge, Haoran Wei, Huan Lin, Jialong Tang, Jian Yang, Jianhong Tu, Jianwei Zhang, Jianxin Yang, Jiaxi Yang, Jing Zhou, Jingren Zhou, Junyang Lin, Kai Dang, Keqin Bao, Kexin Yang, Le Yu, Lianghao Deng, Mei Li, Mingfeng Xue, Mingze Li, Pei Zhang, Peng Wang, Qin Zhu, Rui Men, Ruize Gao, Shixuan Liu, Shuang Luo, Tianhao Li, Tianyi Tang, Wenbiao Yin, Xingzhang Ren, Xinyu Wang, Xinyu Zhang, Xuancheng Ren, Yang Fan, Yang Su, Yichang Zhang, Yinger Zhang, Yu Wan, Yuqiong Liu, Zekun Wang, Zeyu Cui, Zhenru Zhang, Zhipeng Zhou, and Zihan Qiu. Qwen3 technical report, 2025. URL https://arxiv.org/abs/2505.09388",
+      "url": "https://arxiv.org/abs/2505.09388"
+    },
+    {
+      "href": "https://arxiv.org/abs/2308.12043",
+      "text": "https://arxiv.org/abs/2308.12043",
+      "section": "References",
+      "context": "Zhang et al. [2023a] Feiyu Zhang, Liangzhi Li, Junhao Chen, Zhouqiang Jiang, Bowen Wang, and Yiming Qian. Increlora: Incremental parameter allocation method for parameter-efficient fine-tuning, 2023a. URL https://arxiv.org/abs/2308.12043",
+      "url": "https://arxiv.org/abs/2308.12043"
+    },
+    {
+      "href": "#S3",
+      "text": "3",
+      "section": "Appendix A SimplexLoRA : theoretical motivation",
+      "context": "This section presents a heuristic argument that motivates the simplex-constrained reparameterization of Section 3",
+      "url": "https://arxiv.org/html/2610.37206v1#S3"
+    },
+    {
+      "href": "#S3",
+      "text": "3",
+      "section": "Appendix A SimplexLoRA : theoretical motivation",
+      "context": "where 𝒜 \\mathcal{A} and ℬ \\mathcal{B} denote the sets of all LoRA adapters. To generalize this formulation, we introduce a non-negative scaling factor ω i ≥ 0 \\omega_{i}\\geq 0 for each layer i i , which can be interpreted as rescaling the adapter matrix 𝑨 i \\displaystyle{\\bm{A}}^{i} by ω i \\omega_{i} . For the purposes of the present derivation, we constrain the vector ω := ( ω 1 , … , ω n ) \\omega:=(\\omega_{1},\\dots,\\omega_{n}) to lie on the probability simplex Δ n − 1 \\Delta_{n-1} , i.e., ∑ i = 1 n ω i = 1 \\sum_{i=1}^{n}\\omega_{i}=1 ; the n n -scaled simplex used in the algorithm (Section 3",
+      "url": "https://arxiv.org/html/2610.37206v1#S3"
+    },
+    {
+      "href": "#bib.bib18",
+      "text": "Khaled et al., 2023",
+      "section": "Appendix A SimplexLoRA : theoretical motivation",
+      "context": "A classical simplifying assumption in the optimization literature is that ℒ \\mathcal{L} is convex [ Khaled et al., 2023",
+      "url": "https://arxiv.org/html/2610.37206v1#bib.bib18"
+    },
+    {
+      "href": "#bib.bib19",
+      "text": "Kleinberg et al., 2018",
+      "section": "Appendix A SimplexLoRA : theoretical motivation",
+      "context": "A classical simplifying assumption in the optimization literature is that ℒ \\mathcal{L} is convex [ Khaled et al., 2023 ] with respect to all parameters { 𝑾 1 , … , 𝑾 n } \\{\\displaystyle{\\bm{W}}^{1},\\dots,\\displaystyle{\\bm{W}}^{n}\\} . For deep networks this is generally false, but convex analysis is still commonly used as a guiding lens: empirical studies report local convexity along training trajectories [ Kleinberg et al., 2018",
+      "url": "https://arxiv.org/html/2610.37206v1#bib.bib19"
+    },
+    {
+      "href": "#bib.bib35",
+      "text": "Zhou et al., 2019",
+      "section": "Appendix A SimplexLoRA : theoretical motivation",
+      "context": "A classical simplifying assumption in the optimization literature is that ℒ \\mathcal{L} is convex [ Khaled et al., 2023 ] with respect to all parameters { 𝑾 1 , … , 𝑾 n } \\{\\displaystyle{\\bm{W}}^{1},\\dots,\\displaystyle{\\bm{W}}^{n}\\} . For deep networks this is generally false, but convex analysis is still commonly used as a guiding lens: empirical studies report local convexity along training trajectories [ Kleinberg et al., 2018 ; Zhou et al., 2019",
+      "url": "https://arxiv.org/html/2610.37206v1#bib.bib35"
+    },
+    {
+      "href": "#bib.bib15",
+      "text": "Hinder et al., 2020",
+      "section": "Appendix A SimplexLoRA : theoretical motivation",
+      "context": "A classical simplifying assumption in the optimization literature is that ℒ \\mathcal{L} is convex [ Khaled et al., 2023 ] with respect to all parameters { 𝑾 1 , … , 𝑾 n } \\{\\displaystyle{\\bm{W}}^{1},\\dots,\\displaystyle{\\bm{W}}^{n}\\} . For deep networks this is generally false, but convex analysis is still commonly used as a guiding lens: empirical studies report local convexity along training trajectories [ Kleinberg et al., 2018 ; Zhou et al., 2019 ] , and many non-convex results build on convex foundations [ Hinder et al., 2020",
+      "url": "https://arxiv.org/html/2610.37206v1#bib.bib15"
+    },
+    {
+      "href": "#bib.bib10",
+      "text": "Fatkhullin et al., 2022",
+      "section": "Appendix A SimplexLoRA : theoretical motivation",
+      "context": "A classical simplifying assumption in the optimization literature is that ℒ \\mathcal{L} is convex [ Khaled et al., 2023 ] with respect to all parameters { 𝑾 1 , … , 𝑾 n } \\{\\displaystyle{\\bm{W}}^{1},\\dots,\\displaystyle{\\bm{W}}^{n}\\} . For deep networks this is generally false, but convex analysis is still commonly used as a guiding lens: empirical studies report local convexity along training trajectories [ Kleinberg et al., 2018 ; Zhou et al., 2019 ] , and many non-convex results build on convex foundations [ Hinder et al., 2020 ; Fatkhullin et al., 2022",
+      "url": "https://arxiv.org/html/2610.37206v1#bib.bib10"
+    },
+    {
+      "href": "#S3",
+      "text": "3",
+      "section": "Appendix A SimplexLoRA : theoretical motivation",
+      "context": "since otherwise swapping their positions would yield a smaller upper bound. Reading this in reverse, components of ω \\omega rank the layers by their single-layer \"fitting potential\". SimplexLoRA uses this ranking as a proxy for layer importance and reallocates adapter rank accordingly: well-adapted layers receive higher ranks, weaker ones lower. We emphasize that this argument bounds the loss, not the rank distribution itself, so the connection to optimal ranks remains a heuristic; its empirical effectiveness is reported in Section 3",
+      "url": "https://arxiv.org/html/2610.37206v1#S3"
+    },
+    {
+      "href": "#S4.SS3",
+      "text": "4.3",
+      "section": "Appendix A SimplexLoRA : theoretical motivation",
+      "context": "since otherwise swapping their positions would yield a smaller upper bound. Reading this in reverse, components of ω \\omega rank the layers by their single-layer \"fitting potential\". SimplexLoRA uses this ranking as a proxy for layer importance and reallocates adapter rank accordingly: well-adapted layers receive higher ranks, weaker ones lower. We emphasize that this argument bounds the loss, not the rank distribution itself, so the connection to optimal ranks remains a heuristic; its empirical effectiveness is reported in Section 3 and the ablation in Section 4.3",
+      "url": "https://arxiv.org/html/2610.37206v1#S4.SS3"
+    },
+    {
+      "href": "#bib.bib13",
+      "text": "He et al., 2015",
+      "section": "Appendix B Adapter Reinitialization",
+      "context": "∙ \\bullet 𝑨 i {\\bm{A}}^{i} initialized using the Kaiming uniform distribution [ He et al., 2015",
+      "url": "https://arxiv.org/html/2610.37206v1#bib.bib13"
+    },
+    {
+      "href": "#S3.E1",
+      "text": "1",
+      "section": "Appendix C Simplex Projections",
+      "context": "o the simplex, we observed severe performance degradation during training when applying these methods. Their behavior is highly sensitive to temperature scaling: low temperatures tend to produce nearly one-hot distributions, whereas high temperatures result in almost uniform outputs. Such degeneracies are particularly problematic in our setting, where the goal is to efficiently allocate the rank budget across multiple adapters without inducing excessive sparsity or uniformity. For these reasons, we utilize the standard Euclidean regularization in the optimization problem formulation equation 1",
+      "url": "https://arxiv.org/html/2610.37206v1#S3.E1"
+    },
+    {
+      "href": "#bib.bib16",
+      "text": "Hu et al., 2021",
+      "section": "Appendix D Experimental Details",
+      "context": "The core algorithm is implemented in PyTorch using the Huggingface library. All experiments are conducted on NVIDIA A100-SXM4-80GB GPUs. Following standard LoRA practice, we use the scaling factor α / r \\alpha/r with α = 32 \\alpha=32 and dynamically updated ranks r i new r_{i}^{\\text{new}} [ Hu et al., 2021",
+      "url": "https://arxiv.org/html/2610.37206v1#bib.bib16"
+    },
+    {
+      "href": "#bib.bib24",
+      "text": "Loshchilov and Hutter, 2019",
+      "section": "Appendix D Experimental Details",
+      "context": "The core algorithm is implemented in PyTorch using the Huggingface library. All experiments are conducted on NVIDIA A100-SXM4-80GB GPUs. Following standard LoRA practice, we use the scaling factor α / r \\alpha/r with α = 32 \\alpha=32 and dynamically updated ranks r i new r_{i}^{\\text{new}} [ Hu et al., 2021 ] . To support simplex projection and dynamic rank reallocation, we employ a modified AdamW optimizer [ Loshchilov and Hutter, 2019",
+      "url": "https://arxiv.org/html/2610.37206v1#bib.bib24"
+    },
+    {
+      "href": "#A4.T4",
+      "text": "4",
+      "section": "Appendix D Experimental Details",
+      "context": "Training and optimization hyperparameters for each experimental setup are summarized in Tables 4",
+      "url": "https://arxiv.org/html/2610.37206v1#A4.T4"
+    },
+    {
+      "href": "#A4.T5",
+      "text": "5",
+      "section": "Appendix D Experimental Details",
+      "context": "Training and optimization hyperparameters for each experimental setup are summarized in Tables 4 , 5",
+      "url": "https://arxiv.org/html/2610.37206v1#A4.T5"
+    },
+    {
+      "href": "#A4.T6",
+      "text": "6",
+      "section": "Appendix D Experimental Details",
+      "context": "Training and optimization hyperparameters for each experimental setup are summarized in Tables 4 , 5 , 6",
+      "url": "https://arxiv.org/html/2610.37206v1#A4.T6"
+    },
+    {
+      "href": "#A4.T7",
+      "text": "7",
+      "section": "Appendix D Experimental Details",
+      "context": "Training and optimization hyperparameters for each experimental setup are summarized in Tables 4 , 5 , 6 , 7",
+      "url": "https://arxiv.org/html/2610.37206v1#A4.T7"
+    },
+    {
+      "href": "#A4.T8",
+      "text": "8",
+      "section": "Appendix D Experimental Details",
+      "context": "Training and optimization hyperparameters for each experimental setup are summarized in Tables 4 , 5 , 6 , 7 , and 8",
+      "url": "https://arxiv.org/html/2610.37206v1#A4.T8"
+    },
+    {
+      "href": "#S3.T1",
+      "text": "1",
+      "section": "Appendix D Experimental Details",
+      "context": "Table 4: Hyperparameters for out-of-the-box comparison (Table 1",
+      "url": "https://arxiv.org/html/2610.37206v1#S3.T1"
+    },
+    {
+      "href": "#S4.T2",
+      "text": "2",
+      "section": "Appendix D Experimental Details",
+      "context": "Table 4: Hyperparameters for out-of-the-box comparison (Table 1 ). Hyperparameter Value Optimizer AdamW β 1 , β 2 \\beta_{1},\\beta_{2} 0.9 , 0.999 0.9,0.999 Model learning rate Tuned (PEFT) Learning rate ( ω \\omega ) 5 5 LR warm-up 30 30 Reg. weight decay 0 Dropout 0.05 0.05 Grad. accumulation 6 6 Training budget 512 512 iterations Batch size 32 32 Scheduler Linear Target layers Query, Key, Value Table 5: Hyperparameters for DeBERTaV3 base experiments (Table 2",
+      "url": "https://arxiv.org/html/2610.37206v1#S4.T2"
+    },
+    {
+      "href": "#S4.T2",
+      "text": "2",
+      "section": "Appendix D Experimental Details",
+      "context": ",30,50,80,100\\}\\!\\times\\!10^{-5} Learning rate ( ω \\omega ) 5 5 LR warm-up { 0 , 20 , 30 , 50 , 70 , 100 , 200 } \\{0,20,30,50,70,100,200\\} Reg. weight decay { 0 , 10 0 , 10 − 1 , … , 10 − 6 } \\{0,10^{0},10^{-1},\\dots,10^{-6}\\} Dropout 0.05 0.05 Grad. accumulation 6 6 Training budget task-specific Batch size task-specific Scheduler Two-phase (Linear) Target layers All linear layers Task-specific (# epochs / batch size) MNLI / SST-2 / QNLI / QQP (7 / 32), (10 / 32), (5 / 32), (5 / 32) CoLA / RTE / MRPC (15 / 64), (50 / 64), (30 / 64) Table 6: Hyperparameters for Llama 3.1 8B experiments (Table 2",
+      "url": "https://arxiv.org/html/2610.37206v1#S4.T2"
+    },
+    {
+      "href": "#S4.T3",
+      "text": "3",
+      "section": "Appendix D Experimental Details",
+      "context": "eters for Llama 3.1 8B experiments (Table 2 ). Hyperparameter Value / Grid Optimizer AdamW β 1 , β 2 \\beta_{1},\\beta_{2} 0.9 , 0.999 0.9,0.999 Model learning rate { 3 , 5 , 8 , 10 , 30 , 50 , 80 , 100 } × 10 − 5 \\{3,5,8,10,30,50,80,100\\}\\!\\times\\!10^{-5} Learning rate ( ω \\omega ) 5 LR warm-up 50 Reg. weight decay { 0 , 10 0 , 10 − 1 , … , 10 − 6 } \\{0,10^{0},10^{-1},\\dots,10^{-6}\\} Dropout 0.05 0.05 Grad. accumulation 1 1 Training budget 1024 1024 iterations Batch size 16 16 Scheduler Two-phase (Cosine) Target layers All linear layers Table 7: Hyperparameters for Qwen3-8B experiments (Table 3",
+      "url": "https://arxiv.org/html/2610.37206v1#S4.T3"
+    },
+    {
+      "href": "#S4.T3",
+      "text": "3",
+      "section": "Appendix D Experimental Details",
+      "context": "rameters for Qwen3-8B experiments (Table 3 ). Hyperparameter Value / Grid Optimizer AdamW β 1 , β 2 \\beta_{1},\\beta_{2} 0.9 , 0.999 0.9,0.999 Model learning rate { 3 , 5 , 8 , 10 , 30 , 50 , 80 , 100 } × 10 − 5 \\{3,5,8,10,30,50,80,100\\}\\!\\times\\!10^{-5} Learning rate ( ω \\omega ) 5 LR warm-up 350 Reg. weight decay { 0 , 10 0 , 10 − 1 , … , 10 − 6 } \\{0,10^{0},10^{-1},\\dots,10^{-6}\\} Dropout 0.05 0.05 Grad. accumulation 1 1 Training budget 3500 3500 iterations Batch size 4 4 Scheduler Two-phase (Linear) Target layers All linear layers Table 8: Hyperparameters for BART-large experiments (Table 3",
+      "url": "https://arxiv.org/html/2610.37206v1#S4.T3"
+    }
+  ],
+  "note": "Extracted HTML text; equations and table formatting may be imperfect. No PDF extraction was attempted."
+}

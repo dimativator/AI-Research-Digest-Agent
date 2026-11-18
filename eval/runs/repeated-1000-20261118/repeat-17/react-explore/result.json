@@ -1,0 +1,316 @@
+{
+  "run_id": "cef7224a9f684319a271e2ce00676ef6",
+  "status": "completed",
+  "user_id": "dmitrii",
+  "profile_fingerprint": "a2480e0075ad9cdf236d40e30f74f9bfd87a08dd948530b42e6b57e4a123bfc0",
+  "pipeline_version": "react-v2",
+  "categories": [
+    "cs.LG",
+    "cs.CL",
+    "stat.ML",
+    "cs.AI",
+    "cs.IR"
+  ],
+  "date_from": "2026-09-28",
+  "date_to": "2026-11-15",
+  "papers": [
+    {
+      "paper_id": "2610.31897",
+      "summary": "S-SALAAD jointly learns model weights, low-rank components, and structured sparsity during training. Its low-rank-only ablation reports a better quality–compressibility trade-off than the tested direct nuclear-norm regularization baselines.",
+      "relevance": "The closest match to training a model for low-rank compressibility while retaining quality.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "jointly learns the model weights and their low-rank and structured sparse components during training"
+        },
+        {
+          "source": "inspection",
+          "quote": "L L -only S-SALAAD maintains low perplexity over the same budget range, providing a better trade-off between model quality and elastic compressibility than these direct regularization baselines."
+        }
+      ],
+      "title": "Learning Structured Sparsity for Large Models: Bridging Model Compressibility and Efficient Inference",
+      "url": "https://arxiv.org/abs/2610.31897v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.23571",
+      "summary": "BMuon changes Muon’s spectral geometry with a global MLP-channel budget and reports greater robustness to channel pruning in vision models and a 1B-parameter language model. The authors note a possible dense-model quality trade-off.",
+      "relevance": "Tests whether optimizer geometry can improve structured compressibility during training.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "Across vision and language models, BMuon is substantially more robust than Muon to magnitude-based MLP-channel pruning."
+        },
+        {
+          "source": "inspection",
+          "quote": "BMuon can trade dense-model quality for greater pruning robustness, as observed in our language-model experiments"
+        }
+      ],
+      "title": "BMuon: Budgeting Muon's Spectral Geometry for Structured Compressibility",
+      "url": "https://arxiv.org/abs/2610.23571v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.10965",
+      "summary": "Spectrally Targeted Muon isolates which momentum singular directions are amplified. In NanoGPT, amplifying all but the few largest directions nearly matches Muon’s loss, while effective-rank measurements show that parameter spectra and loss need not move together.",
+      "relevance": "Direct evidence on singular spectra, effective rank, and spectral-update mechanisms in language-model training.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "Orthogonalizing everything except the few largest singular values of each matrix gets within 0.03 of Muon while orthogonalizing only about 13% of the momentum matrix’s magnitude"
+        },
+        {
+          "source": "inspection",
+          "quote": "Note that structure and performance don’t move together: AdamW collapses rank and still performs well, the bottom targeted variants keep Muon’s rank without matching its loss"
+        }
+      ],
+      "title": "Spectrally Targeted Muon",
+      "url": "https://arxiv.org/abs/2610.10965v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.04249",
+      "summary": "A theoretical comparison of singular-mode birth, saturation, and decay under several optimizers. Matrix-factorization and linear-regression experiments find substantially different transient rank dynamics even when final losses and spectra are similar.",
+      "relevance": "Helps distinguish optimizer-induced spectral dynamics from improved final compressibility.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "Under explicit balance and alignment assumptions, we derive birth, saturation, and decay laws for Euclidean GD, coordinate-wise updates of SignGD and an instantaneous Adam approximation, spectral updates of Muon and cumulative Shampoo, and a block curvature model of K-FAC."
+        },
+        {
+          "source": "inspection",
+          "quote": "All methods reach comparable final loss and final spectra of W W despite substantially different transient dynamics shown by the stable rank and effective rank throughout training."
+        }
+      ],
+      "title": "Optimizer Geometry Sets the Pace: Spectral Learning Dynamics in Matrix Factorization",
+      "url": "https://arxiv.org/abs/2610.04249v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.23343",
+      "summary": "Develops bottleneck-rank bounds for trace-norm-regularized adaptation with frozen features and a rank-deficiency result for perturbed, weight-decayed factorized LoRA. The latter is explicitly not a no-spurious-local-minima theorem.",
+      "relevance": "Addresses when low-rank LoRA solutions can suffice and how regularization shapes them.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "we prove that the trace-norm-regularized problem has a global minimizer whose rank is controlled by d Φ"
+        },
+        {
+          "source": "inspection",
+          "quote": "This is a first-order exclusion theorem, not a no-spurious-local-minima theorem"
+        }
+      ],
+      "title": "How Finite-Rank Bottlenecks Shape the Low-Rank Adaptation Landscape",
+      "url": "https://arxiv.org/abs/2610.23343v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.04507",
+      "summary": "A module-matched LoRA rank sweep under label noise compares adapters with dense fine-tuning of the same modules. In the reported 7B text-classification experiment, every sampled rank, including parameter parity, has higher test negative log-likelihood than dense fine-tuning across three paired seeds.",
+      "relevance": "Directly connects adapter rank, noisy-label memorization, and generalization using a controlled dense reference.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "Every sampled rank, parity included, remains behind dense in all three seeds"
+        },
+        {
+          "source": "inspection",
+          "quote": "The dense arm trains the weights of those projections and freezes their biases, as does LoRA. Both arms train the same classification head with the same optimizer settings."
+        }
+      ],
+      "title": "LoRA's Second Descent Extends Beyond Parameter Parity",
+      "url": "https://arxiv.org/abs/2610.04507v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.22794",
+      "summary": "Ori tracks drifting gradient subspaces for low-rank LLM training. Across fixed-token-budget LLaMA experiments, it reports gains over GaLore under tight rank constraints; the reported memory figures measure the optimizer step, not total peak training memory.",
+      "relevance": "A direct GaLore-related comparison of low-rank training quality, rank, and optimizer memory.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "when training the 130M model at an aggressively low rank of just 16, Ori achieves a validation perplexity of 43.61, substantially outperforming GaLore (60.29) and OSD (54.05)"
+        },
+        {
+          "source": "inspection",
+          "quote": "Our goal is to record the peak memory usage, incurred solely by the said optimizer’s update step."
+        }
+      ],
+      "title": "Ori: Drift-Aware Streaming $k$-PCA for Very Low-Rank LLM Training",
+      "url": "https://arxiv.org/abs/2610.22794v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2610.17429",
+      "summary": "Monarch–Muon combines structured weight factors with Muon. At a 6.89B dense-reference size, its single-H100 systems measurements report 52.94 versus 68.87 GB peak allocated memory and 1638.6 versus 2986.9 ms full-step time relative to dense Muon; quality comparisons are reported separately at smaller scales.",
+      "relevance": "Measures how structured parameterization affects weights, gradients, optimizer state, and training time as scale changes.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "Table 2 : Training costs on one H100 at microbatch 4, indexed by the dense reference model size. Monarch–Muon uses 4 blocks."
+        },
+        {
+          "source": "inspection",
+          "quote": "At 6.89B, Monarch–Muon reduces the full-step time by 45% and peak memory by 23% relative to dense Muon."
+        }
+      ],
+      "title": "Monarch-Muon: Structure-Aware Muon for Fast and Memory-Efficient Pretraining",
+      "url": "https://arxiv.org/abs/2610.17429v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.08924",
+      "summary": "ResQAdam retains a BF16 momentum, applies Adam in a principal low-rank subspace, and uses the residual’s sign. In the reported QAT measurements across three LLMs, optimizer-state memory falls by 71–74%, total peak memory by 15.3–19.5%, and throughput by less than 2% relative to AdamW.",
+      "relevance": "A concrete quality–memory–throughput study of low-rank optimizer-state compression, specifically for quantization-aware training.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "It keeps a single BF16 momentum, applies Adam only to the r × r r\\times r coordinates of the principal subspace, and adds a normalized sign update computed from the residual."
+        },
+        {
+          "source": "inspection",
+          "quote": "This efficiency directly translates to a 15.3% to 19.5% reduction in total peak memory. This substantial memory reduction incurs minimal computational overhead. The training throughput decreases by less than 2% compared to standard AdamW in all evaluated cases."
+        }
+      ],
+      "title": "ResQAdam: Residual-Preserving Adaptive Optimization for Memory-Efficient Quantization Aware Training",
+      "url": "https://arxiv.org/abs/2611.08924v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    },
+    {
+      "paper_id": "2611.07859",
+      "summary": "CORE is a training-free deep-research harness that retrieves broad passages but returns selected snippets, with context expansion and duplicate suppression. In its controlled closed-search comparisons, it reports higher answer accuracy and evidence recall than the two evaluated harnesses.",
+      "relevance": "Directly informs retrieval and context-management choices for a handwritten research-digest agent, although its benchmarks are not digest curation.",
+      "evidence": [
+        {
+          "source": "inspection",
+          "quote": "CORE’s context manager lets the agent expand the context around previously retrieved sources and deduplicates snippets across searches."
+        },
+        {
+          "source": "inspection",
+          "quote": "Across three agent models and three benchmarks, CORE achieves higher answer accuracy and evidence recall than Tongyi DeepResearch and OpenResearcher in every model–benchmark comparison"
+        }
+      ],
+      "title": "CORE: Coarse-to-Fine Search with Context Management for Deep Research",
+      "url": "https://arxiv.org/abs/2611.07859v1",
+      "version": 1,
+      "code": {
+        "status": "not_checked"
+      },
+      "attention": {
+        "status": "not_checked",
+        "level": "unknown"
+      },
+      "featured_on_x": false
+    }
+  ],
+  "x_feature": null,
+  "limitations": [
+    "Findings are drawn from the supplied abstracts and retrieved paper passages, not independent replications; code availability and reproducibility were not checked.",
+    "The Monarch–Muon 6.89B systems comparison is not a same-quality result; Ori’s cited memory measure is optimizer-step memory, not total training peak memory.",
+    "BMuon studies structured channel pruning rather than low-rank factorization and reports a dense-quality trade-off. ResQAdam’s evaluated setting is QAT.",
+    "CORE was evaluated on deep-research question answering, not research-digest selection. X analysis was disabled.",
+    "inspect:2610.23571: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.22794: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.31897: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.10965: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.04507: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.17429: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.04249: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2611.07859: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2610.23343: only question-relevant HTML passages were inspected, not the whole paper.",
+    "inspect:2611.08924: only question-relevant HTML passages were inspected, not the whole paper."
+  ],
+  "stats": {
+    "fetched_count": 1000,
+    "candidate_count": 1000,
+    "llm_calls": 20,
+    "steps": 15,
+    "inspections": 10,
+    "expansions": 2,
+    "screened": 49,
+    "usage": {
+      "recorded_calls": 19,
+      "llm_latency_seconds": 343.5604629180161,
+      "input_tokens": 878532,
+      "output_tokens": 11011,
+      "estimated_api_cost_usd": null,
+      "calls_without_usage": 0,
+      "cost_note": "API-equivalent estimate using standard GPT-5.6-Luna rates checked 2026-11-17: $0.20/M input, $1.20/M output; above 272K input, $0.40/M and $1.80/M. Assumes all input is uncached; excludes cache writes and external tools. Not actual Codex subscription billing. Unknown usage/model yields null cost.",
+      "price_source": "https://developers.openai.com/api/docs/models/gpt-5.6-luna"
+    },
+    "tool_calls": 12,
+    "tool_latency_seconds": 38.07988466595998
+  }
+}

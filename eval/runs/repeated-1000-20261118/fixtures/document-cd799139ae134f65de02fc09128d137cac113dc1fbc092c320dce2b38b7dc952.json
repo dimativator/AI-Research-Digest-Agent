@@ -1,0 +1,360 @@
+{
+  "status": "ok",
+  "source": "https://arxiv.org/html/2611.07174v2",
+  "extractor_version": "article-v1",
+  "chunks": [
+    {
+      "chunk_id": "chunk-0001",
+      "section": "MapHub: Daily Relevance Heatmaps of New arXiv Preprints for a Research Community",
+      "text": "Kaili Cao (曹开力) Alternate Affiliation: Schmidt Fellow Affiliation: Michigan Institute for Data and AI in Society (MIDAS), University of Michigan, 500 Church Street, Ann Arbor, MI 48109, USA Email: [ Camille Avestruz Affiliation: Department of Physics, University of Michigan, 450 Church Street, Ann Arbor, MI 48109, USA Affiliation: Leinweber Institute for Theoretical Physics, University of Michigan, 450 Church Street, Ann Arbor, MI 48109, USA Email: Feige Wang Affiliation: Department of Astronomy, University of Michigan, 1085 South University Avenue, Ann Arbor, MI 48109, USA Email:",
+      "source": "https://arxiv.org/html/2611.07174v2",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0002",
+      "section": "Abstract",
+      "text": "MapHub, the MIDAS arXiv Preprint Hub, assesses each day’s new arXiv submissions for every participant in a research community, with a large language model reading each paper against portfolios built for the participants. It publishes the relevance scores, from 0 to 100, as a heatmap that shows whose work each paper touches. In the authors’ blind ratings, the top 10% of papers by MapHub’s scores held about 70% of the raters’ own top 5%, pooled, against about a third for a text-matching baseline. About 6% of a day’s astro-ph papers reach 30 for each participant, and one every three days reaches 60. MapHub runs on a standard Claude subscription and is designed to be useful for any field: https://github.com/kailicao/maphub-public .",
+      "source": "https://arxiv.org/html/2611.07174v2",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0003",
+      "section": "Keywords:",
+      "text": "Astroinformatics — Astronomical research — Open source software show]kailicao@umich.edu",
+      "source": "https://arxiv.org/html/2611.07174v2",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0004",
+      "section": "I Introduction",
+      "text": "Nowadays, each arXiv announcement brings about ninety new astro-ph submissions, and readers cannot attend to all of them equally [ 4 ] . myADS runs keyword and author queries on new preprints [ 5 ] ; recommenders learn a reader’s interests from topics, text similarity, or ratings [ 6 , 3 ] , or adapt inspectable profiles day by day [ 8 ] . Open-source projects use large language models to rank each day’s listing against one reader’s interests, and at Ohio State, agents built from 21 faculty members’ publication records each discuss matching daily papers [ 7 ] . These tools serve one reader at a time, or share discussions, rather than publishing how each paper relates to each member. MapHub 1 1 1 https://kailicao.github.io/maphub-public/ combines three things: Every new paper is scored for every participant and shown in one heatmap, one row per paper and one column per participant; the profiles are portfolios that participants can check and correct themselves; the scores are public and traceable.",
+      "source": "https://arxiv.org/html/2611.07174v2",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0005",
+      "section": "II Design",
+      "text": "A public prompt can be used to draft each participant’s research portfolio from a publication record, and the participant checks it: about 1,500–3,000 words, built from their own papers and plans, listing methods and targets as well as topics. Portfolios stay among participants and the model’s provider; scores are public, as participants agree when they join. Claude Opus 5.5 [ 1 , at low effort;] reads each new paper’s title, authors, and abstract against the portfolios and returns a relevance score from 100 (“the participant wrote the paper, or would”) through 60 (“would cite it”) and 30 (“it may broaden their view”) to 0, a fit to the portfolio rather than a judgment of quality. MapHub assesses new submissions to its listings (here astro-ph and cs.AI; the listings can be configured). Since most cells score low, a first pass scores chunks of about 50 papers for all participants at once against short outlines of the portfolios, and only papers scoring 10 or more are rescored against a full portfolio. On two test listings (748 papers), this cost about 36% of a single full pass and missed none of the 56 cells that pass scored 40 or more. The prompts, code, and tables are public, scores are labeled as AI-generated, and each table’s commit records what produced it, so the output can be checked. Figure 1: (a) An example day of MapHub, as its viewer shows it: the 23 papers (of 262) that reached 30 for some participant on 2026 August 25, numbered by average score. (b), (c) The share of each rater’s top 5% (b) and top 15% (c) found, against the share of astro-ph papers read in order of score. Columns are pooled and weighted back to uniform sampling; bands are 68% bootstrap intervals.",
+      "source": "https://arxiv.org/html/2611.07174v2",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0006",
+      "section": "III First results",
+      "text": "Seventy listings scored with version 0.8’s portfolios and prompt held 11,932 new submissions, scored for one individual, two groups, and two collaborations. Of a day’s 87 astro-ph papers, 6.3 % ± 3.5 % 6.3\\%\\pm 3.5\\% (mean ± \\pm standard deviation) reach 30 for each participant and 0.4% reach 60. Even the individual column, spanning multiple subfields, sees only 7 ± 3 7\\pm 3 astro-ph papers a day at 30 or more: minutes of reading abstracts. And 8% of astro-ph papers reach 30 for two or more participants (Figure 1 a). Of a day’s 84 cs.AI papers, about two reach 30 for the individual, and almost none for the others. To test whether the scores save time, the authors rated one shared list blind for themselves or their groups on MapHub’s rubric, each interpreting its descriptions in their own way. 2 2 2 One rater recast its descriptions as a scale from 1 to 5. Only each rater’s order is used. The list held 45 astro-ph papers drawn with probabilities rising with a paper’s highest score ( ∝ 2 s / 20 \\propto 2^{s/20} ), five of them shown twice, and 10 cs.AI papers spanning the individual column’s scores. Papers by the participants were left out; the portfolios were fixed on 2026 October 14 and cite none of the rated papers. Each rating is weighted by the inverse of its paper’s chance of being drawn, so the results estimate what reading these listings would find. A paper counts as of interest if it is in the rater’s top 5% (or 15%) of the population by their own ratings.",
+      "source": "https://arxiv.org/html/2611.07174v2",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0007",
+      "section": "III First results",
+      "text": "Reading in MapHub’s order finds the rater’s top 5% quickly (Figure 1 b): MapHub’s top 5% of papers hold about a third of it, and its top 10% about 70%, against 33% for a term-frequency baseline (TF-IDF 3 3 3 https://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.TfidfVectorizer.html of title and abstract against the portfolio) reading the same share. MapHub’s lead is 39 points at 10% read (95% interval: 11–60; ahead in every bootstrap draw). The top 15% is spread more widely: MapHub’s top 10% holds about a third of it, against about 20% for TF-IDF, and the two converge when about 40% of the listing is read (Figure 1 c). MapHub’s cutoff of 30 means reading 4%–9%, and over 90% of the papers above it were in the rater’s top 15%.",
+      "source": "https://arxiv.org/html/2611.07174v2",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0008",
+      "section": "IV Discussion",
+      "text": "A department’s heatmap could help an Astro Coffee-style discussion 4 4 4 https://astronomy.osu.edu/coffee of the whole listing: Papers touching several columns are natural topics, and their highest-scoring participants natural people to ask. Portfolios drawn from publication records may miss interests not yet published: The groups’ portfolios name machine learning only as a tool for their science, so MapHub may miss AI papers their members want. Adding these interests to the portfolios would fix this; meanwhile, the individual’s column flags AI papers. Scores stay comparable across days, since every paper is read against the portfolio on one rubric, and rescoring changed them by 1.7 points on average. MapHub is still under development, and the test is small. Its ratings are subjective: The first author, who built the tool, rated three of the five columns, and a rating shifts with the papers read just before it. Each rater’s top 5% holds few papers, and defining interest by percentile assumes every rater has some. K.C. was supported by the Eric and Wendy Schmidt AI in Science Postdoctoral Fellowship, a program of Schmidt Sciences. C.A. acknowledges support from the Leinweber Institute for Theoretical Physics at the University of Michigan and DOE grant DE-SC009193. This work was, in part, enabled by the Claude Team Plan for Scientists.",
+      "source": "https://arxiv.org/html/2611.07174v2",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0009",
+      "section": "AI Disclosure",
+      "text": "Claude (Anthropic) was used to draft parts of this note’s text. Responsibility for the final text lies entirely with the authors.",
+      "source": "https://arxiv.org/html/2611.07174v2",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0010",
+      "section": "Data Availability",
+      "text": "MapHub’s code, documentation, and tables are on GitHub. This note describes version 0.8 [ 2 ] .",
+      "source": "https://arxiv.org/html/2611.07174v2",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0011",
+      "section": "References",
+      "text": "[1] Anthropic (2026) System Card: Claude Opus 5.5 . Note: System card published 2026 September 22 External Links: Link Cited by: §II . [2] K. Cao (2026) Kailicao/maphub-public: maphub: code and tables of the research note’s rating study (october 2026) . Zenodo . External Links: Document , Link Cited by: Data Availability . [3] M. Flicke, G. Angrabeit, M. Iyengar, V. Protsenko, I. Shakun, J. Cicvaric, B. Kargi, H. He, L. Schuler, L. Scholz, K. Agnihotri, Y. Cao, and A. Geiger (2025) Scholar Inbox: Personalized Paper Recommendations for Scientists . arXiv e-prints , pp. arXiv:2504.08385 . External Links: Document , 2504.08385 Cited by: §I . [4] A. Haque and P. Ginsparg (2009) Positional effects on citation and readership in arXiv . Journal of the American Society for Information Science and Technology 60 , pp. 2203–2218 . External Links: Document , 0907.4740 Cited by: §I . [5] E. Henneken, M. J. Kurtz, G. Eichhorn, A. Accomazzi, C. S. Grant, D. Thompson, E. Bohlen, and S. S. Murray (2007) myADS-arXiv – a Tailor-made, Open Access, Virtual Journal . In Library and Information Services in Astronomy V , S. Ricketts, C. Birdie, and E. Isaksson (Eds.) , Astronomical Society of the Pacific Conference Series , Vol. 377 , pp. 106 . External Links: Document , cs/0608027 Cited by: §I . [6] W. E. Kerzendorf (2019) Knowledge discovery through text-based similarity searches for astronomy literature . Journal of Astrophysics and Astronomy 40 ( 3 ), pp. 23 . External Links: Document , 1705.05840 Cited by: §I . [7] Y. Ting (2026) Your Outie Is a Wonderful Astronomer: Macrodata Refinement of the Astro-ph ArXiv Feed at Phermon Industries . arXiv e-prints , pp. arXiv:2603.29771 . External Links: Document , 2603.29771 Cited by: §I .",
+      "source": "https://arxiv.org/html/2611.07174v2",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0012",
+      "section": "References",
+      "text": "[8] F. Wang, S. Tan, Z. Guo, J. Fu, X. Xu, B. Yu, J. Dong, Z. Sun, S. Li, J. Wei, and C. Tan (2026) PaperFlow: Profiling, Recommending, and Adapting Across Daily Paper Streams . arXiv e-prints , pp. arXiv:2606.07454 . External Links: Document , 2606.07454 Cited by: §I .",
+      "source": "https://arxiv.org/html/2611.07174v2",
+      "offset": 0
+    }
+  ],
+  "links": [
+    {
+      "href": "mailto:[",
+      "text": "[",
+      "section": "MapHub: Daily Relevance Heatmaps of New arXiv Preprints for a Research Community",
+      "context": "Kaili Cao (曹开力) Alternate Affiliation: Schmidt Fellow Affiliation: Michigan Institute for Data and AI in Society (MIDAS), University of Michigan, 500 Church Street, Ann Arbor, MI 48109, USA Email: [",
+      "url": "mailto:["
+    },
+    {
+      "href": "mailto:",
+      "text": "",
+      "section": "MapHub: Daily Relevance Heatmaps of New arXiv Preprints for a Research Community",
+      "context": "Kaili Cao (曹开力) Alternate Affiliation: Schmidt Fellow Affiliation: Michigan Institute for Data and AI in Society (MIDAS), University of Michigan, 500 Church Street, Ann Arbor, MI 48109, USA Email: [ Camille Avestruz Affiliation: Department of Physics, University of Michigan, 450 Church Street, Ann Arbor, MI 48109, USA Affiliation: Leinweber Institute for Theoretical Physics, University of Michigan, 450 Church Street, Ann Arbor, MI 48109, USA Email:",
+      "url": "mailto:"
+    },
+    {
+      "href": "mailto:",
+      "text": "",
+      "section": "MapHub: Daily Relevance Heatmaps of New arXiv Preprints for a Research Community",
+      "context": "Kaili Cao (曹开力) Alternate Affiliation: Schmidt Fellow Affiliation: Michigan Institute for Data and AI in Society (MIDAS), University of Michigan, 500 Church Street, Ann Arbor, MI 48109, USA Email: [ Camille Avestruz Affiliation: Department of Physics, University of Michigan, 450 Church Street, Ann Arbor, MI 48109, USA Affiliation: Leinweber Institute for Theoretical Physics, University of Michigan, 450 Church Street, Ann Arbor, MI 48109, USA Email: Feige Wang Affiliation: Department of Astronomy, University of Michigan, 1085 South University Avenue, Ann Arbor, MI 48109, USA Email:",
+      "url": "mailto:"
+    },
+    {
+      "href": "https://github.com/kailicao/maphub-public",
+      "text": "https://github.com/kailicao/maphub-public",
+      "section": "Abstract",
+      "context": "arge language model reading each paper against portfolios built for the participants. It publishes the relevance scores, from 0 to 100, as a heatmap that shows whose work each paper touches. In the authors’ blind ratings, the top 10% of papers by MapHub’s scores held about 70% of the raters’ own top 5%, pooled, against about a third for a text-matching baseline. About 6% of a day’s astro-ph papers reach 30 for each participant, and one every three days reaches 60. MapHub runs on a standard Claude subscription and is designed to be useful for any field: https://github.com/kailicao/maphub-public",
+      "url": "https://github.com/kailicao/maphub-public"
+    },
+    {
+      "href": "https://astrothesaurus.org/uat/78",
+      "text": "Astroinformatics",
+      "section": "Keywords:",
+      "context": "Astroinformatics",
+      "url": "https://astrothesaurus.org/uat/78"
+    },
+    {
+      "href": "https://astrothesaurus.org/uat/91",
+      "text": "Astronomical research",
+      "section": "Keywords:",
+      "context": "Astroinformatics — Astronomical research",
+      "url": "https://astrothesaurus.org/uat/91"
+    },
+    {
+      "href": "https://astrothesaurus.org/uat/1866",
+      "text": "Open source software",
+      "section": "Keywords:",
+      "context": "Astroinformatics — Astronomical research — Open source software",
+      "url": "https://astrothesaurus.org/uat/1866"
+    },
+    {
+      "href": "#bib.bib4",
+      "text": "4",
+      "section": "I Introduction",
+      "context": "Nowadays, each arXiv announcement brings about ninety new astro-ph submissions, and readers cannot attend to all of them equally [ 4",
+      "url": "https://arxiv.org/html/2611.07174v2#bib.bib4"
+    },
+    {
+      "href": "#bib.bib5",
+      "text": "5",
+      "section": "I Introduction",
+      "context": "Nowadays, each arXiv announcement brings about ninety new astro-ph submissions, and readers cannot attend to all of them equally [ 4 ] . myADS runs keyword and author queries on new preprints [ 5",
+      "url": "https://arxiv.org/html/2611.07174v2#bib.bib5"
+    },
+    {
+      "href": "#bib.bib3",
+      "text": "6",
+      "section": "I Introduction",
+      "context": "Nowadays, each arXiv announcement brings about ninety new astro-ph submissions, and readers cannot attend to all of them equally [ 4 ] . myADS runs keyword and author queries on new preprints [ 5 ] ; recommenders learn a reader’s interests from topics, text similarity, or ratings [ 6",
+      "url": "https://arxiv.org/html/2611.07174v2#bib.bib3"
+    },
+    {
+      "href": "#bib.bib2",
+      "text": "3",
+      "section": "I Introduction",
+      "context": "Nowadays, each arXiv announcement brings about ninety new astro-ph submissions, and readers cannot attend to all of them equally [ 4 ] . myADS runs keyword and author queries on new preprints [ 5 ] ; recommenders learn a reader’s interests from topics, text similarity, or ratings [ 6 , 3",
+      "url": "https://arxiv.org/html/2611.07174v2#bib.bib2"
+    },
+    {
+      "href": "#bib.bib1",
+      "text": "8",
+      "section": "I Introduction",
+      "context": "Nowadays, each arXiv announcement brings about ninety new astro-ph submissions, and readers cannot attend to all of them equally [ 4 ] . myADS runs keyword and author queries on new preprints [ 5 ] ; recommenders learn a reader’s interests from topics, text similarity, or ratings [ 6 , 3 ] , or adapt inspectable profiles day by day [ 8",
+      "url": "https://arxiv.org/html/2611.07174v2#bib.bib1"
+    },
+    {
+      "href": "#bib.bib7",
+      "text": "7",
+      "section": "I Introduction",
+      "context": "Nowadays, each arXiv announcement brings about ninety new astro-ph submissions, and readers cannot attend to all of them equally [ 4 ] . myADS runs keyword and author queries on new preprints [ 5 ] ; recommenders learn a reader’s interests from topics, text similarity, or ratings [ 6 , 3 ] , or adapt inspectable profiles day by day [ 8 ] . Open-source projects use large language models to rank each day’s listing against one reader’s interests, and at Ohio State, agents built from 21 faculty members’ publication records each discuss matching daily papers [ 7",
+      "url": "https://arxiv.org/html/2611.07174v2#bib.bib7"
+    },
+    {
+      "href": "https://kailicao.github.io/maphub-public/",
+      "text": "https://kailicao.github.io/maphub-public/",
+      "section": "I Introduction",
+      "context": "These tools serve one reader at a time, or share discussions, rather than publishing how each paper relates to each member. MapHub 1 1 1 https://kailicao.github.io/maphub-public/",
+      "url": "https://kailicao.github.io/maphub-public/"
+    },
+    {
+      "href": "#bib.bib6",
+      "text": "1",
+      "section": "II Design",
+      "context": "A public prompt can be used to draft each participant’s research portfolio from a publication record, and the participant checks it: about 1,500–3,000 words, built from their own papers and plans, listing methods and targets as well as topics. Portfolios stay among participants and the model’s provider; scores are public, as participants agree when they join. Claude Opus 5.5 [ 1",
+      "url": "https://arxiv.org/html/2611.07174v2#bib.bib6"
+    },
+    {
+      "href": "#S2.F1",
+      "text": "1",
+      "section": "III First results",
+      "context": "Seventy listings scored with version 0.8’s portfolios and prompt held 11,932 new submissions, scored for one individual, two groups, and two collaborations. Of a day’s 87 astro-ph papers, 6.3 % ± 3.5 % 6.3\\%\\pm 3.5\\% (mean ± \\pm standard deviation) reach 30 for each participant and 0.4% reach 60. Even the individual column, spanning multiple subfields, sees only 7 ± 3 7\\pm 3 astro-ph papers a day at 30 or more: minutes of reading abstracts. And 8% of astro-ph papers reach 30 for two or more participants (Figure 1",
+      "url": "https://arxiv.org/html/2611.07174v2#S2.F1"
+    },
+    {
+      "href": "#S2.F1",
+      "text": "1",
+      "section": "III First results",
+      "context": "Reading in MapHub’s order finds the rater’s top 5% quickly (Figure 1",
+      "url": "https://arxiv.org/html/2611.07174v2#S2.F1"
+    },
+    {
+      "href": "https://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.TfidfVectorizer.html",
+      "text": "https://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.TfidfVectorizer.html",
+      "section": "III First results",
+      "context": "Reading in MapHub’s order finds the rater’s top 5% quickly (Figure 1 b): MapHub’s top 5% of papers hold about a third of it, and its top 10% about 70%, against 33% for a term-frequency baseline (TF-IDF 3 3 3 https://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.TfidfVectorizer.html",
+      "url": "https://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.TfidfVectorizer.html"
+    },
+    {
+      "href": "#S2.F1",
+      "text": "1",
+      "section": "III First results",
+      "context": " quickly (Figure 1 b): MapHub’s top 5% of papers hold about a third of it, and its top 10% about 70%, against 33% for a term-frequency baseline (TF-IDF 3 3 3 https://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.TfidfVectorizer.html of title and abstract against the portfolio) reading the same share. MapHub’s lead is 39 points at 10% read (95% interval: 11–60; ahead in every bootstrap draw). The top 15% is spread more widely: MapHub’s top 10% holds about a third of it, against about 20% for TF-IDF, and the two converge when about 40% of the listing is read (Figure 1",
+      "url": "https://arxiv.org/html/2611.07174v2#S2.F1"
+    },
+    {
+      "href": "https://astronomy.osu.edu/coffee",
+      "text": "https://astronomy.osu.edu/coffee",
+      "section": "IV Discussion",
+      "context": "A department’s heatmap could help an Astro Coffee-style discussion 4 4 4 https://astronomy.osu.edu/coffee",
+      "url": "https://astronomy.osu.edu/coffee"
+    },
+    {
+      "href": "#bib.bib8",
+      "text": "2",
+      "section": "Data Availability",
+      "context": "MapHub’s code, documentation, and tables are on GitHub. This note describes version 0.8 [ 2",
+      "url": "https://arxiv.org/html/2611.07174v2#bib.bib8"
+    },
+    {
+      "href": "https://www.anthropic.com/claude-opus-5-5",
+      "text": "Link",
+      "section": "References",
+      "context": "[1] Anthropic (2026) System Card: Claude Opus 5.5 . Note: System card published 2026 September 22 External Links: Link",
+      "url": "https://www.anthropic.com/claude-opus-5-5"
+    },
+    {
+      "href": "#S2.p1.1",
+      "text": "§II",
+      "section": "References",
+      "context": "[1] Anthropic (2026) System Card: Claude Opus 5.5 . Note: System card published 2026 September 22 External Links: Link Cited by: §II",
+      "url": "https://arxiv.org/html/2611.07174v2#S2.p1.1"
+    },
+    {
+      "href": "https://dx.doi.org/10.5281/ZENODO.23539894",
+      "text": "Document",
+      "section": "References",
+      "context": "[2] K. Cao (2026) Kailicao/maphub-public: maphub: code and tables of the research note’s rating study (october 2026) . Zenodo . External Links: Document",
+      "url": "https://dx.doi.org/10.5281/ZENODO.23539894"
+    },
+    {
+      "href": "https://zenodo.org/doi/10.5281/zenodo.23539894",
+      "text": "Link",
+      "section": "References",
+      "context": "[2] K. Cao (2026) Kailicao/maphub-public: maphub: code and tables of the research note’s rating study (october 2026) . Zenodo . External Links: Document , Link",
+      "url": "https://zenodo.org/doi/10.5281/zenodo.23539894"
+    },
+    {
+      "href": "#Sx2.p1.1",
+      "text": "Data Availability",
+      "section": "References",
+      "context": "[2] K. Cao (2026) Kailicao/maphub-public: maphub: code and tables of the research note’s rating study (october 2026) . Zenodo . External Links: Document , Link Cited by: Data Availability",
+      "url": "https://arxiv.org/html/2611.07174v2#Sx2.p1.1"
+    },
+    {
+      "href": "https://dx.doi.org/10.48550/arXiv.2504.08385",
+      "text": "Document",
+      "section": "References",
+      "context": "[3] M. Flicke, G. Angrabeit, M. Iyengar, V. Protsenko, I. Shakun, J. Cicvaric, B. Kargi, H. He, L. Schuler, L. Scholz, K. Agnihotri, Y. Cao, and A. Geiger (2025) Scholar Inbox: Personalized Paper Recommendations for Scientists . arXiv e-prints , pp. arXiv:2504.08385 . External Links: Document",
+      "url": "https://dx.doi.org/10.48550/arXiv.2504.08385"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§I",
+      "section": "References",
+      "context": "[3] M. Flicke, G. Angrabeit, M. Iyengar, V. Protsenko, I. Shakun, J. Cicvaric, B. Kargi, H. He, L. Schuler, L. Scholz, K. Agnihotri, Y. Cao, and A. Geiger (2025) Scholar Inbox: Personalized Paper Recommendations for Scientists . arXiv e-prints , pp. arXiv:2504.08385 . External Links: Document , 2504.08385 Cited by: §I",
+      "url": "https://arxiv.org/html/2611.07174v2#S1.p1.1"
+    },
+    {
+      "href": "https://dx.doi.org/10.1002/asi.21166",
+      "text": "Document",
+      "section": "References",
+      "context": "[4] A. Haque and P. Ginsparg (2009) Positional effects on citation and readership in arXiv . Journal of the American Society for Information Science and Technology 60 , pp. 2203–2218 . External Links: Document",
+      "url": "https://dx.doi.org/10.1002/asi.21166"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§I",
+      "section": "References",
+      "context": "[4] A. Haque and P. Ginsparg (2009) Positional effects on citation and readership in arXiv . Journal of the American Society for Information Science and Technology 60 , pp. 2203–2218 . External Links: Document , 0907.4740 Cited by: §I",
+      "url": "https://arxiv.org/html/2611.07174v2#S1.p1.1"
+    },
+    {
+      "href": "https://dx.doi.org/10.48550/arXiv.cs/0608027",
+      "text": "Document",
+      "section": "References",
+      "context": "[5] E. Henneken, M. J. Kurtz, G. Eichhorn, A. Accomazzi, C. S. Grant, D. Thompson, E. Bohlen, and S. S. Murray (2007) myADS-arXiv – a Tailor-made, Open Access, Virtual Journal . In Library and Information Services in Astronomy V , S. Ricketts, C. Birdie, and E. Isaksson (Eds.) , Astronomical Society of the Pacific Conference Series , Vol. 377 , pp. 106 . External Links: Document",
+      "url": "https://dx.doi.org/10.48550/arXiv.cs/0608027"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§I",
+      "section": "References",
+      "context": "[5] E. Henneken, M. J. Kurtz, G. Eichhorn, A. Accomazzi, C. S. Grant, D. Thompson, E. Bohlen, and S. S. Murray (2007) myADS-arXiv – a Tailor-made, Open Access, Virtual Journal . In Library and Information Services in Astronomy V , S. Ricketts, C. Birdie, and E. Isaksson (Eds.) , Astronomical Society of the Pacific Conference Series , Vol. 377 , pp. 106 . External Links: Document , cs/0608027 Cited by: §I",
+      "url": "https://arxiv.org/html/2611.07174v2#S1.p1.1"
+    },
+    {
+      "href": "https://dx.doi.org/10.1007/s12036-019-9590-5",
+      "text": "Document",
+      "section": "References",
+      "context": "[6] W. E. Kerzendorf (2019) Knowledge discovery through text-based similarity searches for astronomy literature . Journal of Astrophysics and Astronomy 40 ( 3 ), pp. 23 . External Links: Document",
+      "url": "https://dx.doi.org/10.1007/s12036-019-9590-5"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§I",
+      "section": "References",
+      "context": "[6] W. E. Kerzendorf (2019) Knowledge discovery through text-based similarity searches for astronomy literature . Journal of Astrophysics and Astronomy 40 ( 3 ), pp. 23 . External Links: Document , 1705.05840 Cited by: §I",
+      "url": "https://arxiv.org/html/2611.07174v2#S1.p1.1"
+    },
+    {
+      "href": "https://dx.doi.org/10.48550/arXiv.2603.29771",
+      "text": "Document",
+      "section": "References",
+      "context": "[7] Y. Ting (2026) Your Outie Is a Wonderful Astronomer: Macrodata Refinement of the Astro-ph ArXiv Feed at Phermon Industries . arXiv e-prints , pp. arXiv:2603.29771 . External Links: Document",
+      "url": "https://dx.doi.org/10.48550/arXiv.2603.29771"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§I",
+      "section": "References",
+      "context": "[7] Y. Ting (2026) Your Outie Is a Wonderful Astronomer: Macrodata Refinement of the Astro-ph ArXiv Feed at Phermon Industries . arXiv e-prints , pp. arXiv:2603.29771 . External Links: Document , 2603.29771 Cited by: §I",
+      "url": "https://arxiv.org/html/2611.07174v2#S1.p1.1"
+    },
+    {
+      "href": "https://dx.doi.org/10.48550/arXiv.2606.07454",
+      "text": "Document",
+      "section": "References",
+      "context": "[8] F. Wang, S. Tan, Z. Guo, J. Fu, X. Xu, B. Yu, J. Dong, Z. Sun, S. Li, J. Wei, and C. Tan (2026) PaperFlow: Profiling, Recommending, and Adapting Across Daily Paper Streams . arXiv e-prints , pp. arXiv:2606.07454 . External Links: Document",
+      "url": "https://dx.doi.org/10.48550/arXiv.2606.07454"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§I",
+      "section": "References",
+      "context": "[8] F. Wang, S. Tan, Z. Guo, J. Fu, X. Xu, B. Yu, J. Dong, Z. Sun, S. Li, J. Wei, and C. Tan (2026) PaperFlow: Profiling, Recommending, and Adapting Across Daily Paper Streams . arXiv e-prints , pp. arXiv:2606.07454 . External Links: Document , 2606.07454 Cited by: §I",
+      "url": "https://arxiv.org/html/2611.07174v2#S1.p1.1"
+    }
+  ],
+  "note": "Extracted HTML text; equations and table formatting may be imperfect. No PDF extraction was attempted."
+}

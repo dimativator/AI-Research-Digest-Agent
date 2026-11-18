@@ -1,0 +1,1144 @@
+{
+  "status": "ok",
+  "source": "https://arxiv.org/html/2610.06647v3",
+  "extractor_version": "article-v1",
+  "chunks": [
+    {
+      "chunk_id": "chunk-0001",
+      "section": "LoGRA: Scaling LLM Reinforcement Learning with Low-Rank Gradient Sketches",
+      "text": "Shaokun Zhang Yifan Zhang Jian Hu Yueying Li Hao Zhang Binfeng Xu Jan Kautz Yi Dong Affiliation: NVIDIA",
+      "source": "https://arxiv.org/html/2610.06647v3",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0002",
+      "section": "Abstract",
+      "text": "Reinforcement learning has greatly advanced the capabilities of large language models, but its memory demands remain a barrier to broader adoption. We introduce LoGRA, an approach to RL post-training that reduces memory by retaining useful learning signals in low-rank gradient sketches. These compact representations support both model updates and efficient policy synchronization. To prevent overly large updates from disrupting learning, we complement gradient compression with predicted-KL step control, which estimates policy changes before applying each update and adjusts its magnitude accordingly. With all techniques combined, LoGRA reduces average training memory usage by up to 45.7% across reasoning tasks without compromising performance. It also enables stable training of a 27B-parameter model for over 1,100 steps on a single eight-GPU node, where dense Adam runs out of memory, making previously memory-infeasible RL training practical. Code is available in the Molt library . \\abscontent",
+      "source": "https://arxiv.org/html/2610.06647v3",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0003",
+      "section": "1 Introduction",
+      "text": "Figure 1: Lower training memory across model scales. Colors denote model sizes; hatching distinguishes Dense Adam from LoGRA. Dark bars show average memory and pale extensions reach peak memory (Table 1 ); labels report average / peak in GiB per training GPU. Arrows show average-memory savings over Dense Adam. The broken axis omits 34–48 GiB. The 27B Dense Adam bar marks OOM at GPU capacity, not a measured value. Reinforcement learning (RL) has emerged as a key driver of advances in LLM, enabling models to improve through feedback on their own generated responses ( Sheng et al., 2024 ; , 2025 ; Xu et al., 2026 ; Zhang et al., 2026b ) . However, its substantial memory requirements remain a major barrier to broader adoption. This challenge extends well beyond storing model parameters, as gradients and optimizer states can consume several times more memory than the weights themselves. For example, the BF16 weights of a 7B-parameter Qwen model ( Bai et al., 2023 ) require approximately 14 GB, while Adam’s ( Kingma and Ba, 2014 ) two FP32 moment buffers add another 56 GB, even before accounting for gradients and activations. Consequently, hardware capable of running a model may still be insufficient to improve it through RL. Reducing this memory overhead is therefore critical to making RL post-training accessible to the broader research community.",
+      "source": "https://arxiv.org/html/2610.06647v3",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0004",
+      "section": "1 Introduction",
+      "text": "To overcome this bottleneck, existing approaches span both system-level optimizations and memory-efficient training algorithms. At the system level, FSDP ( Zhao et al., 2023 ) shards training states across GPUs, gradient checkpointing ( Chen et al., 2016 ) reduces activation storage through recomputation, and CPU offloading moves selected training states to host memory ( Rajbhandari et al., 2020 ) . Parameter-efficient methods reduce the number of parameters that require gradients and optimizer states: LoRA ( Hu et al., 2021 ) , for example, freezes pretrained weights and learns small low-rank adapters. Gradient compression offers another route ( Zhao et al., 2024 ; Su et al., 2025 ; Hao et al., 2024 ) : they keep the original weight matrices trainable while using compact representations of gradients and optimizer states, thereby reducing training memory while still enabling effective updates to the full model.",
+      "source": "https://arxiv.org/html/2610.06647v3",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0005",
+      "section": "1 Introduction",
+      "text": "Motivated by this perspective, we introduce LoGRA, a method that uses low-rank gradient sketches to reduce the memory and communication costs of RL post-training, thus lower the hardware barrier. Our intuition is that learning from rewards may require far less information than a full gradient can represent: with binary outcome rewards, each generated response receives only a single correctness signal, motivating a compact representation of the resulting learning signal ( Schulman and Lab, 2025 ) . LoGRA directly accumulates sketches during backpropagation, avoiding the construction and storage of full gradients for the selected weight matrices. These sketches produce updates that are merged into the model weights, with directions that can vary throughout training. The same compact representation is then reused to synchronize the rollout policy, extending the benefits of compression from training memory to communication. LoGRA alone is insufficient to ensure stable updates: an overly large update can abruptly shift the policy and disrupt previously learned behavior. We therefore introduce predicted-KL step control, which estimates how much a proposed update would change the model’s next-token probabilities before applying it. This estimate guides the update scale to stay within a prescribed KL budget with simple optimizers.",
+      "source": "https://arxiv.org/html/2610.06647v3",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0006",
+      "section": "1 Introduction",
+      "text": "We evaluate LoGRA across multiple reasoning tasks with models ranging from 1.5B to 27B parameters. LoGRA reduces average training memory by 21.8% at 1.5B and 45.7% at 7B without sacrificing task performance. These savings also make larger-scale training feasible: LoGRA sustains stable learning of a 27B model for over 1,100 steps on a single eight-GPU node, where the dense Adam baseline runs out of memory under the same hardware allocation. Ablations further clarify how projection design and KL budgets affect learning performance and training stability.",
+      "source": "https://arxiv.org/html/2610.06647v3",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0007",
+      "section": "2 Method",
+      "text": "An LLM contains large weight matrices, and storing a full gradient for each matrix adds substantial training memory. LoGRA replaces these full gradients with compact sketches and represents each weight update as the product of two thin matrices. We first describe this matrix representation, then explain its use in RL post-training and policy synchronization. We use predicted-KL step control to determine the update magnitude.",
+      "source": "https://arxiv.org/html/2610.06647v3",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0008",
+      "section": "Full-gradient updates.",
+      "text": "Let θ \\theta denote the parameters of an LLM policy π θ \\pi_{\\theta} , and let ℒ ⁡ ( θ ) \\mathcal{L}(\\theta) be a differentiable RL training loss. Consider one weight matrix W ∈ ℝ d × k W\\in\\mathbb{R}^{d\\times k} in the model. Its gradient G G has the same dimensions as W W ; for example, an SGD update takes the form G = ∇ W ℒ ∈ ℝ d × k , W ← W − η ​ G , G=\\nabla_{W}\\mathcal{L}\\in\\mathbb{R}^{d\\times k},\\qquad W\\leftarrow W-\\eta G, (1) where η \\eta is the learning rate. When a training batch is split into microbatches, standard training accumulates their contributions in a full d × k d\\times k gradient buffer before updating W W . This requires d ​ k dk stored values in addition to the weights and any optimizer state. Our goal is to perform the update using a much smaller gradient representation.",
+      "source": "https://arxiv.org/html/2610.06647v3",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0009",
+      "section": "A compact representation.",
+      "text": "Choose a rank r ≪ min ⁡ ( d , k ) r\\ll\\min(d,k) and a random projection matrix A ∈ ℝ r × k A\\in\\mathbb{R}^{r\\times k} . LoGRA represents the gradient by a sketch S = G ​ A ⊤ ∈ ℝ d × r . S=GA^{\\top}\\in\\mathbb{R}^{d\\times r}. (2) Multiplication by A ⊤ A^{\\top} compresses the k k columns of G G into r r columns of S S . The sketch therefore stores d ​ r dr values instead of d ​ k dk . The projection A A is sampled independently of the current batch and held fixed throughout gradient accumulation; it is not learned. By default, its entries are independent random signs scaled by 1 / r 1/\\sqrt{r} . Equation 2 defines the sketch mathematically, but does not require computing and then compressing a full gradient. Our implementation directly accumulates the projected gradient contributions from each microbatch into S S in fp32. It does so by projecting the inputs used in the weight-gradient calculation before multiplying them by the backward derivatives. Thus, the compressed weights do not require a full gradient buffer, while the model’s ordinary forward computation is preserved.",
+      "source": "https://arxiv.org/html/2610.06647v3",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0010",
+      "section": "A low-rank weight update.",
+      "text": "To update W W , we need a matrix with the same dimensions as W W . The sketch S S has only r r columns, so we multiply it by A A to obtain a d × k d\\times k approximation to the full gradient: G ^ = S ​ A ∈ ℝ d × k , W ← W − η ​ S ​ A . \\widehat{G}=SA\\in\\mathbb{R}^{d\\times k},\\qquad W\\leftarrow W-\\eta SA. (3) In other words, we use S ​ A SA in place of G G in the standard gradient update. Although S ​ A SA has the same dimensions as G G , it is represented by two small matrices: S S of size d × r d\\times r and A A of size r × k r\\times k . Because S S has only r r columns, every column of S ​ A SA is a combination of these r r columns; this is why the update has rank at most r r . This compact representation approximates the full gradient rather than recovering it exactly. The resulting update is added directly to W W , which remains a full-sized weight matrix. An optimizer can also adjust the sketch before it is used in the update. We call this adjusted sketch U U ; it has the same dimensions as S S , and U = S U=S for the basic SGD variant. The update then becomes W ← W − α ​ η ​ U ​ A . W\\leftarrow W-\\alpha\\eta UA. (4) Here η \\eta sets the nominal step size, and α \\alpha is an additional multiplier: α = 1 \\alpha=1 leaves the step unchanged, while a smaller value reduces it. The predicted-KL controller described below chooses α \\alpha without changing the shapes of U U and A A .",
+      "source": "https://arxiv.org/html/2610.06647v3",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0011",
+      "section": "2.2 Applying LoGRA to RL post-training",
+      "text": "We apply the sketch to attention and MLP projection matrices, holding other parameters fixed. Algorithm 1 summarizes the procedure, which supports differentiable RL losses. Each matrix has its own A A , S S , and U U , while α \\alpha is shared. Updates are merged directly into the weights, with no persistent adapter branch. Refreshing A A each step allows successive updates to use different subspaces, so their sum need not have rank at most r r . Here ℒ m \\mathcal{L}_{m} denotes microbatch m m ’s contribution to ℒ \\mathcal{L} . The projected gradient in the algorithm is accumulated directly, without forming the full gradient matrix.",
+      "source": "https://arxiv.org/html/2610.06647v3",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0012",
+      "section": "Memory and synchronization.",
+      "text": "The gradient accumulator shrinks from d ​ k dk to d ​ r dr values: for d = k = 4096 d=k=4096 and r = 64 r=64 , fp32 storage falls from 64 MiB to 1 MiB. Model weights, cached projections, activations, and other buffers still consume memory. Basic SGD requires no optimizer moments; stateful sketch optimizers add their own storage. For synchronization, the rollout engine regenerates A A from its seed and applies the received factor α ​ η ​ U \\alpha\\eta U . The payload is O ⁡ ( d ​ r ) O(dr) values plus a seed and metadata, instead of a full d × k d\\times k update. Algorithm 1 LoGRA with projection refreshing 1: Policy π θ \\pi_{\\theta} , selected matrices W W , rank r r , step size η \\eta 2: Initialize rollout weights from θ \\theta . 3: for each training step do 4: Sample responses from π θ \\pi_{\\theta} ; construct ℒ \\mathcal{L} . ⊳ \\triangleright 1. Prepare 5: for each W W do 6: Sample A ∈ ℝ r × k A\\in\\mathbb{R}^{r\\times k} from a fresh seed. 7: S ← 0 ∈ ℝ d × r S\\leftarrow 0\\in\\mathbb{R}^{d\\times r} 8: for each microbatch m m ( θ \\theta and A A fixed) do ⊳ \\triangleright 2. Accumulate sketches 9: for each W W do 10: S ← S + ( ∇ W ℒ m ) ​ A ⊤ S\\leftarrow S+(\\nabla_{W}\\mathcal{L}_{m})A^{\\top} ⊳ \\triangleright Direct sketch accumulation 11: For each W W : U ← S U\\leftarrow S (or use a sketch optimizer). ⊳ \\triangleright 3. Choose the update 12: α ← 1 \\alpha\\leftarrow 1 ⊳ \\triangleright Or use predicted KL; Section 2.3 13: for each W W do ⊳ \\triangleright 4. Update and synchronize 14: W ← W − α ​ η ​ U ​ A W\\leftarrow W-\\alpha\\eta UA ⊳ \\triangleright Trainer 15: Send α ​ η ​ U \\alpha\\eta U and the seed for A A to rollout. 16: Regenerate A A ; apply the same update. ⊳ \\triangleright Rollout 17: Wait for synchronization to finish.",
+      "source": "https://arxiv.org/html/2610.06647v3",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0013",
+      "section": "2.3 Step-size control with predicted KL",
+      "text": "LoGRA specify how to change the weights, but the size of that change also matters. An update that is small in parameter space can still substantially change the policy’s output probabilities. Following the trust-region motivation of TRPO ( Schulman et al., 2015 ) , we therefore control the update magnitude using KL divergence between the current and proposed policies. We estimate how much the proposed update would change the model’s next-token probabilities, then scale the update to fit a prescribed budget. Let D D denote the proposed update to all parameters; its component for each compressed weight matrix W W is D W = − η ​ U ​ A D_{W}=-\\eta UA , using the factors and nominal step size defined above. We apply θ ← θ + α ​ D \\theta\\leftarrow\\theta+\\alpha D , where α \\alpha controls the step size without changing its direction. We select a small subset of responses from the current training batch and examine the predictions used to generate their tokens. For each prediction, the model sees s s which is a prompt and the response generated so far. Let 𝒫 \\mathcal{P} collect these contexts. At each context, we compare the current model’s probabilities over the vocabulary, π θ ( ⋅ ∣ s ) \\pi_{\\theta}(\\cdot\\mid s) , with those of the proposed updated model, π θ + α ​ D ( ⋅ ∣ s ) \\pi_{\\theta+\\alpha D}(\\cdot\\mid s) . Both are evaluated on the same text context and at the same temperature T > 0 T>0 : a higher temperature gives a flatter distribution. KL divergence measures how much these two probability distributions differ. We average this change over the examined predictions as derived in detail in the appendix:",
+      "source": "https://arxiv.org/html/2610.06647v3",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0014",
+      "section": "2.3 Step-size control with predicted KL",
+      "text": "1 | 𝒫 | ∑ s ∈ 𝒫 D KL ( π θ ( ⋅ ∣ s ) ∥ π θ + α ​ D ( ⋅ ∣ s ) ) ≈ α 2 q ( D ) . \\frac{1}{|\\mathcal{P}|}\\sum_{s\\in\\mathcal{P}}D_{\\mathrm{KL}}\\!\\left(\\pi_{\\theta}(\\cdot\\mid s)\\,\\middle\\|\\,\\pi_{\\theta+\\alpha D}(\\cdot\\mid s)\\right)\\approx\\alpha^{2}q(D). (5) The side is the average KL between the current and proposed policies over the examined contexts. On the right, q ⁡ ( D ) q(D) is our estimate of this average change for the unscaled proposal ( α = 1 \\alpha=1 ). The approximation predicts a quadratic dependence on step size: halving α \\alpha reduces the predicted KL by a factor of four. We specify a KL budget δ > 0 \\delta>0 , the allowed average predicted change in next-token probabilities for one training step. A smaller budget keeps the updated policy closer to the current one. Equation 5 gives a way to control this change: rescale the proposed update by α \\alpha so that α 2 ​ q ​ ( D ) ≤ δ \\alpha^{2}q(D)\\leq\\delta . Thus, we first estimate the proposal’s predicted KL q ⁡ ( D ) q(D) , then choose its scale to fit the budget. To estimate q ⁡ ( D ) q(D) , we examine how the proposal would change the scores assigned to candidate next tokens. Let v v index vocabulary tokens, z v ​ ( s ) z_{v}(s) be the score (logit) of token v v at context s s , and z ⁡ ( s ) z(s) collect these scores. The vector p ⁡ ( s ) = softmax ⁡ ( z ⁡ ( s ) / T ) p(s)=\\operatorname{softmax}(z(s)/T) contains their probabilities at temperature T T . Let z ˙ v ​ ( s ) \\dot{z}_{v}(s) be the rate at which score z v ​ ( s ) z_{v}(s) changes along D D , evaluated at the current weights. The predicted KL is q ⁡ ( D ) = 1 2 ​ | 𝒫 | ​ T 2 ​ ∑ s ∈ 𝒫 Var v ∼ p ⁡ ( s ) ⁡ [ z ˙ v ​ ( s ) ] . q(D)=\\frac{1}{2|\\mathcal{P}|T^{2}}\\sum_{s\\in\\mathcal{P}}\\operatorname{Var}_{v\\sim p(s)}\\!\\left[\\dot{z}_{v}(s)\\right]. (6)",
+      "source": "https://arxiv.org/html/2610.06647v3",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0015",
+      "section": "2.3 Step-size control with predicted KL",
+      "text": "Derived could be found in the appendix. Here the variance measures how differently the token scores change, weighted by their current probabilities p ⁡ ( s ) p(s) , and | 𝒫 | |\\mathcal{P}| is the number of examined contexts.",
+      "source": "https://arxiv.org/html/2610.06647v3",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0016",
+      "section": "Rescale the update to fit the budget.",
+      "text": "Once q ⁡ ( D ) q(D) is available, the ratio δ / q ⁡ ( D ) \\delta/q(D) tells us how the budget compares with the proposed change. Because predicted KL scales with α 2 \\alpha^{2} , we take the square root of this ratio. With a chosen upper limit α max > 0 \\alpha_{\\max}>0 on the update multiplier, we set α = min ⁡ { α max , δ / q ⁡ ( D ) } , \\alpha=\\min\\!\\left\\{\\alpha_{\\max},\\sqrt{\\delta/q(D)}\\right\\}, (7) for finite positive q ⁡ ( D ) q(D) . For example, a proposal with q ⁡ ( D ) = 4 ​ δ q(D)=4\\delta is scaled to at most one half of its original size. The cap prevents excessive enlargement when the predicted KL is small. This rule controls the predicted change; the realized KL can differ because the estimate is a local approximation. A constant budget keeps δ \\delta fixed, while an annealed budget gradually lowers it to permit less policy change later in training.",
+      "source": "https://arxiv.org/html/2610.06647v3",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0017",
+      "section": "3 Experiments",
+      "text": "We conduct experiments to demonstrate that: (1) LoGRA substantially improves training efficiency without compromising performance; (2) predicted-KL enables stable single-node RL training for more than 1,000 steps; and (3) ablation analyses provide deeper understanding of our method.",
+      "source": "https://arxiv.org/html/2610.06647v3",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0018",
+      "section": "3.1 General Experimental Setup",
+      "text": "We primarily evaluate Qwen models ranging from 1.5B to 27B parameters, including Qwen2.5-Math-1.5B/7B and Qwen3.8-27B, on mathematical reasoning tasks. We also investigate long-horizon training of the 27B model on the Reasoning-Gym Hard mixture. Unless otherwise specified, we use PPO with verifiable rewards, sampling one response per prompt and using a global running reward baseline for advantage estimation. This deliberately simple setup isolates the effects of our method from potential gains introduced by more sophisticated RL algorithms. By default, all experiments run on a single node equipped with eight H100 80GB GPUs and 128 CPU cores, with four GPUs allocated to FSDP training and the remaining four to independent generation engines. Figure 2: Learning performance across model scales. MATH-500 accuracy over the first 200 updates. Curves and bands show means and ± \\pm one sample standard deviation over three seeds.",
+      "source": "https://arxiv.org/html/2610.06647v3",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0019",
+      "section": "3.2 Main Experiments",
+      "text": "We primarily compare LoGRA with dense-gradient training on DAPO-Math-7.5K. We evaluate on MATH-500 every five updates for the 1.5B and 7B models and every ten updates for the 27B model. Each batch contains 128 prompts, with one response per prompt, a 4,096-token context limit, and one policy update using a global reward baseline. LoGRA uses rank-256 RowAdam with mismatch subtraction and a predicted-KL budget annealed from 2 × 10 − 4 2\\times 10^{-4} to 2 × 10 − 5 2\\times 10^{-5} , whereas the dense baseline uses Adam with learning-rate annealing. We run three runs for 20,000 updates at 1.5B and 7B and 200 updates at 27B, retaining the 300-update annealing schedule for the latter. Figure 3: Training memory across model scales. Per-update peak allocated memory, averaged over three seeds, with ± \\pm one sample standard deviation. Arrows compare temporal means over updates 1–200 at 1.5B/7B; at 27B, the arrow shows headroom to device capacity. Table 1: Accuracy, memory, and throughput of the main experiments. Memory and throughput cover full runs; accuracy peaks use updates 0–200. Peak memory is the maximum of the three-seed mean curve.",
+      "source": "https://arxiv.org/html/2610.06647v3",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0020",
+      "section": "3.2 Main Experiments",
+      "text": "Model Method n n Average memory ↓ \\downarrow (GiB/GPU) Peak memory ↓ \\downarrow (GiB/GPU) Updates/h ↑ \\uparrow Peak Pass@1 ↑ \\uparrow (%) Peak Pass@4 ↑ \\uparrow (%) 1.5B Dense 3 9.18 ± 0.00 9.18\\pm 0.00 9.19 ± 0.00 9.19\\pm 0.00 54.28 ± 0.40 54.28\\pm 0.40 63.77 ± 1.35 63.77\\pm 1.35 80.33 ± 1.47 80.33\\pm 1.47 1.5B LoGRA 3 7.18 ± 0.10 \\mathbf{7.18\\pm 0.10} 8.66 ± 1.62 \\mathbf{8.66\\pm 1.62} 55.44 ± 0.41 \\mathbf{55.44\\pm 0.41} 67.87 ± 1.23 \\mathbf{67.87\\pm 1.23} 82.47 ± 1.10 \\mathbf{82.47\\pm 1.10} 7B Dense 3 31.82 ± 0.00 31.82\\pm 0.00 31.85 ± 0.00 31.85\\pm 0.00 25.28 ± 0.68 25.28\\pm 0.68 72.48 ± 0.35 72.48\\pm 0.35 85.33 ± 0.83 85.33\\pm 0.83 7B LoGRA 3 17.29 ± 0.34 \\mathbf{17.29\\pm 0.34} 22.26 ± 4.98 \\mathbf{22.26\\pm 4.98} 25.73 ± 0.28 \\mathbf{25.73\\pm 0.28} 72.33 ± 1.33 72.33\\pm 1.33 85.13 ± 1.14 85.13\\pm 1.14 27B Dense 0 OOM 27B LoGRA 3 51.54 ± 0.17 \\mathbf{51.54\\pm 0.17} 53.88 ± 0.00 \\mathbf{53.88\\pm 0.00} 6.99 ± 0.02 \\mathbf{6.99\\pm 0.02} 71.52 ± 0.94 \\mathbf{71.52\\pm 0.94} 81.87 ± 0.81 \\mathbf{81.87\\pm 0.81}",
+      "source": "https://arxiv.org/html/2610.06647v3",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0021",
+      "section": "Learning performance.",
+      "text": "At 1.5B, LoGRA achieves peak Pass@1 of 67.87 % 67.87\\% , compared with 63.77 % 63.77\\% for Dense; peak Pass@4 increases from 80.33 % 80.33\\% to 82.47 % 82.47\\% . At 7B, the methods attain similar peak accuracy: 72.33 % 72.33\\% versus 72.48 % 72.48\\% Pass@1 and 85.13 % 85.13\\% versus 85.33 % 85.33\\% Pass@4 for LoGRA and Dense, respectively. LoGRA also trains the 27B model successfully, reaching 71.52 % 71.52\\% Pass@1 and 81.87 % 81.87\\% Pass@4, whereas Dense exhausts GPU memory at its first Adam-state allocation. These results show that compressed updates preserve competitive learning performance in the evaluated configurations while making the largest model trainable under the same GPU budget.",
+      "source": "https://arxiv.org/html/2610.06647v3",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0022",
+      "section": "Memory and throughput.",
+      "text": "Figure 3 shows that LoGRA lowers average per-update memory at 1.5B and 7B. Over the complete runs, average memory decreases from 9.18 to 7.18 GiB at 1.5B and from 31.82 to 17.29 GiB at 7B, reductions of 21.8% and 45.7%, respectively. Under the seed-averaged peak definition, LoGRA reduces peak memory from 9.19 to 8.66 GiB at 1.5B and from 31.85 to 22.26 GiB at 7B. At 27B, LoGRA uses 51.54 GiB on average and reaches a peak seed-averaged memory of 53.88 GiB; Dense fails before completing an update, precluding a measured memory-reduction ratio or throughput comparison. End-to-end update rates are similar where both methods complete training: 55.44 versus 54.28 updates/h at 1.5B and 25.73 versus 25.28 updates/h at 7B for LoGRA and Dense, respectively. The main systems benefit is reduced memory use and feasibility at 27B, with modest observed throughput gains at 1.5B and 7B.",
+      "source": "https://arxiv.org/html/2610.06647v3",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0023",
+      "section": "3.3 Sustained 27B training on a single eight-GPU node",
+      "text": "Figure 4: Sustained 27B training on a single eight-GPU node. Qwen3.8-27B trained with LoGRA on the Reasoning-Gym Hard mixture. (a) Macro-averaged verifier score across held-out tasks. (b) Mean evaluation response length. (c) Fraction of evaluation responses truncated at the 16,384-token context limit. All panels describe one training trajectory. We demonstrate that LoGRA with predicted-KL enables stable 27B model training for over 1,000 steps on a single node. Specifically, we train Qwen3.8-27B on the Reasoning-Gym Hard mixture. For efficiency purpose, we estimate (q(D)) using a finite-difference probe based on direct KL evaluations, rather than the JVP-based estimator in Equation 6 . The dataset contains 38,948 training prompts and 193 hard held-out problems across eight tasks. We use rank-256 sketches and anneal the predicted-KL budget. Every 20 steps, we evaluate the model using the macro-averaged verifier score and monitor response length and truncation rate. The held-out macro score increases from 39.69 % 39.69\\% initially to 62.94 % 62.94\\% , with a peak of 65.52 % 65.52\\% at step 1,060 (Figure 4 a). The final five observed evaluations range from 59.11 % 59.11\\% to 64.16 % 64.16\\% , showing no sustained collapse. Over the same trajectory, mean response length decreases from 8,312 to 4,705 tokens, while the truncation rate falls from 34.72 % 34.72\\% to 12.95 % 12.95\\% (Figure 4 b,c). This trajectory demonstrates that the LoGRA recipe can sustain learning of a 27B model beyond 1,100 logged training steps on one eight-GPU node, without sustained deterioration in the observed evaluation scores or runaway response-length growth.",
+      "source": "https://arxiv.org/html/2610.06647v3",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0024",
+      "section": "3.4.1 Design Choices in Low-Rank Gradient Compression",
+      "text": "Figure 5: Components of gradient compression. (a) Training performance as a function of projection rank; (b) Gradient-reconstruction cosine for fixed and refreshed Rademacher bases. (c) The same diagnostic for refreshed Rademacher and Gaussian bases. Heatmap rows denote Transformer layers and columns denote ranks, with a shared [ 0 , 0.4 ] [0,0.4] color scale; higher values indicate closer alignment with the dense gradient. We examine the effects of projection rank, basis refreshing, and projection distribution using Qwen2.5-Math-1.5B on DAPO-Math-7.5k with ranks r ∈ 4 , 16 , 64 , 256 r\\in{4,16,64,256} . Fixed Rademacher projections sample matrices once with independent entries ± 1 / r \\pm 1/\\sqrt{r} , whereas refreshed Rademacher and Gaussian projections resample at every update. Following Flora’s motivation of avoiding confinement to a fixed low-rank subspace ( Hao et al., 2024 ) , we test whether refreshing benefits RL post-training. Each point represents one run, with MATH-500 pass@1 averaged over eight evaluations between steps 200 and 235. Figure (a) shows that rank has the strongest effect: increasing it from 4 to 256 improves pass@1 by 3.02–3.95 percentage points across configurations. At rank 256, fixed Rademacher, refreshed Rademacher, and refreshed Gaussian achieve 68.50 % 68.50\\% , 68.31 % 68.31\\% , and 67.42 % 67.42\\% , respectively. Their ordering varies across ranks, showing no consistent benefit from refreshing, possibly because a fixed low-rank subspace captures sufficient task-relevant signal over this short training horizon.",
+      "source": "https://arxiv.org/html/2610.06647v3",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0025",
+      "section": "3.4.1 Design Choices in Low-Rank Gradient Compression",
+      "text": "Figures 5 (b) and 5 (c) evaluate gradient reconstruction quality. We use the initialization and checkpoints at steps 160 and 280 from one fixed-basis rank-64 training trajectory. At each model state, we sample one response for each of 4,096 prompts and divide them into 32 minibatches of 128 responses. All projection conditions use the same responses and dense gradients. Fixed bases are reused across minibatches, whereas refreshed bases are redrawn for each minibatch. For each rank, we evaluate eight projection seeds and compute the Frobenius cosine similarity between the dense gradient G G and its reconstruction for all 196 attention and MLP weight matrices. Each heatmap cell is averaged over the seven matrices in each Transformer layer, minibatches, model states, and projection seeds. Figure 5 (b) compares fixed and refreshed Rademacher projections, whereas Figure 5 (c) compares refreshed Rademacher and Gaussian projections. Reconstruction quality exhibits a strong dependence on rank: the mean cosine similarity increases from approximately 0.046 0.046 at rank 4 to 0.348 0.348 at rank 256. By contrast, the largest difference between corresponding layer–rank cells is only 0.0014 0.0014 for fixed versus refreshed Rademacher projections and 0.0008 0.0008 for refreshed Rademacher versus Gaussian projections. Although the decrease in mean cosine under Gaussian projections is detectable at ranks 64 and 256, its magnitude remains below 2 × 10 − 4 2\\times 10^{-4} . Overall, projection rank has a substantially greater effect on single-minibatch gradient reconstruction than either basis refreshing or projection distribution.",
+      "source": "https://arxiv.org/html/2610.06647v3",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0026",
+      "section": "3.4.2 Comparison with LoRA",
+      "text": "Table 2: LoRA and LoGRA on Qwen2.5-Math-1.5B. Values are mean ± \\pm sample standard deviation over three seeds. Method Average memory ↓ \\downarrow (GiB) Peak memory ↓ \\downarrow (GiB) Pass@1 ↑ \\uparrow (%) Pass@4 ↑ \\uparrow (%) Seconds/update ↓ \\downarrow (s) LoRA 13.21 ± 0.07 13.21\\pm 0.07 13.38 ± 0.00 13.38\\pm 0.00 70.45 ± 3.09 70.45\\pm 3.09 81.40 ± 2.09 81.40\\pm 2.09 10.63 ± 0.10 10.63\\pm 0.10 LoGRA 7.18 ± 0.10 \\mathbf{7.18\\pm 0.10} 8.66 ± 1.62 \\mathbf{8.66\\pm 1.62} 68.47 ± 0.95 68.47\\pm 0.95 81.80 ± 1.06 \\mathbf{81.80\\pm 1.06} 11.31 ± 0.09 11.31\\pm 0.09 LoRA learns low-rank weight adapters, whereas LoGRA compresses gradients and updates to the model weights. We compare their memory use, accuracy, and update time. We compare rank-256 configurations of Qwen2.5-Math-1.5B trained on DAPO-Math-7.5k. For this comparison, we use the first 300 training steps of each method. LoRA uses AdamW with a constant learning rate of 2 × 10 − 4 2\\times 10^{-4} ; LoGRA uses a predicted-KL budget annealed from 2 × 10 − 4 2\\times 10^{-4} to 2 × 10 − 5 2\\times 10^{-5} . Average memory is the temporal mean of the three-seed mean per-update memory curve; peak memory is its maximum. The per-step measurements are peak allocated training memory, excluding generation memory. Seconds/update measures the policy-training call, including call overhead but excluding response generation and weight synchronization.",
+      "source": "https://arxiv.org/html/2610.06647v3",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0027",
+      "section": "3.4.2 Comparison with LoRA",
+      "text": "Table 2 shows an obvious memory advantage for LoGRA under the recorded recipes, with average and peak memory of 7.18 and 8.66 GiB, compared with 13.21 and 13.38 GiB for LoRA. LoRA attains higher mean Pass@1 and a shorter policy-training call, while LoGRA attains a 0.40-percentage-point higher mean Pass@4. Thus, these results motivate gradient compression as an alternative when training memory is the limiting resource, but do not establish an accuracy or speed advantage.",
+      "source": "https://arxiv.org/html/2610.06647v3",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0028",
+      "section": "3.4.3 KL Budget Control",
+      "text": "Figure 6: Long-horizon accuracy and response length under different KL controls. Thick solid lines show two-seed means, thin lines individual runs, and shading their range. Curves use five-evaluation moving means. We then study whether predicted-KL step control improves long-horizon learning and how constant versus annealed KL budgets affect accuracy and response length. We use Qwen2.5-Math-1.5B on DAPO-Math-7.5k with rank-256 Rademacher projections refreshed every update, SGD, and a global running reward baseline. We compare a fixed relative update norm of 6 × 10 − 5 6\\times 10^{-5} without KL control, constant KL budgets of 1.5 × 10 − 3 1.5\\times 10^{-3} and 1.5 × 10 − 4 1.5\\times 10^{-4} , and a cosine-annealed budget from 2 × 10 − 4 2\\times 10^{-4} to 2 × 10 − 5 2\\times 10^{-5} over 1,500 steps. Each setting has two seeds; these KL-controlled settings do not subtract mismatch or use realised-KL feedback. Figure 6 plots MATH-500 pass@1 and response length over the first 800 logged steps, evaluating four responses per problem every five steps. Averaging raw evaluations over steps 700–800 within each run and then across seeds, pass@1 is 70.30 % 70.30\\% without KL control, 63.43 % 63.43\\% with the large constant budget, 71.03 % 71.03\\% with the small constant budget, and 71.47 % 71.47\\% with annealing. Corresponding response lengths are 774, 976, 858, and 832 tokens.",
+      "source": "https://arxiv.org/html/2610.06647v3",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0029",
+      "section": "3.4.3 KL Budget Control",
+      "text": "These results support the usefulness of predicted-KL step control with a conservative budget. The small constant budget improves tail accuracy over no control while maintaining stable learning. This is consistent with the trust-region motivation of TRPO ( Schulman et al., 2015 ) : limiting policy changes helps ensure that improvements predicted by a local objective translate into better performance, whereas overly large updates can undermine this approximation and destabilize training. In our experiments, the large constant budget exhibits performance degradation, while the small and annealed budgets remain stable, with annealing achieving the highest mean tail accuracy. The no-control baseline also remains stable, and the separately collected annealed runs differ in their initial budget, so these two-seed results suggest a benefit from well-calibrated KL control without establishing that it is necessary for stability or that annealing alone explains the gain.",
+      "source": "https://arxiv.org/html/2610.06647v3",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0030",
+      "section": "4 Related Works",
+      "text": "Large language models have emerged as a foundation for general-purpose problem solving ( Jimenez et al., 2024 ; Shao et al., 2024 ; Xie et al., 2024 ; Zhang et al., 2024 ; Yuan et al., 2026 ) , with reinforcement learning (RL) becoming a critical post-training stage for advancing their capabilities ( Guo et al., 2025 ; Yu et al., 2026 ; Hu et al., 2025 ) . However, scaling RL is more challenging than scaling SFT, as RL repeatedly alternates among response generation, reward evaluation, and policy optimization, requiring careful coordination of computation and memory across these stages. Recent work has addressed these challenges through asynchronous execution and more efficient resource management. For example, asynchronous RL overlap rollout with policy training, reducing GPU idle time between stages ( Xu et al., 2026 ; Zhang et al., 2026a ) . Other works improve resource allocation and scheduling to accommodate the distinct computational demands of generation and training ( Mei et al., 2025 ) . Memory-saving techniques further enable larger models to fit within available hardware: sharding distributes training states across GPUs ( Zhao et al., 2023 ) , activation checkpointing reduces memory consumption by recomputing intermediate activations ( Chen et al., 2016 ) , and CPU offloading transfers selected training states to host memory ( Rajbhandari et al., 2020 ) . Our work complements them by compressing the gradients and optimization updates themselves, thereby reducing both training memory and communication overhead during policy synchronization.",
+      "source": "https://arxiv.org/html/2610.06647v3",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0031",
+      "section": "4 Related Works",
+      "text": "Another line of work exploits low-rank structure to reduce training memory. LoRA ( Hu et al., 2021 ) freezes pretrained weights and optimizes low-rank adapters, reducing the memory required for gradients and optimizer states. GaLore ( Su et al., 2025 ; Zhao et al., 2024 ) and Flora ( Hao et al., 2024 ) instead keep the original weights trainable while compactly representing gradients and optimizer states. In contrast, LoGRA targets the RL training–generation loop: it accumulates low-rank sketches during backpropagation without materializing full gradients for selected weights and reuses the compressed updates for rollout-policy synchronization. It thus extends compression from training-state storage to gradient computation and policy communication. APOLLO ( Zhu et al., 2025 ) uses random projections to estimate channel-wise adaptive scaling factors, reducing optimizer-state memory while retaining full-gradient updates. In comparison, LoGRA directly accumulates gradient sketches and constructs low-rank updates without materializing full gradients for selected weights.",
+      "source": "https://arxiv.org/html/2610.06647v3",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0032",
+      "section": "5 Conclusion",
+      "text": "We presented LoGRA, a memory-efficient approach to LLM RL post-training that uses low-rank gradient sketches throughout gradient accumulation, weight updates, and policy synchronization. Our results show that compact gradient representations can substantially reduce training memory without sacrificing reasoning performance. In particular, LoGRA enables sustained training of a 27B model for over 1,100 steps on a single eight-GPU node, where dense Adam exceeds the available memory. Predicted-KL step control complements compression by regulating policy changes, with conservative budgets supporting stable long-horizon learning. Together, these findings highlight gradient representation as a practical lever for lowering the hardware barrier to RL post-training.",
+      "source": "https://arxiv.org/html/2610.06647v3",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0033",
+      "section": "References",
+      "text": "Bai et al. (2023) J. Bai, S. Bai, Y. Chu, Z. Cui, K. Dang, X. Deng, Y. Fan, W. Ge, Y. Han, F. Huang, et al. Qwen technical report . arXiv preprint arXiv:2309.16609 . Cited by: §1 . Chen et al. (2016) T. Chen, B. Xu, C. Zhang, and C. Guestrin Training deep nets with sublinear memory cost . arXiv preprint arXiv:1604.06174 . Cited by: §1 , §4 . Guo et al. (2025) D. Guo, D. Yang, H. Zhang, J. Song, P. Wang, Q. Zhu, R. Xu, R. Zhang, S. Ma, X. Bi, et al. Deepseek-r1: incentivizing reasoning capability in llms via reinforcement learning . arXiv preprint arXiv:2501.12948 . Cited by: §4 . Hao et al. (2024) Y. Hao, Y. Cao, and L. Mou Flora: low-rank adapters are secretly gradient compressors . arXiv preprint arXiv:2402.03293 . Cited by: §1 , §3.4.1 , §4 . Hu et al. (2021) E. J. Hu, Y. Shen, P. Wallis, Z. Allen-Zhu, Y. Li, S. Wang, L. Wang, and W. Chen Lora: low-rank adaptation of large language models . arXiv preprint arXiv:2106.09685 . Cited by: §1 , §4 . Hu et al. (2025) J. Hu, X. Wu, W. Shen, J. K. Liu, W. Wang, S. Jiang, H. Wang, H. Chen, B. Chen, W. Fang, et al. OpenRLHF: a ray-based easy-to-use, scalable and high-performance rlhf framework . In Proceedings of the 2025 Conference on Empirical Methods in Natural Language Processing: System Demonstrations , pp. 656–666 . Cited by: §4 . Jimenez et al. (2024) C. E. Jimenez, J. Yang, A. Wettig, S. Yao, K. Pei, O. Press, and K. Narasimhan Swe-bench: can language models resolve real-world github issues? . In International Conference on Learning Representations , Vol. 2024 , pp. 54107–54157 . Cited by: §4 . Kingma and Ba (2014) D. P. Kingma and J. Ba Adam: a method for stochastic optimization . arXiv preprint arXiv:1412.6980 . Cited by: §1 .",
+      "source": "https://arxiv.org/html/2610.06647v3",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0034",
+      "section": "References",
+      "text": "Lightman et al. (2023) H. Lightman, V. Kosaraju, Y. Burda, H. Edwards, B. Baker, T. Lee, J. Leike, J. Schulman, I. Sutskever, and K. Cobbe Let’s verify step by step . arXiv preprint arXiv:2305.20050 . Cited by: §C.1 . Mei et al. (2025) Z. Mei, W. Fu, K. Li, G. Wang, H. Zhang, and Y. Wu Real: efficient rlhf training of large language models with parameter reallocation . Proceedings of Machine Learning and Systems 7 . Cited by: §4 . [11] (2025) NeMo rl: a scalable and efficient post-training library . Note: https://github.com/NVIDIA-NeMo/RL GitHub repository Cited by: §1 . Rajbhandari et al. (2020) S. Rajbhandari, J. Rasley, O. Ruwase, and Y. He Zero: memory optimizations toward training trillion parameter models . In SC20: international conference for high performance computing, networking, storage and analysis , pp. 1–16 . Cited by: §1 , §4 . Schulman and Lab (2025) J. Schulman and T. M. Lab LoRA without regret . Thinking Machines Lab: Connectionism . Note: https://thinkingmachines.ai/blog/lora/ External Links: Document Cited by: §1 . Schulman et al. (2015) J. Schulman, S. Levine, P. Abbeel, M. Jordan, and P. Moritz Trust region policy optimization . In International conference on machine learning , pp. 1889–1897 . Cited by: §2.3 , §3.4.3 . Shao et al. (2024) Z. Shao, P. Wang, Q. Zhu, R. Xu, J. Song, X. Bi, H. Zhang, M. Zhang, Y. Li, Y. Wu, et al. Deepseekmath: pushing the limits of mathematical reasoning in open language models . arXiv preprint arXiv:2402.03300 . Cited by: §4 . Sheng et al. (2024) G. Sheng, C. Zhang, Z. Ye, X. Wu, W. Zhang, R. Zhang, Y. Peng, H. Lin, and C. Wu HybridFlow: a flexible and efficient rlhf framework . arXiv preprint arXiv: 2409.19256 . Cited by: §1 .",
+      "source": "https://arxiv.org/html/2610.06647v3",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0035",
+      "section": "References",
+      "text": "Su et al. (2025) D. Su, A. Gu, J. Xu, Y. Tian, and J. Zhao Galore 2: large-scale llm pre-training by gradient low-rank projection . arXiv preprint arXiv:2504.20437 . Cited by: §1 , §4 . Xie et al. (2024) T. Xie, D. Zhang, J. Chen, X. Li, S. Zhao, R. Cao, T. J. Hua, Z. Cheng, D. Shin, F. Lei, et al. Osworld: benchmarking multimodal agents for open-ended tasks in real computer environments . Advances in Neural Information Processing Systems 37 , pp. 52040–52094 . Cited by: §4 . Xu et al. (2026) B. Xu, H. Zhang, S. Zhang, S. Han, M. Liu, J. Hu, S. Diao, Z. Jin, Y. Zou, M. Demoret, et al. Polar: agentic rl on any harness at scale . arXiv preprint arXiv:2605.24220 . Cited by: §1 , §4 . Yu et al. (2026) Q. Yu, Z. Zhang, R. Zhu, Y. Yuan, X. Zuo, Y. Yue, W. Dai, T. Fan, G. Liu, L. Liu, et al. Dapo: an open-source llm reinforcement learning system at scale . Advances in Neural Information Processing Systems 38 , pp. 113222–113244 . Cited by: §C.1 , §4 . Yuan et al. (2026) M. Yuan, Z. Zhou, X. Xiong, W. Wu, J. Sun, J. Song, K. Cui, B. Wang, H. Wu, Y. Li, et al. OSWorld2. 0: benchmarking computer use agents on long-horizon real-world tasks . arXiv preprint arXiv:2606.29537 . Cited by: §4 . Zhang et al. (2026a) H. Zhang, M. Liu, S. Zhang, S. Han, J. Hu, Z. Jin, Y. Zhang, S. Diao, X. Lu, B. Xu, et al. Prorl agent: rollout-as-a-service for rl training of multi-turn llm agents . arXiv preprint arXiv:2603.18815 . Cited by: §4 . Zhang et al. (2026b) S. Zhang, Y. Dong, J. Zhang, J. Kautz, B. Catanzaro, A. Tao, Q. Wu, Z. Yu, and G. Liu Nemotron-research-tool-n1: exploring tool-using language models with reinforced reasoning . In International Conference on Learning Representations , Vol. 2026 , pp. 91437–91453 . Cited by: §1 .",
+      "source": "https://arxiv.org/html/2610.06647v3",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0036",
+      "section": "References",
+      "text": "Zhang et al. (2024) S. Zhang, J. Zhang, J. Liu, L. Song, C. Wang, R. Krishna, and Q. Wu Offline training of language model agents with functions as learnable weights . arXiv preprint arXiv:2402.11359 . Cited by: §4 . Zhao et al. (2024) J. Zhao, Z. Zhang, B. Chen, Z. Wang, A. Anandkumar, and Y. Tian Galore: memory-efficient llm training by gradient low-rank projection . arXiv preprint arXiv:2403.03507 . Cited by: §1 , §4 . Zhao et al. (2023) Y. Zhao, A. Gu, R. Varma, L. Luo, C. Huang, M. Xu, L. Wright, H. Shojanazeri, M. Ott, S. Shleifer, et al. Pytorch fsdp: experiences on scaling fully sharded data parallel . arXiv preprint arXiv:2304.11277 . Cited by: §1 , §4 . Zhu et al. (2025) H. Zhu, Z. Zhang, W. Cong, X. Liu, S. Park, V. Chandra, B. Long, D. Z. Pan, Z. Wang, and J. Lee APOLLO: sgd-like memory, adamw-level performance . In Proceedings of Machine Learning and Systems , M. Zaharia, G. Joshi, and Y. Lin (Eds.) , Vol. 7 , pp. . External Links: Link Cited by: §4 .",
+      "source": "https://arxiv.org/html/2610.06647v3",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0037",
+      "section": "A.1 From policy KL to changes in token scores",
+      "text": "Equation 5 describes how KL changes with the update scale; Equation 6 gives its coefficient in terms of changes in token scores. We derive them in this order. Throughout, the proposed parameter update D D and the nonempty set of contexts 𝒫 \\mathcal{P} are fixed. Each context s s consists of a prompt and the response tokens preceding one next-token prediction. Both policies are evaluated on this same text.",
+      "source": "https://arxiv.org/html/2610.06647v3",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0038",
+      "section": "Measure the change along an update.",
+      "text": "Let a a be a scalar multiplier: a = 0 a=0 leaves the weights unchanged, while a = 1 a=1 applies the full proposal D D . For vocabulary token v v , write p v ​ ( a ) = π θ + a ​ D ​ ( v ∣ s ) p_{v}(a)=\\pi_{\\theta+aD}(v\\mid s) and p v = p v ​ ( 0 ) p_{v}=p_{v}(0) . We use natural logarithms and the same temperature T > 0 T>0 for both policies. Their KL at context s s is K s ​ ( a ) = ∑ v p v ​ log ⁡ p v p v ​ ( a ) . K_{s}(a)=\\sum_{v}p_{v}\\log\\frac{p_{v}}{p_{v}(a)}. (8) A prime denotes a derivative with respect to the multiplier a a . Thus p v ′ ​ ( 0 ) p_{v}^{\\prime}(0) measures how quickly token v v ’s probability initially changes along D D , whereas K s ′ ​ ( 0 ) K_{s}^{\\prime}(0) measures the initial slope of the KL. At a = 0 a=0 the two policies coincide, so K s ​ ( 0 ) = 0 K_{s}(0)=0 . Moreover, K s ′ ( 0 ) = − ∑ v p v ′ ( 0 ) = 0 , K_{s}^{\\prime}(0)=-\\sum_{v}p_{v}^{\\prime}(0)=0, (9) because ∑ v p v ​ ( a ) = 1 \\sum_{v}p_{v}(a)=1 for every a a . Individual token probabilities can change to first order, but the KL has zero slope at the point where the distributions agree.",
+      "source": "https://arxiv.org/html/2610.06647v3",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0039",
+      "section": "Obtain Equation 5 : the quadratic dependence on step size.",
+      "text": "The second derivative K s ′′ ​ ( 0 ) K_{s}^{\\prime\\prime}(0) measures the local curvature: how quickly the KL’s slope changes as we move away from the current policy. Differentiating again gives K s ′′ ​ ( 0 ) = ∑ v [ p v ′ ​ ( 0 ) ] 2 p v − ∑ v p v ′′ ​ ( 0 ) = ∑ v p v ​ [ d d ​ a ​ log ⁡ p v ​ ( a ) | a = 0 ] 2 . K_{s}^{\\prime\\prime}(0)=\\sum_{v}\\frac{[p_{v}^{\\prime}(0)]^{2}}{p_{v}}-\\sum_{v}p_{v}^{\\prime\\prime}(0)=\\sum_{v}p_{v}\\left[\\left.\\frac{\\mathrm{d}}{\\mathrm{d}a}\\log p_{v}(a)\\right|_{a=0}\\right]^{2}. (10) The term ∑ v p v ′′ ​ ( 0 ) \\sum_{v}p_{v}^{\\prime\\prime}(0) vanishes because total probability remains one. For the local expansion, assume the logits have continuous, bounded third derivatives along D D near a = 0 a=0 . Taylor’s formula then writes the KL for a small multiplier α \\alpha as K s ​ ( α ) = K s ​ ( 0 ) + α ​ K s ′ ​ ( 0 ) + α 2 2 ​ K s ′′ ​ ( 0 ) + O ⁡ ( α 3 ) = α 2 2 ​ K s ′′ ​ ( 0 ) + O ⁡ ( α 3 ) . K_{s}(\\alpha)=K_{s}(0)+\\alpha K_{s}^{\\prime}(0)+\\frac{\\alpha^{2}}{2}K_{s}^{\\prime\\prime}(0)+O(\\alpha^{3})=\\frac{\\alpha^{2}}{2}K_{s}^{\\prime\\prime}(0)+O(\\alpha^{3}). (11) Here O ⁡ ( α 3 ) O(\\alpha^{3}) collects terms whose magnitude is bounded by a constant times | α | 3 |\\alpha|^{3} near zero, for fixed D D . Averaging over the examined predictions gives 1 | 𝒫 | ​ ∑ s ∈ 𝒫 K s ​ ( α ) = α 2 ​ q ​ ( D ) + O ⁡ ( α 3 ) , q ⁡ ( D ) = 1 2 ​ | 𝒫 | ​ ∑ s ∈ 𝒫 K s ′′ ​ ( 0 ) . \\frac{1}{|\\mathcal{P}|}\\sum_{s\\in\\mathcal{P}}K_{s}(\\alpha)=\\alpha^{2}q(D)+O(\\alpha^{3}),\\qquad q(D)=\\frac{1}{2|\\mathcal{P}|}\\sum_{s\\in\\mathcal{P}}K_{s}^{\\prime\\prime}(0). (12)",
+      "source": "https://arxiv.org/html/2610.06647v3",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0040",
+      "section": "Obtain Equation 5 : the quadratic dependence on step size.",
+      "text": "Dropping the higher-order remainder gives Equation 5 . Thus q ⁡ ( D ) q(D) is half the average KL curvature along the proposal: a larger value means that the same update scale changes the policy more. Within this approximation, halving the scale reduces KL by a factor of four.",
+      "source": "https://arxiv.org/html/2610.06647v3",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0041",
+      "section": "Obtain Equation 6 : express the curvature using token scores.",
+      "text": "Let z v ​ ( a , s ) z_{v}(a;s) be the logit, or score, of token v v at context s s under weights θ + a ​ D \\theta+aD . Define z ˙ v ​ ( s ) = d ​ z v ​ ( a , s ) / d ​ a | a = 0 \\dot{z}_{v}(s)=\\left.\\mathrm{d}z_{v}(a;s)/\\mathrm{d}a\\right|_{a=0} , its initial rate of change along the proposal. Using p v ​ ( a ) = exp ⁡ ( z v ​ ( a , s ) / T ) ∑ u exp ⁡ ( z u ​ ( a , s ) / T ) , p_{v}(a)=\\frac{\\exp(z_{v}(a;s)/T)}{\\sum_{u}\\exp(z_{u}(a;s)/T)}, where u u also ranges over vocabulary tokens, differentiating the log probability yields d d ​ a ​ log ⁡ p v ​ ( a ) | a = 0 = 1 T ​ ( z ˙ v ​ ( s ) − ∑ u p u ​ z ˙ u ​ ( s ) ) . \\left.\\frac{\\mathrm{d}}{\\mathrm{d}a}\\log p_{v}(a)\\right|_{a=0}=\\frac{1}{T}\\left(\\dot{z}_{v}(s)-\\sum_{u}p_{u}\\dot{z}_{u}(s)\\right). (13) The subtraction reflects that probabilities depend on relative scores: a token gains probability when its score increases faster than the probability-weighted average score. Substituting into Equation 10 gives K s ′′ ​ ( 0 ) = 1 T 2 ​ ∑ v p v ​ ( z ˙ v ​ ( s ) − ∑ u p u ​ z ˙ u ​ ( s ) ) 2 = 1 T 2 ​ Var v ∼ p ⁡ ( s ) ​ [ z ˙ v ​ ( s ) ] , K_{s}^{\\prime\\prime}(0)=\\frac{1}{T^{2}}\\sum_{v}p_{v}\\left(\\dot{z}_{v}(s)-\\sum_{u}p_{u}\\dot{z}_{u}(s)\\right)^{2}=\\frac{1}{T^{2}}\\operatorname{Var}_{v\\sim p(s)}[\\dot{z}_{v}(s)], where p ⁡ ( s ) p(s) collects the current token probabilities. This variance measures how differently the scores change, weighted by those probabilities. In particular, adding the same amount to every score leaves softmax probabilities unchanged; correspondingly, identical score-change rates give zero curvature. Substituting this expression into the definition of q ⁡ ( D ) q(D) above gives exactly Equation 6 :",
+      "source": "https://arxiv.org/html/2610.06647v3",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0042",
+      "section": "Obtain Equation 6 : express the curvature using token scores.",
+      "text": "q ⁡ ( D ) = 1 2 ​ | 𝒫 | ​ T 2 ​ ∑ s ∈ 𝒫 Var v ∼ p ⁡ ( s ) ⁡ [ z ˙ v ​ ( s ) ] . q(D)=\\frac{1}{2|\\mathcal{P}|T^{2}}\\sum_{s\\in\\mathcal{P}}\\operatorname{Var}_{v\\sim p(s)}[\\dot{z}_{v}(s)]. The average weights examined predictions equally. The probe evaluates the variance over the full vocabulary at each selected prediction; only the contexts are subsampled. It computes score-change rates before applying the update, using the factors D W = − η ​ U ​ A D_{W}=-\\eta UA for each selected weight matrix. Neither a stored dense gradient nor a dense curvature matrix is needed.",
+      "source": "https://arxiv.org/html/2610.06647v3",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0043",
+      "section": "A.2 Scaling an update to a KL budget",
+      "text": "The multiplier α \\alpha controls how much of the proposed update D D we apply: α = 1 \\alpha=1 keeps it unchanged, while α = 1 / 2 \\alpha=1/2 halves it. Let q ⁡ ( D ) q(D) be the predicted KL for the full proposal and let δ > 0 \\delta>0 be the KL budget, the allowed average predicted change in the policy. We choose α \\alpha by comparing these two quantities. If the proposal exceeds the budget, we shrink it; if it falls below the budget, we enlarge it. The key is that predicted KL scales with the square of the update multiplier, as derived in Appendix A.1 . To match the budget, we therefore solve α 2 ​ q ​ ( D ) = δ \\alpha^{2}q(D)=\\delta , giving α = δ / q ⁡ ( D ) \\alpha=\\sqrt{\\delta/q(D)} for finite positive q ⁡ ( D ) q(D) . For example, if the proposal predicts four times the allowed KL, halving the update brings its predicted KL down to the budget. Conversely, if it predicts one quarter of the budget, doubling the update would reach the budget. We cap this enlargement at a chosen maximum multiplier α max > 0 \\alpha_{\\max}>0 , giving Equation 7 : α = min ⁡ { α max , δ / q ⁡ ( D ) } . \\alpha=\\min\\!\\left\\{\\alpha_{\\max},\\sqrt{\\delta/q(D)}\\right\\}. (14) The cap prevents a very small KL prediction from producing an excessively large update. This rule changes the update’s size, not its direction.",
+      "source": "https://arxiv.org/html/2610.06647v3",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0044",
+      "section": "Appendix B RowAdam",
+      "text": "In the main experiments, we use RowAdam to make the comparison with dense Adam by retaining adaptive scaling based on past gradients. RowAdam is not identical to Adam: it adapts the scale of each row rather than each individual parameter, and does not maintain first-moment momentum. Let S t S_{t} be the normalized gradient sketch at update t t . For row i i , RowAdam maintains a running estimate v t , i v_{t,i} of its squared magnitude and uses it to scale the row: v t , i \\displaystyle v_{t,i} = β 2 ​ v t − 1 , i + ( 1 − β 2 ) ​ 1 r ​ ∑ j = 1 r ( S t ) i ​ j 2 , \\displaystyle=\\beta_{2}v_{t-1,i}+(1-\\beta_{2})\\frac{1}{r}\\sum_{j=1}^{r}(S_{t})_{ij}^{2}, (15) ( U ~ t ) i , : \\displaystyle(\\widetilde{U}_{t})_{i,:} = ( S t ) i , : v ^ t , i + ϵ t , v ^ t , i = v t , i 1 − β 2 t . \\displaystyle=\\frac{(S_{t})_{i,:}}{\\sqrt{\\widehat{v}_{t,i}}+\\epsilon_{t}},\\qquad\\widehat{v}_{t,i}=\\frac{v_{t,i}}{1-\\beta_{2}^{t}}.",
+      "source": "https://arxiv.org/html/2610.06647v3",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0045",
+      "section": "Appendix B RowAdam",
+      "text": "We initialize v 0 , i = 0 v_{0,i}=0 ; the correction in v ^ t , i \\widehat{v}_{t,i} accounts for this zero initialization. The parameter β 2 \\beta_{2} controls how much history is retained. Rows with consistently larger squared gradients receive smaller multipliers. After this row scaling, we rescale U ~ t \\widetilde{U}_{t} to match the original sketch’s Frobenius norm, yielding the factor U t U_{t} used for the weight update. Thus RowAdam adjusts the relative contribution of different rows while preserving the sketch’s overall magnitude. We use β 2 = 0.95 \\beta_{2}=0.95 . The stabilizer ϵ t \\epsilon_{t} is 10 − 8 10^{-8} times the mean of v ^ t , i \\sqrt{\\widehat{v}_{t,i}} across rows, with a positive numerical floor; zero sketches produce zero updates. The row statistics and their update counter persist across projection refreshes. Each selected matrix requires only d d second-moment values, rather than one value per weight.",
+      "source": "https://arxiv.org/html/2610.06647v3",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0046",
+      "section": "C.1 Mathematical reasoning",
+      "text": "We construct DAPO-Math-7.5K from the DAPO-Math-17k training split, using the corresponding release on Hugging Face ( Yu et al., 2026 ) . The preparation script streams the source in its dataset order, retains the first occurrence of each prompt, and stops after collecting 7,500 unique prompts. The deduplication key is the content of the first prompt message. Evaluation uses all 500 problems in the test split of MATH-500 ( Lightman et al., 2023 ) . Each problem is converted to a user message, and its reference answer is stored as a string for the verifier. Training and evaluation use the model’s chat template. The training-subset deduplication described above operates within the training source; it is not a cross-dataset semantic decontamination procedure. Evaluation generates four responses per problem at temperature 0.7 0.7 and top- p p 0.7 0.7 . Pass@1 is the mean binary correctness over these 2,000 responses. The verifier extracts and checks the final mathematical answer; an unparseable answer receives no correctness credit. Training generates one response per prompt at temperature 1.0 1.0 and top- p p 1.0 1.0 , with a 4,096-token total context limit.",
+      "source": "https://arxiv.org/html/2610.06647v3",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0047",
+      "section": "C.2 Reasoning-Gym Hard mixture",
+      "text": "Table 3: Reasoning-Gym Hard mixture. Task Training problems Evaluation problems codeio 4,868 25 emoji_mystery 4,752 22 rectangle_count 5,000 25 word_ladder 4,994 25 pool_matrix 5,000 25 tsumego 5,000 25 sentence_reordering 4,334 21 manipulate_matrix 5,000 25 Total 38,948 193 The long-horizon 27B experiment uses an eight-task Reasoning-Gym mixture with task-specific verifiers. We select tasks with mean verifier scores of approximately 0.25 0.25 – 0.60 0.60 in a preliminary evaluation of 89 tasks, excluding those whose failures mainly reflect response truncation or formatting errors. This provides a challenging training mixture with room for improvement. For each task, we generate 5,000 candidate training problems and 25 evaluation problems at the default difficulty. We remove duplicate training questions and exclude training–evaluation overlaps; Table 3 reports the final counts. Each task’s verifier returns a score in ([0,1]). We report the equally weighted mean of the eight task-average scores. We report the equally weighted mean of the eight task-average scores. Evaluation uses one response per problem, temperature 0.7 0.7 , top- p p 0.95 0.95 , and a 16,384-token context limit.",
+      "source": "https://arxiv.org/html/2610.06647v3",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0048",
+      "section": "D.1 Main mathematical-reasoning experiments",
+      "text": "Table 4 summarizes the settings for Table 1 . Each run uses one node with eight H100 80GB GPUs and 128 CPU cores: four FSDP training GPUs and four independent generation engines (tensor-parallel degree one). Both use BF16 computation, activation checkpointing, no CPU offloading, and full-weight policy synchronization. Table 4: Main-experiment settings. Schedule horizons count actual optimizer updates. Setting Dense LoGRA Training seeds 1 , 2 , 42 1,2,42 1 , 2 , 42 1,2,42 Prompts / responses per update 128 128 / 128 128 128 128 / 128 128 Microbatch per training GPU 1 1 1 1 Optimizer Adam (zero weight decay) RowAdam Moment decay ( β 1 , β 2 ) = ( 0.9 , 0.95 ) (\\beta_{1},\\beta_{2})=(0.9,0.95) β 2 = 0.95 \\beta_{2}=0.95 ; no first moment Epsilon 10 − 8 10^{-8} , absolute 10 − 8 10^{-8} , relative Projection Not applicable Rank 256 256 , Rademacher Projection refresh Not applicable Every update Step-size rule LR 10 − 6 → 10 − 7 10^{-6}\\rightarrow 10^{-7} Predicted KL × 10 − 4 → × 10 − 5 2\\!\\times\\!10^{-4}\\rightarrow 2\\!\\times\\!10^{-5} Schedule 9 9 -update warmup; cosine decay Cosine budget decay Mismatch subtraction Not applicable Enabled; budget floor 50 % 50\\% Evaluation interval 5 5 / 5 5 / OOM 5 5 / 5 5 / 10 10",
+      "source": "https://arxiv.org/html/2610.06647v3",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0049",
+      "section": "KL budget.",
+      "text": "For update u = 1 , … , H u=1,\\ldots,H , the main experiments use δ u = δ min + δ max − δ min 2 ​ [ 1 + cos ⁡ ( π ​ u − 1 H − 1 ) ] , \\delta_{u}=\\delta_{\\min}+\\frac{\\delta_{\\max}-\\delta_{\\min}}{2}\\left[1+\\cos\\left(\\pi\\frac{u-1}{H-1}\\right)\\right], (16) with H = 300 H=300 , δ max = 2 × 10 − 4 \\delta_{\\max}=2\\times 10^{-4} , and δ min = 2 × 10 − 5 \\delta_{\\min}=2\\times 10^{-5} . The 27B runs stop at 200 updates without shortening the schedule. Mismatch subtraction accounts for differences between rollout-engine and trainer probabilities at the same nominal weights. We average rollout-minus-trainer log probabilities over generated tokens in completed, nontruncated responses, clamp the estimate below at zero, and smooth it with moving-average weight 0.3 0.3 . Denoting this estimate by κ u \\kappa_{u} , the effective budget is δ u eff = max ⁡ ( δ u − κ u , 0.5 ​ δ u ) . \\delta_{u}^{\\mathrm{eff}}=\\max(\\delta_{u}-\\kappa_{u},\\,0.5\\delta_{u}). (17) Without a valid measurement, no subtraction is applied. This adjustment is a budgeting heuristic, not an exact decomposition of KL.",
+      "source": "https://arxiv.org/html/2610.06647v3",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0050",
+      "section": "D.2 Long-horizon 27B training",
+      "text": "The Reasoning-Gym run in Figure 4 uses seed 42 42 , 128 prompts with one response each, microbatch size one, and a 16,384-token context limit. Training temperature and top- p p are both 1.0 1.0 . It uses rank-256 refreshed projections, SGD sketch updates, a global running baseline, and a KL budget annealed from 2 × 10 − 4 2\\times 10^{-4} to 2 × 10 − 5 2\\times 10^{-5} over 1,000 merges then held constant. Four training GPUs and four generation engines share one node. Evaluation is scheduled every 20 logged steps;",
+      "source": "https://arxiv.org/html/2610.06647v3",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0051",
+      "section": "D.3 Reconstruction heatmaps.",
+      "text": "We use initialization and steps 160 and 280 of one fixed-basis rank-64 trajectory. At each state, all conditions share 4,096 responses, grouped into 32 batches of 128, and their dense gradients. We measure reconstruction before optimizer transformations: G ^ = ( G ​ A ⊤ ) ​ A , cos ⁡ ( G , G ^ ) = ∑ i , j G i ​ j ​ G ^ i ​ j ‖ G ‖ F ​ ‖ G ^ ‖ F . \\widehat{G}=(GA^{\\top})A,\\qquad\\operatorname{cos}(G,\\widehat{G})=\\frac{\\sum_{i,j}G_{ij}\\widehat{G}_{ij}}{\\|G\\|_{F}\\|\\widehat{G}\\|_{F}}. Each heatmap cell equally averages the seven attention/MLP matrices in a layer, 32 batches, three model states, and eight random projection realizations; 28 layers contain 196 matrices in total. Fixed bases are reused across batches; refreshed bases are redrawn.",
+      "source": "https://arxiv.org/html/2610.06647v3",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0052",
+      "section": "D.4 LoRA",
+      "text": "Table 2 uses rank 256 and Qwen2.5-Math-1.5B, with three runs per method. LoRA uses AdamW with constant learning rate 2 × 10 − 4 2\\times 10^{-4} , moment decay ( 0.9 , 0.95 ) (0.9,0.95) , epsilon 10 − 8 10^{-8} , and zero weight decay. Both methods use 128 prompts with one response each, microbatch size one, and a 4,096-token context limit; LoGRA follows Table 4 . LoRA statistics cover 300 logged steps, excluding records without an update from memory/time averages; LoGRA covers 300 actual updates. The different counters, optimizers, and schedules prevent isolating adapter parameterization alone.",
+      "source": "https://arxiv.org/html/2610.06647v3",
+      "offset": 0
+    }
+  ],
+  "links": [
+    {
+      "href": "https://github.com/skzhang1/labs-molt/tree/logra/examples/scripts/logra",
+      "text": "Molt library",
+      "section": "Abstract",
+      "context": "nt overly large updates from disrupting learning, we complement gradient compression with predicted-KL step control, which estimates policy changes before applying each update and adjusts its magnitude accordingly. With all techniques combined, LoGRA reduces average training memory usage by up to 45.7% across reasoning tasks without compromising performance. It also enables stable training of a 27B-parameter model for over 1,100 steps on a single eight-GPU node, where dense Adam runs out of memory, making previously memory-infeasible RL training practical. Code is available in the Molt library",
+      "url": "https://github.com/skzhang1/labs-molt/tree/logra/examples/scripts/logra"
+    },
+    {
+      "href": "#S3.T1",
+      "text": "1",
+      "section": "1 Introduction",
+      "context": "Figure 1: Lower training memory across model scales. Colors denote model sizes; hatching distinguishes Dense Adam from LoGRA. Dark bars show average memory and pale extensions reach peak memory (Table 1",
+      "url": "https://arxiv.org/html/2610.06647v3#S3.T1"
+    },
+    {
+      "href": "#bib.bib1",
+      "text": "Sheng et al., 2024",
+      "section": "1 Introduction",
+      "context": "Reinforcement learning (RL) has emerged as a key driver of advances in LLM, enabling models to improve through feedback on their own generated responses ( Sheng et al., 2024",
+      "url": "https://arxiv.org/html/2610.06647v3#bib.bib1"
+    },
+    {
+      "href": "#bib.bib2",
+      "text": ", 2025",
+      "section": "1 Introduction",
+      "context": "Reinforcement learning (RL) has emerged as a key driver of advances in LLM, enabling models to improve through feedback on their own generated responses ( Sheng et al., 2024 ; , 2025",
+      "url": "https://arxiv.org/html/2610.06647v3#bib.bib2"
+    },
+    {
+      "href": "#bib.bib3",
+      "text": "Xu et al., 2026",
+      "section": "1 Introduction",
+      "context": "Reinforcement learning (RL) has emerged as a key driver of advances in LLM, enabling models to improve through feedback on their own generated responses ( Sheng et al., 2024 ; , 2025 ; Xu et al., 2026",
+      "url": "https://arxiv.org/html/2610.06647v3#bib.bib3"
+    },
+    {
+      "href": "#bib.bib4",
+      "text": "Zhang et al., 2026b",
+      "section": "1 Introduction",
+      "context": "Reinforcement learning (RL) has emerged as a key driver of advances in LLM, enabling models to improve through feedback on their own generated responses ( Sheng et al., 2024 ; , 2025 ; Xu et al., 2026 ; Zhang et al., 2026b",
+      "url": "https://arxiv.org/html/2610.06647v3#bib.bib4"
+    },
+    {
+      "href": "#bib.bib5",
+      "text": "Bai et al., 2023",
+      "section": "1 Introduction",
+      "context": "Reinforcement learning (RL) has emerged as a key driver of advances in LLM, enabling models to improve through feedback on their own generated responses ( Sheng et al., 2024 ; , 2025 ; Xu et al., 2026 ; Zhang et al., 2026b ) . However, its substantial memory requirements remain a major barrier to broader adoption. This challenge extends well beyond storing model parameters, as gradients and optimizer states can consume several times more memory than the weights themselves. For example, the BF16 weights of a 7B-parameter Qwen model ( Bai et al., 2023",
+      "url": "https://arxiv.org/html/2610.06647v3#bib.bib5"
+    },
+    {
+      "href": "#bib.bib6",
+      "text": "Kingma and Ba, 2014",
+      "section": "1 Introduction",
+      "context": "g (RL) has emerged as a key driver of advances in LLM, enabling models to improve through feedback on their own generated responses ( Sheng et al., 2024 ; , 2025 ; Xu et al., 2026 ; Zhang et al., 2026b ) . However, its substantial memory requirements remain a major barrier to broader adoption. This challenge extends well beyond storing model parameters, as gradients and optimizer states can consume several times more memory than the weights themselves. For example, the BF16 weights of a 7B-parameter Qwen model ( Bai et al., 2023 ) require approximately 14 GB, while Adam’s ( Kingma and Ba, 2014",
+      "url": "https://arxiv.org/html/2610.06647v3#bib.bib6"
+    },
+    {
+      "href": "#bib.bib7",
+      "text": "Zhao et al., 2023",
+      "section": "1 Introduction",
+      "context": "To overcome this bottleneck, existing approaches span both system-level optimizations and memory-efficient training algorithms. At the system level, FSDP ( Zhao et al., 2023",
+      "url": "https://arxiv.org/html/2610.06647v3#bib.bib7"
+    },
+    {
+      "href": "#bib.bib8",
+      "text": "Chen et al., 2016",
+      "section": "1 Introduction",
+      "context": "To overcome this bottleneck, existing approaches span both system-level optimizations and memory-efficient training algorithms. At the system level, FSDP ( Zhao et al., 2023 ) shards training states across GPUs, gradient checkpointing ( Chen et al., 2016",
+      "url": "https://arxiv.org/html/2610.06647v3#bib.bib8"
+    },
+    {
+      "href": "#bib.bib9",
+      "text": "Rajbhandari et al., 2020",
+      "section": "1 Introduction",
+      "context": "To overcome this bottleneck, existing approaches span both system-level optimizations and memory-efficient training algorithms. At the system level, FSDP ( Zhao et al., 2023 ) shards training states across GPUs, gradient checkpointing ( Chen et al., 2016 ) reduces activation storage through recomputation, and CPU offloading moves selected training states to host memory ( Rajbhandari et al., 2020",
+      "url": "https://arxiv.org/html/2610.06647v3#bib.bib9"
+    },
+    {
+      "href": "#bib.bib10",
+      "text": "Hu et al., 2021",
+      "section": "1 Introduction",
+      "context": "To overcome this bottleneck, existing approaches span both system-level optimizations and memory-efficient training algorithms. At the system level, FSDP ( Zhao et al., 2023 ) shards training states across GPUs, gradient checkpointing ( Chen et al., 2016 ) reduces activation storage through recomputation, and CPU offloading moves selected training states to host memory ( Rajbhandari et al., 2020 ) . Parameter-efficient methods reduce the number of parameters that require gradients and optimizer states: LoRA ( Hu et al., 2021",
+      "url": "https://arxiv.org/html/2610.06647v3#bib.bib10"
+    },
+    {
+      "href": "#bib.bib11",
+      "text": "Zhao et al., 2024",
+      "section": "1 Introduction",
+      "context": "optimizations and memory-efficient training algorithms. At the system level, FSDP ( Zhao et al., 2023 ) shards training states across GPUs, gradient checkpointing ( Chen et al., 2016 ) reduces activation storage through recomputation, and CPU offloading moves selected training states to host memory ( Rajbhandari et al., 2020 ) . Parameter-efficient methods reduce the number of parameters that require gradients and optimizer states: LoRA ( Hu et al., 2021 ) , for example, freezes pretrained weights and learns small low-rank adapters. Gradient compression offers another route ( Zhao et al., 2024",
+      "url": "https://arxiv.org/html/2610.06647v3#bib.bib11"
+    },
+    {
+      "href": "#bib.bib12",
+      "text": "Su et al., 2025",
+      "section": "1 Introduction",
+      "context": "memory-efficient training algorithms. At the system level, FSDP ( Zhao et al., 2023 ) shards training states across GPUs, gradient checkpointing ( Chen et al., 2016 ) reduces activation storage through recomputation, and CPU offloading moves selected training states to host memory ( Rajbhandari et al., 2020 ) . Parameter-efficient methods reduce the number of parameters that require gradients and optimizer states: LoRA ( Hu et al., 2021 ) , for example, freezes pretrained weights and learns small low-rank adapters. Gradient compression offers another route ( Zhao et al., 2024 ; Su et al., 2025",
+      "url": "https://arxiv.org/html/2610.06647v3#bib.bib12"
+    },
+    {
+      "href": "#bib.bib13",
+      "text": "Hao et al., 2024",
+      "section": "1 Introduction",
+      "context": "aining algorithms. At the system level, FSDP ( Zhao et al., 2023 ) shards training states across GPUs, gradient checkpointing ( Chen et al., 2016 ) reduces activation storage through recomputation, and CPU offloading moves selected training states to host memory ( Rajbhandari et al., 2020 ) . Parameter-efficient methods reduce the number of parameters that require gradients and optimizer states: LoRA ( Hu et al., 2021 ) , for example, freezes pretrained weights and learns small low-rank adapters. Gradient compression offers another route ( Zhao et al., 2024 ; Su et al., 2025 ; Hao et al., 2024",
+      "url": "https://arxiv.org/html/2610.06647v3#bib.bib13"
+    },
+    {
+      "href": "#bib.bib14",
+      "text": "Schulman and Lab, 2025",
+      "section": "1 Introduction",
+      "context": "Motivated by this perspective, we introduce LoGRA, a method that uses low-rank gradient sketches to reduce the memory and communication costs of RL post-training, thus lower the hardware barrier. Our intuition is that learning from rewards may require far less information than a full gradient can represent: with binary outcome rewards, each generated response receives only a single correctness signal, motivating a compact representation of the resulting learning signal ( Schulman and Lab, 2025",
+      "url": "https://arxiv.org/html/2610.06647v3#bib.bib14"
+    },
+    {
+      "href": "#S2.E2",
+      "text": "2",
+      "section": "A compact representation.",
+      "context": "Equation 2",
+      "url": "https://arxiv.org/html/2610.06647v3#S2.E2"
+    },
+    {
+      "href": "#alg1",
+      "text": "1",
+      "section": "2.2 Applying LoGRA to RL post-training",
+      "context": "We apply the sketch to attention and MLP projection matrices, holding other parameters fixed. Algorithm 1",
+      "url": "https://arxiv.org/html/2610.06647v3#alg1"
+    },
+    {
+      "href": "#S2.SS3",
+      "text": "2.3",
+      "section": "Memory and synchronization.",
+      "context": "} . ⊳ \\triangleright 1. Prepare 5: for each W W do 6: Sample A ∈ ℝ r × k A\\in\\mathbb{R}^{r\\times k} from a fresh seed. 7: S ← 0 ∈ ℝ d × r S\\leftarrow 0\\in\\mathbb{R}^{d\\times r} 8: for each microbatch m m ( θ \\theta and A A fixed) do ⊳ \\triangleright 2. Accumulate sketches 9: for each W W do 10: S ← S + ( ∇ W ℒ m ) ​ A ⊤ S\\leftarrow S+(\\nabla_{W}\\mathcal{L}_{m})A^{\\top} ⊳ \\triangleright Direct sketch accumulation 11: For each W W : U ← S U\\leftarrow S (or use a sketch optimizer). ⊳ \\triangleright 3. Choose the update 12: α ← 1 \\alpha\\leftarrow 1 ⊳ \\triangleright Or use predicted KL; Section 2.3",
+      "url": "https://arxiv.org/html/2610.06647v3#S2.SS3"
+    },
+    {
+      "href": "#bib.bib26",
+      "text": "Schulman et al., 2015",
+      "section": "2.3 Step-size control with predicted KL",
+      "context": "LoGRA specify how to change the weights, but the size of that change also matters. An update that is small in parameter space can still substantially change the policy’s output probabilities. Following the trust-region motivation of TRPO ( Schulman et al., 2015",
+      "url": "https://arxiv.org/html/2610.06647v3#bib.bib26"
+    },
+    {
+      "href": "#S2.E5",
+      "text": "5",
+      "section": "2.3 Step-size control with predicted KL",
+      "context": "We specify a KL budget δ > 0 \\delta>0 , the allowed average predicted change in next-token probabilities for one training step. A smaller budget keeps the updated policy closer to the current one. Equation 5",
+      "url": "https://arxiv.org/html/2610.06647v3#S2.E5"
+    },
+    {
+      "href": "#S3.F3",
+      "text": "3",
+      "section": "Memory and throughput.",
+      "context": "Figure 3",
+      "url": "https://arxiv.org/html/2610.06647v3#S3.F3"
+    },
+    {
+      "href": "#S2.E6",
+      "text": "6",
+      "section": "3.3 Sustained 27B training on a single eight-GPU node",
+      "context": "We demonstrate that LoGRA with predicted-KL enables stable 27B model training for over 1,000 steps on a single node. Specifically, we train Qwen3.8-27B on the Reasoning-Gym Hard mixture. For efficiency purpose, we estimate (q(D)) using a finite-difference probe based on direct KL evaluations, rather than the JVP-based estimator in Equation 6",
+      "url": "https://arxiv.org/html/2610.06647v3#S2.E6"
+    },
+    {
+      "href": "#S3.F4",
+      "text": "4",
+      "section": "3.3 Sustained 27B training on a single eight-GPU node",
+      "context": "The held-out macro score increases from 39.69 % 39.69\\% initially to 62.94 % 62.94\\% , with a peak of 65.52 % 65.52\\% at step 1,060 (Figure 4",
+      "url": "https://arxiv.org/html/2610.06647v3#S3.F4"
+    },
+    {
+      "href": "#S3.F4",
+      "text": "4",
+      "section": "3.3 Sustained 27B training on a single eight-GPU node",
+      "context": "The held-out macro score increases from 39.69 % 39.69\\% initially to 62.94 % 62.94\\% , with a peak of 65.52 % 65.52\\% at step 1,060 (Figure 4 a). The final five observed evaluations range from 59.11 % 59.11\\% to 64.16 % 64.16\\% , showing no sustained collapse. Over the same trajectory, mean response length decreases from 8,312 to 4,705 tokens, while the truncation rate falls from 34.72 % 34.72\\% to 12.95 % 12.95\\% (Figure 4",
+      "url": "https://arxiv.org/html/2610.06647v3#S3.F4"
+    },
+    {
+      "href": "#bib.bib13",
+      "text": "Hao et al., 2024",
+      "section": "3.4.1 Design Choices in Low-Rank Gradient Compression",
+      "context": "We examine the effects of projection rank, basis refreshing, and projection distribution using Qwen2.5-Math-1.5B on DAPO-Math-7.5k with ranks r ∈ 4 , 16 , 64 , 256 r\\in{4,16,64,256} . Fixed Rademacher projections sample matrices once with independent entries ± 1 / r \\pm 1/\\sqrt{r} , whereas refreshed Rademacher and Gaussian projections resample at every update. Following Flora’s motivation of avoiding confinement to a fixed low-rank subspace ( Hao et al., 2024",
+      "url": "https://arxiv.org/html/2610.06647v3#bib.bib13"
+    },
+    {
+      "href": "#S3.F5",
+      "text": "5",
+      "section": "3.4.1 Design Choices in Low-Rank Gradient Compression",
+      "context": "Figures 5",
+      "url": "https://arxiv.org/html/2610.06647v3#S3.F5"
+    },
+    {
+      "href": "#S3.F5",
+      "text": "5",
+      "section": "3.4.1 Design Choices in Low-Rank Gradient Compression",
+      "context": "Figures 5 (b) and 5",
+      "url": "https://arxiv.org/html/2610.06647v3#S3.F5"
+    },
+    {
+      "href": "#S3.F5",
+      "text": "5",
+      "section": "3.4.1 Design Choices in Low-Rank Gradient Compression",
+      "context": "mple one response for each of 4,096 prompts and divide them into 32 minibatches of 128 responses. All projection conditions use the same responses and dense gradients. Fixed bases are reused across minibatches, whereas refreshed bases are redrawn for each minibatch. For each rank, we evaluate eight projection seeds and compute the Frobenius cosine similarity between the dense gradient G G and its reconstruction for all 196 attention and MLP weight matrices. Each heatmap cell is averaged over the seven matrices in each Transformer layer, minibatches, model states, and projection seeds. Figure 5",
+      "url": "https://arxiv.org/html/2610.06647v3#S3.F5"
+    },
+    {
+      "href": "#S3.F5",
+      "text": "5",
+      "section": "3.4.1 Design Choices in Low-Rank Gradient Compression",
+      "context": "tches of 128 responses. All projection conditions use the same responses and dense gradients. Fixed bases are reused across minibatches, whereas refreshed bases are redrawn for each minibatch. For each rank, we evaluate eight projection seeds and compute the Frobenius cosine similarity between the dense gradient G G and its reconstruction for all 196 attention and MLP weight matrices. Each heatmap cell is averaged over the seven matrices in each Transformer layer, minibatches, model states, and projection seeds. Figure 5 (b) compares fixed and refreshed Rademacher projections, whereas Figure 5",
+      "url": "https://arxiv.org/html/2610.06647v3#S3.F5"
+    },
+    {
+      "href": "#S3.T2",
+      "text": "2",
+      "section": "3.4.2 Comparison with LoRA",
+      "context": "Table 2",
+      "url": "https://arxiv.org/html/2610.06647v3#S3.T2"
+    },
+    {
+      "href": "#S3.F6",
+      "text": "6",
+      "section": "3.4.3 KL Budget Control",
+      "context": "udgets affect accuracy and response length. We use Qwen2.5-Math-1.5B on DAPO-Math-7.5k with rank-256 Rademacher projections refreshed every update, SGD, and a global running reward baseline. We compare a fixed relative update norm of 6 × 10 − 5 6\\times 10^{-5} without KL control, constant KL budgets of 1.5 × 10 − 3 1.5\\times 10^{-3} and 1.5 × 10 − 4 1.5\\times 10^{-4} , and a cosine-annealed budget from 2 × 10 − 4 2\\times 10^{-4} to 2 × 10 − 5 2\\times 10^{-5} over 1,500 steps. Each setting has two seeds; these KL-controlled settings do not subtract mismatch or use realised-KL feedback. Figure 6",
+      "url": "https://arxiv.org/html/2610.06647v3#S3.F6"
+    },
+    {
+      "href": "#bib.bib26",
+      "text": "Schulman et al., 2015",
+      "section": "3.4.3 KL Budget Control",
+      "context": "These results support the usefulness of predicted-KL step control with a conservative budget. The small constant budget improves tail accuracy over no control while maintaining stable learning. This is consistent with the trust-region motivation of TRPO ( Schulman et al., 2015",
+      "url": "https://arxiv.org/html/2610.06647v3#bib.bib26"
+    },
+    {
+      "href": "#bib.bib15",
+      "text": "Jimenez et al., 2024",
+      "section": "4 Related Works",
+      "context": "Large language models have emerged as a foundation for general-purpose problem solving ( Jimenez et al., 2024",
+      "url": "https://arxiv.org/html/2610.06647v3#bib.bib15"
+    },
+    {
+      "href": "#bib.bib16",
+      "text": "Shao et al., 2024",
+      "section": "4 Related Works",
+      "context": "Large language models have emerged as a foundation for general-purpose problem solving ( Jimenez et al., 2024 ; Shao et al., 2024",
+      "url": "https://arxiv.org/html/2610.06647v3#bib.bib16"
+    },
+    {
+      "href": "#bib.bib17",
+      "text": "Xie et al., 2024",
+      "section": "4 Related Works",
+      "context": "Large language models have emerged as a foundation for general-purpose problem solving ( Jimenez et al., 2024 ; Shao et al., 2024 ; Xie et al., 2024",
+      "url": "https://arxiv.org/html/2610.06647v3#bib.bib17"
+    },
+    {
+      "href": "#bib.bib18",
+      "text": "Zhang et al., 2024",
+      "section": "4 Related Works",
+      "context": "Large language models have emerged as a foundation for general-purpose problem solving ( Jimenez et al., 2024 ; Shao et al., 2024 ; Xie et al., 2024 ; Zhang et al., 2024",
+      "url": "https://arxiv.org/html/2610.06647v3#bib.bib18"
+    },
+    {
+      "href": "#bib.bib19",
+      "text": "Yuan et al., 2026",
+      "section": "4 Related Works",
+      "context": "Large language models have emerged as a foundation for general-purpose problem solving ( Jimenez et al., 2024 ; Shao et al., 2024 ; Xie et al., 2024 ; Zhang et al., 2024 ; Yuan et al., 2026",
+      "url": "https://arxiv.org/html/2610.06647v3#bib.bib19"
+    },
+    {
+      "href": "#bib.bib20",
+      "text": "Guo et al., 2025",
+      "section": "4 Related Works",
+      "context": "Large language models have emerged as a foundation for general-purpose problem solving ( Jimenez et al., 2024 ; Shao et al., 2024 ; Xie et al., 2024 ; Zhang et al., 2024 ; Yuan et al., 2026 ) , with reinforcement learning (RL) becoming a critical post-training stage for advancing their capabilities ( Guo et al., 2025",
+      "url": "https://arxiv.org/html/2610.06647v3#bib.bib20"
+    },
+    {
+      "href": "#bib.bib21",
+      "text": "Yu et al., 2026",
+      "section": "4 Related Works",
+      "context": "Large language models have emerged as a foundation for general-purpose problem solving ( Jimenez et al., 2024 ; Shao et al., 2024 ; Xie et al., 2024 ; Zhang et al., 2024 ; Yuan et al., 2026 ) , with reinforcement learning (RL) becoming a critical post-training stage for advancing their capabilities ( Guo et al., 2025 ; Yu et al., 2026",
+      "url": "https://arxiv.org/html/2610.06647v3#bib.bib21"
+    },
+    {
+      "href": "#bib.bib22",
+      "text": "Hu et al., 2025",
+      "section": "4 Related Works",
+      "context": "Large language models have emerged as a foundation for general-purpose problem solving ( Jimenez et al., 2024 ; Shao et al., 2024 ; Xie et al., 2024 ; Zhang et al., 2024 ; Yuan et al., 2026 ) , with reinforcement learning (RL) becoming a critical post-training stage for advancing their capabilities ( Guo et al., 2025 ; Yu et al., 2026 ; Hu et al., 2025",
+      "url": "https://arxiv.org/html/2610.06647v3#bib.bib22"
+    },
+    {
+      "href": "#bib.bib3",
+      "text": "Xu et al., 2026",
+      "section": "4 Related Works",
+      "context": "Recent work has addressed these challenges through asynchronous execution and more efficient resource management. For example, asynchronous RL overlap rollout with policy training, reducing GPU idle time between stages ( Xu et al., 2026",
+      "url": "https://arxiv.org/html/2610.06647v3#bib.bib3"
+    },
+    {
+      "href": "#bib.bib23",
+      "text": "Zhang et al., 2026a",
+      "section": "4 Related Works",
+      "context": "Recent work has addressed these challenges through asynchronous execution and more efficient resource management. For example, asynchronous RL overlap rollout with policy training, reducing GPU idle time between stages ( Xu et al., 2026 ; Zhang et al., 2026a",
+      "url": "https://arxiv.org/html/2610.06647v3#bib.bib23"
+    },
+    {
+      "href": "#bib.bib24",
+      "text": "Mei et al., 2025",
+      "section": "4 Related Works",
+      "context": "Recent work has addressed these challenges through asynchronous execution and more efficient resource management. For example, asynchronous RL overlap rollout with policy training, reducing GPU idle time between stages ( Xu et al., 2026 ; Zhang et al., 2026a ) . Other works improve resource allocation and scheduling to accommodate the distinct computational demands of generation and training ( Mei et al., 2025",
+      "url": "https://arxiv.org/html/2610.06647v3#bib.bib24"
+    },
+    {
+      "href": "#bib.bib7",
+      "text": "Zhao et al., 2023",
+      "section": "4 Related Works",
+      "context": "Recent work has addressed these challenges through asynchronous execution and more efficient resource management. For example, asynchronous RL overlap rollout with policy training, reducing GPU idle time between stages ( Xu et al., 2026 ; Zhang et al., 2026a ) . Other works improve resource allocation and scheduling to accommodate the distinct computational demands of generation and training ( Mei et al., 2025 ) . Memory-saving techniques further enable larger models to fit within available hardware: sharding distributes training states across GPUs ( Zhao et al., 2023",
+      "url": "https://arxiv.org/html/2610.06647v3#bib.bib7"
+    },
+    {
+      "href": "#bib.bib8",
+      "text": "Chen et al., 2016",
+      "section": "4 Related Works",
+      "context": "nt resource management. For example, asynchronous RL overlap rollout with policy training, reducing GPU idle time between stages ( Xu et al., 2026 ; Zhang et al., 2026a ) . Other works improve resource allocation and scheduling to accommodate the distinct computational demands of generation and training ( Mei et al., 2025 ) . Memory-saving techniques further enable larger models to fit within available hardware: sharding distributes training states across GPUs ( Zhao et al., 2023 ) , activation checkpointing reduces memory consumption by recomputing intermediate activations ( Chen et al., 2016",
+      "url": "https://arxiv.org/html/2610.06647v3#bib.bib8"
+    },
+    {
+      "href": "#bib.bib9",
+      "text": "Rajbhandari et al., 2020",
+      "section": "4 Related Works",
+      "context": "GPU idle time between stages ( Xu et al., 2026 ; Zhang et al., 2026a ) . Other works improve resource allocation and scheduling to accommodate the distinct computational demands of generation and training ( Mei et al., 2025 ) . Memory-saving techniques further enable larger models to fit within available hardware: sharding distributes training states across GPUs ( Zhao et al., 2023 ) , activation checkpointing reduces memory consumption by recomputing intermediate activations ( Chen et al., 2016 ) , and CPU offloading transfers selected training states to host memory ( Rajbhandari et al., 2020",
+      "url": "https://arxiv.org/html/2610.06647v3#bib.bib9"
+    },
+    {
+      "href": "#bib.bib10",
+      "text": "Hu et al., 2021",
+      "section": "4 Related Works",
+      "context": "Another line of work exploits low-rank structure to reduce training memory. LoRA ( Hu et al., 2021",
+      "url": "https://arxiv.org/html/2610.06647v3#bib.bib10"
+    },
+    {
+      "href": "#bib.bib12",
+      "text": "Su et al., 2025",
+      "section": "4 Related Works",
+      "context": "Another line of work exploits low-rank structure to reduce training memory. LoRA ( Hu et al., 2021 ) freezes pretrained weights and optimizes low-rank adapters, reducing the memory required for gradients and optimizer states. GaLore ( Su et al., 2025",
+      "url": "https://arxiv.org/html/2610.06647v3#bib.bib12"
+    },
+    {
+      "href": "#bib.bib11",
+      "text": "Zhao et al., 2024",
+      "section": "4 Related Works",
+      "context": "Another line of work exploits low-rank structure to reduce training memory. LoRA ( Hu et al., 2021 ) freezes pretrained weights and optimizes low-rank adapters, reducing the memory required for gradients and optimizer states. GaLore ( Su et al., 2025 ; Zhao et al., 2024",
+      "url": "https://arxiv.org/html/2610.06647v3#bib.bib11"
+    },
+    {
+      "href": "#bib.bib13",
+      "text": "Hao et al., 2024",
+      "section": "4 Related Works",
+      "context": "Another line of work exploits low-rank structure to reduce training memory. LoRA ( Hu et al., 2021 ) freezes pretrained weights and optimizes low-rank adapters, reducing the memory required for gradients and optimizer states. GaLore ( Su et al., 2025 ; Zhao et al., 2024 ) and Flora ( Hao et al., 2024",
+      "url": "https://arxiv.org/html/2610.06647v3#bib.bib13"
+    },
+    {
+      "href": "#bib.bib27",
+      "text": "Zhu et al., 2025",
+      "section": "4 Related Works",
+      "context": "uired for gradients and optimizer states. GaLore ( Su et al., 2025 ; Zhao et al., 2024 ) and Flora ( Hao et al., 2024 ) instead keep the original weights trainable while compactly representing gradients and optimizer states. In contrast, LoGRA targets the RL training–generation loop: it accumulates low-rank sketches during backpropagation without materializing full gradients for selected weights and reuses the compressed updates for rollout-policy synchronization. It thus extends compression from training-state storage to gradient computation and policy communication. APOLLO ( Zhu et al., 2025",
+      "url": "https://arxiv.org/html/2610.06647v3#bib.bib27"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Bai et al. (2023) J. Bai, S. Bai, Y. Chu, Z. Cui, K. Dang, X. Deng, Y. Fan, W. Ge, Y. Han, F. Huang, et al. Qwen technical report . arXiv preprint arXiv:2309.16609 . Cited by: §1",
+      "url": "https://arxiv.org/html/2610.06647v3#S1.p1.1"
+    },
+    {
+      "href": "#S1.p2.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Chen et al. (2016) T. Chen, B. Xu, C. Zhang, and C. Guestrin Training deep nets with sublinear memory cost . arXiv preprint arXiv:1604.06174 . Cited by: §1",
+      "url": "https://arxiv.org/html/2610.06647v3#S1.p2.1"
+    },
+    {
+      "href": "#S4.p2.1",
+      "text": "§4",
+      "section": "References",
+      "context": "Chen et al. (2016) T. Chen, B. Xu, C. Zhang, and C. Guestrin Training deep nets with sublinear memory cost . arXiv preprint arXiv:1604.06174 . Cited by: §1 , §4",
+      "url": "https://arxiv.org/html/2610.06647v3#S4.p2.1"
+    },
+    {
+      "href": "#S4.p1.1",
+      "text": "§4",
+      "section": "References",
+      "context": "Guo et al. (2025) D. Guo, D. Yang, H. Zhang, J. Song, P. Wang, Q. Zhu, R. Xu, R. Zhang, S. Ma, X. Bi, et al. Deepseek-r1: incentivizing reasoning capability in llms via reinforcement learning . arXiv preprint arXiv:2501.12948 . Cited by: §4",
+      "url": "https://arxiv.org/html/2610.06647v3#S4.p1.1"
+    },
+    {
+      "href": "#S1.p2.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Hao et al. (2024) Y. Hao, Y. Cao, and L. Mou Flora: low-rank adapters are secretly gradient compressors . arXiv preprint arXiv:2402.03293 . Cited by: §1",
+      "url": "https://arxiv.org/html/2610.06647v3#S1.p2.1"
+    },
+    {
+      "href": "#S3.SS4.SSS1.p1.1",
+      "text": "§3.4.1",
+      "section": "References",
+      "context": "Hao et al. (2024) Y. Hao, Y. Cao, and L. Mou Flora: low-rank adapters are secretly gradient compressors . arXiv preprint arXiv:2402.03293 . Cited by: §1 , §3.4.1",
+      "url": "https://arxiv.org/html/2610.06647v3#S3.SS4.SSS1.p1.1"
+    },
+    {
+      "href": "#S4.p3.1",
+      "text": "§4",
+      "section": "References",
+      "context": "Hao et al. (2024) Y. Hao, Y. Cao, and L. Mou Flora: low-rank adapters are secretly gradient compressors . arXiv preprint arXiv:2402.03293 . Cited by: §1 , §3.4.1 , §4",
+      "url": "https://arxiv.org/html/2610.06647v3#S4.p3.1"
+    },
+    {
+      "href": "#S1.p2.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Hu et al. (2021) E. J. Hu, Y. Shen, P. Wallis, Z. Allen-Zhu, Y. Li, S. Wang, L. Wang, and W. Chen Lora: low-rank adaptation of large language models . arXiv preprint arXiv:2106.09685 . Cited by: §1",
+      "url": "https://arxiv.org/html/2610.06647v3#S1.p2.1"
+    },
+    {
+      "href": "#S4.p3.1",
+      "text": "§4",
+      "section": "References",
+      "context": "Hu et al. (2021) E. J. Hu, Y. Shen, P. Wallis, Z. Allen-Zhu, Y. Li, S. Wang, L. Wang, and W. Chen Lora: low-rank adaptation of large language models . arXiv preprint arXiv:2106.09685 . Cited by: §1 , §4",
+      "url": "https://arxiv.org/html/2610.06647v3#S4.p3.1"
+    },
+    {
+      "href": "#S4.p1.1",
+      "text": "§4",
+      "section": "References",
+      "context": "Hu et al. (2025) J. Hu, X. Wu, W. Shen, J. K. Liu, W. Wang, S. Jiang, H. Wang, H. Chen, B. Chen, W. Fang, et al. OpenRLHF: a ray-based easy-to-use, scalable and high-performance rlhf framework . In Proceedings of the 2025 Conference on Empirical Methods in Natural Language Processing: System Demonstrations , pp. 656–666 . Cited by: §4",
+      "url": "https://arxiv.org/html/2610.06647v3#S4.p1.1"
+    },
+    {
+      "href": "#S4.p1.1",
+      "text": "§4",
+      "section": "References",
+      "context": "Jimenez et al. (2024) C. E. Jimenez, J. Yang, A. Wettig, S. Yao, K. Pei, O. Press, and K. Narasimhan Swe-bench: can language models resolve real-world github issues? . In International Conference on Learning Representations , Vol. 2024 , pp. 54107–54157 . Cited by: §4",
+      "url": "https://arxiv.org/html/2610.06647v3#S4.p1.1"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Kingma and Ba (2014) D. P. Kingma and J. Ba Adam: a method for stochastic optimization . arXiv preprint arXiv:1412.6980 . Cited by: §1",
+      "url": "https://arxiv.org/html/2610.06647v3#S1.p1.1"
+    },
+    {
+      "href": "#A3.SS1.p2.1",
+      "text": "§C.1",
+      "section": "References",
+      "context": "Lightman et al. (2023) H. Lightman, V. Kosaraju, Y. Burda, H. Edwards, B. Baker, T. Lee, J. Leike, J. Schulman, I. Sutskever, and K. Cobbe Let’s verify step by step . arXiv preprint arXiv:2305.20050 . Cited by: §C.1",
+      "url": "https://arxiv.org/html/2610.06647v3#A3.SS1.p2.1"
+    },
+    {
+      "href": "#S4.p2.1",
+      "text": "§4",
+      "section": "References",
+      "context": "Mei et al. (2025) Z. Mei, W. Fu, K. Li, G. Wang, H. Zhang, and Y. Wu Real: efficient rlhf training of large language models with parameter reallocation . Proceedings of Machine Learning and Systems 7 . Cited by: §4",
+      "url": "https://arxiv.org/html/2610.06647v3#S4.p2.1"
+    },
+    {
+      "href": "https://github.com/NVIDIA-NeMo/RL",
+      "text": "https://github.com/NVIDIA-NeMo/RL",
+      "section": "References",
+      "context": "[11] (2025) NeMo rl: a scalable and efficient post-training library . Note: https://github.com/NVIDIA-NeMo/RL",
+      "url": "https://github.com/NVIDIA-NeMo/RL"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "[11] (2025) NeMo rl: a scalable and efficient post-training library . Note: https://github.com/NVIDIA-NeMo/RL GitHub repository Cited by: §1",
+      "url": "https://arxiv.org/html/2610.06647v3#S1.p1.1"
+    },
+    {
+      "href": "#S1.p2.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Rajbhandari et al. (2020) S. Rajbhandari, J. Rasley, O. Ruwase, and Y. He Zero: memory optimizations toward training trillion parameter models . In SC20: international conference for high performance computing, networking, storage and analysis , pp. 1–16 . Cited by: §1",
+      "url": "https://arxiv.org/html/2610.06647v3#S1.p2.1"
+    },
+    {
+      "href": "#S4.p2.1",
+      "text": "§4",
+      "section": "References",
+      "context": "Rajbhandari et al. (2020) S. Rajbhandari, J. Rasley, O. Ruwase, and Y. He Zero: memory optimizations toward training trillion parameter models . In SC20: international conference for high performance computing, networking, storage and analysis , pp. 1–16 . Cited by: §1 , §4",
+      "url": "https://arxiv.org/html/2610.06647v3#S4.p2.1"
+    },
+    {
+      "href": "https://dx.doi.org/10.64434/tml.20250929",
+      "text": "Document",
+      "section": "References",
+      "context": "Schulman and Lab (2025) J. Schulman and T. M. Lab LoRA without regret . Thinking Machines Lab: Connectionism . Note: https://thinkingmachines.ai/blog/lora/ External Links: Document",
+      "url": "https://dx.doi.org/10.64434/tml.20250929"
+    },
+    {
+      "href": "#S1.p3.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Schulman and Lab (2025) J. Schulman and T. M. Lab LoRA without regret . Thinking Machines Lab: Connectionism . Note: https://thinkingmachines.ai/blog/lora/ External Links: Document Cited by: §1",
+      "url": "https://arxiv.org/html/2610.06647v3#S1.p3.1"
+    },
+    {
+      "href": "#S2.SS3.p1.1",
+      "text": "§2.3",
+      "section": "References",
+      "context": "Schulman et al. (2015) J. Schulman, S. Levine, P. Abbeel, M. Jordan, and P. Moritz Trust region policy optimization . In International conference on machine learning , pp. 1889–1897 . Cited by: §2.3",
+      "url": "https://arxiv.org/html/2610.06647v3#S2.SS3.p1.1"
+    },
+    {
+      "href": "#S3.SS4.SSS3.p2.1",
+      "text": "§3.4.3",
+      "section": "References",
+      "context": "Schulman et al. (2015) J. Schulman, S. Levine, P. Abbeel, M. Jordan, and P. Moritz Trust region policy optimization . In International conference on machine learning , pp. 1889–1897 . Cited by: §2.3 , §3.4.3",
+      "url": "https://arxiv.org/html/2610.06647v3#S3.SS4.SSS3.p2.1"
+    },
+    {
+      "href": "#S4.p1.1",
+      "text": "§4",
+      "section": "References",
+      "context": "Shao et al. (2024) Z. Shao, P. Wang, Q. Zhu, R. Xu, J. Song, X. Bi, H. Zhang, M. Zhang, Y. Li, Y. Wu, et al. Deepseekmath: pushing the limits of mathematical reasoning in open language models . arXiv preprint arXiv:2402.03300 . Cited by: §4",
+      "url": "https://arxiv.org/html/2610.06647v3#S4.p1.1"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Sheng et al. (2024) G. Sheng, C. Zhang, Z. Ye, X. Wu, W. Zhang, R. Zhang, Y. Peng, H. Lin, and C. Wu HybridFlow: a flexible and efficient rlhf framework . arXiv preprint arXiv: 2409.19256 . Cited by: §1",
+      "url": "https://arxiv.org/html/2610.06647v3#S1.p1.1"
+    },
+    {
+      "href": "#S1.p2.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Su et al. (2025) D. Su, A. Gu, J. Xu, Y. Tian, and J. Zhao Galore 2: large-scale llm pre-training by gradient low-rank projection . arXiv preprint arXiv:2504.20437 . Cited by: §1",
+      "url": "https://arxiv.org/html/2610.06647v3#S1.p2.1"
+    },
+    {
+      "href": "#S4.p3.1",
+      "text": "§4",
+      "section": "References",
+      "context": "Su et al. (2025) D. Su, A. Gu, J. Xu, Y. Tian, and J. Zhao Galore 2: large-scale llm pre-training by gradient low-rank projection . arXiv preprint arXiv:2504.20437 . Cited by: §1 , §4",
+      "url": "https://arxiv.org/html/2610.06647v3#S4.p3.1"
+    },
+    {
+      "href": "#S4.p1.1",
+      "text": "§4",
+      "section": "References",
+      "context": "Xie et al. (2024) T. Xie, D. Zhang, J. Chen, X. Li, S. Zhao, R. Cao, T. J. Hua, Z. Cheng, D. Shin, F. Lei, et al. Osworld: benchmarking multimodal agents for open-ended tasks in real computer environments . Advances in Neural Information Processing Systems 37 , pp. 52040–52094 . Cited by: §4",
+      "url": "https://arxiv.org/html/2610.06647v3#S4.p1.1"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Xu et al. (2026) B. Xu, H. Zhang, S. Zhang, S. Han, M. Liu, J. Hu, S. Diao, Z. Jin, Y. Zou, M. Demoret, et al. Polar: agentic rl on any harness at scale . arXiv preprint arXiv:2605.24220 . Cited by: §1",
+      "url": "https://arxiv.org/html/2610.06647v3#S1.p1.1"
+    },
+    {
+      "href": "#S4.p2.1",
+      "text": "§4",
+      "section": "References",
+      "context": "Xu et al. (2026) B. Xu, H. Zhang, S. Zhang, S. Han, M. Liu, J. Hu, S. Diao, Z. Jin, Y. Zou, M. Demoret, et al. Polar: agentic rl on any harness at scale . arXiv preprint arXiv:2605.24220 . Cited by: §1 , §4",
+      "url": "https://arxiv.org/html/2610.06647v3#S4.p2.1"
+    },
+    {
+      "href": "#A3.SS1.p1.1",
+      "text": "§C.1",
+      "section": "References",
+      "context": "Yu et al. (2026) Q. Yu, Z. Zhang, R. Zhu, Y. Yuan, X. Zuo, Y. Yue, W. Dai, T. Fan, G. Liu, L. Liu, et al. Dapo: an open-source llm reinforcement learning system at scale . Advances in Neural Information Processing Systems 38 , pp. 113222–113244 . Cited by: §C.1",
+      "url": "https://arxiv.org/html/2610.06647v3#A3.SS1.p1.1"
+    },
+    {
+      "href": "#S4.p1.1",
+      "text": "§4",
+      "section": "References",
+      "context": "Yu et al. (2026) Q. Yu, Z. Zhang, R. Zhu, Y. Yuan, X. Zuo, Y. Yue, W. Dai, T. Fan, G. Liu, L. Liu, et al. Dapo: an open-source llm reinforcement learning system at scale . Advances in Neural Information Processing Systems 38 , pp. 113222–113244 . Cited by: §C.1 , §4",
+      "url": "https://arxiv.org/html/2610.06647v3#S4.p1.1"
+    },
+    {
+      "href": "#S4.p1.1",
+      "text": "§4",
+      "section": "References",
+      "context": "Yuan et al. (2026) M. Yuan, Z. Zhou, X. Xiong, W. Wu, J. Sun, J. Song, K. Cui, B. Wang, H. Wu, Y. Li, et al. OSWorld2. 0: benchmarking computer use agents on long-horizon real-world tasks . arXiv preprint arXiv:2606.29537 . Cited by: §4",
+      "url": "https://arxiv.org/html/2610.06647v3#S4.p1.1"
+    },
+    {
+      "href": "#S4.p2.1",
+      "text": "§4",
+      "section": "References",
+      "context": "Zhang et al. (2026a) H. Zhang, M. Liu, S. Zhang, S. Han, J. Hu, Z. Jin, Y. Zhang, S. Diao, X. Lu, B. Xu, et al. Prorl agent: rollout-as-a-service for rl training of multi-turn llm agents . arXiv preprint arXiv:2603.18815 . Cited by: §4",
+      "url": "https://arxiv.org/html/2610.06647v3#S4.p2.1"
+    },
+    {
+      "href": "#S1.p1.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Zhang et al. (2026b) S. Zhang, Y. Dong, J. Zhang, J. Kautz, B. Catanzaro, A. Tao, Q. Wu, Z. Yu, and G. Liu Nemotron-research-tool-n1: exploring tool-using language models with reinforced reasoning . In International Conference on Learning Representations , Vol. 2026 , pp. 91437–91453 . Cited by: §1",
+      "url": "https://arxiv.org/html/2610.06647v3#S1.p1.1"
+    },
+    {
+      "href": "#S4.p1.1",
+      "text": "§4",
+      "section": "References",
+      "context": "Zhang et al. (2024) S. Zhang, J. Zhang, J. Liu, L. Song, C. Wang, R. Krishna, and Q. Wu Offline training of language model agents with functions as learnable weights . arXiv preprint arXiv:2402.11359 . Cited by: §4",
+      "url": "https://arxiv.org/html/2610.06647v3#S4.p1.1"
+    },
+    {
+      "href": "#S1.p2.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Zhao et al. (2024) J. Zhao, Z. Zhang, B. Chen, Z. Wang, A. Anandkumar, and Y. Tian Galore: memory-efficient llm training by gradient low-rank projection . arXiv preprint arXiv:2403.03507 . Cited by: §1",
+      "url": "https://arxiv.org/html/2610.06647v3#S1.p2.1"
+    },
+    {
+      "href": "#S4.p3.1",
+      "text": "§4",
+      "section": "References",
+      "context": "Zhao et al. (2024) J. Zhao, Z. Zhang, B. Chen, Z. Wang, A. Anandkumar, and Y. Tian Galore: memory-efficient llm training by gradient low-rank projection . arXiv preprint arXiv:2403.03507 . Cited by: §1 , §4",
+      "url": "https://arxiv.org/html/2610.06647v3#S4.p3.1"
+    },
+    {
+      "href": "#S1.p2.1",
+      "text": "§1",
+      "section": "References",
+      "context": "Zhao et al. (2023) Y. Zhao, A. Gu, R. Varma, L. Luo, C. Huang, M. Xu, L. Wright, H. Shojanazeri, M. Ott, S. Shleifer, et al. Pytorch fsdp: experiences on scaling fully sharded data parallel . arXiv preprint arXiv:2304.11277 . Cited by: §1",
+      "url": "https://arxiv.org/html/2610.06647v3#S1.p2.1"
+    },
+    {
+      "href": "#S4.p2.1",
+      "text": "§4",
+      "section": "References",
+      "context": "Zhao et al. (2023) Y. Zhao, A. Gu, R. Varma, L. Luo, C. Huang, M. Xu, L. Wright, H. Shojanazeri, M. Ott, S. Shleifer, et al. Pytorch fsdp: experiences on scaling fully sharded data parallel . arXiv preprint arXiv:2304.11277 . Cited by: §1 , §4",
+      "url": "https://arxiv.org/html/2610.06647v3#S4.p2.1"
+    },
+    {
+      "href": "https://proceedings.mlsys.org/paper_files/paper/2025/file/437bc4ccafd3fc6d4289bd10940be42b-Paper-Conference.pdf",
+      "text": "Link",
+      "section": "References",
+      "context": "Zhu et al. (2025) H. Zhu, Z. Zhang, W. Cong, X. Liu, S. Park, V. Chandra, B. Long, D. Z. Pan, Z. Wang, and J. Lee APOLLO: sgd-like memory, adamw-level performance . In Proceedings of Machine Learning and Systems , M. Zaharia, G. Joshi, and Y. Lin (Eds.) , Vol. 7 , pp. . External Links: Link",
+      "url": "https://proceedings.mlsys.org/paper_files/paper/2025/file/437bc4ccafd3fc6d4289bd10940be42b-Paper-Conference.pdf"
+    },
+    {
+      "href": "#S4.p3.1",
+      "text": "§4",
+      "section": "References",
+      "context": "Zhu et al. (2025) H. Zhu, Z. Zhang, W. Cong, X. Liu, S. Park, V. Chandra, B. Long, D. Z. Pan, Z. Wang, and J. Lee APOLLO: sgd-like memory, adamw-level performance . In Proceedings of Machine Learning and Systems , M. Zaharia, G. Joshi, and Y. Lin (Eds.) , Vol. 7 , pp. . External Links: Link Cited by: §4",
+      "url": "https://arxiv.org/html/2610.06647v3#S4.p3.1"
+    },
+    {
+      "href": "#S2.E5",
+      "text": "5",
+      "section": "A.1 From policy KL to changes in token scores",
+      "context": "Equation 5",
+      "url": "https://arxiv.org/html/2610.06647v3#S2.E5"
+    },
+    {
+      "href": "#S2.E6",
+      "text": "6",
+      "section": "A.1 From policy KL to changes in token scores",
+      "context": "Equation 5 describes how KL changes with the update scale; Equation 6",
+      "url": "https://arxiv.org/html/2610.06647v3#S2.E6"
+    },
+    {
+      "href": "#S2.E5",
+      "text": "5",
+      "section": "Measure the change along an update.",
+      "context": "",
+      "url": "https://arxiv.org/html/2610.06647v3#S2.E5"
+    },
+    {
+      "href": "#S2.E5",
+      "text": "5",
+      "section": "Obtain Equation 5 : the quadratic dependence on step size.",
+      "context": "Dropping the higher-order remainder gives Equation 5",
+      "url": "https://arxiv.org/html/2610.06647v3#S2.E5"
+    },
+    {
+      "href": "#S2.E6",
+      "text": "6",
+      "section": "Obtain Equation 5 : the quadratic dependence on step size.",
+      "context": "",
+      "url": "https://arxiv.org/html/2610.06647v3#S2.E6"
+    },
+    {
+      "href": "#A1.E10",
+      "text": "10",
+      "section": "Obtain Equation 6 : express the curvature using token scores.",
+      "context": "The subtraction reflects that probabilities depend on relative scores: a token gains probability when its score increases faster than the probability-weighted average score. Substituting into Equation 10",
+      "url": "https://arxiv.org/html/2610.06647v3#A1.E10"
+    },
+    {
+      "href": "#S2.E6",
+      "text": "6",
+      "section": "Obtain Equation 6 : express the curvature using token scores.",
+      "context": "where p ⁡ ( s ) p(s) collects the current token probabilities. This variance measures how differently the scores change, weighted by those probabilities. In particular, adding the same amount to every score leaves softmax probabilities unchanged; correspondingly, identical score-change rates give zero curvature. Substituting this expression into the definition of q ⁡ ( D ) q(D) above gives exactly Equation 6",
+      "url": "https://arxiv.org/html/2610.06647v3#S2.E6"
+    },
+    {
+      "href": "#A1.SS1",
+      "text": "A.1",
+      "section": "A.2 Scaling an update to a KL budget",
+      "context": "The key is that predicted KL scales with the square of the update multiplier, as derived in Appendix A.1",
+      "url": "https://arxiv.org/html/2610.06647v3#A1.SS1"
+    },
+    {
+      "href": "#S2.E7",
+      "text": "7",
+      "section": "A.2 Scaling an update to a KL budget",
+      "context": "ey is that predicted KL scales with the square of the update multiplier, as derived in Appendix A.1 . To match the budget, we therefore solve α 2 ​ q ​ ( D ) = δ \\alpha^{2}q(D)=\\delta , giving α = δ / q ⁡ ( D ) \\alpha=\\sqrt{\\delta/q(D)} for finite positive q ⁡ ( D ) q(D) . For example, if the proposal predicts four times the allowed KL, halving the update brings its predicted KL down to the budget. Conversely, if it predicts one quarter of the budget, doubling the update would reach the budget. We cap this enlargement at a chosen maximum multiplier α max > 0 \\alpha_{\\max}>0 , giving Equation 7",
+      "url": "https://arxiv.org/html/2610.06647v3#S2.E7"
+    },
+    {
+      "href": "#bib.bib21",
+      "text": "Yu et al., 2026",
+      "section": "C.1 Mathematical reasoning",
+      "context": "We construct DAPO-Math-7.5K from the DAPO-Math-17k training split, using the corresponding release on Hugging Face ( Yu et al., 2026",
+      "url": "https://arxiv.org/html/2610.06647v3#bib.bib21"
+    },
+    {
+      "href": "#bib.bib25",
+      "text": "Lightman et al., 2023",
+      "section": "C.1 Mathematical reasoning",
+      "context": "Evaluation uses all 500 problems in the test split of MATH-500 ( Lightman et al., 2023",
+      "url": "https://arxiv.org/html/2610.06647v3#bib.bib25"
+    },
+    {
+      "href": "#A3.T3",
+      "text": "3",
+      "section": "C.2 Reasoning-Gym Hard mixture",
+      "context": "For each task, we generate 5,000 candidate training problems and 25 evaluation problems at the default difficulty. We remove duplicate training questions and exclude training–evaluation overlaps; Table 3",
+      "url": "https://arxiv.org/html/2610.06647v3#A3.T3"
+    },
+    {
+      "href": "#A4.T4",
+      "text": "4",
+      "section": "D.1 Main mathematical-reasoning experiments",
+      "context": "Table 4",
+      "url": "https://arxiv.org/html/2610.06647v3#A4.T4"
+    },
+    {
+      "href": "#S3.T1",
+      "text": "1",
+      "section": "D.1 Main mathematical-reasoning experiments",
+      "context": "Table 4 summarizes the settings for Table 1",
+      "url": "https://arxiv.org/html/2610.06647v3#S3.T1"
+    },
+    {
+      "href": "#S3.F4",
+      "text": "4",
+      "section": "D.2 Long-horizon 27B training",
+      "context": "The Reasoning-Gym run in Figure 4",
+      "url": "https://arxiv.org/html/2610.06647v3#S3.F4"
+    },
+    {
+      "href": "#S3.T2",
+      "text": "2",
+      "section": "D.4 LoRA",
+      "context": "Table 2",
+      "url": "https://arxiv.org/html/2610.06647v3#S3.T2"
+    },
+    {
+      "href": "#A4.T4",
+      "text": "4",
+      "section": "D.4 LoRA",
+      "context": "Table 2 uses rank 256 and Qwen2.5-Math-1.5B, with three runs per method. LoRA uses AdamW with constant learning rate 2 × 10 − 4 2\\times 10^{-4} , moment decay ( 0.9 , 0.95 ) (0.9,0.95) , epsilon 10 − 8 10^{-8} , and zero weight decay. Both methods use 128 prompts with one response each, microbatch size one, and a 4,096-token context limit; LoGRA follows Table 4",
+      "url": "https://arxiv.org/html/2610.06647v3#A4.T4"
+    }
+  ],
+  "note": "Extracted HTML text; equations and table formatting may be imperfect. No PDF extraction was attempted."
+}

@@ -1,0 +1,31 @@
+Weekly digest evaluation
+
+Primary outcome: mean relevance@7, using ratings 0 / 0.5 / 1.
+Seven paired weekly tasks; one run per agent and week. All 35 digests completed.
+
+| System | Mean | SD across weeks | Approx. 95% CI | Interesting / potential / no (49 slots) |
+|---|---:|---:|---|---|
+| BM25 | 0.490 | 0.259 | [0.306, 0.653] | 14 / 20 / 15 |
+| E5 | 0.469 | 0.136 | [0.388, 0.571] | 13 / 20 / 16 |
+| Agent 1 | 0.551 | 0.209 | [0.408, 0.694] | 17 / 20 / 12 |
+| Agent 2 | 0.571 | 0.149 | [0.469, 0.673] | 17 / 22 / 10 |
+| Agent 3 | 0.602 | 0.154 | [0.490, 0.704] | 18 / 23 / 8 |
+
+Paired effects (first system minus second):
+BM25 - E5: +0.020; 95% CI [-0.13265306122448983, 0.17346938775510212]; p=0.89062; Holm p=1.00000.
+BM25 - Agent 1: -0.061; 95% CI [-0.27551020408163274, 0.14285714285714285]; p=0.65625; Holm p=1.00000.
+BM25 - Agent 2: -0.082; 95% CI [-0.22448979591836743, 0.05102040816326525]; p=0.43750; Holm p=1.00000.
+BM25 - Agent 3: -0.112; 95% CI [-0.2551020408163265, 0.010204081632653073]; p=0.37500; Holm p=1.00000.
+E5 - Agent 1: -0.082; 95% CI [-0.26530612244897955, 0.11224489795918363]; p=0.50000; Holm p=1.00000.
+E5 - Agent 2: -0.102; 95% CI [-0.23469387755102034, 0.010204081632653073]; p=0.25000; Holm p=1.00000.
+E5 - Agent 3: -0.133; 95% CI [-0.2448979591836734, -0.030612244897959107]; p=0.12500; Holm p=1.00000.
+Agent 1 - Agent 2: -0.020; 95% CI [-0.11224489795918374, 0.08163265306122447]; p=0.87500; Holm p=1.00000.
+Agent 1 - Agent 3: -0.051; 95% CI [-0.15306122448979603, 0.04081632653061229]; p=0.50000; Holm p=1.00000.
+Agent 2 - Agent 3: -0.031; 95% CI [-0.09183673469387754, 0.030612244897959218]; p=0.56250; Holm p=1.00000.
+
+Resources per digest (includes screening and reviewer/check calls):
+Agent 1: {'model_calls': 22.571428571428573, 'tool_calls': 13.428571428571429, 'input_tokens': 1057335.5714285714, 'output_tokens': 10880.857142857143, 'wall_seconds': 354.61371100028293, 'estimated_api_cost_usd': None}
+Agent 2: {'model_calls': 25.0, 'tool_calls': 15.0, 'input_tokens': 1086080.2857142857, 'output_tokens': 12418.57142857143, 'wall_seconds': 385.4181779345672, 'estimated_api_cost_usd': None}
+Agent 3: {'model_calls': 23.857142857142858, 'tool_calls': 14.0, 'input_tokens': 1033464.8571428572, 'output_tokens': 14192.0, 'wall_seconds': 412.8420308151399, 'estimated_api_cost_usd': None}
+
+This is exploratory, personal-relevance evaluation for one annotator. The primary metric was in the run manifest; the all-pairs testing family was fixed in this analysis turn, not preregistered before collection. Weeks are the units, not the 49 slots or 122 distinct papers. Intervals enumerate all 823543 bootstrap resamples of seven whole weeks, percentile 95%; pairwise intervals are pointwise, not simultaneous. Tests enumerate all 128 paired sign flips, using absolute mean differences; validity requires independent weeks and exchangeability of the signs under the null. Adjacent weeks may be dependent. No normality assumption or normality pretest is used. Holm correction covers all ten comparisons. With seven weeks the minimum two-sided p is 0.015625, so this ten-comparison Holm procedure cannot reject any pair at 0.05. Non-significance does not imply equivalence. Small-sample bootstrap intervals may be optimistic. One model run per task cannot estimate model randomness separately. Dates overlap development exposure and two pooled papers had prior labels, so this is not a pristine holdout. Only selected papers were labeled: full-corpus recall cannot be calculated. The intervals generalize to similar weeks only under the sampling assumptions, not to other researchers. No verified gpt-6-sol pricing is recorded, so dollar cost remains unknown; token use is measured. Agent wall times exclude shared corpus collection/ranking and are affected by concurrency. Baseline timing was not recorded, and is not set to zero.

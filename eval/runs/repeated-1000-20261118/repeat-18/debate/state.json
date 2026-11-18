@@ -1,0 +1,2734 @@
+{
+  "pipeline_version": "react-v2",
+  "profile": {
+    "user_id": "dmitrii",
+    "summary": "LLM research focused on optimization, low-rank and memory-efficient training, spectral regularization, parameter-efficient fine-tuning, and an AI research-digest agent.",
+    "topics": [
+      {
+        "name": "Low-rank pretraining and compressibility",
+        "keywords": [
+          "low-rank pretraining",
+          "low-rank factorization",
+          "model compressibility",
+          "effective rank",
+          "singular-value spectrum"
+        ],
+        "source_id": "description",
+        "evidence_quote": "A central question is whether training can make a model easier to compress with low-rank factorization while preserving its quality."
+      },
+      {
+        "name": "Spectral regularization and matrix optimization",
+        "keywords": [
+          "spectral regularization",
+          "spectral weight decay",
+          "nuclear-norm regularization",
+          "proximal methods",
+          "Newton-Schulz approximation"
+        ],
+        "source_id": "description",
+        "evidence_quote": "I am interested in spectral weight decay, nuclear-norm regularization, proximal methods, and Newton-Schulz approximations."
+      },
+      {
+        "name": "Generalization and memorization under label noise",
+        "keywords": [
+          "generalization",
+          "memorization",
+          "label noise",
+          "noisy labels",
+          "neural network training"
+        ],
+        "source_id": "description",
+        "evidence_quote": "Related questions concern generalization and memorization under label noise."
+      },
+      {
+        "name": "Optimization for LoRA and low-rank parameterizations",
+        "keywords": [
+          "LoRA",
+          "low-rank adaptation",
+          "Muon optimizer",
+          "factorized weights",
+          "rebalancing",
+          "convergence analysis"
+        ],
+        "source_id": "description",
+        "evidence_quote": "Another research direction is optimization for LoRA and other low-rank parameterizations."
+      },
+      {
+        "name": "Memory-efficient LLM pretraining",
+        "keywords": [
+          "memory-efficient LLM pretraining",
+          "low-rank gradients",
+          "optimizer-state compression",
+          "GaLore",
+          "Frugal",
+          "FP8 optimizer states"
+        ],
+        "source_id": "description",
+        "evidence_quote": "I also work on memory-efficient LLM pretraining."
+      },
+      {
+        "name": "Training-efficiency tradeoffs at scale",
+        "keywords": [
+          "training memory",
+          "throughput",
+          "communication cost",
+          "model quality",
+          "scaling behavior",
+          "LLM scale"
+        ],
+        "source_id": "description",
+        "evidence_quote": "I am interested in their tradeoffs between model quality, training memory, throughput, and communication cost, including how those tradeoffs change with model scale."
+      },
+      {
+        "name": "AI research digest agents and paper retrieval",
+        "keywords": [
+          "research digest agent",
+          "context management",
+          "structured LLM decisions",
+          "tool orchestration",
+          "paper retrieval",
+          "relevance ranking"
+        ],
+        "source_id": "description",
+        "evidence_quote": "Relevant work includes explicit context management, structured LLM decisions, application-controlled tools, and paper retrieval and relevance ranking using lexical or embedding-based methods."
+      }
+    ],
+    "goals": [
+      "Understand how optimization and regularization affect singular-value spectra and the effective rank of weight matrices.",
+      "Determine whether training can improve low-rank compressibility while preserving model quality.",
+      "Understand the geometry and practical language-model fine-tuning behavior of LoRA and other low-rank updates.",
+      "Evaluate tradeoffs among model quality, memory, throughput, and communication cost across model scales.",
+      "Build an AI research digest agent with a handwritten harness."
+    ],
+    "exclusions": [],
+    "arxiv_categories": [
+      "cs.LG",
+      "cs.CL",
+      "stat.ML",
+      "cs.AI",
+      "cs.IR"
+    ],
+    "open_questions": [],
+    "sources": {
+      "description": "I am an LLM researcher working on optimization and efficient training of neural networks. My current research includes low-rank pretraining, spectral regularization, parameter-efficient fine-tuning, and reducing the memory cost of language-model training.\n\nI study how optimization and regularization affect the singular-value spectra and effective rank of weight matrices. I am interested in spectral weight decay, nuclear-norm regularization, proximal methods, and Newton-Schulz approximations. A central question is whether training can make a model easier to compress with low-rank factorization while preserving its quality. Related questions concern generalization and memorization under label noise.\n\nAnother research direction is optimization for LoRA and other low-rank parameterizations. Relevant topics include Muon-style matrix updates, optimization of factorized weights, rebalancing, spectral constraints, and convergence analysis. I want to understand both the geometry of these updates and their practical behavior when fine-tuning language models.\n\nI also work on memory-efficient LLM pretraining. Relevant methods include low-rank gradient and optimizer-state representations, GaLore, Frugal-style methods, and low-precision optimizer states such as FP8. I am interested in their tradeoffs between model quality, training memory, throughput, and communication cost, including how those tradeoffs change with model scale.\n\nAs a secondary current interest, I am building an AI research digest agent with a handwritten harness. Relevant work includes explicit context management, structured LLM decisions, application-controlled tools, and paper retrieval and relevance ranking using lexical or embedding-based methods.\n\nI have not specified hard topic exclusions for this digest."
+    },
+    "model": null,
+    "schema_version": 1
+  },
+  "config": {
+    "categories": [
+      "cs.LG",
+      "cs.CL",
+      "stat.ML",
+      "cs.AI",
+      "cs.IR"
+    ],
+    "date_from": "2026-09-28",
+    "date_to": "2026-11-15",
+    "model": "gpt-6-sol",
+    "shortlist_size": 30,
+    "batch_size": 10,
+    "expansion_size": 10,
+    "max_candidates": null,
+    "digest_size": 10,
+    "max_steps": null,
+    "max_llm_calls": null,
+    "max_inspections": null,
+    "max_expansions": null,
+    "page_size": 100,
+    "refresh_metadata": false,
+    "max_context_chars": null,
+    "new_only": false,
+    "x_enabled": false,
+    "variant": "debate"
+  },
+  "phase": "react",
+  "screened": {
+    "2610.23343": {
+      "paper_id": "2610.23343",
+      "label": "relevant",
+      "reason": "Directly studies LoRA rank, trace-norm regularization, optimization, and generalization.",
+      "evidence_quote": "Trace-norm regularization then forces the optimizer to pick a low-rank matrix among all matrices that produce the same observed output."
+    },
+    "2611.06598": {
+      "paper_id": "2611.06598",
+      "label": "relevant",
+      "reason": "Connects LoRA compressibility, singular spectra, model behavior, and corrupted training data.",
+      "evidence_quote": "The damage is unevenly concentrated in the adapter's leading singular directions, which compression appears to filter."
+    },
+    "2610.08049": {
+      "paper_id": "2610.08049",
+      "label": "relevant",
+      "reason": "Studies the geometry and optimization of factorized LoRA updates in language-model fine-tuning.",
+      "evidence_quote": "In this paper, we propose a new Riemannian metric that is specifically tailored to LoRA to close the gap to full fine-tuning at the weight level."
+    },
+    "2611.17191": {
+      "paper_id": "2611.17191",
+      "label": "relevant",
+      "reason": "Uses effective-rank regularization to improve LoRA fine-tuning and retention.",
+      "evidence_quote": "Therefore, we propose training mechanisms that optimize the original objective while maximizing adapter effective rank."
+    },
+    "2610.32142": {
+      "paper_id": "2610.32142",
+      "label": "relevant",
+      "reason": "Analyzes initialization and asymmetric learning rates for stable LoRA optimization in LLM fine-tuning.",
+      "evidence_quote": "In practical LLM fine-tuning, this non-vanishing noise can limit the performance gains expected from LoRA+ style asymmetric LRs."
+    },
+    "2609.36692": {
+      "paper_id": "2609.36692",
+      "label": "relevant",
+      "reason": "Addresses spectral matrix optimization, Newton-Schulz approximations, and pretraining efficiency.",
+      "evidence_quote": "To enable large-scale training, NormPre-G uses Newton-Schulz iterations and NormPre-L employs randomized sketching to approximate the leading interaction eigenspace."
+    },
+    "2609.34264": {
+      "paper_id": "2609.34264",
+      "label": "relevant",
+      "reason": "Proposes a geometry-aware optimizer for low-rank LoRA factors.",
+      "evidence_quote": "We propose a novel optimizer for low-rank adaptation (LoRA) that explicitly incorporates the gauge symmetry of low-rank factorization."
+    },
+    "2609.37027": {
+      "paper_id": "2609.37027",
+      "label": "relevant",
+      "reason": "Studies LoRA gradient geometry and the quality–optimizer-memory tradeoff.",
+      "evidence_quote": "GDLoRA incorporates complementary normal gradients without increasing standard LoRA's optimizer-state memory budget under matched adapter and optimizer configurations."
+    },
+    "2610.15965": {
+      "paper_id": "2610.15965",
+      "label": "uncertain",
+      "reason": "Relevant to pretraining regularization and GPU-time tradeoffs, but not clearly to low-rank or memory-efficient methods.",
+      "evidence_quote": "In particular, smaller-than-typical batch sizes can require prohibitively long sequential training, motivating to treat GPUs and time as separate resources."
+    },
+    "2610.32854": {
+      "paper_id": "2610.32854",
+      "label": "relevant",
+      "reason": "Investigates the statistical geometry and observable low-rank directions of LoRA.",
+      "evidence_quote": "This covariance determines which low-rank perturbations are statistically observable."
+    },
+    "2610.24816": {
+      "paper_id": "2610.24816",
+      "label": "relevant",
+      "reason": "Studies the training-system costs and performance of LoRA fine-tuning for LLMs.",
+      "evidence_quote": "We evaluate it on two Qualcomm Snapdragon platforms using four LLMs from the Qwen and Llama families."
+    },
+    "2610.05318": {
+      "paper_id": "2610.05318",
+      "label": "relevant",
+      "reason": "Examines LoRA optimization and model accuracy under hardware constraints, including Muon.",
+      "evidence_quote": "Across Llama-3.2-1B-Instruct and Llama-3-8B with both Muon and AdamW, input reshaping improves analog LoRA fine-tuning under noisy MVM computation."
+    },
+    "2610.23571": {
+      "paper_id": "2610.23571",
+      "label": "relevant",
+      "reason": "Directly connects Muon's spectral geometry to structured model compressibility.",
+      "evidence_quote": "To reconcile Muon's optimization performance with structured compressibility, we introduce Budget Muon (BMuon), which modifies Muon's spectral geometry so that hidden channels across blocks compete for a shared allocation budget."
+    },
+    "2610.06542": {
+      "paper_id": "2610.06542",
+      "label": "relevant",
+      "reason": "Analyzes LoRA optimization geometry and how adapter rank affects fine-tuning.",
+      "evidence_quote": "Our central insight is that the appropriate adapter rank should depend on the quality of the data-induced optimization geometry, rather than on the model alone."
+    },
+    "2610.01620": {
+      "paper_id": "2610.01620",
+      "label": "relevant",
+      "reason": "Addresses low-rank gradient optimization and memory–communication tradeoffs in foundation-model training.",
+      "evidence_quote": "Experiments on vision and language tasks, including federated pre-training, show that"
+    },
+    "2610.02283": {
+      "paper_id": "2610.02283",
+      "label": "relevant",
+      "reason": "Studies singular-mode concentration and effective capacity in low-rank adaptation.",
+      "evidence_quote": "update energy becomes concentrated in a small subset of singular modes, leaving much of the available low-rank space underutilized."
+    },
+    "2611.13331": {
+      "paper_id": "2611.13331",
+      "label": "relevant",
+      "reason": "Analyzes rank-dependent LoRA optimization, convergence, and client overhead.",
+      "evidence_quote": "the adaptation rank $r$ directly governs the signal-to-noise ratio (SNR) of the perturbed gradients."
+    },
+    "2610.06647": {
+      "paper_id": "2610.06647",
+      "label": "relevant",
+      "reason": "Uses low-rank gradient sketches to reduce LLM training memory while measuring performance.",
+      "evidence_quote": "LoGRA reduces average training memory usage by up to 45.7% across reasoning tasks without compromising performance."
+    },
+    "2609.40148": {
+      "paper_id": "2609.40148",
+      "label": "relevant",
+      "reason": "Studies how learning-rate and batch-size schedules affect LLM pretraining loss and compute scaling.",
+      "evidence_quote": "Controlled nanoGPT experiments show that (1) learning-rate and batch-size schedules with matched $B/η$ paths are nearly equivalent in intrinsic time"
+    },
+    "2610.17730": {
+      "paper_id": "2610.17730",
+      "label": "relevant",
+      "reason": "Analyzes LoRA's factorized optimization geometry and targets unused spectral gradient directions.",
+      "evidence_quote": "factorized updates are confined to the tangent space of the current low-rank factors, leaving gradient components outside this space unexploited."
+    },
+    "2611.12054": {
+      "paper_id": "2611.12054",
+      "label": "irrelevant",
+      "reason": "The low-rank and low-precision methods target Gaussian-process kernel computation, not neural-network or LLM training.",
+      "evidence_quote": "We develop a scalable low-rank GP training approach"
+    },
+    "2610.22794": {
+      "paper_id": "2610.22794",
+      "label": "relevant",
+      "reason": "Directly addresses low-rank gradients and optimizer efficiency in LLM pretraining.",
+      "evidence_quote": "we propose Ori, a novel low-rank optimizer for training LLMs"
+    },
+    "2611.14397": {
+      "paper_id": "2611.14397",
+      "label": "relevant",
+      "reason": "Studies LoRA's optimization geometry and the retention–adaptation tradeoff, with language-task experiments.",
+      "evidence_quote": "the regularization parameter controls the balance between retention and adaptation"
+    },
+    "2610.31728": {
+      "paper_id": "2610.31728",
+      "label": "relevant",
+      "reason": "Analyzes Muon's preconditioning and gradient-noise geometry, with an LLM pretraining study.",
+      "evidence_quote": "we study how gradient noise geometry shapes Muon's preconditioning benefits"
+    },
+    "2611.08082": {
+      "paper_id": "2611.08082",
+      "label": "relevant",
+      "reason": "Evaluates low-rank LLM compressibility and the model-size versus quality tradeoff, though compression is post-training.",
+      "evidence_quote": "pushes the Pareto frontier between model size and performance"
+    },
+    "2610.04249": {
+      "paper_id": "2610.04249",
+      "label": "relevant",
+      "reason": "Directly studies how optimizers affect singular-mode dynamics and low-rank bias.",
+      "evidence_quote": "optimizer geometry and depth jointly govern this behavior through a common framework for singular mode dynamics"
+    },
+    "2610.10965": {
+      "paper_id": "2610.10965",
+      "label": "relevant",
+      "reason": "Directly addresses Muon, Newton–Schulz spectral operations, and effective rank during language-model training.",
+      "evidence_quote": "tracking the effective rank of gradient, update, and weight matrices"
+    },
+    "2611.05022": {
+      "paper_id": "2611.05022",
+      "label": "relevant",
+      "reason": "Analyzes how finite Newton–Schulz depth changes rank selection in matrix-factorization training.",
+      "evidence_quote": "the number of Newton-Schulz steps can change the rank selected during the early stages of training"
+    },
+    "2610.19700": {
+      "paper_id": "2610.19700",
+      "label": "relevant",
+      "reason": "Studies singular directions and gradient subspaces in rank-constrained LoRA fine-tuning.",
+      "evidence_quote": "retaining only the top singular components achieves the best performance"
+    },
+    "2610.04507": {
+      "paper_id": "2610.04507",
+      "label": "relevant",
+      "reason": "Directly connects LoRA rank, noisy-label memorization, generalization, and language-model fine-tuning.",
+      "evidence_quote": "We quantify this relation under label noise on four vision backbones and a 7B language model"
+    }
+  },
+  "admitted_ids": [
+    "2610.23343",
+    "2611.06598",
+    "2610.08049",
+    "2611.17191",
+    "2610.32142",
+    "2609.36692",
+    "2609.34264",
+    "2609.37027",
+    "2610.15965",
+    "2610.32854",
+    "2610.24816",
+    "2610.05318",
+    "2610.23571",
+    "2610.06542",
+    "2610.01620",
+    "2610.02283",
+    "2611.13331",
+    "2610.06647",
+    "2609.40148",
+    "2610.17730",
+    "2611.12054",
+    "2610.22794",
+    "2611.14397",
+    "2610.31728",
+    "2611.08082",
+    "2610.04249",
+    "2610.10965",
+    "2611.05022",
+    "2610.19700",
+    "2610.04507"
+  ],
+  "observations": {},
+  "x_collector": "arc-v2",
+  "pending": null,
+  "screen_target": 30,
+  "llm_calls": 5,
+  "steps": 2,
+  "inspections": 0,
+  "expansions": 0,
+  "fetched_count": 1000,
+  "candidate_count": 1000,
+  "retrieval_reranking": {
+    "model": "intfloat/e5-small-v2",
+    "revision": "ffb93f3bd4047442299a41ebb6fa998a38507c52",
+    "device": "cpu",
+    "pool_size": 200,
+    "max_tokens": 512,
+    "profile_source": "positive topic names and keywords (profile.ranking_text)",
+    "latency_seconds": 9.451197875023354,
+    "profile_tokens_before_truncation": 193,
+    "profile_truncated": false,
+    "truncated_paper_ids": [],
+    "ranking": [
+      {
+        "paper_id": "2610.23343",
+        "bm25_rank": 3,
+        "bm25_score": 58.249084998039436,
+        "e5_rank": 1,
+        "e5_score": 0.8972693681716919
+      },
+      {
+        "paper_id": "2611.06598",
+        "bm25_rank": 69,
+        "bm25_score": 35.899869951426965,
+        "e5_rank": 2,
+        "e5_score": 0.888921320438385
+      },
+      {
+        "paper_id": "2610.08049",
+        "bm25_rank": 23,
+        "bm25_score": 44.48419422049728,
+        "e5_rank": 3,
+        "e5_score": 0.8883365392684937
+      },
+      {
+        "paper_id": "2611.17191",
+        "bm25_rank": 101,
+        "bm25_score": 30.391002724465146,
+        "e5_rank": 4,
+        "e5_score": 0.8866685628890991
+      },
+      {
+        "paper_id": "2610.32142",
+        "bm25_rank": 99,
+        "bm25_score": 30.485689723339046,
+        "e5_rank": 5,
+        "e5_score": 0.8850754499435425
+      },
+      {
+        "paper_id": "2609.36692",
+        "bm25_rank": 30,
+        "bm25_score": 43.608444769507535,
+        "e5_rank": 6,
+        "e5_score": 0.8847731947898865
+      },
+      {
+        "paper_id": "2609.34264",
+        "bm25_rank": 59,
+        "bm25_score": 37.337310688243655,
+        "e5_rank": 7,
+        "e5_score": 0.8843455910682678
+      },
+      {
+        "paper_id": "2609.37027",
+        "bm25_rank": 32,
+        "bm25_score": 43.262365134634024,
+        "e5_rank": 8,
+        "e5_score": 0.8828323483467102
+      },
+      {
+        "paper_id": "2610.15965",
+        "bm25_rank": 77,
+        "bm25_score": 32.700173473259426,
+        "e5_rank": 9,
+        "e5_score": 0.8803129196166992
+      },
+      {
+        "paper_id": "2610.32854",
+        "bm25_rank": 60,
+        "bm25_score": 37.17996516486454,
+        "e5_rank": 10,
+        "e5_score": 0.8798595666885376
+      },
+      {
+        "paper_id": "2610.24816",
+        "bm25_rank": 62,
+        "bm25_score": 36.75981611592269,
+        "e5_rank": 11,
+        "e5_score": 0.8798236846923828
+      },
+      {
+        "paper_id": "2610.05318",
+        "bm25_rank": 5,
+        "bm25_score": 53.65489344193628,
+        "e5_rank": 12,
+        "e5_score": 0.8789776563644409
+      },
+      {
+        "paper_id": "2610.23571",
+        "bm25_rank": 7,
+        "bm25_score": 53.261247822612155,
+        "e5_rank": 13,
+        "e5_score": 0.8778202533721924
+      },
+      {
+        "paper_id": "2610.06542",
+        "bm25_rank": 75,
+        "bm25_score": 33.596731622633584,
+        "e5_rank": 14,
+        "e5_score": 0.8775305151939392
+      },
+      {
+        "paper_id": "2610.01620",
+        "bm25_rank": 29,
+        "bm25_score": 43.682689085307125,
+        "e5_rank": 15,
+        "e5_score": 0.8769563436508179
+      },
+      {
+        "paper_id": "2610.02283",
+        "bm25_rank": 61,
+        "bm25_score": 36.85478112619966,
+        "e5_rank": 16,
+        "e5_score": 0.8765089511871338
+      },
+      {
+        "paper_id": "2611.13331",
+        "bm25_rank": 25,
+        "bm25_score": 44.0616434390877,
+        "e5_rank": 17,
+        "e5_score": 0.8763941526412964
+      },
+      {
+        "paper_id": "2610.06647",
+        "bm25_rank": 165,
+        "bm25_score": 24.400272234614825,
+        "e5_rank": 18,
+        "e5_score": 0.8761475682258606
+      },
+      {
+        "paper_id": "2609.40148",
+        "bm25_rank": 80,
+        "bm25_score": 32.21711052727315,
+        "e5_rank": 19,
+        "e5_score": 0.8759818077087402
+      },
+      {
+        "paper_id": "2610.17730",
+        "bm25_rank": 44,
+        "bm25_score": 40.76250893922663,
+        "e5_rank": 20,
+        "e5_score": 0.8756999373435974
+      },
+      {
+        "paper_id": "2611.12054",
+        "bm25_rank": 118,
+        "bm25_score": 28.64262204639279,
+        "e5_rank": 21,
+        "e5_score": 0.8756264448165894
+      },
+      {
+        "paper_id": "2610.22794",
+        "bm25_rank": 66,
+        "bm25_score": 36.13970779973776,
+        "e5_rank": 22,
+        "e5_score": 0.8754353523254395
+      },
+      {
+        "paper_id": "2611.14397",
+        "bm25_rank": 70,
+        "bm25_score": 34.74459520002662,
+        "e5_rank": 23,
+        "e5_score": 0.875102162361145
+      },
+      {
+        "paper_id": "2610.31728",
+        "bm25_rank": 68,
+        "bm25_score": 35.915290801973775,
+        "e5_rank": 24,
+        "e5_score": 0.8749532103538513
+      },
+      {
+        "paper_id": "2611.08082",
+        "bm25_rank": 67,
+        "bm25_score": 36.00262843850101,
+        "e5_rank": 25,
+        "e5_score": 0.8746376037597656
+      },
+      {
+        "paper_id": "2610.04249",
+        "bm25_rank": 6,
+        "bm25_score": 53.56284484301824,
+        "e5_rank": 26,
+        "e5_score": 0.8745073080062866
+      },
+      {
+        "paper_id": "2610.10965",
+        "bm25_rank": 11,
+        "bm25_score": 48.26818790943404,
+        "e5_rank": 27,
+        "e5_score": 0.8740523457527161
+      },
+      {
+        "paper_id": "2611.05022",
+        "bm25_rank": 28,
+        "bm25_score": 43.75291798199872,
+        "e5_rank": 28,
+        "e5_score": 0.8740465044975281
+      },
+      {
+        "paper_id": "2610.19700",
+        "bm25_rank": 64,
+        "bm25_score": 36.388772643231306,
+        "e5_rank": 29,
+        "e5_score": 0.8737412095069885
+      },
+      {
+        "paper_id": "2610.04507",
+        "bm25_rank": 54,
+        "bm25_score": 38.386452743310066,
+        "e5_rank": 30,
+        "e5_score": 0.8737043142318726
+      },
+      {
+        "paper_id": "2611.00652",
+        "bm25_rank": 139,
+        "bm25_score": 26.382519073548544,
+        "e5_rank": 31,
+        "e5_score": 0.8730175495147705
+      },
+      {
+        "paper_id": "2611.08414",
+        "bm25_rank": 37,
+        "bm25_score": 42.20330510242616,
+        "e5_rank": 32,
+        "e5_score": 0.8729109764099121
+      },
+      {
+        "paper_id": "2611.07349",
+        "bm25_rank": 35,
+        "bm25_score": 43.03249974470509,
+        "e5_rank": 33,
+        "e5_score": 0.8723891377449036
+      },
+      {
+        "paper_id": "2610.16533",
+        "bm25_rank": 78,
+        "bm25_score": 32.53319370528154,
+        "e5_rank": 34,
+        "e5_score": 0.8716409206390381
+      },
+      {
+        "paper_id": "2609.35297",
+        "bm25_rank": 10,
+        "bm25_score": 48.79715688630205,
+        "e5_rank": 35,
+        "e5_score": 0.8711453676223755
+      },
+      {
+        "paper_id": "2610.33813",
+        "bm25_rank": 197,
+        "bm25_score": 22.115738846664748,
+        "e5_rank": 36,
+        "e5_score": 0.8710576295852661
+      },
+      {
+        "paper_id": "2611.17072",
+        "bm25_rank": 117,
+        "bm25_score": 28.697500481732856,
+        "e5_rank": 37,
+        "e5_score": 0.8709180355072021
+      },
+      {
+        "paper_id": "2610.05800",
+        "bm25_rank": 91,
+        "bm25_score": 31.26841705195749,
+        "e5_rank": 38,
+        "e5_score": 0.8707349300384521
+      },
+      {
+        "paper_id": "2609.40127",
+        "bm25_rank": 16,
+        "bm25_score": 46.4134084932066,
+        "e5_rank": 39,
+        "e5_score": 0.8703287839889526
+      },
+      {
+        "paper_id": "2611.10866",
+        "bm25_rank": 128,
+        "bm25_score": 27.922685774598932,
+        "e5_rank": 40,
+        "e5_score": 0.8701769113540649
+      },
+      {
+        "paper_id": "2611.10248",
+        "bm25_rank": 48,
+        "bm25_score": 39.81504229590034,
+        "e5_rank": 41,
+        "e5_score": 0.8697949647903442
+      },
+      {
+        "paper_id": "2610.06116",
+        "bm25_rank": 14,
+        "bm25_score": 47.13809877789572,
+        "e5_rank": 42,
+        "e5_score": 0.8697912096977234
+      },
+      {
+        "paper_id": "2610.24938",
+        "bm25_rank": 43,
+        "bm25_score": 40.85300073682054,
+        "e5_rank": 43,
+        "e5_score": 0.8689227104187012
+      },
+      {
+        "paper_id": "2610.37647",
+        "bm25_rank": 58,
+        "bm25_score": 37.58939968809834,
+        "e5_rank": 44,
+        "e5_score": 0.8686977624893188
+      },
+      {
+        "paper_id": "2611.13276",
+        "bm25_rank": 147,
+        "bm25_score": 25.73245070381353,
+        "e5_rank": 45,
+        "e5_score": 0.868661642074585
+      },
+      {
+        "paper_id": "2611.00593",
+        "bm25_rank": 84,
+        "bm25_score": 31.98979653258268,
+        "e5_rank": 46,
+        "e5_score": 0.8680464029312134
+      },
+      {
+        "paper_id": "2610.37206",
+        "bm25_rank": 95,
+        "bm25_score": 30.79776677546704,
+        "e5_rank": 47,
+        "e5_score": 0.8677887916564941
+      },
+      {
+        "paper_id": "2611.13534",
+        "bm25_rank": 157,
+        "bm25_score": 25.049534737044446,
+        "e5_rank": 48,
+        "e5_score": 0.8674355745315552
+      },
+      {
+        "paper_id": "2610.17429",
+        "bm25_rank": 20,
+        "bm25_score": 45.533163285442804,
+        "e5_rank": 49,
+        "e5_score": 0.8670406341552734
+      },
+      {
+        "paper_id": "2610.29424",
+        "bm25_rank": 94,
+        "bm25_score": 30.822442813030012,
+        "e5_rank": 50,
+        "e5_score": 0.8665893077850342
+      },
+      {
+        "paper_id": "2610.37062",
+        "bm25_rank": 21,
+        "bm25_score": 45.40558846483002,
+        "e5_rank": 51,
+        "e5_score": 0.8665050864219666
+      },
+      {
+        "paper_id": "2610.11730",
+        "bm25_rank": 1,
+        "bm25_score": 75.80255573218582,
+        "e5_rank": 52,
+        "e5_score": 0.8661525249481201
+      },
+      {
+        "paper_id": "2610.15398",
+        "bm25_rank": 26,
+        "bm25_score": 43.92468306836121,
+        "e5_rank": 53,
+        "e5_score": 0.8659285306930542
+      },
+      {
+        "paper_id": "2611.01702",
+        "bm25_rank": 100,
+        "bm25_score": 30.442229656197227,
+        "e5_rank": 54,
+        "e5_score": 0.8659267425537109
+      },
+      {
+        "paper_id": "2610.02067",
+        "bm25_rank": 8,
+        "bm25_score": 50.56592683210333,
+        "e5_rank": 55,
+        "e5_score": 0.8657124042510986
+      },
+      {
+        "paper_id": "2610.36386",
+        "bm25_rank": 120,
+        "bm25_score": 28.571219386766224,
+        "e5_rank": 56,
+        "e5_score": 0.865138053894043
+      },
+      {
+        "paper_id": "2610.35130",
+        "bm25_rank": 40,
+        "bm25_score": 41.31666216708572,
+        "e5_rank": 57,
+        "e5_score": 0.8637769818305969
+      },
+      {
+        "paper_id": "2609.37590",
+        "bm25_rank": 52,
+        "bm25_score": 38.96600503759364,
+        "e5_rank": 58,
+        "e5_score": 0.8632459044456482
+      },
+      {
+        "paper_id": "2610.04204",
+        "bm25_rank": 13,
+        "bm25_score": 47.511114593812735,
+        "e5_rank": 59,
+        "e5_score": 0.8632389903068542
+      },
+      {
+        "paper_id": "2610.09122",
+        "bm25_rank": 47,
+        "bm25_score": 40.346321788909734,
+        "e5_rank": 60,
+        "e5_score": 0.8629928231239319
+      },
+      {
+        "paper_id": "2611.04323",
+        "bm25_rank": 15,
+        "bm25_score": 46.45920321445648,
+        "e5_rank": 61,
+        "e5_score": 0.8626346588134766
+      },
+      {
+        "paper_id": "2610.08669",
+        "bm25_rank": 24,
+        "bm25_score": 44.15676980177106,
+        "e5_rank": 62,
+        "e5_score": 0.8623711466789246
+      },
+      {
+        "paper_id": "2611.13306",
+        "bm25_rank": 36,
+        "bm25_score": 42.22489082787114,
+        "e5_rank": 63,
+        "e5_score": 0.861840009689331
+      },
+      {
+        "paper_id": "2611.12961",
+        "bm25_rank": 27,
+        "bm25_score": 43.78428596274833,
+        "e5_rank": 64,
+        "e5_score": 0.8618029952049255
+      },
+      {
+        "paper_id": "2610.19844",
+        "bm25_rank": 19,
+        "bm25_score": 45.674749419675884,
+        "e5_rank": 65,
+        "e5_score": 0.8612676858901978
+      },
+      {
+        "paper_id": "2610.25873",
+        "bm25_rank": 142,
+        "bm25_score": 26.024366615377957,
+        "e5_rank": 66,
+        "e5_score": 0.8609888553619385
+      },
+      {
+        "paper_id": "2611.03633",
+        "bm25_rank": 121,
+        "bm25_score": 28.339535194868414,
+        "e5_rank": 67,
+        "e5_score": 0.8608440160751343
+      },
+      {
+        "paper_id": "2610.06621",
+        "bm25_rank": 79,
+        "bm25_score": 32.249201919585694,
+        "e5_rank": 68,
+        "e5_score": 0.8599148988723755
+      },
+      {
+        "paper_id": "2611.00236",
+        "bm25_rank": 49,
+        "bm25_score": 39.44912666292678,
+        "e5_rank": 69,
+        "e5_score": 0.8595601320266724
+      },
+      {
+        "paper_id": "2610.07553",
+        "bm25_rank": 189,
+        "bm25_score": 22.683995921651352,
+        "e5_rank": 70,
+        "e5_score": 0.8591201901435852
+      },
+      {
+        "paper_id": "2609.39673",
+        "bm25_rank": 125,
+        "bm25_score": 28.194792652652765,
+        "e5_rank": 71,
+        "e5_score": 0.8583670854568481
+      },
+      {
+        "paper_id": "2609.37525",
+        "bm25_rank": 31,
+        "bm25_score": 43.52349999053299,
+        "e5_rank": 72,
+        "e5_score": 0.8581184148788452
+      },
+      {
+        "paper_id": "2611.11752",
+        "bm25_rank": 85,
+        "bm25_score": 31.95225934044321,
+        "e5_rank": 73,
+        "e5_score": 0.8578583002090454
+      },
+      {
+        "paper_id": "2610.39610",
+        "bm25_rank": 115,
+        "bm25_score": 28.837354895119052,
+        "e5_rank": 74,
+        "e5_score": 0.8569633960723877
+      },
+      {
+        "paper_id": "2611.10792",
+        "bm25_rank": 124,
+        "bm25_score": 28.210287115940172,
+        "e5_rank": 75,
+        "e5_score": 0.8566111326217651
+      },
+      {
+        "paper_id": "2610.35112",
+        "bm25_rank": 42,
+        "bm25_score": 41.24176638675907,
+        "e5_rank": 76,
+        "e5_score": 0.8565866947174072
+      },
+      {
+        "paper_id": "2611.17784",
+        "bm25_rank": 53,
+        "bm25_score": 38.431736393287025,
+        "e5_rank": 77,
+        "e5_score": 0.8565112352371216
+      },
+      {
+        "paper_id": "2610.31897",
+        "bm25_rank": 17,
+        "bm25_score": 46.20140893325314,
+        "e5_rank": 78,
+        "e5_score": 0.8560776710510254
+      },
+      {
+        "paper_id": "2610.28975",
+        "bm25_rank": 51,
+        "bm25_score": 38.98533667185873,
+        "e5_rank": 79,
+        "e5_score": 0.8560640811920166
+      },
+      {
+        "paper_id": "2611.08924",
+        "bm25_rank": 9,
+        "bm25_score": 49.832216253358624,
+        "e5_rank": 80,
+        "e5_score": 0.8558165431022644
+      },
+      {
+        "paper_id": "2611.02052",
+        "bm25_rank": 176,
+        "bm25_score": 23.54307622834764,
+        "e5_rank": 81,
+        "e5_score": 0.8556921482086182
+      },
+      {
+        "paper_id": "2610.07497",
+        "bm25_rank": 39,
+        "bm25_score": 41.52059097104739,
+        "e5_rank": 82,
+        "e5_score": 0.855340301990509
+      },
+      {
+        "paper_id": "2611.04199",
+        "bm25_rank": 72,
+        "bm25_score": 34.16582548003639,
+        "e5_rank": 83,
+        "e5_score": 0.8551889657974243
+      },
+      {
+        "paper_id": "2610.16868",
+        "bm25_rank": 22,
+        "bm25_score": 44.959899693658905,
+        "e5_rank": 84,
+        "e5_score": 0.854456901550293
+      },
+      {
+        "paper_id": "2610.16891",
+        "bm25_rank": 138,
+        "bm25_score": 26.566519167359946,
+        "e5_rank": 85,
+        "e5_score": 0.8535962104797363
+      },
+      {
+        "paper_id": "2610.00717",
+        "bm25_rank": 97,
+        "bm25_score": 30.540427526593056,
+        "e5_rank": 86,
+        "e5_score": 0.8535913228988647
+      },
+      {
+        "paper_id": "2610.39902",
+        "bm25_rank": 192,
+        "bm25_score": 22.360042230491054,
+        "e5_rank": 87,
+        "e5_score": 0.8533955812454224
+      },
+      {
+        "paper_id": "2610.30280",
+        "bm25_rank": 76,
+        "bm25_score": 32.70844205216291,
+        "e5_rank": 88,
+        "e5_score": 0.8530511260032654
+      },
+      {
+        "paper_id": "2610.22438",
+        "bm25_rank": 102,
+        "bm25_score": 30.35764593543829,
+        "e5_rank": 89,
+        "e5_score": 0.8527688384056091
+      },
+      {
+        "paper_id": "2610.32849",
+        "bm25_rank": 41,
+        "bm25_score": 41.28251143296535,
+        "e5_rank": 90,
+        "e5_score": 0.8526009321212769
+      },
+      {
+        "paper_id": "2610.02516",
+        "bm25_rank": 166,
+        "bm25_score": 24.167442104538008,
+        "e5_rank": 91,
+        "e5_score": 0.8522465229034424
+      },
+      {
+        "paper_id": "2609.39595",
+        "bm25_rank": 4,
+        "bm25_score": 54.77083747296219,
+        "e5_rank": 92,
+        "e5_score": 0.8521466851234436
+      },
+      {
+        "paper_id": "2610.41455",
+        "bm25_rank": 156,
+        "bm25_score": 25.053413034648113,
+        "e5_rank": 93,
+        "e5_score": 0.8519984483718872
+      },
+      {
+        "paper_id": "2611.13137",
+        "bm25_rank": 145,
+        "bm25_score": 26.000015025094935,
+        "e5_rank": 94,
+        "e5_score": 0.8518147468566895
+      },
+      {
+        "paper_id": "2611.14149",
+        "bm25_rank": 104,
+        "bm25_score": 30.103996508178234,
+        "e5_rank": 95,
+        "e5_score": 0.8515931367874146
+      },
+      {
+        "paper_id": "2610.37934",
+        "bm25_rank": 191,
+        "bm25_score": 22.369523245390326,
+        "e5_rank": 96,
+        "e5_score": 0.8514758944511414
+      },
+      {
+        "paper_id": "2609.37988",
+        "bm25_rank": 113,
+        "bm25_score": 29.2221130613452,
+        "e5_rank": 97,
+        "e5_score": 0.8514159321784973
+      },
+      {
+        "paper_id": "2610.21743",
+        "bm25_rank": 178,
+        "bm25_score": 23.32618175115335,
+        "e5_rank": 98,
+        "e5_score": 0.851270318031311
+      },
+      {
+        "paper_id": "2610.31483",
+        "bm25_rank": 187,
+        "bm25_score": 22.696025507034435,
+        "e5_rank": 99,
+        "e5_score": 0.8505727052688599
+      },
+      {
+        "paper_id": "2611.13186",
+        "bm25_rank": 200,
+        "bm25_score": 22.003280319775854,
+        "e5_rank": 100,
+        "e5_score": 0.8500150442123413
+      },
+      {
+        "paper_id": "2610.38683",
+        "bm25_rank": 122,
+        "bm25_score": 28.3073785951343,
+        "e5_rank": 101,
+        "e5_score": 0.8500025272369385
+      },
+      {
+        "paper_id": "2610.28201",
+        "bm25_rank": 152,
+        "bm25_score": 25.318787380388596,
+        "e5_rank": 102,
+        "e5_score": 0.8499632477760315
+      },
+      {
+        "paper_id": "2611.19477",
+        "bm25_rank": 57,
+        "bm25_score": 37.59025069528301,
+        "e5_rank": 103,
+        "e5_score": 0.8497287631034851
+      },
+      {
+        "paper_id": "2610.35195",
+        "bm25_rank": 148,
+        "bm25_score": 25.567094839663277,
+        "e5_rank": 104,
+        "e5_score": 0.8495727777481079
+      },
+      {
+        "paper_id": "2611.19419",
+        "bm25_rank": 98,
+        "bm25_score": 30.50306070538289,
+        "e5_rank": 105,
+        "e5_score": 0.8492770195007324
+      },
+      {
+        "paper_id": "2610.33826",
+        "bm25_rank": 141,
+        "bm25_score": 26.211447283990534,
+        "e5_rank": 106,
+        "e5_score": 0.8486286997795105
+      },
+      {
+        "paper_id": "2610.20112",
+        "bm25_rank": 50,
+        "bm25_score": 39.33970901186326,
+        "e5_rank": 107,
+        "e5_score": 0.8482739925384521
+      },
+      {
+        "paper_id": "2610.34158",
+        "bm25_rank": 34,
+        "bm25_score": 43.09342383094465,
+        "e5_rank": 108,
+        "e5_score": 0.8481642603874207
+      },
+      {
+        "paper_id": "2611.17876",
+        "bm25_rank": 71,
+        "bm25_score": 34.560979466068034,
+        "e5_rank": 109,
+        "e5_score": 0.8475882411003113
+      },
+      {
+        "paper_id": "2610.11076",
+        "bm25_rank": 129,
+        "bm25_score": 27.777576453764482,
+        "e5_rank": 110,
+        "e5_score": 0.8470472097396851
+      },
+      {
+        "paper_id": "2610.13773",
+        "bm25_rank": 106,
+        "bm25_score": 29.84181355962115,
+        "e5_rank": 111,
+        "e5_score": 0.846548318862915
+      },
+      {
+        "paper_id": "2611.16905",
+        "bm25_rank": 108,
+        "bm25_score": 29.77269398409477,
+        "e5_rank": 112,
+        "e5_score": 0.8453785181045532
+      },
+      {
+        "paper_id": "2610.36617",
+        "bm25_rank": 109,
+        "bm25_score": 29.76730457009591,
+        "e5_rank": 113,
+        "e5_score": 0.8451012372970581
+      },
+      {
+        "paper_id": "2610.26742",
+        "bm25_rank": 33,
+        "bm25_score": 43.2253109401446,
+        "e5_rank": 114,
+        "e5_score": 0.8448848128318787
+      },
+      {
+        "paper_id": "2611.04462",
+        "bm25_rank": 55,
+        "bm25_score": 37.96037185305201,
+        "e5_rank": 115,
+        "e5_score": 0.8445922136306763
+      },
+      {
+        "paper_id": "2610.05297",
+        "bm25_rank": 171,
+        "bm25_score": 23.672562588145706,
+        "e5_rank": 116,
+        "e5_score": 0.8445712924003601
+      },
+      {
+        "paper_id": "2610.33846",
+        "bm25_rank": 87,
+        "bm25_score": 31.86124960603602,
+        "e5_rank": 117,
+        "e5_score": 0.8441683650016785
+      },
+      {
+        "paper_id": "2609.34972",
+        "bm25_rank": 196,
+        "bm25_score": 22.14749406134437,
+        "e5_rank": 118,
+        "e5_score": 0.844151496887207
+      },
+      {
+        "paper_id": "2610.02202",
+        "bm25_rank": 190,
+        "bm25_score": 22.588121575466673,
+        "e5_rank": 119,
+        "e5_score": 0.8434517979621887
+      },
+      {
+        "paper_id": "2611.07552",
+        "bm25_rank": 82,
+        "bm25_score": 32.01151302901075,
+        "e5_rank": 120,
+        "e5_score": 0.8432038426399231
+      },
+      {
+        "paper_id": "2610.01513",
+        "bm25_rank": 144,
+        "bm25_score": 26.014705659622855,
+        "e5_rank": 121,
+        "e5_score": 0.842974066734314
+      },
+      {
+        "paper_id": "2611.10212",
+        "bm25_rank": 2,
+        "bm25_score": 67.52253388770063,
+        "e5_rank": 122,
+        "e5_score": 0.8429474234580994
+      },
+      {
+        "paper_id": "2610.02345",
+        "bm25_rank": 170,
+        "bm25_score": 23.68207037174019,
+        "e5_rank": 123,
+        "e5_score": 0.8428844213485718
+      },
+      {
+        "paper_id": "2610.20099",
+        "bm25_rank": 199,
+        "bm25_score": 22.01219846814058,
+        "e5_rank": 124,
+        "e5_score": 0.8427376747131348
+      },
+      {
+        "paper_id": "2610.41104",
+        "bm25_rank": 74,
+        "bm25_score": 33.735801093273196,
+        "e5_rank": 125,
+        "e5_score": 0.8420274257659912
+      },
+      {
+        "paper_id": "2610.38079",
+        "bm25_rank": 86,
+        "bm25_score": 31.87122359892238,
+        "e5_rank": 126,
+        "e5_score": 0.841161847114563
+      },
+      {
+        "paper_id": "2610.07093",
+        "bm25_rank": 185,
+        "bm25_score": 22.903340938774978,
+        "e5_rank": 127,
+        "e5_score": 0.8404656648635864
+      },
+      {
+        "paper_id": "2611.10469",
+        "bm25_rank": 126,
+        "bm25_score": 28.182924837758446,
+        "e5_rank": 128,
+        "e5_score": 0.8398491144180298
+      },
+      {
+        "paper_id": "2610.16161",
+        "bm25_rank": 63,
+        "bm25_score": 36.48147813358117,
+        "e5_rank": 129,
+        "e5_score": 0.8397756814956665
+      },
+      {
+        "paper_id": "2611.07859",
+        "bm25_rank": 136,
+        "bm25_score": 26.93719459530531,
+        "e5_rank": 130,
+        "e5_score": 0.8396539688110352
+      },
+      {
+        "paper_id": "2610.27119",
+        "bm25_rank": 193,
+        "bm25_score": 22.336227609309322,
+        "e5_rank": 131,
+        "e5_score": 0.8396173715591431
+      },
+      {
+        "paper_id": "2609.38473",
+        "bm25_rank": 134,
+        "bm25_score": 26.9677640371349,
+        "e5_rank": 132,
+        "e5_score": 0.8394212126731873
+      },
+      {
+        "paper_id": "2611.02529",
+        "bm25_rank": 135,
+        "bm25_score": 26.942961636120373,
+        "e5_rank": 133,
+        "e5_score": 0.8391035795211792
+      },
+      {
+        "paper_id": "2610.34566",
+        "bm25_rank": 93,
+        "bm25_score": 31.00079533967202,
+        "e5_rank": 134,
+        "e5_score": 0.8389448523521423
+      },
+      {
+        "paper_id": "2610.04345",
+        "bm25_rank": 162,
+        "bm25_score": 24.629443157154142,
+        "e5_rank": 135,
+        "e5_score": 0.8389012217521667
+      },
+      {
+        "paper_id": "2610.36113",
+        "bm25_rank": 18,
+        "bm25_score": 46.053090049314385,
+        "e5_rank": 136,
+        "e5_score": 0.8388700485229492
+      },
+      {
+        "paper_id": "2610.34816",
+        "bm25_rank": 150,
+        "bm25_score": 25.353675941982694,
+        "e5_rank": 137,
+        "e5_score": 0.838578462600708
+      },
+      {
+        "paper_id": "2611.07707",
+        "bm25_rank": 65,
+        "bm25_score": 36.302051627227556,
+        "e5_rank": 138,
+        "e5_score": 0.8384056091308594
+      },
+      {
+        "paper_id": "2611.07217",
+        "bm25_rank": 89,
+        "bm25_score": 31.759601312180898,
+        "e5_rank": 139,
+        "e5_score": 0.8383966684341431
+      },
+      {
+        "paper_id": "2611.16082",
+        "bm25_rank": 123,
+        "bm25_score": 28.286169811780113,
+        "e5_rank": 140,
+        "e5_score": 0.8380510807037354
+      },
+      {
+        "paper_id": "2610.16923",
+        "bm25_rank": 105,
+        "bm25_score": 29.93640534352764,
+        "e5_rank": 141,
+        "e5_score": 0.8378716707229614
+      },
+      {
+        "paper_id": "2610.35398",
+        "bm25_rank": 119,
+        "bm25_score": 28.578513040721553,
+        "e5_rank": 142,
+        "e5_score": 0.8374193906784058
+      },
+      {
+        "paper_id": "2610.00958",
+        "bm25_rank": 184,
+        "bm25_score": 22.952204777684113,
+        "e5_rank": 143,
+        "e5_score": 0.8371602892875671
+      },
+      {
+        "paper_id": "2610.39412",
+        "bm25_rank": 111,
+        "bm25_score": 29.520045783779345,
+        "e5_rank": 144,
+        "e5_score": 0.8363535404205322
+      },
+      {
+        "paper_id": "2610.18939",
+        "bm25_rank": 92,
+        "bm25_score": 31.15193249421244,
+        "e5_rank": 145,
+        "e5_score": 0.8361106514930725
+      },
+      {
+        "paper_id": "2610.20503",
+        "bm25_rank": 131,
+        "bm25_score": 27.596504494122268,
+        "e5_rank": 146,
+        "e5_score": 0.8360011577606201
+      },
+      {
+        "paper_id": "2610.33477",
+        "bm25_rank": 38,
+        "bm25_score": 42.12689705450644,
+        "e5_rank": 147,
+        "e5_score": 0.8357536792755127
+      },
+      {
+        "paper_id": "2610.10324",
+        "bm25_rank": 174,
+        "bm25_score": 23.603529926001872,
+        "e5_rank": 148,
+        "e5_score": 0.8355590105056763
+      },
+      {
+        "paper_id": "2610.35164",
+        "bm25_rank": 83,
+        "bm25_score": 32.007351157663095,
+        "e5_rank": 149,
+        "e5_score": 0.8352418541908264
+      },
+      {
+        "paper_id": "2610.16132",
+        "bm25_rank": 180,
+        "bm25_score": 23.145459101119165,
+        "e5_rank": 150,
+        "e5_score": 0.8349575996398926
+      },
+      {
+        "paper_id": "2610.11784",
+        "bm25_rank": 73,
+        "bm25_score": 33.84989674303,
+        "e5_rank": 151,
+        "e5_score": 0.8349277377128601
+      },
+      {
+        "paper_id": "2610.02334",
+        "bm25_rank": 90,
+        "bm25_score": 31.646274714377096,
+        "e5_rank": 152,
+        "e5_score": 0.8343939781188965
+      },
+      {
+        "paper_id": "2610.20388",
+        "bm25_rank": 127,
+        "bm25_score": 28.058429098382863,
+        "e5_rank": 153,
+        "e5_score": 0.8337967395782471
+      },
+      {
+        "paper_id": "2610.14688",
+        "bm25_rank": 81,
+        "bm25_score": 32.2027140136186,
+        "e5_rank": 154,
+        "e5_score": 0.8326892852783203
+      },
+      {
+        "paper_id": "2610.14730",
+        "bm25_rank": 96,
+        "bm25_score": 30.68567231143008,
+        "e5_rank": 155,
+        "e5_score": 0.8322230577468872
+      },
+      {
+        "paper_id": "2611.03097",
+        "bm25_rank": 151,
+        "bm25_score": 25.34112844072431,
+        "e5_rank": 156,
+        "e5_score": 0.8321489691734314
+      },
+      {
+        "paper_id": "2611.13523",
+        "bm25_rank": 46,
+        "bm25_score": 40.676449806147104,
+        "e5_rank": 157,
+        "e5_score": 0.8318890333175659
+      },
+      {
+        "paper_id": "2610.14393",
+        "bm25_rank": 110,
+        "bm25_score": 29.757214548841677,
+        "e5_rank": 158,
+        "e5_score": 0.8315499424934387
+      },
+      {
+        "paper_id": "2610.16511",
+        "bm25_rank": 181,
+        "bm25_score": 23.14434818352482,
+        "e5_rank": 159,
+        "e5_score": 0.8312674760818481
+      },
+      {
+        "paper_id": "2610.05842",
+        "bm25_rank": 107,
+        "bm25_score": 29.78042051556016,
+        "e5_rank": 160,
+        "e5_score": 0.8311904072761536
+      },
+      {
+        "paper_id": "2609.34963",
+        "bm25_rank": 160,
+        "bm25_score": 24.680192627775863,
+        "e5_rank": 161,
+        "e5_score": 0.8303502798080444
+      },
+      {
+        "paper_id": "2611.01186",
+        "bm25_rank": 158,
+        "bm25_score": 24.936752006126383,
+        "e5_rank": 162,
+        "e5_score": 0.8302126526832581
+      },
+      {
+        "paper_id": "2610.26836",
+        "bm25_rank": 112,
+        "bm25_score": 29.31397273010333,
+        "e5_rank": 163,
+        "e5_score": 0.8290333151817322
+      },
+      {
+        "paper_id": "2610.23574",
+        "bm25_rank": 188,
+        "bm25_score": 22.68624323351741,
+        "e5_rank": 164,
+        "e5_score": 0.8289271593093872
+      },
+      {
+        "paper_id": "2611.15600",
+        "bm25_rank": 12,
+        "bm25_score": 47.95041983848517,
+        "e5_rank": 165,
+        "e5_score": 0.828816294670105
+      },
+      {
+        "paper_id": "2610.04517",
+        "bm25_rank": 195,
+        "bm25_score": 22.228137931811887,
+        "e5_rank": 166,
+        "e5_score": 0.8283916115760803
+      },
+      {
+        "paper_id": "2610.15933",
+        "bm25_rank": 114,
+        "bm25_score": 29.14940894900269,
+        "e5_rank": 167,
+        "e5_score": 0.8280407786369324
+      },
+      {
+        "paper_id": "2610.23313",
+        "bm25_rank": 183,
+        "bm25_score": 23.123195259590403,
+        "e5_rank": 168,
+        "e5_score": 0.8274431228637695
+      },
+      {
+        "paper_id": "2611.19859",
+        "bm25_rank": 140,
+        "bm25_score": 26.249241090498845,
+        "e5_rank": 169,
+        "e5_score": 0.8268463015556335
+      },
+      {
+        "paper_id": "2611.12219",
+        "bm25_rank": 149,
+        "bm25_score": 25.426711149350254,
+        "e5_rank": 170,
+        "e5_score": 0.826734185218811
+      },
+      {
+        "paper_id": "2611.05814",
+        "bm25_rank": 132,
+        "bm25_score": 27.282102890529423,
+        "e5_rank": 171,
+        "e5_score": 0.8264493346214294
+      },
+      {
+        "paper_id": "2610.20857",
+        "bm25_rank": 146,
+        "bm25_score": 25.991760001029327,
+        "e5_rank": 172,
+        "e5_score": 0.8255563378334045
+      },
+      {
+        "paper_id": "2610.15373",
+        "bm25_rank": 161,
+        "bm25_score": 24.653893878647743,
+        "e5_rank": 173,
+        "e5_score": 0.8253424763679504
+      },
+      {
+        "paper_id": "2611.19140",
+        "bm25_rank": 179,
+        "bm25_score": 23.31264615298783,
+        "e5_rank": 174,
+        "e5_score": 0.82532799243927
+      },
+      {
+        "paper_id": "2611.14589",
+        "bm25_rank": 45,
+        "bm25_score": 40.711843861772635,
+        "e5_rank": 175,
+        "e5_score": 0.8241832852363586
+      },
+      {
+        "paper_id": "2610.40227",
+        "bm25_rank": 154,
+        "bm25_score": 25.257299761763626,
+        "e5_rank": 176,
+        "e5_score": 0.8240470886230469
+      },
+      {
+        "paper_id": "2611.06179",
+        "bm25_rank": 186,
+        "bm25_score": 22.789215064534723,
+        "e5_rank": 177,
+        "e5_score": 0.823889434337616
+      },
+      {
+        "paper_id": "2610.37779",
+        "bm25_rank": 133,
+        "bm25_score": 27.190695679591933,
+        "e5_rank": 178,
+        "e5_score": 0.823706328868866
+      },
+      {
+        "paper_id": "2610.08622",
+        "bm25_rank": 153,
+        "bm25_score": 25.296006003209317,
+        "e5_rank": 179,
+        "e5_score": 0.8234583139419556
+      },
+      {
+        "paper_id": "2611.08644",
+        "bm25_rank": 143,
+        "bm25_score": 26.016255993674203,
+        "e5_rank": 180,
+        "e5_score": 0.8228302001953125
+      },
+      {
+        "paper_id": "2611.02810",
+        "bm25_rank": 163,
+        "bm25_score": 24.439432525443944,
+        "e5_rank": 181,
+        "e5_score": 0.8223108649253845
+      },
+      {
+        "paper_id": "2611.01362",
+        "bm25_rank": 130,
+        "bm25_score": 27.63575829607211,
+        "e5_rank": 182,
+        "e5_score": 0.8218101263046265
+      },
+      {
+        "paper_id": "2611.11541",
+        "bm25_rank": 198,
+        "bm25_score": 22.069352038877597,
+        "e5_rank": 183,
+        "e5_score": 0.821503758430481
+      },
+      {
+        "paper_id": "2610.35175",
+        "bm25_rank": 175,
+        "bm25_score": 23.582683187283706,
+        "e5_rank": 184,
+        "e5_score": 0.8208281993865967
+      },
+      {
+        "paper_id": "2610.04263",
+        "bm25_rank": 155,
+        "bm25_score": 25.252665295370143,
+        "e5_rank": 185,
+        "e5_score": 0.8207892179489136
+      },
+      {
+        "paper_id": "2611.14925",
+        "bm25_rank": 167,
+        "bm25_score": 24.052498986030738,
+        "e5_rank": 186,
+        "e5_score": 0.8176390528678894
+      },
+      {
+        "paper_id": "2610.09375",
+        "bm25_rank": 159,
+        "bm25_score": 24.817729071815172,
+        "e5_rank": 187,
+        "e5_score": 0.817407488822937
+      },
+      {
+        "paper_id": "2609.35759",
+        "bm25_rank": 164,
+        "bm25_score": 24.42470467745201,
+        "e5_rank": 188,
+        "e5_score": 0.8172313570976257
+      },
+      {
+        "paper_id": "2610.05256",
+        "bm25_rank": 116,
+        "bm25_score": 28.774641298472652,
+        "e5_rank": 189,
+        "e5_score": 0.8165809512138367
+      },
+      {
+        "paper_id": "2611.11064",
+        "bm25_rank": 168,
+        "bm25_score": 24.026582386853164,
+        "e5_rank": 190,
+        "e5_score": 0.8141012191772461
+      },
+      {
+        "paper_id": "2610.10590",
+        "bm25_rank": 88,
+        "bm25_score": 31.778862249348,
+        "e5_rank": 191,
+        "e5_score": 0.8134976625442505
+      },
+      {
+        "paper_id": "2610.03948",
+        "bm25_rank": 182,
+        "bm25_score": 23.13533531921999,
+        "e5_rank": 192,
+        "e5_score": 0.8134776949882507
+      },
+      {
+        "paper_id": "2610.16656",
+        "bm25_rank": 169,
+        "bm25_score": 23.913106191825754,
+        "e5_rank": 193,
+        "e5_score": 0.8125506639480591
+      },
+      {
+        "paper_id": "2611.01977",
+        "bm25_rank": 194,
+        "bm25_score": 22.293371042101764,
+        "e5_rank": 194,
+        "e5_score": 0.8122901320457458
+      },
+      {
+        "paper_id": "2610.25997",
+        "bm25_rank": 173,
+        "bm25_score": 23.62121000255884,
+        "e5_rank": 195,
+        "e5_score": 0.8122896552085876
+      },
+      {
+        "paper_id": "2610.22703",
+        "bm25_rank": 177,
+        "bm25_score": 23.35695937210998,
+        "e5_rank": 196,
+        "e5_score": 0.8113120794296265
+      },
+      {
+        "paper_id": "2610.41927",
+        "bm25_rank": 56,
+        "bm25_score": 37.803132000250784,
+        "e5_rank": 197,
+        "e5_score": 0.8110182285308838
+      },
+      {
+        "paper_id": "2610.23254",
+        "bm25_rank": 103,
+        "bm25_score": 30.332955381814052,
+        "e5_rank": 198,
+        "e5_score": 0.8094955086708069
+      },
+      {
+        "paper_id": "2611.02605",
+        "bm25_rank": 172,
+        "bm25_score": 23.632061024159295,
+        "e5_rank": 199,
+        "e5_score": 0.7996349334716797
+      },
+      {
+        "paper_id": "2610.33009",
+        "bm25_rank": 137,
+        "bm25_score": 26.80718825268373,
+        "e5_rank": 200,
+        "e5_score": 0.7994871735572815
+      }
+    ]
+  },
+  "llm_usage": [
+    {
+      "model": "gpt-6-sol",
+      "status": "completed",
+      "input_tokens": 12331,
+      "output_tokens": 723,
+      "latency_seconds": 33.40150183302467,
+      "estimated_api_cost_usd": null
+    },
+    {
+      "model": "gpt-6-sol",
+      "status": "completed",
+      "input_tokens": 12040,
+      "output_tokens": 805,
+      "latency_seconds": 24.82577270801994,
+      "estimated_api_cost_usd": null
+    },
+    {
+      "model": "gpt-6-sol",
+      "status": "completed",
+      "input_tokens": 11952,
+      "output_tokens": 613,
+      "latency_seconds": 17.337509125005454,
+      "estimated_api_cost_usd": null
+    },
+    {
+      "model": "gpt-6-sol",
+      "status": "completed",
+      "input_tokens": 20401,
+      "output_tokens": 1651,
+      "latency_seconds": 43.07263024998247,
+      "estimated_api_cost_usd": null
+    },
+    {
+      "model": "gpt-6-sol",
+      "status": "completed",
+      "input_tokens": 20405,
+      "output_tokens": 1670,
+      "latency_seconds": 44.15508716701879,
+      "estimated_api_cost_usd": null
+    }
+  ],
+  "debate": {
+    "initial_context": {
+      "profile": {
+        "summary": "LLM research focused on optimization, low-rank and memory-efficient training, spectral regularization, parameter-efficient fine-tuning, and an AI research-digest agent.",
+        "topics": [
+          {
+            "name": "Low-rank pretraining and compressibility",
+            "keywords": [
+              "low-rank pretraining",
+              "low-rank factorization",
+              "model compressibility",
+              "effective rank",
+              "singular-value spectrum"
+            ],
+            "source_id": "description",
+            "evidence_quote": "A central question is whether training can make a model easier to compress with low-rank factorization while preserving its quality."
+          },
+          {
+            "name": "Spectral regularization and matrix optimization",
+            "keywords": [
+              "spectral regularization",
+              "spectral weight decay",
+              "nuclear-norm regularization",
+              "proximal methods",
+              "Newton-Schulz approximation"
+            ],
+            "source_id": "description",
+            "evidence_quote": "I am interested in spectral weight decay, nuclear-norm regularization, proximal methods, and Newton-Schulz approximations."
+          },
+          {
+            "name": "Generalization and memorization under label noise",
+            "keywords": [
+              "generalization",
+              "memorization",
+              "label noise",
+              "noisy labels",
+              "neural network training"
+            ],
+            "source_id": "description",
+            "evidence_quote": "Related questions concern generalization and memorization under label noise."
+          },
+          {
+            "name": "Optimization for LoRA and low-rank parameterizations",
+            "keywords": [
+              "LoRA",
+              "low-rank adaptation",
+              "Muon optimizer",
+              "factorized weights",
+              "rebalancing",
+              "convergence analysis"
+            ],
+            "source_id": "description",
+            "evidence_quote": "Another research direction is optimization for LoRA and other low-rank parameterizations."
+          },
+          {
+            "name": "Memory-efficient LLM pretraining",
+            "keywords": [
+              "memory-efficient LLM pretraining",
+              "low-rank gradients",
+              "optimizer-state compression",
+              "GaLore",
+              "Frugal",
+              "FP8 optimizer states"
+            ],
+            "source_id": "description",
+            "evidence_quote": "I also work on memory-efficient LLM pretraining."
+          },
+          {
+            "name": "Training-efficiency tradeoffs at scale",
+            "keywords": [
+              "training memory",
+              "throughput",
+              "communication cost",
+              "model quality",
+              "scaling behavior",
+              "LLM scale"
+            ],
+            "source_id": "description",
+            "evidence_quote": "I am interested in their tradeoffs between model quality, training memory, throughput, and communication cost, including how those tradeoffs change with model scale."
+          },
+          {
+            "name": "AI research digest agents and paper retrieval",
+            "keywords": [
+              "research digest agent",
+              "context management",
+              "structured LLM decisions",
+              "tool orchestration",
+              "paper retrieval",
+              "relevance ranking"
+            ],
+            "source_id": "description",
+            "evidence_quote": "Relevant work includes explicit context management, structured LLM decisions, application-controlled tools, and paper retrieval and relevance ranking using lexical or embedding-based methods."
+          }
+        ],
+        "goals": [
+          "Understand how optimization and regularization affect singular-value spectra and the effective rank of weight matrices.",
+          "Determine whether training can improve low-rank compressibility while preserving model quality.",
+          "Understand the geometry and practical language-model fine-tuning behavior of LoRA and other low-rank updates.",
+          "Evaluate tradeoffs among model quality, memory, throughput, and communication cost across model scales.",
+          "Build an AI research digest agent with a handwritten harness."
+        ],
+        "exclusions": []
+      },
+      "candidates": [
+        {
+          "paper_id": "2610.23343",
+          "title": "How Finite-Rank Bottlenecks Shape the Low-Rank Adaptation Landscape",
+          "abstract_excerpt": "Low-rank adaptation (LoRA) has become the standard method for parameter-efficient fine-tuning of large pretrained models, yet theoretical explanations for why low-rank updates suffice remain incomplete. Most existing analyses rely on the Neural Tangent Kernel (NTK) regime, which linearizes the network around the pretrained weights. In this work, we take a different approach that requires no linearization: our key observation is that, once the backbone is frozen, the loss sees each adapted weight matrix only through a finite-rank linear map induced by the frozen activations. Trace-norm regularization then forces the optimizer to pick a low-rank matrix among all matrices that produce the same observed output. This yields global minimizers whose ranks are controlled by the rank of this map, which we call the \\emph{bottleneck rank}, rather than the sample size. For multi-head attention, we obtain tighter rank upper bounds by exploiting two additional invariances: row-wise softmax is insensitive to additive row constants in the score matrix, and value updates are observable only after attention weighting and frozen output projection. For the factorized LoRA objective with weight decay, ",
+          "abstract_truncated": true,
+          "bm25_score": 58.249084998039436,
+          "assessment": {
+            "paper_id": "2610.23343",
+            "label": "relevant",
+            "reason": "Directly studies LoRA rank, trace-norm regularization, optimization, and generalization.",
+            "evidence_quote": "Trace-norm regularization then forces the optimizer to pick a low-rank matrix among all matrices that produce the same observed output."
+          },
+          "code": {
+            "status": "not_checked"
+          },
+          "x_attention": {
+            "status": "disabled",
+            "level": "unknown"
+          }
+        },
+        {
+          "paper_id": "2611.06598",
+          "title": "The Behavioral Rate of Fine-Tuning: Compression as a Measure of Useful Information",
+          "abstract_excerpt": "Low-Rank Adaptation (LoRA) adapts a frozen language model through a compact learned update, making it a natural setting for asking how much information fine-tuning needs to write. Yet adapter rank, parameter count, or numerical reconstruction error do not directly tell us how many bits are required to preserve the acquired behavior. We therefore define an operational behavioral rate $R^\\star$ as the smallest serialized size of a compressed adapter that, once reloaded into the frozen base model, retains a fixed fraction of its held-out fine-tuning gain. Across LoRA fine-tuning experiments, this rate increases with distinct training content at fixed optimization budgets, but is not determined by intuitive metrics like source description length, fine-tuning gain, or weight-space reconstruction error. Most importantly, the same datasets exhibit substantially different, and even reordered, rates across frozen base models, showing that fine-tuning compressibility is a property of the dataset--receiver pair rather than of the dataset alone. However, we show that correction spectra measured on the data are able to rank these rates within a receiver. Finally, we study a striking noise-reduc",
+          "abstract_truncated": true,
+          "bm25_score": 35.899869951426965,
+          "assessment": {
+            "paper_id": "2611.06598",
+            "label": "relevant",
+            "reason": "Connects LoRA compressibility, singular spectra, model behavior, and corrupted training data.",
+            "evidence_quote": "The damage is unevenly concentrated in the adapter's leading singular directions, which compression appears to filter."
+          },
+          "code": {
+            "status": "not_checked"
+          },
+          "x_attention": {
+            "status": "disabled",
+            "level": "unknown"
+          }
+        },
+        {
+          "paper_id": "2610.08049",
+          "title": "A Riemannian Geometry for Low-rank Adaptation",
+          "abstract_excerpt": "Low-rank adaptation (LoRA) is widely used as a parameter-efficient fine-tuning technique for pre-trained deep neural networks, which approximates the weight update via full fine-tuning by a low-rank matrix $BA^\\top$. This parameterization leads to the equivalence relation $(B, A) \\sim (BG^{-1}, AG^\\top)$ for any invertible matrix $G$ because $BA^\\top = BG^{-1}(AG^\\top)^\\top$ and thus both pairs yield the same loss value. This relation induces a quotient manifold where matrices $(BG^{-1}, AG^\\top)$ for all $G$ are identified, eliminating redundant directions along which the loss value remains unchanged. To respect the geometry of this manifold, the original search space is endowed with a Riemannian metric that is invariant under the equivalence relation. Such a metric induces preconditioning at each gradient step and ensures that each weight update via LoRA changes the loss value, leading to efficient optimization. In this paper, we propose a new Riemannian metric that is specifically tailored to LoRA to close the gap to full fine-tuning at the weight level. We theoretically show that LoRA with our preconditioning induced by this metric satisfies the following two properties at each",
+          "abstract_truncated": true,
+          "bm25_score": 44.48419422049728,
+          "assessment": {
+            "paper_id": "2610.08049",
+            "label": "relevant",
+            "reason": "Studies the geometry and optimization of factorized LoRA updates in language-model fine-tuning.",
+            "evidence_quote": "In this paper, we propose a new Riemannian metric that is specifically tailored to LoRA to close the gap to full fine-tuning at the weight level."
+          },
+          "code": {
+            "status": "not_checked"
+          },
+          "x_attention": {
+            "status": "disabled",
+            "level": "unknown"
+          }
+        },
+        {
+          "paper_id": "2611.17191",
+          "title": "Maximizing Capacity Utilization of LoRA Adapters for Mitigating the Learning-Forgetting Trade-off",
+          "abstract_excerpt": "Low-Rank Adaptation (LoRA) often underperforms full fine-tuning, especially in heterogeneous and continual-learning settings in which substantial forgetting occurs. In general, it suffers from an undesirable learning-forgetting trade-off across diverse fine-tuning settings. We identify a potential contributor: LoRA adapters, especially high-rank ones, frequently fail to realize the available capacity afforded by the configured rank. Specifically, we find that standard LoRA updates have effective rank far below their configured rank, limiting how broadly the update energy is distributed. Therefore, we propose training mechanisms that optimize the original objective while maximizing adapter effective rank. Our main method adds a simple, stable, differentiable, and SVD-free Rényi-2 effective-rank regularizer to the language-modeling loss. We also connect capacity maximization to norm-bounded updates. In mixed-domain rank sweeps on three models evaluated with multiple random seeds, a penalty weight of $λ=0.01$ lowers mean Wiki perplexity at every tested rank of at least $16$ relative to unpenalized LoRA. Mean training perplexity improves or increases by at most $0.02$ in all but one mo",
+          "abstract_truncated": true,
+          "bm25_score": 30.391002724465146,
+          "assessment": {
+            "paper_id": "2611.17191",
+            "label": "relevant",
+            "reason": "Uses effective-rank regularization to improve LoRA fine-tuning and retention.",
+            "evidence_quote": "Therefore, we propose training mechanisms that optimize the original objective while maximizing adapter effective rank."
+          },
+          "code": {
+            "status": "not_checked"
+          },
+          "x_attention": {
+            "status": "disabled",
+            "level": "unknown"
+          }
+        },
+        {
+          "paper_id": "2610.32142",
+          "title": "Rethinking LoRA Initialization for Robust Asymmetric Learning Rates",
+          "abstract_excerpt": "Low-Rank Adaptation (LoRA) is often highly sensitive to learning-rate (LR) choices. Recent empirical studies suggest that, once LRs are carefully tuned, vanilla LoRA can remain competitive with many proposed LoRA variants. This shifts the central practical question from designing ever more variants to reducing the cost and brittleness of LR selection. LoRA+ addresses this issue with asymmetric LRs, using a larger LR for the up-projection matrix $B$ than for the down-projection matrix $A$. However, the ratio $η_B / η_A$ itself becomes an additional hyperparameter: large ratios can improve adaptation, but under the standard LoRA initialization they can also cause unstable training and ratio-dependent performance collapse. We identify the source of this brittleness through a signal--noise decomposition of LoRA dynamics. Under standard \\initA, the update contains an initialization-induced noise term whose magnitude can be affected by the LR for $B$, $η_B$, the initialization scale $β$, and the adapter rank $r$. In practical LLM fine-tuning, this non-vanishing noise can limit the performance gains expected from LoRA+ style asymmetric LRs. To suppress this effect, we propose \\initAA, a s",
+          "abstract_truncated": true,
+          "bm25_score": 30.485689723339046,
+          "assessment": {
+            "paper_id": "2610.32142",
+            "label": "relevant",
+            "reason": "Analyzes initialization and asymmetric learning rates for stable LoRA optimization in LLM fine-tuning.",
+            "evidence_quote": "In practical LLM fine-tuning, this non-vanishing noise can limit the performance gains expected from LoRA+ style asymmetric LRs."
+          },
+          "code": {
+            "status": "not_checked"
+          },
+          "x_attention": {
+            "status": "disabled",
+            "level": "unknown"
+          }
+        },
+        {
+          "paper_id": "2609.36692",
+          "title": "Normalize-Then-Precondition: A Hierarchical Approach to Marginal Scale and Interaction Geometry for LLM Training",
+          "abstract_excerpt": "Matrix optimizers have emerged as a promising direction, with Muon standing out as a prominent design. Revisiting Muon through its full-Gram representation, we observe that it jointly processes marginal-scale and interaction information. This opens an alternative way to organize geometric information hierarchically, motivating the Normalize-Then-Precondition framework. Specifically, it first uses diagonal-Gram information to construct a marginally normalized update, then applies spectral preconditioning to its directional interaction geometry. Building on this framework, we develop NormPre with NormPre-G and NormPre-L adopting global and localized spectral preconditioning, grounded in spectral-norm steepest descent and a regularized formulation followed by leading mode selection, respectively. To enable large-scale training, NormPre-G uses Newton-Schulz iterations and NormPre-L employs randomized sketching to approximate the leading interaction eigenspace. Theoretically, we establish $\\mathcal{O}(T^{-1/2})$ convergence guarantees for simplified versions of NormPre. Across extensive pretraining experiments on GPT-2 Small, LLaMA and Qwen3, both variants consistently outperform AdamW,",
+          "abstract_truncated": true,
+          "bm25_score": 43.608444769507535,
+          "assessment": {
+            "paper_id": "2609.36692",
+            "label": "relevant",
+            "reason": "Addresses spectral matrix optimization, Newton-Schulz approximations, and pretraining efficiency.",
+            "evidence_quote": "To enable large-scale training, NormPre-G uses Newton-Schulz iterations and NormPre-L employs randomized sketching to approximate the leading interaction eigenspace."
+          },
+          "code": {
+            "status": "not_checked"
+          },
+          "x_attention": {
+            "status": "disabled",
+            "level": "unknown"
+          }
+        },
+        {
+          "paper_id": "2609.34264",
+          "title": "Rotated Manifold Optimization for Low-Rank Adaptation",
+          "abstract_excerpt": "We propose a novel optimizer for low-rank adaptation (LoRA) that explicitly incorporates the gauge symmetry of low-rank factorization. Our optimizer extends recent matrix optimizers for full-parameter training to the manifold of fixed-rank matrices by interpreting them as normalization under a rotated basis. We show how rotation and normalization can be integrated with the fixed-rank manifold efficiently. Our optimizer converges faster to lower held-out loss and achieves better or comparable downstream performance on both supervised finetuning and reinforcement learning tasks.",
+          "abstract_truncated": false,
+          "bm25_score": 37.337310688243655,
+          "assessment": {
+            "paper_id": "2609.34264",
+            "label": "relevant",
+            "reason": "Proposes a geometry-aware optimizer for low-rank LoRA factors.",
+            "evidence_quote": "We propose a novel optimizer for low-rank adaptation (LoRA) that explicitly incorporates the gauge symmetry of low-rank factorization."
+          },
+          "code": {
+            "status": "not_checked"
+          },
+          "x_attention": {
+            "status": "disabled",
+            "level": "unknown"
+          }
+        },
+        {
+          "paper_id": "2609.37027",
+          "title": "Beyond Low-Rank Parameterization: Narrowing the Gap Between LoRA and Full Fine-Tuning via Gradient Decomposition",
+          "abstract_excerpt": "Low-Rank Adaptation (LoRA) is a widely used approach to parameter-efficient fine-tuning (PEFT), yet a performance gap can remain relative to full fine-tuning (FFT). Many LoRA variants improve the initialization or optimization of low-rank factors. At each training step, however, their first-order weight-space directions are constrained by the current parameterization. We characterize the corresponding LoRA-accessible gradient space and show that it coincides with the tangent space induced by the current LoRA parameterization. This characterization yields an orthogonal decomposition of the full weight gradient at the current model parameters. We term the component orthogonal to this space the normal gradient. Based on this decomposition, we propose GDLoRA (Gradient-Decomposed Low-Rank Adaptation). GDLoRA reconstructs the full weight gradient from forward activations and backward signals, extracts its normal component, and directly updates the base weights with this component, while retaining standard AdamW optimization for the LoRA factors. GDLoRA incorporates complementary normal gradients without increasing standard LoRA's optimizer-state memory budget under matched adapter and op",
+          "abstract_truncated": true,
+          "bm25_score": 43.262365134634024,
+          "assessment": {
+            "paper_id": "2609.37027",
+            "label": "relevant",
+            "reason": "Studies LoRA gradient geometry and the quality–optimizer-memory tradeoff.",
+            "evidence_quote": "GDLoRA incorporates complementary normal gradients without increasing standard LoRA's optimizer-state memory budget under matched adapter and optimizer configurations."
+          },
+          "code": {
+            "status": "not_checked"
+          },
+          "x_attention": {
+            "status": "disabled",
+            "level": "unknown"
+          }
+        },
+        {
+          "paper_id": "2610.15965",
+          "title": "Scaling Repeated-Data Pretraining: Batch Size, Regularization, and GPU-Time Tradeoffs",
+          "abstract_excerpt": "We study pretraining when compute is abundant but unique training data are finite, requiring repeated training on the same data. We first revisit infinite-compute pretraining (Kim et al. 2026) and show that its frontier depends critically on choices previously fixed or studied only in isolation. In particular, optimizing batch size together with epoch counts reveals a U-shaped relationship between validation loss and batch size, favoring smaller batches than typical pretraining, likely because small-batch gradient noise provides implicit regularization. We further find that training recipes, previously optimized under a single-pass assumption, can be tuned, e.g., repacking documents into new sequences every epoch, weight tying, and positive embedding weight decay. We then relax the infinite-compute assumption. In particular, smaller-than-typical batch sizes can require prohibitively long sequential training, motivating to treat GPUs and time as separate resources. Tighter deadlines favor larger batches, and latency-oriented parallelism can trade additional GPUs for shorter training. Nevertheless, even under a fixed time budget, a smaller batch with fewer GPUs can achieve lower vali",
+          "abstract_truncated": true,
+          "bm25_score": 32.700173473259426,
+          "assessment": {
+            "paper_id": "2610.15965",
+            "label": "uncertain",
+            "reason": "Relevant to pretraining regularization and GPU-time tradeoffs, but not clearly to low-rank or memory-efficient methods.",
+            "evidence_quote": "In particular, smaller-than-typical batch sizes can require prohibitively long sequential training, motivating to treat GPUs and time as separate resources."
+          },
+          "code": {
+            "status": "not_checked"
+          },
+          "x_attention": {
+            "status": "disabled",
+            "level": "unknown"
+          }
+        },
+        {
+          "paper_id": "2610.32854",
+          "title": "Singular Geometry of Low-Rank Adaptation",
+          "abstract_excerpt": "Low-rank adaptation (LoRA) is now a standard approach to parameter-efficient fine-tuning of large neural networks. Its low-rank factorization is inherently non-identifiable, making LoRA a singular statistical model whose learning complexity cannot be described by parameter dimension alone. We study this complexity using the real log canonical threshold (RLCT) from singular learning theory and how it depends on both the low-rank parameterization and the pretrained network. Under a local linearization, LoRA induces a low-rank trace regression model whose Kullback--Leibler geometry is controlled by a forward-backward covariance, constructed from activations and backpropagated sensitivities at the adapted layer. This covariance determines which low-rank perturbations are statistically observable. When it is nondegenerate along the relevant low-rank directions, we recover the classical learning complexity of reduced-rank regression; when its kernel meets these directions, additional statistically indistinguishable parameters change the singular geometry. We characterize this geometry locally through observable tangent directions and a residual singularity, and globally through affine li",
+          "abstract_truncated": true,
+          "bm25_score": 37.17996516486454,
+          "assessment": {
+            "paper_id": "2610.32854",
+            "label": "relevant",
+            "reason": "Investigates the statistical geometry and observable low-rank directions of LoRA.",
+            "evidence_quote": "This covariance determines which low-rank perturbations are statistically observable."
+          },
+          "code": {
+            "status": "not_checked"
+          },
+          "x_attention": {
+            "status": "disabled",
+            "level": "unknown"
+          }
+        },
+        {
+          "paper_id": "2610.24816",
+          "title": "First-Order LoRA Training with Phone NPUs",
+          "abstract_excerpt": "On-device fine-tuning lets a large language model (LLM) learn from its user's private data without uploading it. Low-rank adaptation (LoRA) reduces the trainable parameters, but each first-order training step still multiplies by the frozen base-model weights during the forward pass, activation recomputation, and input-gradient computation. A phone's neural processing unit (NPU) already holds these weights for inference; using it for training also requires computing input gradients, which its inference interface does not support. We present a system that runs all three frozen-weight products on the NPU while keeping the training graph, adapters, and optimizer on the CPU. Its input-gradient kernels reuse the resident weight tiles and the forward dequantizer, avoiding a transposed weight copy and ensuring forward and backward use the same effective weights. To preserve usable gradients, the system selects precision by gradient sensitivity and applies a per-row range guard for half-precision (FP16) outputs. Its runtime fuses the remaining CPU operators and overlaps NPU execution with adapter computation, while resumable execution and thermal pacing let training proceed as a background ",
+          "abstract_truncated": true,
+          "bm25_score": 36.75981611592269,
+          "assessment": {
+            "paper_id": "2610.24816",
+            "label": "relevant",
+            "reason": "Studies the training-system costs and performance of LoRA fine-tuning for LLMs.",
+            "evidence_quote": "We evaluate it on two Qualcomm Snapdragon platforms using four LLMs from the Qwen and Llama families."
+          },
+          "code": {
+            "status": "not_checked"
+          },
+          "x_attention": {
+            "status": "disabled",
+            "level": "unknown"
+          }
+        },
+        {
+          "paper_id": "2610.05318",
+          "title": "Robust Parameter-Efficient LLM Adaptation on Analog Hardware",
+          "abstract_excerpt": "Analog in-memory computing is a promising platform for on-device execution of large language models because it performs matrix--vector multiplications (MVMs) in memory and in parallel, reducing data movement. However, limited digital-to-analog converter precision, input noise, and finite conductance states can degrade model accuracy, while full-model retraining to address these effects can be costly. We develop an optimizer-agnostic, parameter-efficient adaptation method based on Low-Rank Adaptation (LoRA), keeping the pretrained weights stored on analog arrays fixed while training the LoRA weights to adapt to downstream tasks and hardware non-idealities. Reliable adaptation requires handling errors in both forward and backward MVMs and physical weight updates. We use input reshaping to reduce input-induced MVM errors and update accumulation to retain small updates before programming them to finite-state analog devices. Across Llama-3.2-1B-Instruct and Llama-3-8B with both Muon and AdamW, input reshaping improves analog LoRA fine-tuning under noisy MVM computation. Update accumulation separately preserves sub-threshold updates and substantially improves adaptation under finite-reso",
+          "abstract_truncated": true,
+          "bm25_score": 53.65489344193628,
+          "assessment": {
+            "paper_id": "2610.05318",
+            "label": "relevant",
+            "reason": "Examines LoRA optimization and model accuracy under hardware constraints, including Muon.",
+            "evidence_quote": "Across Llama-3.2-1B-Instruct and Llama-3-8B with both Muon and AdamW, input reshaping improves analog LoRA fine-tuning under noisy MVM computation."
+          },
+          "code": {
+            "status": "not_checked"
+          },
+          "x_attention": {
+            "status": "disabled",
+            "level": "unknown"
+          }
+        },
+        {
+          "paper_id": "2610.23571",
+          "title": "BMuon: Budgeting Muon's Spectral Geometry for Structured Compressibility",
+          "abstract_excerpt": "Muon has emerged as a strong optimizer for neural network training and admits an interpretation as steepest descent under a spectral-norm geometry. Yet we find that Muon-trained Transformers can degrade sharply when their MLP hidden channels are pruned after training. To reconcile Muon's optimization performance with structured compressibility, we introduce Budget Muon (BMuon), which modifies Muon's spectral geometry so that hidden channels across blocks compete for a shared allocation budget. The resulting oracle is exactly normalized steepest descent under a family of norms that interpolate between Muon's geometry and structured sparse geometries. Our principal sparsity control is an interpretable global channel-allocation budget, rather than a setting-dependent sparsity-penalty coefficient. For linear factorization models, we show that Muon admits minimum-cost exact representations with redundant hidden width, whereas under the BMuon oracle geometry and a sufficiently scarce budget, every minimum-cost representation is width-minimal. For practical training, we derive a minorization-maximization surrogate for the exact allocation problem. On ImageNet-1K with ViT-S/16, BMuon impro",
+          "abstract_truncated": true,
+          "bm25_score": 53.261247822612155,
+          "assessment": {
+            "paper_id": "2610.23571",
+            "label": "relevant",
+            "reason": "Directly connects Muon's spectral geometry to structured model compressibility.",
+            "evidence_quote": "To reconcile Muon's optimization performance with structured compressibility, we introduce Budget Muon (BMuon), which modifies Muon's spectral geometry so that hidden channels across blocks compete for a shared allocation budget."
+          },
+          "code": {
+            "status": "not_checked"
+          },
+          "x_attention": {
+            "status": "disabled",
+            "level": "unknown"
+          }
+        },
+        {
+          "paper_id": "2610.06542",
+          "title": "A Fine-Grained Analysis of the LoRA Fine-Tuning Landscape with Implications for Data Selection",
+          "abstract_excerpt": "Low-Rank Adaptation (LoRA) has become a standard approach for parameter-efficient fine-tuning, yet a fundamental practical question remains unresolved: how should the adapter rank be chosen? An overly small rank may lead to a poorly conditioned optimization landscape, whereas an unnecessarily large rank sacrifices the efficiency that motivates LoRA in the first place. Existing theoretical analyses provide only limited guidance on this trade-off, and their guarantees are typically established under restrictive theoretical settings. We address this gap by developing a substantially sharper landscape theory for LoRA, building on modern results from nonconvex low-rank matrix sensing. Our central insight is that the appropriate adapter rank should depend on the quality of the data-induced optimization geometry, rather than on the model alone. To formalize this connection, we introduce LoRA-RIP, a data-dependent restricted-isometry metric that characterizes the conditioning of the cross-entropy (CE) objective along LoRA-relevant low-rank directions. We prove that sufficient rank over-parameterization, with the required rank explicitly determined by the LoRA-RIP constant, eliminates spuri",
+          "abstract_truncated": true,
+          "bm25_score": 33.596731622633584,
+          "assessment": {
+            "paper_id": "2610.06542",
+            "label": "relevant",
+            "reason": "Analyzes LoRA optimization geometry and how adapter rank affects fine-tuning.",
+            "evidence_quote": "Our central insight is that the appropriate adapter rank should depend on the quality of the data-induced optimization geometry, rather than on the model alone."
+          },
+          "code": {
+            "status": "not_checked"
+          },
+          "x_attention": {
+            "status": "disabled",
+            "level": "unknown"
+          }
+        },
+        {
+          "paper_id": "2610.01620",
+          "title": "FedLore: Communication and Memory Efficient Federated Learning via Shared Gradient Low-Rank Projection",
+          "abstract_excerpt": "Federated training of foundation models is constrained by client memory and communication costs. LoRA-based methods reduce these costs through low-rank adapters, but their fixed rank budget can limit adaptation. Gradient low-rank optimization offers greater flexibility, yet independently chosen client subspaces create a problem we term \\emph{subspace fragmentation}: local projections interact with data heterogeneity to bias aggregated directions, while aggregation can increase update rank and communication cost. Thus, accurate local gradient compression need not preserve global descent. We propose \\texttt{FedLore}, which shares a low-rank optimization basis within each round and refreshes it across rounds. The shared basis enables exact aggregation in low-rank coordinates and eliminates the identified projection bias. Subspace refresh allows the accumulated model update to exceed the per-round rank budget. We characterize the aggregation bias and establish an $O(T^{-1/2})$ stationarity bound for the projected-SGD variant under a global-gradient coverage condition and standard smoothness and variance assumptions, with bounded gradient heterogeneity. Experiments on vision and languag",
+          "abstract_truncated": true,
+          "bm25_score": 43.682689085307125,
+          "assessment": {
+            "paper_id": "2610.01620",
+            "label": "relevant",
+            "reason": "Addresses low-rank gradient optimization and memory–communication tradeoffs in foundation-model training.",
+            "evidence_quote": "Experiments on vision and language tasks, including federated pre-training, show that"
+          },
+          "code": {
+            "status": "not_checked"
+          },
+          "x_attention": {
+            "status": "disabled",
+            "level": "unknown"
+          }
+        },
+        {
+          "paper_id": "2610.02283",
+          "title": "MLoRA:Continual Low-Rank Adaptation via Relative-Response Subspace Selection and Momentum Orthogonalization",
+          "abstract_excerpt": "Low-rank adaptation (LoRA) provides a parameter-efficient approach to continual learning, but its nominal rank can conceal a loss of effective adaptation capacity. We identify \\emph{spectral plasticity collapse}: during sequential adaptation, update energy becomes concentrated in a small subset of singular modes, leaving much of the available low-rank space underutilized. This exposes a limitation of interference avoidance alone: protecting historical representations does not ensure that the remaining adaptation capacity is responsive to new tasks or effectively utilized. To address this problem, we propose \\texttt{MLoRA}, which jointly controls capacity allocation and utilization. First, historical whitening identifies input directions with strong current-task response relative to accumulated historical response, yielding a task-adaptive basis that remains fixed during training. Second, approximate polar orthogonalization of momentum updates reduces spectral concentration within theselected space. An orthonormal basis connects these mechanisms by transferring the factor-update spectrum exactly tothe induced weight update. We establish a max--min characterization of exact subspace ",
+          "abstract_truncated": true,
+          "bm25_score": 36.85478112619966,
+          "assessment": {
+            "paper_id": "2610.02283",
+            "label": "relevant",
+            "reason": "Studies singular-mode concentration and effective capacity in low-rank adaptation.",
+            "evidence_quote": "update energy becomes concentrated in a small subset of singular modes, leaving much of the available low-rank space underutilized."
+          },
+          "code": {
+            "status": "not_checked"
+          },
+          "x_attention": {
+            "status": "disabled",
+            "level": "unknown"
+          }
+        },
+        {
+          "paper_id": "2611.13331",
+          "title": "Stochastic Projections and Rank-Aware Learning Rates for Federated LoRA",
+          "abstract_excerpt": "Fine-tuning large-scale foundation models across resource-constrained, distributed clients presents significant computational and communication challenges. While merging Low-Rank Adaptation (LoRA) with Federated Learning (FL) enables rank-based flexibility, the interdependence of the adaptation matrices ($\\mathbf{A}$ and $\\mathbf{B}$) often complicates optimization. In this work, we theoretically demonstrate that LoRA fine-tuning with Gaussian initialization and a frozen $\\mathbf{A}$ matrix acts as a stochastic approximation of full fine-tuning, where batch gradients are subject to a random, rank-dependent perturbation. Motivated by this insight, we propose freezing and periodically resampling $\\mathbf{A}$ matrices at the client level. This strategy decouples the $\\mathbf{A}$ and $\\mathbf{B}$ gradients, diminishes LoRA low-rank constraints and reduces both computational and uplink communication overheads by 50\\%, allowing for the reallocation of resources toward higher adaptation ranks. Furthermore, we show that in this frozen-$\\mathbf{A}$ regime, the adaptation rank $r$ directly governs the signal-to-noise ratio (SNR) of the perturbed gradients. Specifically, we find that the SNR ",
+          "abstract_truncated": true,
+          "bm25_score": 44.0616434390877,
+          "assessment": {
+            "paper_id": "2611.13331",
+            "label": "relevant",
+            "reason": "Analyzes rank-dependent LoRA optimization, convergence, and client overhead.",
+            "evidence_quote": "the adaptation rank $r$ directly governs the signal-to-noise ratio (SNR) of the perturbed gradients."
+          },
+          "code": {
+            "status": "not_checked"
+          },
+          "x_attention": {
+            "status": "disabled",
+            "level": "unknown"
+          }
+        },
+        {
+          "paper_id": "2610.06647",
+          "title": "LoGRA: Scaling LLM Reinforcement Learning with Low-Rank Gradient Sketches",
+          "abstract_excerpt": "Reinforcement learning has greatly advanced the capabilities of large language models, but its memory demands remain a barrier to broader adoption. We introduce LoGRA, an approach to RL post-training that reduces memory by retaining useful learning signals in low-rank gradient sketches. These compact representations support both model updates and efficient policy synchronization. To prevent overly large updates from disrupting learning, we complement gradient compression with predicted-KL step control, which estimates policy changes before applying each update and adjusts its magnitude accordingly. With all techniques combined, LoGRA reduces average training memory usage by up to 45.7% across reasoning tasks without compromising performance. It also enables stable training of a 27B-parameter model for over 1,100 steps on a single eight-GPU node, where dense Adam runs out of memory, making previously memory-infeasible RL training practical. Code is available in the \\href{https://github.com/skzhang1/labs-molt/tree/logra/examples/scripts/logra}{Molt library}.",
+          "abstract_truncated": false,
+          "bm25_score": 24.400272234614825,
+          "assessment": {
+            "paper_id": "2610.06647",
+            "label": "relevant",
+            "reason": "Uses low-rank gradient sketches to reduce LLM training memory while measuring performance.",
+            "evidence_quote": "LoGRA reduces average training memory usage by up to 45.7% across reasoning tasks without compromising performance."
+          },
+          "code": {
+            "status": "not_checked"
+          },
+          "x_attention": {
+            "status": "disabled",
+            "level": "unknown"
+          }
+        },
+        {
+          "paper_id": "2609.40148",
+          "title": "From Spectra to Joint Schedules in LLM Pre-training: 3+3(+2) Scaling-Law Regimes",
+          "abstract_excerpt": "Power-law learning curves are often treated as fixed properties of a model and its data, although learning-rate and batch-size schedules can change the observed loss. We study this dependence in noisy online SGD with linear random features. Conditional on the representation, an exact Volterra equation separates two response components: a forcing term that propagates unresolved target error and a memory kernel that propagates stochastic-error injections. We prove that either component follows a power law if and only if its cumulative weighted spectral mass has the corresponding low-spectrum scaling; individual eigenvalues and target coefficients need not obey coordinatewise power laws. Under a joint schedule, intrinsic time $T_t=\\sum_{s<t}η_s$ controls optimization progress, while $r_t=B_t/η_t$ controls noise injection. Their interaction yields sharp conditions under which a schedule preserves, changes, or destroys the clean power law, together with a memory ceiling on noise reduction. The power-law random-feature model realizes this mechanism in $3+3(+2)$ propagation regimes with phase-dependent compute rates. Controlled nanoGPT experiments show that (1) learning-rate and batch-siz",
+          "abstract_truncated": true,
+          "bm25_score": 32.21711052727315,
+          "assessment": {
+            "paper_id": "2609.40148",
+            "label": "relevant",
+            "reason": "Studies how learning-rate and batch-size schedules affect LLM pretraining loss and compute scaling.",
+            "evidence_quote": "Controlled nanoGPT experiments show that (1) learning-rate and batch-size schedules with matched $B/η$ paths are nearly equivalent in intrinsic time"
+          },
+          "code": {
+            "status": "not_checked"
+          },
+          "x_attention": {
+            "status": "disabled",
+            "level": "unknown"
+          }
+        },
+        {
+          "paper_id": "2610.17730",
+          "title": "DT-LoRA: Reaching Beyond the Tangent Space of Low-Rank Adaptation",
+          "abstract_excerpt": "Low-rank adaptation (LoRA) often underperforms full fine-tuning. We investigate this performance gap through a tangent-space lens: factorized updates are confined to the tangent space of the current low-rank factors, leaving gradient components outside this space unexploited. An analysis of ten representative LoRA variants reveals that these residual components account for most of the gradient energy and exhibit strong spectral concentration. Motivated by this finding, we propose Dynamic Tangent LoRA (DT-LoRA), which partitions a fixed rank budget into a stable branch and a dynamic branch to capture the principal residual gradient directions. We show that these directions define the optimal update of a local quadratic model under orthogonal-complement and rank constraints. Matrix-free randomized SVD recovers them without materializing the residual gradient, while controlled write-back preserves accumulated updates and stabilizes training within the allocated rank. DT-LoRA adds no trainable parameters or inference cost over LoRA. Experiments across computer vision and natural language processing tasks demonstrate consistent improvements over LoRA and its variants. Moreover, despite ",
+          "abstract_truncated": true,
+          "bm25_score": 40.76250893922663,
+          "assessment": {
+            "paper_id": "2610.17730",
+            "label": "relevant",
+            "reason": "Analyzes LoRA's factorized optimization geometry and targets unused spectral gradient directions.",
+            "evidence_quote": "factorized updates are confined to the tangent space of the current low-rank factors, leaving gradient components outside this space unexploited."
+          },
+          "code": {
+            "status": "not_checked"
+          },
+          "x_attention": {
+            "status": "disabled",
+            "level": "unknown"
+          }
+        },
+        {
+          "paper_id": "2611.12054",
+          "title": "Low-rank Low Precision Training of Gaussian Processes",
+          "abstract_excerpt": "Training Gaussian processes (GPs) at large scale is computationally challenging because evaluating the log-marginal likelihood and its gradients involves large, dense kernel matrices. We develop a scalable low-rank GP training approach that combines AnchorNet landmark selection with a fully independent training conditional (FITC) correction. The resulting objective and its analytic gradients can be evaluated using low-rank factors, diagonal quantities, and small dense matrices, without forming the full kernel matrix or its derivatives. The complete training procedure is implemented in single precision and evaluated on nine large-scale regression datasets. Across these problems, the method reaches the reference predictive accuracy while substantially reducing training time, although the required approximation rank varies across datasets. We also study the numerical behavior of the full-kernel predictive solve and show that single precision can become limiting for ill-conditioned problems. Finally, we investigate further reducing selected matrix operations to fp16 or TF32. These lower-precision variants provide only modest additional speedups and can become unreliable when the reduce",
+          "abstract_truncated": true,
+          "bm25_score": 28.64262204639279,
+          "assessment": {
+            "paper_id": "2611.12054",
+            "label": "irrelevant",
+            "reason": "The low-rank and low-precision methods target Gaussian-process kernel computation, not neural-network or LLM training.",
+            "evidence_quote": "We develop a scalable low-rank GP training approach"
+          },
+          "code": {
+            "status": "not_checked"
+          },
+          "x_attention": {
+            "status": "disabled",
+            "level": "unknown"
+          }
+        },
+        {
+          "paper_id": "2610.22794",
+          "title": "Ori: Drift-Aware Streaming $k$-PCA for Very Low-Rank LLM Training",
+          "abstract_excerpt": "A prominent family of low-rank LLM optimizers, pioneered by GaLore, performs gradient-subspace projection: at each step, they project the gradient into a low-dimensional subspace and map the update back to the full model. Most existing work either recomputes the gradient subspace at certain intervals, or performs post-hoc adaptation to catch up to the moving subspace. In this work, we explicitly identify in practice the slow, stable manner in which LLM gradient subspaces drift across time. To this end, we propose Ori, a novel low-rank optimizer for training LLMs that captures the shifting principal gradient directions over time to achieve state-of-the-art accuracy under stringent low-rank constraints. Ori employs a streaming $k$-PCA algorithm inspired by Oja++, whose low per-step cost enables high-frequency, on-the-fly subspace tracking. In practice, Ori reduces the performance gap of the state-of-the-art low-rank optimizers to full-rank optimizers by up to 69.3\\% on a 1B LLaMA pretraining task, and achieves the best performance on 10 out of 16 task scenarios in Roberta-Base fine-tuning. Together, these contributions allow Ori to further push the performance and efficiency frontier",
+          "abstract_truncated": true,
+          "bm25_score": 36.13970779973776,
+          "assessment": {
+            "paper_id": "2610.22794",
+            "label": "relevant",
+            "reason": "Directly addresses low-rank gradients and optimizer efficiency in LLM pretraining.",
+            "evidence_quote": "we propose Ori, a novel low-rank optimizer for training LLMs"
+          },
+          "code": {
+            "status": "not_checked"
+          },
+          "x_attention": {
+            "status": "disabled",
+            "level": "unknown"
+          }
+        },
+        {
+          "paper_id": "2611.14397",
+          "title": "A Margin Perspective on LoRA: Robustness to Catastrophic Forgetting and Adapter Merging (MaLoRA)",
+          "abstract_excerpt": "Low-rank adaptation (LoRA) is the de facto method for parameter-efficient fine-tuning of large neural networks, achieving strong task adaptation with minimal trainable parameters and low optimization cost. Beyond this efficiency, practitioners have observed two striking properties: \\textit{robustness to catastrophic forgetting} and the ability to \\textit{merge independently trained adapters} into a single model that performs competitively across multiple tasks. These properties are central to continual and multi-task learning, yet remain poorly understood. In this work, we provide a theoretical explanation through a unified \\textit{margin-based perspective}. We analyze LoRA in multiclass linear classification under a near-orthogonal task regime with $\\ell_2$-regularization, and characterize the optimal LoRA adapter across regularization regimes. Our analysis shows that, in an intermediate regime of regularization parameters, the optimal adapter aligns with the \\emph{max-margin solution} on the fine-tuning data. Building on this characterization, we derive two key consequences. First, we obtain closed-form expressions for the margins on pre-training and fine-tuning data, revealing a",
+          "abstract_truncated": true,
+          "bm25_score": 34.74459520002662,
+          "assessment": {
+            "paper_id": "2611.14397",
+            "label": "relevant",
+            "reason": "Studies LoRA's optimization geometry and the retention–adaptation tradeoff, with language-task experiments.",
+            "evidence_quote": "the regularization parameter controls the balance between retention and adaptation"
+          },
+          "code": {
+            "status": "not_checked"
+          },
+          "x_attention": {
+            "status": "disabled",
+            "level": "unknown"
+          }
+        },
+        {
+          "paper_id": "2610.31728",
+          "title": "When and How Does Muon Precondition? The Role of Structured Gradient Noise",
+          "abstract_excerpt": "Muon has become a popular optimizer for large language model training, yet its theoretical foundations remain poorly understood. In this work, we study how gradient noise geometry shapes Muon's preconditioning benefits. We first show, theoretically and empirically, that under the classical isotropic noise assumption, Muon offers no acceleration beyond a rescaling of the learning rate. This motivates us to investigate structured noise arising from mini-batch sampling in associative memory with heterogeneous task frequencies. We establish an exact balancing threshold for two tasks and extend the analysis to multiple tasks, revealing how task coverage and gradient reliability jointly shape learning. Our analysis shows that Muon can soften the dependence on task frequency from linear to square-root, helping balance the learning of frequent and rare tasks. We further identify rotation-induced negative transfer in SignSGD that Muon avoids, and explain how momentum reduces sampling noise while tracking changing gradients. Controlled numerical experiments validate these mechanisms, and a preliminary LLM pretraining study illustrates the practical promise of fast-slow momentum.",
+          "abstract_truncated": false,
+          "bm25_score": 35.915290801973775,
+          "assessment": {
+            "paper_id": "2610.31728",
+            "label": "relevant",
+            "reason": "Analyzes Muon's preconditioning and gradient-noise geometry, with an LLM pretraining study.",
+            "evidence_quote": "we study how gradient noise geometry shapes Muon's preconditioning benefits"
+          },
+          "code": {
+            "status": "not_checked"
+          },
+          "x_attention": {
+            "status": "disabled",
+            "level": "unknown"
+          }
+        },
+        {
+          "paper_id": "2611.08082",
+          "title": "DictLLM: Post-training Compression of Large Language Model with Dictionary Kernels",
+          "abstract_excerpt": "Efficient deployment of large language models (LLMs) on mobile devices requires balancing performance with compute and memory constraints. Post-training compression is an effective approach to managing this trade-off, while requiring much less computation than in-training counterparts. We propose DictLLM, a dictionary-based compression scheme in which weight matrices within grouped layers are decomposed into a shared dictionary and layer-specific sparse coefficients, directly obtained from a pre-trained model without further training. Specifically, we cast DictLLM as a four-step post-training optimization. First, we obtain shared dictionaries via singular value decomposition (SVD) of input-scaled weight matrices, amortizing rank across grouped layers; second, we sparsify the layer-specific coefficients to the target compression ratio using a dictionary-aware Hessian; and third, we refine the dictionaries given the resulting sparse coefficients. Finally, we aggressively quantize both components using factor-specific Hessian information: input covariance for the dictionaries and the dictionary-aware Hessian for the coefficients. The resulting representation reduces memory footprint b",
+          "abstract_truncated": true,
+          "bm25_score": 36.00262843850101,
+          "assessment": {
+            "paper_id": "2611.08082",
+            "label": "relevant",
+            "reason": "Evaluates low-rank LLM compressibility and the model-size versus quality tradeoff, though compression is post-training.",
+            "evidence_quote": "pushes the Pareto frontier between model size and performance"
+          },
+          "code": {
+            "status": "not_checked"
+          },
+          "x_attention": {
+            "status": "disabled",
+            "level": "unknown"
+          }
+        },
+        {
+          "paper_id": "2610.04249",
+          "title": "Optimizer Geometry Sets the Pace: Spectral Learning Dynamics in Matrix Factorization",
+          "abstract_excerpt": "Recent successes of matrix- and curvature-based optimizers have renewed interest in how update geometry shapes learning. These methods normalize or precondition updates, changing how different components progress during training. In deep matrix factorization, the geometry that slows gradient descent (GD) favors low-rank solutions by delaying the emergence of small singular modes. This raises the question of what remains of that spectral bias when normalization or curvature correction weakens or removes the slowdown. We study how optimizer geometry and depth jointly govern this behavior through a common framework for singular mode dynamics. Under explicit balance and alignment assumptions, we derive birth, saturation, and decay laws for Euclidean GD, coordinate-wise updates of SignGD and an instantaneous Adam approximation, spectral updates of Muon and cumulative Shampoo, and a block curvature model of K-FAC. The resulting picture is not a simple ordering from stronger to weaker low-rank bias. To highlight, SignGD and ideal Muon eliminate the divergent birth barrier and drive unsupported modes to zero in finite time. Cumulative Shampoo initially retains GD's depth-dependent barrier,",
+          "abstract_truncated": true,
+          "bm25_score": 53.56284484301824,
+          "assessment": {
+            "paper_id": "2610.04249",
+            "label": "relevant",
+            "reason": "Directly studies how optimizers affect singular-mode dynamics and low-rank bias.",
+            "evidence_quote": "optimizer geometry and depth jointly govern this behavior through a common framework for singular mode dynamics"
+          },
+          "code": {
+            "status": "not_checked"
+          },
+          "x_attention": {
+            "status": "disabled",
+            "level": "unknown"
+          }
+        },
+        {
+          "paper_id": "2610.10965",
+          "title": "Spectrally Targeted Muon",
+          "abstract_excerpt": "The Muon optimizer orthogonalizes each update matrix, setting all of its singular values to one, and has proven highly effective for training large language models. It remains unclear, however, whether this success comes from amplifying small singular directions that gradient descent neglects or from suppressing large, degenerate directions that disrupt training. We introduce Spectrally Targeted Muon, which orthogonalizes only the singular values above or below a threshold $τ$, so that varying $τ$ interpolates between normalized SGD and Muon. It isolates the relevant singular subspaces with projections computed by Newton-Schulz iteration on a shifted Gram matrix, so no SVD is needed. We evaluate these variants on the CIFAR-10 and NanoGPT speedruns, tracking the effective rank of gradient, update, and weight matrices and a new metric, the alignment of updates with the tangent space of the weight matrix's isospectral manifold. We find three things. First, the small singular values of the momentum are not noise. Orthogonalizing everything except the few largest singular values of each matrix nearly matches Muon while touching only a small fraction of the momentum, whereas orthogonaliz",
+          "abstract_truncated": true,
+          "bm25_score": 48.26818790943404,
+          "assessment": {
+            "paper_id": "2610.10965",
+            "label": "relevant",
+            "reason": "Directly addresses Muon, Newton–Schulz spectral operations, and effective rank during language-model training.",
+            "evidence_quote": "tracking the effective rank of gradient, update, and weight matrices"
+          },
+          "code": {
+            "status": "not_checked"
+          },
+          "x_attention": {
+            "status": "disabled",
+            "level": "unknown"
+          }
+        },
+        {
+          "paper_id": "2611.05022",
+          "title": "Finite Spectral Depth Controls Gaussian Entrance Rank and Avoidance of the First Gradient-Flow Saddle",
+          "abstract_excerpt": "Matrix factorization provides a simple model for studying the training dynamics of neural networks. Recent studies of gradient flow under small initialization have analyzed how trajectories escape from a neighborhood of the origin and approach their first nonzero stationary point. In this paper, we study continuous-time dynamics that applies a finite number of Newton-Schulz iterations to the normalized matrix gradient (Muon). We show that the number of Newton-Schulz steps can change the rank selected during the early stages of training and allow the resulting trajectory to bypass the first nonzero stationary point approached by gradient flow. Under an additional residual-inertia condition, we prove that bypass occurs for all sufficiently large finite Newton-Schulz depths and provide an explicit sufficient threshold. We also construct an example in which the bypass threshold is four.",
+          "abstract_truncated": false,
+          "bm25_score": 43.75291798199872,
+          "assessment": {
+            "paper_id": "2611.05022",
+            "label": "relevant",
+            "reason": "Analyzes how finite Newton–Schulz depth changes rank selection in matrix-factorization training.",
+            "evidence_quote": "the number of Newton-Schulz steps can change the rank selected during the early stages of training"
+          },
+          "code": {
+            "status": "not_checked"
+          },
+          "x_attention": {
+            "status": "disabled",
+            "level": "unknown"
+          }
+        },
+        {
+          "paper_id": "2610.19700",
+          "title": "ReGRA: Residual-Gradient Adaptation for Complementary Low-Rank Fine-Tuning",
+          "abstract_excerpt": "Low-rank adaptation (LoRA) enables parameter-efficient fine-tuning by learning low-rank weight updates. Increasing rank expands adaptation capacity, but does not guarantee that all learned directions improve downstream performance. In a diagnostic experiment with rank-16 LoRA, we show that retaining only the top singular components achieves the best performance, whereas adding further components degrades it. Motivated by this, we propose Residual-Gradient Adaptation (ReGRA), a two-stage method for making more effective use of a fixed rank budget. After the first stage, ReGRA estimates task gradients on a calibration set and removes their projections onto the two-sided subspace induced by the first-stage update. It then aggregates the residual-gradient directions to initialize a second-stage adapter without changing the first-stage update. An orthogonality regularizer encourages the two updates to capture complementary directions. Both updates can be merged into the pretrained weights, incurring no additional inference overhead. Across diverse benchmark sets, ReGRA achieves stronger performance than alternatives with the same total rank and even matches LoRA adapters with twice the ",
+          "abstract_truncated": true,
+          "bm25_score": 36.388772643231306,
+          "assessment": {
+            "paper_id": "2610.19700",
+            "label": "relevant",
+            "reason": "Studies singular directions and gradient subspaces in rank-constrained LoRA fine-tuning.",
+            "evidence_quote": "retaining only the top singular components achieves the best performance"
+          },
+          "code": {
+            "status": "not_checked"
+          },
+          "x_attention": {
+            "status": "disabled",
+            "level": "unknown"
+          }
+        },
+        {
+          "paper_id": "2610.04507",
+          "title": "LoRA's Second Descent Extends Beyond Parameter Parity",
+          "abstract_excerpt": "Double descent has sparked considerable interest, with recent work relating it to the data, the model and the learning configuration. Practical fine-tuning commonly involves training a small adapter on top of frozen pretrained weights, as in low-rank adaptation (LoRA). The adapter's rank is the hyperparameter that sets its capacity, yet how this rank relates to double descent has not been well explored. We quantify this relation under label noise on four vision backbones and a 7B language model with a module-matched rank sweep (MMRS), which extends past full rank and compares every rank with dense fine-tuning of the same modules, paired by seed. On DeiT-Tiny, risk is lowest at rank one and rises sharply as the adapter becomes able to fit the noisy labels, forming an interpolation cliff. Past the peak, risk falls again, but every tested post-peak rank that still saves parameters remains above dense risk. Rank-one LoRA outperforms dense fine-tuning on three of the four vision backbones, consistent with strong regularization at small rank. LoRA thus exhibits a second descent, but matches dense risk only after losing its parameter advantage, first on DeiT-Tiny at four times dense's pro",
+          "abstract_truncated": true,
+          "bm25_score": 38.386452743310066,
+          "assessment": {
+            "paper_id": "2610.04507",
+            "label": "relevant",
+            "reason": "Directly connects LoRA rank, noisy-label memorization, generalization, and language-model fine-tuning.",
+            "evidence_quote": "We quantify this relation under label noise on four vision backbones and a 7B language model"
+          },
+          "code": {
+            "status": "not_checked"
+          },
+          "x_attention": {
+            "status": "disabled",
+            "level": "unknown"
+          }
+        }
+      ],
+      "bounds": {
+        "categories": [
+          "cs.LG",
+          "cs.CL",
+          "stat.ML",
+          "cs.AI",
+          "cs.IR"
+        ],
+        "date_from": "2026-09-28",
+        "date_to": "2026-11-15",
+        "digest_size": 10,
+        "max_candidates": null,
+        "new_only": false,
+        "x_enabled": false
+      }
+    },
+    "reviews": {
+      "precision": {
+        "assessments": [
+          {
+            "paper_id": "2610.23343",
+            "recommendation": "include",
+            "reason": "Directly connects LoRA rank bounds, trace-norm regularization, and optimization geometry.",
+            "uncertainty": "Abstract is truncated."
+          },
+          {
+            "paper_id": "2611.06598",
+            "recommendation": "include",
+            "reason": "Studies behavioral compressibility of LoRA adapters and links it to spectral structure.",
+            "uncertainty": "Abstract is truncated."
+          },
+          {
+            "paper_id": "2610.08049",
+            "recommendation": "include",
+            "reason": "Directly addresses the geometry and optimization of factorized LoRA updates.",
+            "uncertainty": "Abstract is truncated."
+          },
+          {
+            "paper_id": "2611.17191",
+            "recommendation": "include",
+            "reason": "Effective-rank regularization for LoRA closely matches the researcher's spectral fine-tuning interests.",
+            "uncertainty": "Abstract is truncated."
+          },
+          {
+            "paper_id": "2610.32142",
+            "recommendation": "uncertain",
+            "reason": "LoRA initialization and learning-rate stability are relevant, but less central than rank geometry and spectra.",
+            "uncertainty": "Abstract is truncated."
+          },
+          {
+            "paper_id": "2609.36692",
+            "recommendation": "include",
+            "reason": "Combines spectral preconditioning, Newton–Schulz approximations, and LLM pretraining.",
+            "uncertainty": "Abstract is truncated."
+          },
+          {
+            "paper_id": "2609.34264",
+            "recommendation": "uncertain",
+            "reason": "A geometry-aware LoRA optimizer fits the profile, but overlaps with a more detailed candidate on this topic.",
+            "uncertainty": ""
+          },
+          {
+            "paper_id": "2609.37027",
+            "recommendation": "uncertain",
+            "reason": "LoRA gradient geometry and optimizer-state memory are relevant, though the proposed base-weight updates move beyond standard low-rank adaptation.",
+            "uncertainty": "Abstract is truncated."
+          },
+          {
+            "paper_id": "2610.15965",
+            "recommendation": "exclude",
+            "reason": "Batch-size and GPU-time tradeoffs are adjacent, but the paper does not address the profile's low-rank, spectral, or memory-efficient methods.",
+            "uncertainty": "Abstract is truncated."
+          },
+          {
+            "paper_id": "2610.32854",
+            "recommendation": "uncertain",
+            "reason": "LoRA's statistical geometry is relevant, but singular learning theory is less directly tied to the stated optimization goals.",
+            "uncertainty": "Abstract is truncated."
+          },
+          {
+            "paper_id": "2610.24816",
+            "recommendation": "exclude",
+            "reason": "Phone-NPU implementation of LoRA is peripheral to the researcher's optimization and LLM-scale training priorities.",
+            "uncertainty": "Abstract is truncated."
+          },
+          {
+            "paper_id": "2610.05318",
+            "recommendation": "exclude",
+            "reason": "Analog-hardware noise mitigation is a specialized LoRA application outside the stated priorities.",
+            "uncertainty": "Abstract is truncated."
+          },
+          {
+            "paper_id": "2610.23571",
+            "recommendation": "include",
+            "reason": "Directly tests how Muon's spectral geometry affects model compressibility.",
+            "uncertainty": "Compression is structured channel pruning rather than low-rank factorization; abstract is truncated."
+          },
+          {
+            "paper_id": "2610.06542",
+            "recommendation": "uncertain",
+            "reason": "LoRA rank selection and optimization landscape fit the profile, but the theoretical focus overlaps with stronger candidates.",
+            "uncertainty": "Abstract is truncated."
+          },
+          {
+            "paper_id": "2610.01620",
+            "recommendation": "uncertain",
+            "reason": "Low-rank gradient projection and memory–communication tradeoffs fit, but the federated setting is not a stated priority.",
+            "uncertainty": "Abstract is truncated."
+          },
+          {
+            "paper_id": "2610.02283",
+            "recommendation": "uncertain",
+            "reason": "Spectral concentration in LoRA updates is relevant, but continual learning is peripheral to the stated goals.",
+            "uncertainty": "Abstract is truncated."
+          },
+          {
+            "paper_id": "2611.13331",
+            "recommendation": "uncertain",
+            "reason": "Rank-dependent LoRA optimization is relevant, but the federated-learning emphasis lowers priority.",
+            "uncertainty": "Abstract is truncated."
+          },
+          {
+            "paper_id": "2610.06647",
+            "recommendation": "uncertain",
+            "reason": "Low-rank gradient sketches and training-memory savings fit, but the focus is RL post-training rather than pretraining.",
+            "uncertainty": ""
+          },
+          {
+            "paper_id": "2609.40148",
+            "recommendation": "exclude",
+            "reason": "Pretraining schedules and scaling are adjacent, but the paper does not directly study low-rank, spectral optimization, or training memory.",
+            "uncertainty": "Abstract is truncated."
+          },
+          {
+            "paper_id": "2610.17730",
+            "recommendation": "uncertain",
+            "reason": "LoRA tangent-space geometry and spectral residual gradients fit, but overlap with other selected LoRA optimization papers.",
+            "uncertainty": "Abstract is truncated."
+          },
+          {
+            "paper_id": "2611.12054",
+            "recommendation": "exclude",
+            "reason": "Low-rank Gaussian-process kernel training is outside the neural-network and LLM focus.",
+            "uncertainty": ""
+          },
+          {
+            "paper_id": "2610.22794",
+            "recommendation": "include",
+            "reason": "Directly targets GaLore-like low-rank gradient optimization in LLM pretraining.",
+            "uncertainty": "Abstract is truncated."
+          },
+          {
+            "paper_id": "2611.14397",
+            "recommendation": "uncertain",
+            "reason": "LoRA regularization and retention are relevant, but the simplified margin model is less central to current goals.",
+            "uncertainty": "Abstract is truncated."
+          },
+          {
+            "paper_id": "2610.31728",
+            "recommendation": "uncertain",
+            "reason": "Muon preconditioning and gradient-noise geometry fit, though the LLM study is described as preliminary.",
+            "uncertainty": ""
+          },
+          {
+            "paper_id": "2611.08082",
+            "recommendation": "uncertain",
+            "reason": "SVD-based LLM compression relates to compressibility, but it is post-training and does not study how training produces it.",
+            "uncertainty": "Abstract is truncated."
+          },
+          {
+            "paper_id": "2610.04249",
+            "recommendation": "include",
+            "reason": "Directly studies how optimizer geometry changes singular-mode dynamics and low-rank bias.",
+            "uncertainty": "Results rely on matrix-factorization assumptions; abstract is truncated."
+          },
+          {
+            "paper_id": "2610.10965",
+            "recommendation": "include",
+            "reason": "Direct match for Muon, Newton–Schulz operations, and effective-rank measurements during LM training.",
+            "uncertainty": "Abstract is truncated."
+          },
+          {
+            "paper_id": "2611.05022",
+            "recommendation": "uncertain",
+            "reason": "Newton–Schulz depth and rank selection fit closely, but the analysis is confined to a matrix-factorization model.",
+            "uncertainty": ""
+          },
+          {
+            "paper_id": "2610.19700",
+            "recommendation": "uncertain",
+            "reason": "Singular directions and rank-budget use in LoRA fit, but the proposed two-stage adaptation is less central than spectral optimization papers.",
+            "uncertainty": "Abstract is truncated."
+          },
+          {
+            "paper_id": "2610.04507",
+            "recommendation": "include",
+            "reason": "Directly connects LoRA rank, label-noise memorization, and generalization, including a language-model experiment.",
+            "uncertainty": "Abstract is truncated."
+          }
+        ]
+      }
+    }
+  }
+}

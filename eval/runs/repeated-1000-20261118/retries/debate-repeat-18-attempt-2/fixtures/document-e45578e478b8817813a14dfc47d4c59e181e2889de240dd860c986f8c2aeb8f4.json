@@ -1,0 +1,1123 @@
+{
+  "status": "ok",
+  "source": "https://arxiv.org/html/2610.30676v1",
+  "extractor_version": "article-v1",
+  "chunks": [
+    {
+      "chunk_id": "chunk-0001",
+      "section": "Spectral Smoothing and Spiking Perturbations Reconfigure Capability Profiles and Selective Task Performance in Large Language Models",
+      "text": "Qince Luan Affiliation: Southern University of Science and Technology (SUSTech) Email: 12532589@mail.sustech.edu.cn Jianhui Xu Affiliation: Independent Scholar Affiliation: Work completed during a research assistant position at SUSTech Email: neuromoments@gmail.com Yang Xu † † thanks: Corresponding author. Affiliation: Southern University of Science and Technology (SUSTech) Email: xuyang@sustech.edu.cn",
+      "source": "https://arxiv.org/html/2610.30676v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0002",
+      "section": "Abstract",
+      "text": "Singular-value spectra encode important structure in transformer feed-forward projections, yet their causal role in downstream behavior remains underexplored. We study post-hoc spectral smoothing and spiking interventions on the up_proj and down_proj matrices. Positive perturbation stretches these deviations, making large singular values larger and small ones smaller relative to the geometric mean (spiking); and vice versa. The intervention preserves singular vectors and the geometric mean of the singular values. Across five open Llama and Qwen instruction models, we evaluate the perturbed systems on capability-labeled subtasks, standard and chain-of-thought reasoning benchmarks, judge-scored truthfulness/hallucination/safety tasks, and TRAIT personality probes. To interpret score shifts, we fit responses in a three-dimensional capability basis consisting of factual knowledge, language understanding, and deductive reasoning. The induced changes suggest structured rather than purely random sensitivity: large positive perturbations more reliably suppress language and deductive responses, moderate negative perturbations can sometimes improve factual or task-local performance on the evaluated grids, and sensitivity varies strongly by model family, benchmark module, and underlying layerwise spectral inequality. These results position spectral perturbation as a lightweight intervention for probing how capabilities are organized and traded off in large language models.",
+      "source": "https://arxiv.org/html/2610.30676v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0003",
+      "section": "1 Introduction",
+      "text": "(a) Schematic illustration of the singular-value perturbation applied to feed-forward projection matrices. (b) Trait-level response profiles under spectral perturbation, showing how behavior shifts across models and perturbation strengths. (c) Selected task-level outcomes, highlighting that the same perturbation can improve some subtasks while degrading others. Figure 1: Overview of the perturbation setup and representative behavioral effects. Panel (a) visualizes the SVD-based perturbation schema, panel (b) summarizes trait-level responses, and panel (c) highlights selective task-level changes induced by the intervention. Large language model behavior is usually analyzed through prompting, finetuning, or activation-level interventions. By contrast, we ask whether a small, interpretable change to pretrained weight spectra is already enough to expose structure in downstream behavior. The singular values of transformer MLP projections summarize how strongly each layer amplifies different directions; if that spectral geometry carries functional information, then changing it in a controlled way should produce at least partly systematic behavioral effects rather than only unstructured noise. We therefore study a constrained intervention on feed-forward projections in which singular values are reweighted around their geometric mean while the corresponding singular vectors are left unchanged. This makes spectral inequality itself the manipulated variable and lets us ask whether broad capability patterns can be reorganized without changing tokenization, prompts, or optimization. Figure 1 previews the three complementary views used throughout the paper: the intervention itself, broad behavioral shifts, and concrete task-level gains and losses.",
+      "source": "https://arxiv.org/html/2610.30676v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0004",
+      "section": "1 Introduction",
+      "text": "The empirical picture that emerges is not one of uniform quality loss. Instead, spectral smoothing and spiking redistribute behavior across benchmark modules, auxiliary tasks, and personality-style probes. Some settings mainly suppress language and deductive responses, while others preserve or even improve specific factual or task-local behaviors. The goal of the paper is therefore not to identify a universally best α \\alpha , but to characterize which capabilities become more or less available under controlled spectral perturbation. Our main contributions are threefold: • We introduce a lightweight singular-value smoothing/spiking intervention for transformer MLP projections and evaluate it across five open Llama and Qwen instruction models ( Grattafiori et al., 2024 ; Yang et al., 2025 ) . • We build a subtask-level capability-response analysis over 118 subtasks, using a retained three-dimensional basis of Factual Knowledge , Language Understanding , and Deductive Reasoning . • We provide evidence that spectral perturbations induce non-uniform tradeoffs across capability-labeled benchmark modules, auxiliary tasks, judge-scored truthfulness/hallucination/safety evaluations, and TRAIT personality probes ( Lee et al., 2024 ) , and we relate this heterogeneity to non-uniform layerwise spectral sensitivity.",
+      "source": "https://arxiv.org/html/2610.30676v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0005",
+      "section": "Singular directions as interpretable transformer subspaces.",
+      "text": "A growing line of interpretability work studies transformer weight matrices through their singular vectors. Conjecture (2022) show that the top singular directions of GPT-style MLP and attention output-value matrices often correspond to interpretable semantic clusters. Their analysis supports the view that transformer matrices learn privileged input-output directions, and that singular vectors can reveal semantic axes along which a component strongly acts. However, their results primarily concern high-gain directions and do not imply that all model functionality is concentrated in the largest singular values. More recent work argues that transformer components should not be treated as indivisible computational units. Ahmad et al. (2025) decompose attention and MLP components into singular-vector directions and show that meaningful circuit behavior can reside in compact low-rank subspaces. This perspective is closely aligned with our motivation: if different singular directions inside the same matrix support different functions, then controlled spectral perturbation may selectively alter behavioral profiles without changing the model architecture or retraining it.",
+      "source": "https://arxiv.org/html/2610.30676v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0006",
+      "section": "High- and low-spectrum components.",
+      "text": "Several studies complicate the common assumption that only large singular values matter. Staats et al. (2025) use random matrix theory to show that small singular values in trained transformers can deviate from random baselines and can be important for model behavior, especially after fine-tuning or alignment. Their findings suggest that small singular values should not be dismissed as numerical noise. Similarly, Cancedda (2024) analyze embedding and unembedding spectra and identify low-spectrum “dark” subspaces that are weakly visible to logit-lens-style projections but important for attention sink behavior. This is relevant to our negative- α \\alpha perturbations: smoothing the spectrum can relatively preserve or amplify low-gain directions, which may affect routing, attention management, formatting, calibration, or alignment-like behavior rather than only factual recall. At the other end of the spectrum, low-rank filtering methods suggest that preserving dominant spectral components can sometimes improve benchmark behavior. LASER ( Sharma et al., 2023 ) applies layer-selective rank reduction to LLM weights and reports improvements on reasoning and question-answering benchmarks under carefully chosen layer and matrix interventions. A conservative interpretation is that removing lower-spectrum components can suppress competing associations, distractors, or noisy alternatives, rather than proving that reasoning is exclusively encoded in high singular directions. Our positive- α \\alpha perturbation differs from hard truncation: it continuously sharpens the spectrum while preserving all directions, allowing us to study graded behavioral responses.",
+      "source": "https://arxiv.org/html/2610.30676v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0007",
+      "section": "Singular-value adaptation and parameter-efficient tuning.",
+      "text": "Parameter-efficient tuning methods also provide evidence that different spectral bands support different roles. PiSSA ( Meng et al., 2025 ) initializes adapters using principal singular values and vectors, arguing that principal components capture essential directions of pretrained weights and can provide an effective adaptation subspace. In contrast, MiLoRA ( Wang et al., 2025b ) adapts minor singular components while freezing principal components, motivating the minor subspace as a way to update task-specific or long-tail behavior while reducing interference with pretrained knowledge. KaSA ( Wang et al., 2025a ) further frames singular-value adaptation in terms of activating task-relevant parametric knowledge. These works do not agree on a simple functional assignment of high versus low singular components. Instead, they suggest that principal components often encode dominant pretrained structure, whereas minor components can support adaptation, long-tail behavior, or less visible information. Our work complements this literature by perturbing singular values directly at evaluation time, without training adapters, and measuring how the resulting spectral shift affects capabilities and traits.",
+      "source": "https://arxiv.org/html/2610.30676v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0008",
+      "section": "Parametric knowledge in MLPs.",
+      "text": "A separate literature localizes factual knowledge in transformer feed-forward modules. Geva et al. (2021) propose that feed-forward layers operate as key-value memories, where keys detect textual patterns and values contribute output-token distributions. ROME ( Meng et al., 2023a ) uses causal tracing and rank-one model editing to identify and modify factual associations in mid-layer MLPs, while MEMIT ( Meng et al., 2023b ) scales such edits to many memories. Knowledge-neuron work similarly studies neurons associated with factual recall ( Dai et al., 2022 ) . These studies support the broader premise that MLP weights are central to parametric knowledge and behavior. However, they do not specify which singular-value bands store knowledge. Our work therefore treats factual knowledge as one measured capability dimension rather than assuming it occupies a particular spectral region.",
+      "source": "https://arxiv.org/html/2610.30676v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0009",
+      "section": "Capability decomposition and behavioral evaluation.",
+      "text": "Standard benchmark aggregates can hide heterogeneous task demands. A perturbation that helps one subtask family may harm another, and the same raw accuracy change may reflect different mixtures of factual recall, language comprehension, or deductive reasoning. To address this, we combine fine-grained benchmark subtasks with judge-derived capability-demand weights, then fit perturbation responses in a low-dimensional capability space. This differs from prior spectral work that focuses primarily on matrix structure, low-rank approximation, or isolated reasoning benchmarks. By jointly analyzing benchmark subtasks, capability projections, and TRAIT personality scores, we evaluate spectral perturbation as a behavioral intervention rather than only a compression or interpretability tool.",
+      "source": "https://arxiv.org/html/2610.30676v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0010",
+      "section": "Perturbation.",
+      "text": "Our core perturbation acts on the up_proj and down_proj weight matrices in each MLP layer. For each weight matrix W W , we compute an SVD W = U ​ diag ⁡ ( σ 1 , … , σ r ) ​ V ⊤ , W=U\\operatorname{diag}(\\sigma_{1},\\ldots,\\sigma_{r})V^{\\top}, (1) where σ i > 0 \\sigma_{i}>0 are the nonzero singular values and r r is the rank of W W . We then move to log-singular-value space, ℓ i = log ⁡ σ i , ℓ ¯ = 1 r ​ ∑ i = 1 r ℓ i . \\ell_{i}=\\log\\sigma_{i},\\qquad\\bar{\\ell}=\\frac{1}{r}\\sum_{i=1}^{r}\\ell_{i}. (2) Our Matthew SVD perturbation rescales each singular value according to its deviation from the mean log singular value: ℓ i ( α ) = ℓ ¯ + ( 1 + α ) ​ ( ℓ i − ℓ ¯ ) . \\ell_{i}^{(\\alpha)}=\\bar{\\ell}+(1+\\alpha)(\\ell_{i}-\\bar{\\ell}). (3) Equivalently, the perturbed singular values are σ i ( α ) = exp ⁡ ( ℓ ¯ + ( 1 + α ) ​ ( ℓ i − ℓ ¯ ) ) . \\sigma_{i}^{(\\alpha)}=\\exp\\!\\left(\\bar{\\ell}+(1+\\alpha)(\\ell_{i}-\\bar{\\ell})\\right). (4) This can also be written as σ i ( α ) = σ i 1 + α ( ∏ j = 1 r σ j ) − α / r . \\sigma_{i}^{(\\alpha)}=\\sigma_{i}^{1+\\alpha}\\left(\\prod_{j=1}^{r}\\sigma_{j}\\right)^{-\\alpha/r}. (5) Finally, we reconstruct the perturbed weight matrix as W ( α ) = U ​ diag ⁡ ( σ 1 ( α ) , … , σ r ( α ) ) ​ V ⊤ . W^{(\\alpha)}=U\\operatorname{diag}\\left(\\sigma_{1}^{(\\alpha)},\\ldots,\\sigma_{r}^{(\\alpha)}\\right)V^{\\top}. (6) Positive α \\alpha amplifies deviations from the mean log singular value, producing a more peaked spectrum, whereas negative α \\alpha suppresses these deviations and produces a smoother spectrum on the evaluated grids, where − 1 < α < 1 -1<\\alpha<1 . Because the mean log singular value is preserved, 1 r ​ ∑ i ℓ i ( α ) = ℓ ¯ , \\frac{1}{r}\\sum_{i}\\ell_{i}^{(\\alpha)}=\\bar{\\ell},",
+      "source": "https://arxiv.org/html/2610.30676v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0011",
+      "section": "Perturbation.",
+      "text": "the geometric mean of the singular values remains unchanged. The perturbation therefore changes the inequality, or “Matthew effect,” of the spectrum without globally rescaling the matrix in log space, while keeping the singular vectors fixed.",
+      "source": "https://arxiv.org/html/2610.30676v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0012",
+      "section": "Implementation details.",
+      "text": "The experiments start from the public instruction-tuned checkpoints Llama 3.2 1B Instruct, Llama 3.2 3B Instruct, Llama 3.1 8B Instruct, Qwen3 8B, and Qwen3 30B-A3B. For the four dense models, the perturbation is applied to every MLP up_proj and down_proj matrix in every transformer layer. For Qwen3 30B-A3B MoE, the same log-spectrum transform is applied to every expert up_proj / down_proj pair and to the shared-expert projections as well. In all cases, weights are converted to float32, singular values are clamped below at 10 − 9 10^{-9} before taking logs, the perturbed matrix is reconstructed with an economy SVD, and the final weights are stored in bfloat16. No finetuning, adapter tuning, prompt tuning, or additional optimization is performed after the perturbation.",
+      "source": "https://arxiv.org/html/2610.30676v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0013",
+      "section": "Alpha grids and global inference.",
+      "text": "Capability-labeled benchmarks, TRAIT analyses, and the official full non-judge auxiliary evaluations use a nine-point grid { − 0.2 , − 0.15 , − 0.1 , − 0.05 , 0 , 0.05 , 0.1 , 0.15 , 0.2 } \\{-0.2,-0.15,-0.1,-0.05,0,0.05,0.1,0.15,0.2\\} ; judge-scored auxiliary probes use the coarser grid { − 0.3 , − 0.2 , − 0.1 , 0 , 0.1 , 0.2 , 0.3 } \\{-0.3,-0.2,-0.1,0,0.1,0.2,0.3\\} . All custom free-generation evaluations use deterministic decoding with temperature 0 0 . Tensor parallelism is 1 1 for all models except Qwen3 30B-A3B, which uses tensor parallelism 4 4 . Runtime context ceilings are model-dependent (2048–4096 tokens for no-CoT and judge evaluations and 4096–8192 tokens for CoT evaluations) but do not otherwise change prompts or scoring rules.",
+      "source": "https://arxiv.org/html/2610.30676v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0014",
+      "section": "Evaluation roadmap.",
+      "text": "The main capability-labeled benchmark suite uses 118 subtasks from MMLU-Pro , MMLU-Redux , AGIEval , and BBH ; Section 5 gives the benchmark composition, capability-labeling protocol, and response-fit model next to the corresponding results. To test whether the same perturbation transfers beyond that suite, Section 4 evaluates full standard no-CoT tasks, judge-scored truthfulness/hallucination/safety probes, and full standard CoT variants, with parser diagnostics reported for boxed-answer tasks and first-pass/retry diagnostics for BFCL. Section 6 separately reports TRAIT continuation-likelihood scores.",
+      "source": "https://arxiv.org/html/2610.30676v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0015",
+      "section": "Best-alpha conventions.",
+      "text": "Whenever a table reports a best α ∗ \\alpha^{*} , it is the highest-scoring perturbation on the displayed grid. If several α \\alpha values tie for the maximum and α = 0 \\alpha=0 is among them, we report α ∗ = 0 \\alpha^{*}=0 ; otherwise we choose the tied value with smallest | α | |\\alpha| . We distinguish fractional gain, Δ frac \\Delta_{\\mathrm{frac}} , from percentage-point gain, Δ pp = 100 ​ Δ frac \\Delta_{\\mathrm{pp}}=100\\Delta_{\\mathrm{frac}} . For auxiliary-task tables, the fractional normalization divides the best-minus-baseline improvement by the task’s natural score range: 1 for ordinary rates, 2 for TruthfulQA and HaluEval, and 3 for AdvBench.",
+      "source": "https://arxiv.org/html/2610.30676v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0016",
+      "section": "4 Auxiliary Tasks Reveal Selective Gains",
+      "text": "The same intervention produces equally non-uniform behavior outside the capability-labeled benchmark suite. Table 1 summarizes the best observed settings on the official full non-judge auxiliary evaluations, while Table 2 reports the separate exploratory judge-scored probes. The full non-judge evaluations change the qualitative emphasis relative to small-slice runs: no-CoT ARC-Challenge is mostly flat, while the largest gains concentrate on GSM8K and BFCL. For example, Llama 3.1 8B rises from 0.324 to 0.551 on full GSM8K at α = − 0.15 \\alpha=-0.15 , and the two smaller Llama models gain substantially on BFCL. Several already-strong baselines remain effectively flat, which is more consistent with a redistribution of error modes than with a blanket improvement in answer quality.",
+      "source": "https://arxiv.org/html/2610.30676v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0017",
+      "section": "Standard no-CoT protocol.",
+      "text": "The standard no-CoT auxiliary suite uses the full GSM8K test set (1319 examples), MATH-500 test set (500 examples), ARC-Challenge test set (1172 examples), and BFCL v3 simple split (400 examples). For GSM8K, MATH, and ARC-Challenge, the system instruction asks the model to solve the problem directly, provide no reasoning steps, and place the final answer inside \\boxed{} . When a chat template exposes hidden thinking, it is explicitly disabled. ARC-Challenge questions are rendered with answer options and ask for only the correct option label inside the box. Greedy decoding uses a 256-token answer cap. Parsing first searches for a boxed answer and then falls back to a task-specific final option, final number, or final line heuristic. Correctness is exact option-label match for ARC-C, exact rational-number match for GSM8K, and normalized string match with numeric fallback for MATH. We report Correct, Wrong Answer, and Format Error rates for these boxed-answer tasks. For BFCL, we report both first-pass function-call success and retry-enabled success; the latter is the score used in the auxiliary summary table.",
+      "source": "https://arxiv.org/html/2610.30676v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0018",
+      "section": "Standard CoT protocol.",
+      "text": "The standard CoT suite uses the full GSM8K test set, MATH-500 test set, and ARC-Challenge test set. The system instruction asks the model to think through the problem carefully and then place the final answer inside \\boxed{} . Hidden thinking is enabled when the model template supports it. Decoding is again greedy, with large generation caps so that truncation can be diagnosed rather than silently absorbed. In addition to Correct, Wrong Answer, and Format Error rates, we report Has Think, Closed Think, and Length Finish rates. If an output ends because of the length cap and only yields a final-line fallback rather than a boxed answer, we count it as a format failure.",
+      "source": "https://arxiv.org/html/2610.30676v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0019",
+      "section": "Judge-scored protocol.",
+      "text": "The judge suite uses the first 100 prompts from TruthfulQA generation validation, HaluEval QA, and the AdvBench harmful-behavior prompt list. For TruthfulQA, the model under test receives only the question; the external judge sees the question, the dataset reference answer, and the model answer. For HaluEval, the model receives a context-question pair and the judge sees the same pair together with the model answer. For AdvBench, the model receives the harmful request and the judge evaluates whether the response refuses or facilitates it. No extra system prompt is added to the model under test. Responses are generated greedily with a 150-token cap. Each response is then scored by DeepSeek-V4-Flash at temperature 0 0 with a strict JSON rubric: TruthfulQA uses a 0/1/2 truthfulness score, HaluEval uses a 0/1/2 groundedness score, and AdvBench uses a 0/1/2/3 safety-refusal score. The reported task score is the mean judge score over the 100 prompts. Table 1: Best non-judge auxiliary-task settings outside the capability-labeled benchmark suite. Standard and CoT rows use the official full evaluations over the nine-point α ∈ [ − 0.2 , 0.2 ] \\alpha\\in[-0.2,0.2] grid. For each task and model, we report the baseline score at α = 0 \\alpha=0 , the best α \\alpha on the evaluated grid, and the normalized gain Δ pp \\Delta_{\\mathrm{pp}} in percentage points of that task’s score range. Bold marks the largest positive gain within each task row.",
+      "source": "https://arxiv.org/html/2610.30676v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0020",
+      "section": "Judge-scored protocol.",
+      "text": "Llama-3.2-1B Llama-3.2-3B Llama-3.1-8B Qwen3-8B Qwen3-30B-A3B Group Task s ⁡ ( 0 ) s(0) Best α \\alpha Δ pp \\Delta_{\\mathrm{pp}} s ⁡ ( 0 ) s(0) Best α \\alpha Δ pp \\Delta_{\\mathrm{pp}} s ⁡ ( 0 ) s(0) Best α \\alpha Δ pp \\Delta_{\\mathrm{pp}} s ⁡ ( 0 ) s(0) Best α \\alpha Δ pp \\Delta_{\\mathrm{pp}} s ⁡ ( 0 ) s(0) Best α \\alpha Δ pp \\Delta_{\\mathrm{pp}} Standard no-CoT GSM8K 0.144 − 0.15 -0.15 + 7.9 +7.9 0.121 − 0.15 -0.15 + 3.3 +3.3 0.324 − 0.15 -0.15 + 22.7 \\mathbf{+22.7} 0.845 − 0.10 -0.10 + 0.6 +0.6 0.864 + 0.10 +0.10 + 3.3 +3.3 Standard no-CoT MATH 0.138 − 0.15 -0.15 + 1.4 +1.4 0.178 − 0.10 -0.10 + 2.6 +2.6 0.212 + 0.10 +0.10 + 1.6 +1.6 0.350 − 0.20 -0.20 + 4.4 \\mathbf{+4.4} 0.426 + 0.15 +0.15 + 2.2 +2.2 Standard no-CoT ARC-C 0.497 + 0.05 +0.05 + 0.1 +0.1 0.728 + 0.05 +0.05 + 0.4 +0.4 0.815 − 0.05 -0.05 + 0.5 \\mathbf{+0.5} 0.922 0 0 + 0.0 +0.0 0.927 0 0 + 0.0 +0.0 Standard no-CoT BFCL 0.598 − 0.10 -0.10 + 14.5 \\mathbf{+14.5} 0.048 − 0.20 -0.20 + 12.5 +12.5 0.593 0 0 + 0.0 +0.0 0.777 − 0.15 -0.15 + 2.8 +2.8 0.885 − 0.10 -0.10 + 2.7 +2.7 Standard CoT GSM8K 0.376 0 0 + 0.0 +0.0 0.745 − 0.05 -0.05 + 0.2 +0.2 0.807 − 0.05 -0.05 + 3.0 +3.0 0.306 − 0.15 -0.15 + 5.7 \\mathbf{+5.7} 0.469 − 0.15 -0.15 + 4.5 +4.5 Standard CoT MATH 0.280 + 0.10 +0.10 + 0.4 +0.4 0.464 0 0 + 0.0 +0.0 0.504 0 0 + 0.0 +0.0 0.172 − 0.05 -0.05 + 3.0 \\mathbf{+3.0} 0.178 − 0.20 -0.20 + 3.0 +3.0 Standard CoT ARC-C 0.208 + 0.05 +0.05 + 1.8 +1.8 0.663 + 0.10 +0.10 + 1.0 +1.0 0.839 − 0.05 -0.05 + 0.2 +0.2 0.583 + 0.10 +0.10 + 3.2 \\mathbf{+3.2} 0.819 + 0.10 +0.10 + 0.9 +0.9 Note. The entries are not capability-labeled and are therefore treated as auxiliary probes. Standard and CoT baselines are accuracies, BFCL uses retry-enabled success, and Δ pp \\Delta_{\\mathrm{pp}} is reported in normalized percentage points.",
+      "source": "https://arxiv.org/html/2610.30676v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0021",
+      "section": "Judge-scored protocol.",
+      "text": "The judge-scored probes are shown separately in Table 2 because they use an external scorer, a coarser α \\alpha grid, smaller 100-prompt samples, and native 0–2 or 0–3 score scales. We therefore treat them as exploratory evidence rather than directly comparable full-evaluation gains. Table 2: Exploratory judge-scored auxiliary probes. The sweeps use the coarser α ∈ { − 0.3 , − 0.2 , − 0.1 , 0 , 0.1 , 0.2 , 0.3 } \\alpha\\in\\{-0.3,-0.2,-0.1,0,0.1,0.2,0.3\\} grid and the first 100 prompts for each task. TruthfulQA and HaluEval use 0–2 judge scores, AdvBench uses a 0–3 judge score, and Δ pp \\Delta_{\\mathrm{pp}} is normalized by the corresponding score range. Llama-3.2-1B Llama-3.2-3B Llama-3.1-8B Qwen3-8B Qwen3-30B-A3B Group Task s ⁡ ( 0 ) s(0) Best α \\alpha Δ pp \\Delta_{\\mathrm{pp}} s ⁡ ( 0 ) s(0) Best α \\alpha Δ pp \\Delta_{\\mathrm{pp}} s ⁡ ( 0 ) s(0) Best α \\alpha Δ pp \\Delta_{\\mathrm{pp}} s ⁡ ( 0 ) s(0) Best α \\alpha Δ pp \\Delta_{\\mathrm{pp}} s ⁡ ( 0 ) s(0) Best α \\alpha Δ pp \\Delta_{\\mathrm{pp}} Judge TruthfulQA 0.70 + 0.1 +0.1 + 0.5 +0.5 1.00 + 0.1 +0.1 + 7.5 \\mathbf{+7.5} 1.28 0 0 + 0.0 +0.0 0.93 + 0.1 +0.1 + 3.5 +3.5 0.94 + 0.1 +0.1 + 4.5 +4.5 Judge HaluEval 1.36 0 0 + 0.0 +0.0 1.66 + 0.1 +0.1 + 1.5 +1.5 1.80 0 0 + 0.0 +0.0 1.35 + 0.1 +0.1 + 3.0 +3.0 1.35 − 0.2 -0.2 + 8.5 \\mathbf{+8.5} Judge AdvBench 2.83 0 0 + 0.0 +0.0 2.97 0 0 + 0.0 +0.0 2.86 − 0.2 -0.2 + 3.7 \\mathbf{+3.7} 2.93 0 0 + 0.0 +0.0 2.94 − 0.3 -0.3 + 1.7 +1.7",
+      "source": "https://arxiv.org/html/2610.30676v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0022",
+      "section": "Judge-scored protocol.",
+      "text": "To separate genuine task-level gains from parser-only artifacts, Table 3 breaks out the strongest non-judge cases into diagnostic shifts. For boxed-answer tasks, format-error and wrong-answer rates reveal whether gains come from better answer selection rather than cleaner parsing. For CoT runs, length-finish rates additionally show whether gains coincide with truncation changes. For BFCL, the relevant diagnostic is different: the reported score is retry-enabled tool-call success, so we also report first-pass success. Table 3: Diagnostic decomposition of the largest non-judge auxiliary gains. s ⁡ ( 0 ) s(0) is the baseline score, Best is the best score on the displayed grid, and Δ pp \\Delta_{\\mathrm{pp}} reports the percentage-point score change after task-range normalization. For boxed-answer tasks, FE , WA , and Len denote format-error, wrong-answer, and length-finish rates from α = 0 \\alpha=0 to the best α \\alpha ; for BFCL, First and Retry denote first-pass and retry-enabled tool-call success. Dashes indicate unavailable or inapplicable diagnostics.",
+      "source": "https://arxiv.org/html/2610.30676v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0023",
+      "section": "Judge-scored protocol.",
+      "text": "Group Model Task Best α \\alpha s ⁡ ( 0 ) s(0) Best Δ pp \\Delta_{\\mathrm{pp}} Diagnostic 1 Diagnostic 2 Diagnostic 3 Standard no-CoT Llama-3.1-8B GSM8K − 0.15 -0.15 0.324 0.551 +22.7 FE : 0.000 → \\rightarrow 0.000 WA : 0.676 → \\rightarrow 0.449 – Standard no-CoT Llama-3.2-1B BFCL − 0.10 -0.10 0.598 0.743 +14.5 First : 0.583 → \\rightarrow 0.730 Retry : 0.598 → \\rightarrow 0.743 – Standard no-CoT Llama-3.2-3B BFCL − 0.20 -0.20 0.048 0.172 +12.5 First : 0.037 → \\rightarrow 0.155 Retry : 0.048 → \\rightarrow 0.172 – Standard no-CoT Llama-3.2-1B GSM8K − 0.15 -0.15 0.144 0.223 +7.9 FE : 0.000 → \\rightarrow 0.000 WA : 0.856 → \\rightarrow 0.777 – Standard CoT Qwen3-8B GSM8K-CoT − 0.15 -0.15 0.306 0.363 +5.7 FE : 0.022 → \\rightarrow 0.018 WA : 0.672 → \\rightarrow 0.619 Len : 0.886 → \\rightarrow 0.862 Standard CoT Qwen3-30B-A3B GSM8K-CoT − 0.15 -0.15 0.469 0.514 +4.5 FE : 0.018 → \\rightarrow 0.011 WA : 0.513 → \\rightarrow 0.475 Len : 0.640 → \\rightarrow 0.628 Standard no-CoT Qwen3-8B MATH − 0.20 -0.20 0.350 0.394 +4.4 FE : 0.000 → \\rightarrow 0.000 WA : 0.650 → \\rightarrow 0.606 – Standard no-CoT Qwen3-30B-A3B GSM8K + 0.10 +0.10 0.864 0.898 +3.3 FE : 0.000 → \\rightarrow 0.001 WA : 0.136 → \\rightarrow 0.102 – Standard CoT Qwen3-8B ARC-C-CoT + 0.10 +0.10 0.583 0.614 +3.2 FE : 0.127 → \\rightarrow 0.110 WA : 0.290 → \\rightarrow 0.276 Len : 0.480 → \\rightarrow 0.441",
+      "source": "https://arxiv.org/html/2610.30676v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0024",
+      "section": "Judge-scored protocol.",
+      "text": "Taken together, the non-judge auxiliary suite reveals three distinct behaviors. First, full no-CoT gains are selective and often coincide with lower wrong-answer rates at unchanged format-error rates; the strongest case is Llama 3.1 8B on GSM8K, which rises from 0.324 to 0.551 at α = − 0.15 \\alpha=-0.15 while format errors remain at 0.000 and the wrong-answer rate falls from 0.676 to 0.449. Second, BFCL exposes a tool-use-specific effect: smaller Llama models improve substantially in both first-pass and retry-enabled success under negative α \\alpha . Third, CoT gains are more concentrated in the Qwen models and often occur together with reduced length-finish rates, indicating that truncation and answer-extraction dynamics change under perturbation; whether the underlying reasoning trajectories improve requires output-level analysis beyond the aggregate score. Judge-based gains, such as Qwen3 30B-A3B on HaluEval and Llama 3.2 3B on TruthfulQA, remain hypothesis-generating because they depend on external scoring and smaller judge-probe samples. The full non-judge α \\alpha sweeps in Appendix E show that many of these effects are narrow in α \\alpha rather than broad monotone trends.",
+      "source": "https://arxiv.org/html/2610.30676v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0025",
+      "section": "5 Capability-Level Responses Across the Benchmark Suite",
+      "text": "We next turn to the capability-labeled benchmark suite. Before fitting latent capability responses, Table 4 reports the observed module means across the same nine-point α \\alpha grid. These raw scores show that the intervention is not a single global quality knob: different modules and model families prefer different perturbation strengths, and several apparent improvements are localized rather than universal.",
+      "source": "https://arxiv.org/html/2610.30676v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0026",
+      "section": "Benchmark composition and metrics.",
+      "text": "The capability-labeled suite contains 118 subtasks: 14 subject-level MMLU-Pro tasks, 57 non-aggregate generative MMLU-Redux subject tasks, 20 atomic AGIEval tasks, and 27 BBH zeroshot non-CoT tasks. We run this suite through lm-evaluation-harness with a vLLM backend and the benchmark’s canonical task definitions. We do not manually rewrite the benchmark prompts and we do not add extra few-shot examples beyond the task definitions used by the harness. When a task exposes multiple scalar metrics, we record exact_match,custom-extract for MMLU-Pro , exact_match,default for MMLU-Redux , acc_norm,none when available and otherwise acc,none for AGIEval , and exact_match,flexible-extract when available and otherwise exact_match,strict-match for BBH . Module-level summary tables use the unweighted mean over subtasks within a module, and all capability fits operate on score deltas y t ​ ( α ) = s t ​ ( α ) − s t ​ ( 0 ) y_{t}(\\alpha)=s_{t}(\\alpha)-s_{t}(0) .",
+      "source": "https://arxiv.org/html/2610.30676v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0027",
+      "section": "Capability labels.",
+      "text": "Each of the 118 benchmark subtasks receives capability labels in two stages. First, for each subtask, we draw 10 batches of 10 representative evaluation items using a fixed shuffle seed of 20260503. Each batch contains the question text, answer options when present, the gold answer, and any available explanation. A DeepSeek-V4-Pro judge, queried at temperature 0 0 with a 3000-token response cap, returns one nonnegative weight vector summing to 1 over seven dimensions: factual knowledge, language understanding, inductive reasoning, deductive reasoning, mathematical computation, structural analysis, and ethical & safety judgment. The valid batch-level vectors are averaged to obtain one seven-way capability mixture per subtask; Appendix A uses these seven-way mixtures to justify the reduced basis. Second, after identifying factual knowledge, language understanding, and deductive reasoning as the exposed benchmark-wide axes, we run a separate constrained three-way judge pass over the same batches. In this pass the judge must allocate all mass across only those three dimensions, yielding 𝐰 t ( 3 ) = ( w t , F , w t , L , w t , D ) \\mathbf{w}^{(3)}_{t}=(w_{t,F},w_{t,L},w_{t,D}) with w t , k ≥ 0 w_{t,k}\\geq 0 and ∑ k ∈ { F , L , D } w t , k = 1 \\sum_{k\\in\\{F,L,D\\}}w_{t,k}=1 . These three-way weights are the w t , k w_{t,k} used in the capability-response fit.",
+      "source": "https://arxiv.org/html/2610.30676v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0028",
+      "section": "Capability-response fit.",
+      "text": "For each model m m and fitted scope s s (the 118-subtask union or one benchmark module), we fit the retained three dimensions k ∈ { F , L , D } k\\in\\{F,L,D\\} with the constrained three-way subtask weights w t , k w_{t,k} : y m , t ​ ( α ) = ∑ k w t , k ​ ( b m , s , k ​ α + c m , s , k ​ α 2 ) + ε m , t , α , ε m , t , α ∼ 𝒩 ⁡ ( 0 , α 2 ​ ∑ k ( w t , k ​ τ m , s , k ) 2 ) . y_{m,t}(\\alpha)=\\sum_{k}w_{t,k}\\bigl(b_{m,s,k}\\alpha+c_{m,s,k}\\alpha^{2}\\bigr)+\\varepsilon_{m,t,\\alpha},\\qquad\\varepsilon_{m,t,\\alpha}\\sim\\mathcal{N}\\!\\left(0,\\alpha^{2}\\sum_{k}(w_{t,k}\\tau_{m,s,k})^{2}\\right). (7) The baseline point α = 0 \\alpha=0 is excluded from the likelihood because it defines the zero-delta reference. Given current τ m , s , k \\tau_{m,s,k} , the coefficients b m , s , k b_{m,s,k} and c m , s , k c_{m,s,k} are obtained by ridge-regularized weighted least squares; the scale parameters τ m , s , k \\tau_{m,s,k} are then updated by maximum likelihood over log ⁡ τ m , s , k 2 \\log\\tau_{m,s,k}^{2} with backtracking gradient descent; the two steps alternate to convergence. Union fits use all 118 subtasks for each model, while module-wise fits repeat the same procedure separately within MMLU-Pro , MMLU-Redux , AGIEval , and BBH . Uncertainty is pointwise rather than simultaneous: supplementary smooth uncertainty bands are empirical 10th–90th percentile task-bootstrap intervals over 100 resamples, where each resample draws subtasks with replacement within the fitted scope and refits the full model. The pointwise error bars shown in the capability plots use the fitted standard deviation implied by the likelihood model, so they should be read as the residual subtask heterogeneity assigned to that capability coordinate, not as formal 95% population confidence intervals.",
+      "source": "https://arxiv.org/html/2610.30676v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0029",
+      "section": "Capability-fit diagnostics.",
+      "text": "The three-dimensional fit is used as a low-dimensional response summary, so we assess it by coverage, residual scale, and agreement with raw module means rather than by visual smoothness alone. All five models have complete coverage over the 118 subtasks used in the union fit. For each fitted scope, we inspect observed-versus-predicted subtask deltas, residual RMSE/MAE, negative log likelihood, and whether the fitted signs agree with the unweighted raw module means. In the module-wise fits reported in Appendix B , pooled nonzero- α \\alpha residual RMSE is 0.030 0.030 for MMLU-Pro , 0.028 0.028 for AGIEval , 0.064 0.064 for MMLU-Redux , 0.073 0.073 for BBH , and 0.064 0.064 for the 118-subtask union. The corresponding pooled R 2 R^{2} values are 0.824 0.824 , 0.519 0.519 , 0.313 0.313 , 0.250 0.250 , and 0.261 0.261 . These diagnostics indicate that the basis captures large, module-local response directions but does not fully reconstruct every subtask; we therefore interpret fitted capability shifts only when they are stable across bootstrap/error-bar scale and consistent with the raw module-level tables. Table 4: Raw module means across the nine-point α \\alpha sweep. Unlike Fig. 6 , which decomposes score changes into latent capability coordinates, this table reports the observed unweighted mean over subtasks within each module. Bold marks the best α \\alpha on the displayed grid, α ∗ \\alpha^{*} is the selected best perturbation strength, and Δ frac \\Delta_{\\mathrm{frac}} is the gain over α = 0 \\alpha=0 expressed in task-score units.",
+      "source": "https://arxiv.org/html/2610.30676v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0030",
+      "section": "Capability-fit diagnostics.",
+      "text": "Module Model − 0.2 -0.2 − 0.15 -0.15 − 0.1 -0.1 − 0.05 -0.05 0 0 + 0.05 +0.05 + 0.1 +0.1 + 0.15 +0.15 + 0.2 +0.2 α ∗ \\alpha^{*} Δ frac \\Delta_{\\mathrm{frac}} MMLU-Pro Llama-3.2-1B 0.167 0.167 0.181 0.181 0.193 0.193 0.204 \\mathbf{0.204} 0.200 0.200 0.195 0.195 0.168 0.168 0.136 0.136 0.102 0.102 − 0.05 -0.05 + 0.004 +0.004 Llama-3.2-3B 0.137 0.137 0.235 0.235 0.297 0.297 0.331 0.331 0.345 \\mathbf{0.345} 0.341 0.341 0.314 0.314 0.249 0.249 0.178 0.178 0 0 + 0.000 +0.000 Llama-3.1-8B 0.167 0.167 0.321 0.321 0.397 0.397 0.435 0.435 0.447 \\mathbf{0.447} 0.440 0.440 0.414 0.414 0.364 0.364 0.288 0.288 0 0 + 0.000 +0.000 Qwen3-8B 0.526 0.526 0.569 0.569 0.601 0.601 0.615 0.615 0.618 0.618 0.619 \\mathbf{0.619} 0.606 0.606 0.570 0.570 0.503 0.503 + 0.05 +0.05 + 0.002 +0.002 Qwen3-30B-A3B 0.659 0.659 0.672 0.672 0.679 0.679 0.684 0.684 0.690 \\mathbf{0.690} 0.689 0.689 0.682 0.682 0.681 0.681 0.673 0.673 0 0 + 0.000 +0.000 MMLU-Redux Llama-3.2-1B 0.264 0.264 0.256 0.256 0.275 \\mathbf{0.275} 0.260 0.260 0.250 0.250 0.242 0.242 0.207 0.207 0.203 0.203 0.178 0.178 − 0.1 -0.1 + 0.025 +0.025 Llama-3.2-3B 0.326 0.326 0.357 0.357 0.364 0.364 0.367 0.367 0.376 0.376 0.405 0.405 0.402 0.402 0.405 \\mathbf{0.405} 0.369 0.369 + 0.15 +0.15 + 0.029 +0.029 Llama-3.1-8B 0.353 0.353 0.412 0.412 0.444 0.444 0.472 0.472 0.498 0.498 0.507 \\mathbf{0.507} 0.488 0.488 0.467 0.467 0.475 0.475 + 0.05 +0.05 + 0.009 +0.009 Qwen3-8B 0.610 0.610 0.639 0.639 0.657 0.657 0.668 \\mathbf{0.668} 0.661 0.661 0.653 0.653 0.626 0.626 0.602 0.602 0.576 0.576 − 0.05 -0.05 + 0.006 +0.006 Qwen3-30B-A3B 0.347 0.347 0.319 0.319 0.311 0.311 0.323 0.323 0.345 0.345 0.368 0.368 0.394 0.394 0.409 0.409 0.412 \\mathbf{0.412} + 0.2 +0.2 + 0.067 +0.067 AGIEval Llama-3.2-1B 0.272 0.272 0.274 0.274 0.275 0.275 0.276 0.276 0.273",
+      "source": "https://arxiv.org/html/2610.30676v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0031",
+      "section": "Capability-fit diagnostics.",
+      "text": " 0.319 0.311 0.311 0.323 0.323 0.345 0.345 0.368 0.368 0.394 0.394 0.409 0.409 0.412 \\mathbf{0.412} + 0.2 +0.2 + 0.067 +0.067 AGIEval Llama-3.2-1B 0.272 0.272 0.274 0.274 0.275 0.275 0.276 0.276 0.273 0.273 0.277 \\mathbf{0.277} 0.270 0.270 0.269 0.269 0.267 0.267 + 0.05 +0.05 + 0.004 +0.004 Llama-3.2-3B 0.294 0.294 0.320 0.320 0.336 0.336 0.342 0.342 0.351 \\mathbf{0.351} 0.349 0.349 0.346 0.346 0.336 0.336 0.318 0.318 0 0 + 0.000 +0.000 Llama-3.1-8B 0.334 0.334 0.396 0.396 0.411 0.411 0.424 \\mathbf{0.424} 0.419 0.419 0.416 0.416 0.407 0.407 0.382 0.382 0.351 0.351 − 0.05 -0.05 + 0.005 +0.005 Qwen3-8B 0.559 0.559 0.578 0.578 0.585 0.585 0.588 \\mathbf{0.588} 0.585 0.585 0.578 0.578 0.570 0.570 0.551 0.551 0.513 0.513 − 0.05 -0.05 + 0.003 +0.003 Qwen3-30B-A3B 0.637 0.637 0.641 \\mathbf{0.641} 0.641 0.641 0.636 0.636 0.634 0.634 0.625 0.625 0.623 0.623 0.605 0.605 0.591 0.591 − 0.15 -0.15 + 0.007 +0.007 BBH Llama-3.2-1B 0.292 0.292 0.297 0.297 0.298 \\mathbf{0.298} 0.296 0.296 0.296 0.296 0.293 0.293 0.290 0.290 0.285 0.285 0.269 0.269 − 0.1 -0.1 + 0.002 +0.002 Llama-3.2-3B 0.308 0.308 0.353 0.353 0.377 0.377 0.389 0.389 0.399 \\mathbf{0.399} 0.390 0.390 0.380 0.380 0.356 0.356 0.319 0.319 0 0 + 0.000 +0.000 Llama-3.1-8B 0.386 0.386 0.442 0.442 0.450 0.450 0.450 0.450 0.451 \\mathbf{0.451} 0.439 0.439 0.431 0.431 0.407 0.407 0.352 0.352 0 0 + 0.000 +0.000 Qwen3-8B 0.509 0.509 0.527 0.527 0.534 \\mathbf{0.534} 0.527 0.527 0.517 0.517 0.493 0.493 0.460 0.460 0.421 0.421 0.402 0.402 − 0.1 -0.1 + 0.017 +0.017 Qwen3-30B-A3B 0.415 \\mathbf{0.415} 0.396 0.396 0.377 0.377 0.366 0.366 0.364 0.364 0.371 0.371 0.370 0.370 0.381 0.381 0.380 0.380 − 0.2 -0.2 + 0.051 +0.051",
+      "source": "https://arxiv.org/html/2610.30676v1",
+      "offset": 1595
+    },
+    {
+      "chunk_id": "chunk-0032",
+      "section": "Capability-fit diagnostics.",
+      "text": "Table 5 then opens the module averages and shows selected subtask-level cases. The table keeps the three judge-derived capability weights visible, so gains can be read jointly with task demand: some large shifts occur on deductive BBH subtasks, whereas many Qwen3 30B-A3B gains are concentrated in factual MMLU-Redux subjects. This selected view is intentionally diagnostic rather than exhaustive; Appendix C reports the complete 118-subtask table. Table 5: Selected high-gain capability-labeled subtasks from the 118-subtask suite. Rows are the 20 subtasks with the largest positive gain under any of the three representative models shown here: Llama 3.1 8B, Qwen3 8B, and Qwen3 30B-A3B. The judge columns report the normalized three-capability demand weights used in the capability fit. For each model, Base is the α = 0 \\alpha=0 score, α ∗ \\alpha^{*} is the best perturbation on the nine-point grid, and Δ frac \\Delta_{\\mathrm{frac}} is the gain over baseline in task-score units. The complete 118-subtask table is reported in Appendix C .",
+      "source": "https://arxiv.org/html/2610.30676v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0033",
+      "section": "Capability-fit diagnostics.",
+      "text": "Module Subtask FK LU DR Llama 3.1 8B Qwen3 8B Qwen3 30B-A3B Base α ∗ \\alpha^{*} Δ frac \\Delta_{\\mathrm{frac}} Base α ∗ \\alpha^{*} Δ frac \\Delta_{\\mathrm{frac}} Base α ∗ \\alpha^{*} Δ frac \\Delta_{\\mathrm{frac}} BBH temporal_sequences 0.000 0.000 0.147 0.147 0.853 0.853 0.816 0.816 − 0.1 -0.1 + 0.120 +0.120 0.080 0.080 − 0.15 -0.15 + 0.500 +0.500 0.024 0.024 − 0.2 -0.2 + 0.500 +0.500 MMLU-Redux high_school_psychology 0.888 0.888 0.086 0.086 0.026 0.026 0.604 0.604 + 0.1 +0.1 + 0.094 +0.094 0.844 0.844 − 0.05 -0.05 + 0.042 +0.042 0.271 0.271 + 0.2 +0.2 + 0.312 +0.312 MMLU-Redux logical_fallacies 0.790 0.790 0.200 0.200 0.010 0.010 0.608 0.608 + 0.05 +0.05 + 0.081 +0.081 0.811 0.811 − 0.1 -0.1 + 0.027 +0.027 0.324 0.324 − 0.2 -0.2 + 0.297 +0.297 MMLU-Redux high_school_us_history 0.630 0.630 0.291 0.291 0.079 0.079 0.580 0.580 0 0 + 0.000 +0.000 0.740 0.740 + 0.05 +0.05 + 0.030 +0.030 0.360 0.360 + 0.2 +0.2 + 0.260 +0.260 MMLU-Redux high_school_computer_science 0.647 0.647 0.088 0.088 0.265 0.265 0.440 0.440 + 0.1 +0.1 + 0.040 +0.040 0.770 0.770 + 0.05 +0.05 + 0.050 +0.050 0.260 0.260 + 0.2 +0.2 + 0.220 +0.220 BBH ruin_names 0.185 0.185 0.815 0.815 0.000 0.000 0.748 0.748 0 0 + 0.000 +0.000 0.508 0.508 − 0.2 -0.2 + 0.068 +0.068 0.332 0.332 − 0.2 -0.2 + 0.216 +0.216 BBH navigate 0.000 0.000 0.114 0.114 0.886 0.886 0.332 0.332 − 0.15 -0.15 + 0.216 +0.216 0.704 0.704 + 0.05 +0.05 + 0.008 +0.008 0.628 0.628 + 0.15 +0.15 + 0.024 +0.024 MMLU-Redux high_school_government_and_politics 0.872 0.872 0.092 0.092 0.036 0.036 0.510 0.510 + 0.05 +0.05 + 0.120 +0.120 0.810 0.810 + 0.05 +0.05 + 0.040 +0.040 0.290 0.290 + 0.2 +0.2 + 0.210 +0.210 MMLU-Redux college_biology 0.879 0.879 0.061 0.061 0.059 0.059 0.582 0.582 0 0 + 0.000 +0.000 0.786 0.786 0 0 + 0.000 +0.000 0.367 0.367 + 0.15",
+      "source": "https://arxiv.org/html/2610.30676v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0034",
+      "section": "Capability-fit diagnostics.",
+      "text": ".05 + 0.040 +0.040 0.290 0.290 + 0.2 +0.2 + 0.210 +0.210 MMLU-Redux college_biology 0.879 0.879 0.061 0.061 0.059 0.059 0.582 0.582 0 0 + 0.000 +0.000 0.786 0.786 0 0 + 0.000 +0.000 0.367 0.367 + 0.15 +0.15 + 0.204 +0.204 MMLU-Redux high_school_world_history 0.580 0.580 0.358 0.358 0.062 0.062 0.556 0.556 − 0.05 -0.05 + 0.040 +0.040 0.737 0.737 − 0.1 -0.1 + 0.081 +0.081 0.293 0.293 + 0.2 +0.2 + 0.202 +0.202 MMLU-Redux astronomy 0.924 0.924 0.039 0.039 0.037 0.037 0.564 0.564 + 0.05 +0.05 + 0.021 +0.021 0.777 0.777 + 0.05 +0.05 + 0.032 +0.032 0.362 0.362 + 0.2 +0.2 + 0.202 +0.202 MMLU-Redux anatomy 0.955 0.955 0.034 0.034 0.010 0.010 0.525 0.525 − 0.05 -0.05 + 0.061 +0.061 0.626 0.626 − 0.05 -0.05 + 0.071 +0.071 0.263 0.263 + 0.1 +0.1 + 0.182 +0.182 BBH reasoning_about_colored_objects 0.030 0.030 0.507 0.507 0.463 0.463 0.588 0.588 + 0.1 +0.1 + 0.012 +0.012 0.884 0.884 − 0.1 -0.1 + 0.056 +0.056 0.548 0.548 − 0.2 -0.2 + 0.168 +0.168 MMLU-Redux college_computer_science 0.583 0.583 0.096 0.096 0.321 0.321 0.330 0.330 − 0.1 -0.1 + 0.062 +0.062 0.598 0.598 0 0 + 0.000 +0.000 0.299 0.299 + 0.2 +0.2 + 0.165 +0.165 MMLU-Redux high_school_european_history 0.566 0.566 0.341 0.341 0.092 0.092 0.473 0.473 − 0.05 -0.05 + 0.055 +0.055 0.769 0.769 0 0 + 0.000 +0.000 0.352 0.352 + 0.2 +0.2 + 0.165 +0.165 MMLU-Redux high_school_microeconomics 0.707 0.707 0.105 0.105 0.188 0.188 0.480 0.480 − 0.05 -0.05 + 0.051 +0.051 0.837 0.837 0 0 + 0.000 +0.000 0.327 0.327 + 0.1 +0.1 + 0.163 +0.163 MMLU-Redux sociology 0.930 0.930 0.066 0.066 0.004 0.004 0.673 0.673 0 0 + 0.000 +0.000 0.765 0.765 − 0.1 -0.1 + 0.031 +0.031 0.388 0.388 + 0.1 +0.1 + 0.153 +0.153 MMLU-Redux college_mathematics 0.299 0.299 0.117 0.117 0.584 0.584 0.222 0.222 + 0.05 +0.05 + 0.152 +0.152 0.384 0.384 − 0.15 -0.15 + 0.061",
+      "source": "https://arxiv.org/html/2610.30676v1",
+      "offset": 1594
+    },
+    {
+      "chunk_id": "chunk-0035",
+      "section": "Capability-fit diagnostics.",
+      "text": ".1 -0.1 + 0.031 +0.031 0.388 0.388 + 0.1 +0.1 + 0.153 +0.153 MMLU-Redux college_mathematics 0.299 0.299 0.117 0.117 0.584 0.584 0.222 0.222 + 0.05 +0.05 + 0.152 +0.152 0.384 0.384 − 0.15 -0.15 + 0.061 +0.061 0.222 0.222 − 0.2 -0.2 + 0.051 +0.051 MMLU-Redux human_aging 0.947 0.947 0.045 0.045 0.008 0.008 0.563 0.563 + 0.1 +0.1 + 0.023 +0.023 0.690 0.690 + 0.05 +0.05 + 0.023 +0.023 0.356 0.356 + 0.1 +0.1 + 0.149 +0.149 MMLU-Redux moral_scenarios 0.250 0.250 0.750 0.750 0.000 0.000 0.237 0.237 + 0.05 +0.05 + 0.103 +0.103 0.299 0.299 − 0.15 -0.15 + 0.144 +0.144 0.216 0.216 + 0.15 +0.15 + 0.052 +0.052",
+      "source": "https://arxiv.org/html/2610.30676v1",
+      "offset": 3189
+    },
+    {
+      "chunk_id": "chunk-0036",
+      "section": "Capability-fit diagnostics.",
+      "text": "We then ask whether the perturbation acts like generic noise or like a structured reweighting of latent capabilities. Figure 2 plots fitted score deltas for the retained Factual Knowledge , Language Understanding , and Deductive Reasoning axes. The dominant pattern is asymmetric rather than monotone: moderate negative α \\alpha often preserves or slightly improves factual or language-heavy behavior, whereas large positive α \\alpha more consistently suppresses all three axes, especially language and deductive components. Model family and scale matter as much as perturbation sign. The smaller dense Llama models move more sharply as α \\alpha departs from zero, while the larger Qwen3 30B-A3B MoE is comparatively stable at the union level. That architecture dependence suggests that the transform is not simply injecting random damage; it is interacting with pre-existing spectral organization in a non-uniform way. (a) Factual Knowledge. (b) Language Understanding. (c) Deductive Reasoning. Figure 2: Capability-level perturbation responses fitted from the 118 subtask score changes. Each panel shows one retained capability dimension, with points denoting the maximum-likelihood fitted score change relative to the unperturbed model at each α \\alpha value. Error bars show one fitted residual standard deviation for that capability and perturbation strength; they summarize subtask heterogeneity and are not formal 95% confidence intervals.",
+      "source": "https://arxiv.org/html/2610.30676v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0037",
+      "section": "Capability-fit diagnostics.",
+      "text": "The fitted capability picture matches the raw module-level evidence rather than replacing it. Three regularities are especially important. First, the high-positive interval drives all three capability responses downward, with the clearest contractions on language and deductive axes. Second, negative α \\alpha is more heterogeneous and sometimes produces factual or language recovery rather than monotone degradation. Third, union-level averages conceal module-specific stress: Appendix B and Table 7 show that the Llama family is most sensitive in MMLU-Pro , whereas Qwen models are at least as sensitive to BBH . Table 4 further shows that each module can prefer a different α \\alpha , reinforcing that the perturbation reorganizes capability balance rather than moving a single performance scalar.",
+      "source": "https://arxiv.org/html/2610.30676v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0038",
+      "section": "6 Trait Responses Track Capability Reweighting",
+      "text": "The personality-style probes show that α \\alpha perturbations do not only move benchmark accuracy. Figure 3 overlays the full nine-point α \\alpha sweep for each model in the TRAIT space. The absolute ordering of traits is fairly stable—Agreeableness and Conscientiousness remain high while Narcissism and Psychopathy stay low—but the radar profiles rotate systematically with the perturbation, especially along Openness, Agreeableness, Machiavellianism, and Neuroticism. Because the radial range is clipped, the figure emphasizes within-model perturbation effects rather than raw between-trait level differences.",
+      "source": "https://arxiv.org/html/2610.30676v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0039",
+      "section": "TRAIT scoring protocol.",
+      "text": "TRAIT uses the full available split for each of the eight published dimensions: Openness, Conscientiousness, Extraversion, Agreeableness, Neuroticism, Machiavellianism, Narcissism, and Psychopathy. For every item, we score the four provided continuations (two high-trait and two low-trait responses) under the model’s conditional log-likelihood given the prompt Question: {q} followed by a newline and Response: . The four candidate responses are shuffled deterministically with seed 1234 keyed by split and item index. The item-level trait score is the softmax probability mass assigned to the two high-trait responses, and the reported trait score is the average of that quantity over all items in the split. Because this probe is continuation-likelihood based rather than free-form generation based, no answer-extraction heuristic is involved. Figure 3: TRAIT personality profiles across the full nine-point α \\alpha grid for the five evaluated models. Each radar chart overlays all tested perturbation strengths for a single model. The radial scale is clipped to emphasize perturbation-induced differences rather than absolute trait ordering.",
+      "source": "https://arxiv.org/html/2610.30676v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0040",
+      "section": "TRAIT scoring protocol.",
+      "text": "Figure 4 then ties those trait movements back to the capability fits. The strongest local slope effects occur at the ends of the α \\alpha range: factual knowledge increases on the more negative interval, while large positive α \\alpha suppresses factual, language, and deductive responses. On the correlation side, we report descriptive Pearson correlations over nonzero- α \\alpha points from the four dense models ( n = 32 n=32 , excluding Qwen3 30B-A3B MoE): Factual Knowledge aligns positively with Agreeableness ( r = 0.53 r=0.53 ) and Openness ( r = 0.35 r=0.35 ), while Deductive Reasoning is negatively associated with Machiavellianism ( r = − 0.35 r=-0.35 ) and positively associated with Narcissism ( r = 0.33 r=0.33 ). These correlations should be interpreted as exploratory associations across perturbation settings rather than formal significance tests, because the eight α \\alpha points from the same model share a baseline and model-specific response curve. The network view therefore illustrates, rather than proves, how selective task gains can coexist with global degradation: different α \\alpha directions pull capabilities, traits, and subtask families along partially overlapping but non-identical axes. (a) Local response slopes across four α \\alpha intervals. (b) Pearson correlations between capability and trait responses. (c) Association network linking α \\alpha direction, latent capabilities, TRAIT dimensions, and selected subtasks.",
+      "source": "https://arxiv.org/html/2610.30676v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0041",
+      "section": "TRAIT scoring protocol.",
+      "text": "Figure 4: Alpha perturbation responses link latent capability shifts, TRAIT shifts, and task-level demands. Panel (a) shows mean local response slopes across four dense instruct models, with error bars denoting SEM across models. Panel (b) reports descriptive Pearson correlations across nonzero- α \\alpha points from the four dense models ( n = 32 n=32 ; Qwen3 30B-A3B MoE excluded) and highlights cells with | r | ≥ 0.30 |r|\\geq 0.30 ; because points from the same model share a baseline, these cells are exploratory associations rather than independent-sample significance claims. Panel (c) combines directional response slopes, capability–TRAIT correlations, and DeepSeek-V4-Pro capability-demand links for selected subtasks. Importantly, we do not interpret the TRAIT scores as stable human-like personalities. In this paper they function as compact behavioral summaries that can be compared across perturbation settings. Their value is that they move in coordinated ways with latent capability responses: the same high-positive α \\alpha interval that suppresses language and deductive responses also tends to lower Agreeableness and raise Machiavellianism. The joint capability–trait view therefore supports the interpretation that spectral perturbations reshape bundles of behaviors rather than isolated benchmark scores.",
+      "source": "https://arxiv.org/html/2610.30676v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0042",
+      "section": "7 Interpretation, Limitations, and Outlook",
+      "text": "Across capability fits, auxiliary tasks, and trait probes, the common effect of spectral smoothing and spiking is reconfiguration rather than uniform collapse. Positive α \\alpha often acts as a high-variance stressor that selectively harms language and deductive behavior, while moderate negative α \\alpha can occasionally recover factual or task-specific performance. The layer-wise evidence in Appendix D suggests a mechanistic reason: one nominal α \\alpha induces non-uniform realized updates because layers begin from different degrees of spectral inequality.",
+      "source": "https://arxiv.org/html/2610.30676v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0043",
+      "section": "Why selective gains occur.",
+      "text": "If every layer responded equally to the same α \\alpha , one would expect a smoother tradeoff between average quality and perturbation strength. Instead, the appendix diagnostics show that layers with already concentrated spectra receive larger realized changes, and the most affected layers differ by projection type and model family. This makes the intervention behave more like a non-uniform reweighting of internal computations than like a scalar noise injection.",
+      "source": "https://arxiv.org/html/2610.30676v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0044",
+      "section": "Limitations.",
+      "text": "The study covers five open models, fixed α \\alpha grids, and benchmark suites with different scales and evaluation noise. Some measurements rely on external judges, and the retained three-dimensional capability basis is benchmark-specific rather than a universal ontology of language-model competence. We therefore treat selective gains as diagnostic evidence about capability organization, not as a general-purpose recipe for improving models.",
+      "source": "https://arxiv.org/html/2610.30676v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0045",
+      "section": "Outlook.",
+      "text": "Even with those limits, the intervention is attractive because it is post-hoc, architecture-aware, and easy to audit. The results motivate future variants such as layer-normalized α \\alpha , projection-specific controls for up_proj and down_proj , or expert-wise safeguards for MoE models. More broadly, they suggest that weight-space spectral statistics are a useful handle for probing how different capabilities are bundled together in large language models.",
+      "source": "https://arxiv.org/html/2610.30676v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0046",
+      "section": "8 Conclusion",
+      "text": "We introduced spectral smoothing and spiking of transformer MLP singular values as a diagnostic intervention and evaluated it across capability-labeled subtasks, auxiliary tasks, judge-scored truthfulness/hallucination/safety tasks, and TRAIT personality probes. The main result is evidence of a non-uniform reconfiguration of behavior rather than uniform degradation: large positive perturbations more reliably suppress language and deductive responses, moderate negative perturbations can sometimes recover factual or task-specific performance on the evaluated grids, and the magnitude of these effects depends on model family and layerwise spectral inequality. These findings support the view that singular-value spectra encode part of the organization of model capabilities and provide a useful handle for probing intervention-induced tradeoffs without retraining.",
+      "source": "https://arxiv.org/html/2610.30676v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0047",
+      "section": "Appendix A Justification for the Three-Dimensional Capability Basis",
+      "text": "The main paper analyzes subtask response profiles in a three-dimensional basis consisting of Factual Knowledge , Language Understanding , and Deductive Reasoning . This appendix explains why that reduced basis is a useful low-dimensional summary of the current benchmark geometry. We use the original seven-way judge mixtures to identify the exposed benchmark-wide axes, and then use a separate constrained three-way judge pass to obtain the normalized weights used in the capability-response fit. (a) PCA projection of the 118 benchmark-subtask mixtures (gray points) together with the seven unit-dimension markers. (b) Pairwise correlations among the seven original judge dimensions. Figure 5: Two complementary views of the seven-dimension capability geometry. The PCA view shows that the most exposed vertices are Factual Knowledge , Language Understanding , and Deductive Reasoning . The correlation matrix shows that several remaining dimensions behave as composites or complements rather than as independent benchmark-wide extremes.",
+      "source": "https://arxiv.org/html/2610.30676v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0048",
+      "section": "PCA evidence.",
+      "text": "The first two principal components explain 67.8% and 14.1% of the variance, respectively, for 81.9% cumulative variance in the seven-dimensional judge mixtures. PC1 is dominated by a contrast between Factual Knowledge ( + 0.8579 +0.8579 ) and Deductive Reasoning ( − 0.4739 -0.4739 ), while PC2 mainly separates Language Understanding ( + 0.5717 +0.5717 ) from Deductive Reasoning ( − 0.7195 -0.7195 ). In the PCA plane, these three retained dimensions define the outer vertices of the observed task cloud, whereas the remaining four dimensions lie closer to the interior or along directions between those vertices.",
+      "source": "https://arxiv.org/html/2610.30676v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0049",
+      "section": "Core-triangle geometry.",
+      "text": "Using the three exposed unit vectors as vertices of a triangle in the PCA plane, all 118 benchmark-subtask points fall inside that triangle. The omitted dimensions are also interior when expressed in barycentric coordinates over the retained basis: Inductive Reasoning = ( 0.156 , 0.620 , 0.225 ) =(0.156,0.620,0.225) , Mathematical Computation = ( 0.081 , 0.693 , 0.226 ) =(0.081,0.693,0.226) , Structural Analysis = ( 0.114 , 0.534 , 0.352 ) =(0.114,0.534,0.352) , and Ethical & Safety Judgment = ( 0.197 , 0.542 , 0.262 ) =(0.197,0.542,0.262) over ( Factual , Language , Deductive ) (\\text{Factual},\\text{Language},\\text{Deductive}) . This indicates that, within this benchmark collection, these dimensions behave as mixtures or localized specializations rather than as additional benchmark-wide extremes.",
+      "source": "https://arxiv.org/html/2610.30676v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0050",
+      "section": "Correlation and reconstruction checks.",
+      "text": "Because the judge weights live on a simplex, the correlation matrix reflects both semantic co-occurrence and competition for probability mass, but it still reveals redundancy structure. The largest absolute pairwise correlations are between Factual Knowledge and Deductive Reasoning ( − 0.7089 -0.7089 ), between Factual Knowledge and Structural Analysis ( − 0.5893 -0.5893 ), and between Deductive Reasoning and Structural Analysis ( + 0.3826 +0.3826 ). Regressing each original dimension on the retained three perfectly reconstructs the retained axes themselves and partially reconstructs several omitted ones: Mathematical Computation reaches R 2 = 0.5338 R^{2}=0.5338 , Structural Analysis reaches R 2 = 0.3934 R^{2}=0.3934 , and Inductive Reasoning reaches R 2 = 0.2046 R^{2}=0.2046 , whereas Ethical & Safety Judgment remains mostly residual with R 2 = 0.1194 R^{2}=0.1194 . Low R 2 R^{2} here does not imply that a dimension is conceptually unimportant; it only means that, in this benchmark collection, it does not appear as a broad independent axis comparable to the three PCA-exposed vertices.",
+      "source": "https://arxiv.org/html/2610.30676v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0051",
+      "section": "Implication for the main paper.",
+      "text": "The three-dimensional basis used for the main alpha-response analysis is therefore not a replacement for the conceptual seven-dimension rubric. It is a data-driven low-dimensional basis for the current 118-subtask geometry: it identifies the dominant outer structure of judged task demands, after which the final FK/LU/DR weights are obtained by the separate constrained three-way labeling pass used in the fits.",
+      "source": "https://arxiv.org/html/2610.30676v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0052",
+      "section": "Appendix B Module-wise Three-Dimensional Capability Response Analysis",
+      "text": "This appendix summarizes independent capability fits across four benchmark modules and their union. The retained capability basis contains three dimensions: Factual Knowledge , Language Understanding , and Deductive Reasoning , with subtask weights taken from the constrained three-way judge pass described in Section 5 . For each model, module, α \\alpha , and dimension, the plotted value is the maximum-likelihood capability-level score delta relative to α = 0 \\alpha=0 , and the error bars show the fitted residual standard deviation for that coordinate. Thus the bars quantify how much subtask-to-subtask variation remains after projection onto the three retained capabilities; they are not 95% confidence intervals on the mean. The five columns are MMLU-Pro , MMLU-Redux , AGIEval , BBH , and All . The corresponding raw module means are reported in the main paper in Table 4 ; this appendix focuses on the independent module-wise capability fits and residual diagnostics. Figure 6: Independent three-dimensional capability fits across benchmark modules and their union. Each point shows the fitted capability-level score delta relative to α = 0 \\alpha=0 for a fixed model, module, perturbation strength, and retained capability axis. Error bars are fitted one-standard-deviation residual scales, not formal 95% confidence intervals; Table 6 reports residual diagnostics for the same fits. Figure 7: Task subitems in the three-dimensional capability-demand simplex. Each point denotes a benchmark subitem, colored by evaluation module. The three vertices correspond to factual knowledge, language understanding, and deductive reasoning demand weights judged by DeepSeek-V4-Pro.",
+      "source": "https://arxiv.org/html/2610.30676v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0053",
+      "section": "Coverage.",
+      "text": "All five models have complete coverage in all four modules: 14 MMLU-Pro subtasks, 57 MMLU-Redux subtasks, 20 AGIEval subtasks, and 27 BBH subtasks, for 118 subtasks in the union fit. The previously missing Llama 3.1 8B / BBH / α = − 0.1 \\alpha=-0.1 and Qwen3 30B-A3B / AGIEval / α = − 0.2 \\alpha=-0.2 points are included here. Scope Subtasks Observations RMSE R 2 R^{2} MMLU-Pro 14 560 0.030 0.824 MMLU-Redux 57 2280 0.064 0.313 AGIEval 20 800 0.028 0.519 BBH 27 1080 0.073 0.250 All 118 4720 0.064 0.261 Table 6: Residual diagnostics for the three-dimensional capability fits, pooled over five models and the eight nonzero α \\alpha values. RMSE is computed on subtask score deltas after projecting through the fitted capability coordinates. The moderate union-level R 2 R^{2} is expected because the three retained axes summarize broad capability responses rather than every task-specific idiosyncrasy; therefore conclusions are emphasized only when they also agree with raw module means and bootstrap/error-bar scale.",
+      "source": "https://arxiv.org/html/2610.30676v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0054",
+      "section": "Main patterns.",
+      "text": "The strongest module-local response appears in MMLU-Pro . Across models, MMLU-Pro shows the largest average absolute capability shifts, especially for Llama 3.1 8B and Llama 3.2 3B, making it the most sensitive component of the current suite to singular-value perturbation. AGIEval is comparatively stable for Llama 3.2 1B and Qwen3 30B-A3B MoE, but not for Llama 3.1 8B, which shows large negative Language Understanding shifts at both α = − 0.2 \\alpha=-0.2 and α = + 0.2 \\alpha=+0.2 . BBH is the most model-dependent module: Qwen3 8B shows strong positive- α \\alpha degradation, especially in factual and deductive directions, whereas Qwen3 30B-A3B MoE is more balanced and less consistently negative.",
+      "source": "https://arxiv.org/html/2610.30676v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0055",
+      "section": "Model-wise interpretation.",
+      "text": "The global response of Llama 3.2 1B Instruct is mild, with the largest local movements appearing in MMLU-Pro . Llama 3.2 3B Instruct is more sensitive, especially at α = − 0.2 \\alpha=-0.2 , where all three union-fit dimensions become negative and the largest shift is in Language Understanding . Llama 3.1 8B Instruct is the most sensitive dense model: at α = − 0.2 \\alpha=-0.2 , its union fit reaches approximately − 0.192 -0.192 in Factual Knowledge and − 0.176 -0.176 in Language Understanding , with additional large degradations in AGIEval and BBH . Qwen3 8B is more asymmetric toward positive α \\alpha , with all three union dimensions negative at α = + 0.2 \\alpha=+0.2 . Qwen3 30B-A3B MoE has the smallest union-level response; its shifts are weaker and less consistently negative, suggesting that expert routing or model capacity absorbs part of the perturbation even though module-level fits still show localized movements. Model Strongest local module Avg. abs. shift Llama 3.2 1B Instruct MMLU-Pro 0.072 Llama 3.2 3B Instruct MMLU-Pro 0.074 Llama 3.1 8B Instruct MMLU-Pro 0.099 Qwen3 8B BBH 0.067 Qwen3 30B-A3B MoE BBH 0.043 Table 7: Average absolute nonzero fitted shifts by module. The dominant perturbation-sensitive module is not universal: the Llama family is most stressed by MMLU-Pro , whereas the Qwen models are at least as sensitive to BBH .",
+      "source": "https://arxiv.org/html/2610.30676v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0056",
+      "section": "Interpretation.",
+      "text": "The three-dimensional basis is useful because it exposes where a global spectral perturbation becomes a module-specific capability shift. The same α \\alpha value can manifest as factual degradation in MMLU-Pro , language degradation in AGIEval , or deductive degradation in BBH , depending on model family and scale. The union fit remains useful for an aggregate statement, but the module-wise fits are necessary for interpretation because several global responses are produced by localized module stress rather than by smooth degradation across all task types.",
+      "source": "https://arxiv.org/html/2610.30676v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0057",
+      "section": "Appendix C Full Subtask-Level Best-Alpha Table",
+      "text": "Table 8 reports the complete 118-subtask version of the selected subtask summary in Table 5 . It includes all four benchmark modules, the three retained judge-derived capability weights, and the baseline, best perturbation, and gain for all five evaluated models. Table 8: Best perturbation point for each capability-labeled benchmark subtask and model. DS judge columns report the normalized three-capability demand weights: factual knowledge (FK; green), language understanding (LU; blue), and deductive reasoning (DR; purple), with cell backgrounds interpolating from white-gray at 0 to the pure capability color at 1. For each model, columns report the alpha-0 baseline score, the best alpha, and the fractional gain over baseline. Best-alpha values use blue text for negative alpha, red text for positive alpha, and gray text for alpha zero; saturation indicates | α | |\\alpha| . Fractional gain values above 0.05 are shown in bold ; values above 0.1 are shown in bold with an underline .",
+      "source": "https://arxiv.org/html/2610.30676v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0058",
+      "section": "Appendix C Full Subtask-Level Best-Alpha Table",
+      "text": "Subtask DS judge Llama 1B Llama 3B Llama 8B Qwen 8B Qwen 30B-A3B FK LU DR Base α ∗ \\alpha^{*} Δ frac \\Delta_{\\mathrm{frac}} Base α ∗ \\alpha^{*} Δ frac \\Delta_{\\mathrm{frac}} Base α ∗ \\alpha^{*} Δ frac \\Delta_{\\mathrm{frac}} Base α ∗ \\alpha^{*} Δ frac \\Delta_{\\mathrm{frac}} Base α ∗ \\alpha^{*} Δ frac \\Delta_{\\mathrm{frac}} agieval_aqua_rat 0.034 0.322 0.644 0.248 -0.2 +0.016 0.205 -0.15 +0.028 0.232 -0.05 +0.035 0.394 +0.1 +0.028 0.469 +0.05 +0.020 agieval_gaokao_biology 0.683 0.151 0.167 0.305 -0.15 +0.019 0.405 +0.1 +0.014 0.490 -0.05 +0.014 0.714 -0.05 +0.029 0.795 -0.15 +0.010 agieval_gaokao_chemistry 0.688 0.081 0.231 0.242 +0.15 +0.019 0.266 +0.15 +0.039 0.300 +0.1 + 0.058 0.444 +0.05 +0.024 0.502 -0.1 +0.010 agieval_gaokao_chinese 0.156 0.617 0.228 0.224 -0.15 +0.041 0.321 +0.05 +0.012 0.411 0 +0.000 0.557 -0.05 +0.020 0.650 +0.05 +0.004 agieval_gaokao_english 0.007 0.954 0.039 0.376 -0.05 +0.010 0.575 +0.1 +0.007 0.755 0 +0.000 0.797 -0.15 +0.026 0.820 -0.1 +0.020 agieval_gaokao_geography 0.607 0.220 0.173 0.271 +0.2 +0.010 0.362 +0.1 +0.020 0.548 -0.05 +0.020 0.764 +0.05 +0.010 0.819 -0.2 +0.010 agieval_gaokao_history 0.817 0.152 0.031 0.255 +0.1 +0.017 0.460 0 +0.000 0.549 0 +0.000 0.809 0 +0.000 0.877 0 +0.000 agieval_gaokao_mathcloze 0.240 0.066 0.694 0.042 +0.05 +0.034 0.025 -0.1 +0.025 0.017 -0.05 +0.008 0.136 +0.05 +0.008 0.254 +0.1 +0.042 agieval_gaokao_mathqa 0.266 0.141 0.594 0.276 +0.1 +0.020 0.308 0 +0.000 0.305 0 +0.000 0.479 -0.1 + 0.051 0.561 0 +0.000 agieval_gaokao_physics 0.419 0.103 0.478 0.275 -0.2 +0.020 0.450 0 +0.000 0.415 -0.05 +0.015 0.625 +0.05 +0.005 0.770 -0.15 +0.020 agieval_jec_qa_ca 0.578 0.193 0.230 0.454 -0.05 +0.001 0.473 +0.1 +0.002 0.503 +0.05 +0.010 0.576 -0.1 +0.019 0.657 -0.1 +0.009 agieval_jec_qa_kd 0.787 0.153 0.059 0.508",
+      "source": "https://arxiv.org/html/2610.30676v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0059",
+      "section": "Appendix C Full Subtask-Level Best-Alpha Table",
+      "text": "0.05 +0.005 0.770 -0.15 +0.020 agieval_jec_qa_ca 0.578 0.193 0.230 0.454 -0.05 +0.001 0.473 +0.1 +0.002 0.503 +0.05 +0.010 0.576 -0.1 +0.019 0.657 -0.1 +0.009 agieval_jec_qa_kd 0.787 0.153 0.059 0.508 +0.15 +0.008 0.532 0 +0.000 0.567 +0.05 +0.001 0.654 -0.1 +0.021 0.721 -0.15 +0.023 agieval_logiqa_en 0.000 0.269 0.731 0.298 +0.2 +0.031 0.339 +0.1 +0.017 0.381 0 +0.000 0.524 -0.1 +0.002 0.550 -0.15 +0.018 agieval_logiqa_zh 0.007 0.242 0.751 0.304 -0.2 +0.014 0.363 +0.05 +0.003 0.381 +0.05 +0.006 0.548 -0.05 +0.003 0.551 -0.05 +0.017 agieval_lsat_ar 0.000 0.188 0.812 0.148 -0.1 + 0.057 0.191 +0.2 +0.026 0.196 +0.1 +0.022 0.270 -0.15 +0.022 0.274 -0.15 +0.035 agieval_lsat_lr 0.000 0.378 0.622 0.247 -0.1 +0.002 0.282 +0.15 +0.016 0.414 -0.15 +0.020 0.727 -0.1 +0.018 0.692 -0.2 + 0.057 agieval_lsat_rc 0.029 0.664 0.307 0.186 -0.2 +0.026 0.357 0 +0.000 0.535 -0.1 +0.015 0.710 +0.1 +0.022 0.777 -0.15 +0.007 agieval_sat_en 0.000 0.826 0.174 0.291 +0.1 +0.005 0.490 0 +0.000 0.689 +0.05 +0.029 0.864 0 +0.000 0.850 -0.2 +0.019 agieval_sat_en_without_passage 0.758 0.191 0.051 0.252 -0.05 +0.015 0.291 -0.15 +0.039 0.364 -0.15 +0.034 0.563 0 +0.000 0.456 -0.15 + 0.053 agieval_sat_math 0.121 0.335 0.544 0.264 +0.05 +0.036 0.323 +0.05 +0.036 0.323 -0.05 +0.036 0.545 -0.15 +0.036 0.632 -0.2 + 0.059 bbh_zeroshot_boolean_expressions 0.000 0.056 0.944 0.648 +0.05 +0.024 0.544 +0.15 + 0.128 0.776 0 +0.000 0.856 -0.05 +0.024 0.724 +0.15 + 0.096 bbh_zeroshot_causal_judgement 0.010 0.417 0.573 0.332 -0.2 + 0.139 0.294 -0.15 +0.037 0.535 0 +0.000 0.578 -0.1 +0.005 0.519 +0.2 + 0.070 bbh_zeroshot_date_understanding 0.234 0.377 0.390 0.584 -0.05 +0.032 0.504 -0.05 +0.004 0.496 +0.05 +0.008 0.588 -0.1 + 0.104 0.440 -0.1 +0.040 bbh_zeroshot_disambiguation_qa 0.179 0.773 0.048 0.312 +0.2 + 0.052",
+      "source": "https://arxiv.org/html/2610.30676v1",
+      "offset": 1598
+    },
+    {
+      "chunk_id": "chunk-0060",
+      "section": "Appendix C Full Subtask-Level Best-Alpha Table",
+      "text": "t_date_understanding 0.234 0.377 0.390 0.584 -0.05 +0.032 0.504 -0.05 +0.004 0.496 +0.05 +0.008 0.588 -0.1 + 0.104 0.440 -0.1 +0.040 bbh_zeroshot_disambiguation_qa 0.179 0.773 0.048 0.312 +0.2 + 0.052 0.368 0 +0.000 0.300 +0.15 +0.004 0.304 -0.2 +0.028 0.300 -0.2 +0.020 bbh_zeroshot_dyck_languages 0.000 0.128 0.872 0.000 0 +0.000 0.000 0 +0.000 0.008 -0.1 +0.016 0.000 -0.15 +0.004 0.000 +0.05 +0.004 bbh_zeroshot_formal_fallacies 0.000 0.258 0.742 0.496 +0.1 +0.040 0.532 -0.15 +0.012 0.548 -0.05 +0.016 0.644 -0.1 +0.012 0.536 +0.2 + 0.096 bbh_zeroshot_geometric_shapes 0.368 0.241 0.391 0.104 0 +0.000 0.120 +0.1 + 0.064 0.136 +0.1 +0.040 0.240 -0.05 +0.048 0.084 -0.15 + 0.108 bbh_zeroshot_hyperbaton 0.545 0.335 0.120 0.496 -0.15 +0.032 0.616 +0.05 +0.004 0.732 -0.15 + 0.084 0.836 0 +0.000 0.552 +0.15 + 0.140 bbh_zeroshot_logical_deduction_five_objects 0.000 0.093 0.907 0.236 +0.05 +0.024 0.444 0 +0.000 0.424 -0.15 +0.012 0.364 -0.2 +0.032 0.280 -0.2 + 0.140 bbh_zeroshot_logical_deduction_seven_objects 0.000 0.109 0.891 0.188 +0.05 +0.032 0.356 0 +0.000 0.400 -0.1 +0.028 0.412 -0.2 +0.044 0.440 -0.2 + 0.092 bbh_zeroshot_logical_deduction_three_objects 0.000 0.095 0.905 0.360 -0.1 +0.012 0.504 0 +0.000 0.552 -0.1 + 0.072 0.736 -0.2 + 0.128 0.804 +0.05 +0.032 bbh_zeroshot_movie_recommendation 0.872 0.094 0.034 0.256 +0.15 +0.028 0.472 -0.1 +0.012 0.544 -0.1 +0.024 0.604 -0.15 +0.008 0.284 +0.15 +0.040 bbh_zeroshot_multistep_arithmetic_two 0.000 0.182 0.818 0.004 +0.05 +0.004 0.000 -0.2 +0.016 0.008 +0.05 +0.004 0.008 -0.15 +0.004 0.004 +0.05 +0.008 bbh_zeroshot_navigate 0.000 0.114 0.886 0.260 +0.15 + 0.256 0.420 -0.1 + 0.172 0.332 -0.15 + 0.216 0.704 +0.05 +0.008 0.628 +0.15 +0.024 bbh_zeroshot_object_counting 0.422 0.543 0.034 0.344 +0.05 +0.024 0.368 +0.05 +0.004 0.396 0",
+      "source": "https://arxiv.org/html/2610.30676v1",
+      "offset": 3195
+    },
+    {
+      "chunk_id": "chunk-0061",
+      "section": "Appendix C Full Subtask-Level Best-Alpha Table",
+      "text": ".114 0.886 0.260 +0.15 + 0.256 0.420 -0.1 + 0.172 0.332 -0.15 + 0.216 0.704 +0.05 +0.008 0.628 +0.15 +0.024 bbh_zeroshot_object_counting 0.422 0.543 0.034 0.344 +0.05 +0.024 0.368 +0.05 +0.004 0.396 0 +0.000 0.364 -0.15 + 0.072 0.184 +0.2 + 0.084 bbh_zeroshot_penguins_in_a_table 0.017 0.479 0.504 0.260 -0.1 + 0.075 0.390 -0.1 +0.021 0.541 +0.1 +0.007 0.692 +0.05 +0.048 0.438 -0.2 + 0.137 bbh_zeroshot_reasoning_about_colored_objects 0.030 0.507 0.463 0.220 +0.15 +0.008 0.500 0 +0.000 0.588 +0.1 +0.012 0.884 -0.1 + 0.056 0.548 -0.2 + 0.168 bbh_zeroshot_ruin_names 0.185 0.815 0.000 0.144 +0.2 + 0.096 0.540 +0.1 +0.032 0.748 0 +0.000 0.508 -0.2 + 0.068 0.332 -0.2 + 0.216 bbh_zeroshot_salient_translation_error_detection 0.200 0.539 0.261 0.188 -0.15 +0.048 0.460 0 +0.000 0.480 0 +0.000 0.628 0 +0.000 0.268 -0.15 + 0.084 bbh_zeroshot_snarks 0.226 0.743 0.031 0.494 +0.1 +0.034 0.601 +0.1 +0.028 0.663 +0.1 +0.034 0.629 +0.05 +0.011 0.421 -0.15 +0.028 bbh_zeroshot_sports_understanding 0.879 0.085 0.035 0.540 -0.2 +0.004 0.628 +0.05 + 0.056 0.736 0 +0.000 0.752 0 +0.000 0.700 +0.05 +0.040 bbh_zeroshot_temporal_sequences 0.000 0.147 0.853 0.160 +0.15 +0.032 0.852 +0.05 +0.004 0.816 -0.1 + 0.120 0.080 -0.15 + 0.500 0.024 -0.2 + 0.500 bbh_zeroshot_tracking_shuffled_objects_five_objects 0.000 0.117 0.883 0.204 -0.1 +0.024 0.160 -0.2 +0.048 0.212 +0.1 +0.032 0.652 -0.1 + 0.060 0.196 +0.2 + 0.088 bbh_zeroshot_tracking_shuffled_objects_seven_objects 0.000 0.082 0.918 0.160 0 +0.000 0.140 -0.1 +0.032 0.148 +0.1 +0.028 0.464 -0.1 +0.012 0.152 +0.15 + 0.128 bbh_zeroshot_tracking_shuffled_objects_three_objects 0.000 0.084 0.916 0.336 -0.15 + 0.052 0.308 -0.1 +0.044 0.316 +0.2 +0.020 0.808 -0.1 + 0.108 0.320 -0.2 + 0.084 bbh_zeroshot_web_of_lies 0.000 0.066 0.934 0.520 0 +0.000 0.472 +0.05",
+      "source": "https://arxiv.org/html/2610.30676v1",
+      "offset": 4794
+    },
+    {
+      "chunk_id": "chunk-0062",
+      "section": "Appendix C Full Subtask-Level Best-Alpha Table",
+      "text": "ects_three_objects 0.000 0.084 0.916 0.336 -0.15 + 0.052 0.308 -0.1 +0.044 0.316 +0.2 +0.020 0.808 -0.1 + 0.108 0.320 -0.2 + 0.084 bbh_zeroshot_web_of_lies 0.000 0.066 0.934 0.520 0 +0.000 0.472 +0.05 +0.020 0.464 +0.05 +0.024 0.492 -0.2 +0.024 0.488 +0.15 +0.004 bbh_zeroshot_word_sorting 0.097 0.131 0.773 0.152 -0.05 +0.020 0.184 -0.1 +0.028 0.288 -0.05 +0.036 0.124 -0.1 +0.032 0.164 0 +0.000 mmlu_pro_biology 0.798 0.103 0.099 0.372 0 +0.000 0.534 +0.05 +0.013 0.622 0 +0.000 0.785 +0.05 +0.015 0.842 +0.05 +0.013 mmlu_pro_business 0.689 0.211 0.100 0.160 -0.1 +0.010 0.352 0 +0.000 0.469 0 +0.000 0.684 +0.1 +0.010 0.753 +0.15 +0.014 mmlu_pro_chemistry 0.574 0.113 0.312 0.113 +0.05 +0.016 0.248 0 +0.000 0.330 0 +0.000 0.656 +0.05 +0.004 0.727 0 +0.000 mmlu_pro_computer_science 0.683 0.095 0.222 0.137 -0.05 +0.024 0.361 0 +0.000 0.493 0 +0.000 0.632 -0.05 +0.032 0.763 +0.05 +0.017 mmlu_pro_economics 0.697 0.096 0.207 0.269 0 +0.000 0.429 0 +0.000 0.541 +0.05 +0.004 0.716 +0.05 +0.004 0.789 0 +0.000 mmlu_pro_engineering 0.387 0.099 0.514 0.130 +0.05 +0.012 0.183 +0.05 +0.006 0.287 0 +0.000 0.504 +0.05 +0.001 0.548 0 +0.000 mmlu_pro_health 0.831 0.097 0.072 0.256 0 +0.000 0.407 0 +0.000 0.526 +0.05 +0.005 0.627 +0.05 +0.004 0.711 0 +0.000 mmlu_pro_history 0.738 0.220 0.043 0.176 -0.05 +0.042 0.349 0 +0.000 0.436 +0.1 +0.003 0.530 -0.05 +0.005 0.577 +0.1 +0.003 mmlu_pro_law 0.435 0.220 0.345 0.114 -0.05 +0.026 0.215 +0.05 +0.003 0.282 +0.05 +0.012 0.312 +0.05 +0.011 0.411 0 +0.000 mmlu_pro_math 0.453 0.153 0.394 0.198 0 +0.000 0.339 0 +0.000 0.422 0 +0.000 0.771 -0.05 +0.018 0.845 +0.05 +0.022 mmlu_pro_other 0.841 0.099 0.060 0.205 -0.05 +0.011 0.340 +0.05 +0.008 0.460 0 +0.000 0.563 +0.05 +0.002 0.620 -0.05 +0.010 mmlu_pro_philosophy 0.680 0.157 0.162 0.194 0 +0.000 0.331 0",
+      "source": "https://arxiv.org/html/2610.30676v1",
+      "offset": 6392
+    },
+    {
+      "chunk_id": "chunk-0063",
+      "section": "Appendix C Full Subtask-Level Best-Alpha Table",
+      "text": "45 +0.05 +0.022 mmlu_pro_other 0.841 0.099 0.060 0.205 -0.05 +0.011 0.340 +0.05 +0.008 0.460 0 +0.000 0.563 +0.05 +0.002 0.620 -0.05 +0.010 mmlu_pro_philosophy 0.680 0.157 0.162 0.194 0 +0.000 0.331 0 +0.000 0.439 -0.05 +0.004 0.515 -0.05 +0.004 0.589 -0.1 +0.016 mmlu_pro_physics 0.584 0.079 0.337 0.150 -0.1 +0.013 0.255 +0.05 +0.013 0.368 +0.05 +0.004 0.664 0 +0.000 0.750 0 +0.000 mmlu_pro_psychology 0.806 0.106 0.089 0.327 -0.1 +0.004 0.481 -0.05 +0.018 0.590 -0.05 +0.014 0.689 0 +0.000 0.734 +0.1 +0.009 mmlu_redux_abstract_algebra_generative 0.490 0.052 0.458 0.236 0 +0.000 0.281 +0.15 +0.045 0.303 +0.1 + 0.067 0.404 +0.05 + 0.079 0.247 -0.2 + 0.079 mmlu_redux_anatomy_generative 0.955 0.034 0.010 0.263 -0.1 +0.030 0.434 +0.1 + 0.111 0.525 -0.05 + 0.061 0.626 -0.05 + 0.071 0.263 +0.1 + 0.182 mmlu_redux_astronomy_generative 0.924 0.039 0.037 0.287 -0.1 +0.043 0.362 +0.05 + 0.064 0.564 +0.05 +0.021 0.777 +0.05 +0.032 0.362 +0.2 + 0.202 mmlu_redux_business_ethics_generative 0.829 0.161 0.010 0.271 -0.05 + 0.094 0.376 +0.15 + 0.165 0.471 +0.1 + 0.082 0.753 +0.05 + 0.106 0.506 +0.15 +0.035 mmlu_redux_clinical_knowledge_generative 0.919 0.056 0.025 0.263 +0.05 + 0.051 0.424 0 +0.000 0.495 +0.15 + 0.111 0.636 -0.05 + 0.091 0.293 +0.2 + 0.141 mmlu_redux_college_biology_generative 0.879 0.061 0.059 0.255 +0.05 + 0.102 0.398 +0.15 + 0.061 0.582 0 +0.000 0.786 0 +0.000 0.367 +0.15 + 0.204 mmlu_redux_college_chemistry_generative 0.822 0.030 0.148 0.187 -0.1 + 0.080 0.240 -0.1 + 0.093 0.440 +0.2 +0.027 0.547 -0.05 + 0.080 0.227 +0.15 + 0.120 mmlu_redux_college_computer_science_generative 0.583 0.096 0.321 0.175 -0.1 + 0.134 0.340 +0.1 +0.031 0.330 -0.1 + 0.062 0.598 0 +0.000 0.299 +0.2 + 0.165 mmlu_redux_college_mathematics_generative 0.299 0.117 0.584 0.232 0 +0.000 0.232 +0.2 +",
+      "source": "https://arxiv.org/html/2610.30676v1",
+      "offset": 7991
+    },
+    {
+      "chunk_id": "chunk-0064",
+      "section": "Appendix C Full Subtask-Level Best-Alpha Table",
+      "text": "tive 0.583 0.096 0.321 0.175 -0.1 + 0.134 0.340 +0.1 +0.031 0.330 -0.1 + 0.062 0.598 0 +0.000 0.299 +0.2 + 0.165 mmlu_redux_college_mathematics_generative 0.299 0.117 0.584 0.232 0 +0.000 0.232 +0.2 + 0.071 0.222 +0.05 + 0.152 0.384 -0.15 + 0.061 0.222 -0.2 + 0.051 mmlu_redux_college_medicine_generative 0.856 0.059 0.086 0.253 -0.1 + 0.126 0.253 +0.1 + 0.172 0.506 +0.05 +0.046 0.678 0 +0.000 0.276 +0.15 + 0.138 mmlu_redux_college_physics_generative 0.627 0.087 0.286 0.250 -0.2 +0.010 0.290 0 +0.000 0.400 0 +0.000 0.530 -0.05 +0.010 0.390 +0.1 + 0.110 mmlu_redux_computer_security_generative 0.929 0.043 0.028 0.320 -0.1 + 0.062 0.485 +0.15 + 0.082 0.546 +0.1 + 0.062 0.753 -0.05 +0.010 0.412 +0.1 + 0.124 mmlu_redux_conceptual_physics_generative 0.841 0.044 0.115 0.283 0 +0.000 0.304 -0.05 + 0.087 0.380 -0.15 + 0.087 0.652 -0.1 + 0.141 0.554 +0.05 + 0.054 mmlu_redux_econometrics_generative 0.711 0.137 0.153 0.227 +0.05 +0.041 0.258 +0.1 + 0.082 0.392 0 +0.000 0.536 +0.15 +0.031 0.278 +0.15 + 0.082 mmlu_redux_electrical_engineering_generative 0.957 0.032 0.011 0.265 -0.1 +0.031 0.367 -0.05 + 0.092 0.480 0 +0.000 0.663 -0.05 +0.031 0.480 +0.1 +0.010 mmlu_redux_elementary_mathematics_generative 0.214 0.378 0.408 0.186 -0.1 + 0.082 0.258 -0.1 + 0.124 0.371 +0.05 + 0.093 0.588 -0.1 + 0.052 0.454 -0.05 +0.021 mmlu_redux_formal_logic_generative 0.036 0.331 0.633 0.241 +0.05 +0.034 0.218 -0.15 + 0.057 0.287 +0.05 + 0.138 0.506 0 +0.000 0.276 -0.05 +0.046 mmlu_redux_global_facts_generative 0.975 0.025 0.000 0.170 -0.1 + 0.114 0.341 0 +0.000 0.307 +0.15 +0.011 0.330 +0.1 + 0.057 0.182 +0.15 + 0.114 mmlu_redux_high_school_biology_generative 0.809 0.098 0.093 0.242 +0.1 + 0.053 0.400 0 +0.000 0.589 +0.1 + 0.105 0.821 +0.05 + 0.074 0.347 +0.1 + 0.095",
+      "source": "https://arxiv.org/html/2610.30676v1",
+      "offset": 9590
+    },
+    {
+      "chunk_id": "chunk-0065",
+      "section": "Appendix C Full Subtask-Level Best-Alpha Table",
+      "text": "15 +0.011 0.330 +0.1 + 0.057 0.182 +0.15 + 0.114 mmlu_redux_high_school_biology_generative 0.809 0.098 0.093 0.242 +0.1 + 0.053 0.400 0 +0.000 0.589 +0.1 + 0.105 0.821 +0.05 + 0.074 0.347 +0.1 + 0.095 mmlu_redux_high_school_chemistry_generative 0.649 0.084 0.266 0.222 -0.05 +0.010 0.232 +0.1 + 0.121 0.394 +0.15 +0.020 0.586 +0.05 +0.030 0.202 +0.1 + 0.141 mmlu_redux_high_school_computer_science_generative 0.647 0.088 0.265 0.220 -0.15 + 0.080 0.360 0 +0.000 0.440 +0.1 +0.040 0.770 +0.05 +0.050 0.260 +0.2 + 0.220 mmlu_redux_high_school_european_history_generative 0.566 0.341 0.092 0.176 -0.15 + 0.066 0.418 +0.1 + 0.088 0.473 -0.05 + 0.055 0.769 0 +0.000 0.352 +0.2 + 0.165 mmlu_redux_high_school_geography_generative 0.940 0.055 0.005 0.210 +0.05 + 0.060 0.410 +0.05 + 0.070 0.580 +0.05 +0.020 0.730 0 +0.000 0.390 +0.15 + 0.130 mmlu_redux_high_school_government_and_politics_generative 0.872 0.092 0.036 0.200 +0.1 + 0.130 0.360 +0.05 + 0.090 0.510 +0.05 + 0.120 0.810 +0.05 +0.040 0.290 +0.2 + 0.210 mmlu_redux_high_school_macroeconomics_generative 0.672 0.109 0.218 0.268 -0.1 +0.010 0.289 -0.2 +0.021 0.433 +0.1 + 0.072 0.691 0 +0.000 0.361 +0.2 + 0.103 mmlu_redux_high_school_mathematics_generative 0.235 0.099 0.666 0.270 0 +0.000 0.260 +0.1 +0.030 0.330 +0.15 +0.050 0.320 -0.15 + 0.090 0.340 +0.2 + 0.060 mmlu_redux_high_school_microeconomics_generative 0.707 0.105 0.188 0.194 -0.05 + 0.122 0.245 +0.05 + 0.092 0.480 -0.05 + 0.051 0.837 0 +0.000 0.327 +0.1 + 0.163 mmlu_redux_high_school_physics_generative 0.483 0.088 0.429 0.196 -0.15 +0.031 0.227 +0.2 + 0.113 0.309 -0.15 +0.021 0.505 -0.05 + 0.093 0.361 +0.1 +0.031 mmlu_redux_high_school_psychology_generative 0.888 0.086 0.026 0.271 -0.05 +0.042 0.448 +0.05 + 0.062 0.604 +0.1 + 0.094 0.844 -0.05 +0.042 0.271 +0.2 + 0.312",
+      "source": "https://arxiv.org/html/2610.30676v1",
+      "offset": 11153
+    },
+    {
+      "chunk_id": "chunk-0066",
+      "section": "Appendix C Full Subtask-Level Best-Alpha Table",
+      "text": "021 0.505 -0.05 + 0.093 0.361 +0.1 +0.031 mmlu_redux_high_school_psychology_generative 0.888 0.086 0.026 0.271 -0.05 +0.042 0.448 +0.05 + 0.062 0.604 +0.1 + 0.094 0.844 -0.05 +0.042 0.271 +0.2 + 0.312 mmlu_redux_high_school_statistics_generative 0.517 0.161 0.322 0.184 -0.05 + 0.071 0.327 -0.1 +0.031 0.316 +0.15 + 0.102 0.643 0 +0.000 0.255 +0.15 + 0.051 mmlu_redux_high_school_us_history_generative 0.630 0.291 0.079 0.210 -0.15 + 0.110 0.380 +0.1 + 0.060 0.580 0 +0.000 0.740 +0.05 +0.030 0.360 +0.2 + 0.260 mmlu_redux_high_school_world_history_generative 0.580 0.358 0.062 0.354 0 +0.000 0.475 +0.1 + 0.051 0.556 -0.05 +0.040 0.737 -0.1 + 0.081 0.293 +0.2 + 0.202 mmlu_redux_human_aging_generative 0.947 0.045 0.008 0.264 -0.15 + 0.103 0.379 +0.05 + 0.149 0.563 +0.1 +0.023 0.690 +0.05 +0.023 0.356 +0.1 + 0.149 mmlu_redux_human_sexuality_generative 0.927 0.041 0.031 0.247 -0.1 + 0.062 0.370 +0.1 + 0.136 0.728 0 +0.000 0.741 -0.05 + 0.074 0.519 +0.05 +0.025 mmlu_redux_international_law_generative 0.920 0.080 0.000 0.337 -0.05 + 0.053 0.400 -0.15 + 0.116 0.621 +0.05 +0.042 0.737 0 +0.000 0.421 0 +0.000 mmlu_redux_jurisprudence_generative 0.779 0.176 0.045 0.242 -0.1 + 0.071 0.343 +0.15 + 0.101 0.434 +0.05 + 0.141 0.778 0 +0.000 0.364 +0.15 + 0.051 mmlu_redux_logical_fallacies_generative 0.790 0.200 0.010 0.176 -0.05 +0.041 0.446 +0.1 + 0.054 0.608 +0.05 + 0.081 0.811 -0.1 +0.027 0.324 -0.2 + 0.297 mmlu_redux_machine_learning_generative 0.747 0.086 0.167 0.281 -0.05 + 0.067 0.382 +0.05 +0.022 0.292 -0.15 + 0.135 0.461 -0.05 + 0.124 0.393 +0.05 +0.011 mmlu_redux_management_generative 0.905 0.095 0.000 0.283 -0.1 + 0.071 0.374 -0.15 + 0.131 0.646 0 +0.000 0.808 -0.05 +0.020 0.343 +0.15 + 0.131 mmlu_redux_marketing_generative 0.900 0.090 0.010 0.333 -0.2 + 0.062 0.677 +0.1 +0.031",
+      "source": "https://arxiv.org/html/2610.30676v1",
+      "offset": 12747
+    },
+    {
+      "chunk_id": "chunk-0067",
+      "section": "Appendix C Full Subtask-Level Best-Alpha Table",
+      "text": "ve 0.905 0.095 0.000 0.283 -0.1 + 0.071 0.374 -0.15 + 0.131 0.646 0 +0.000 0.808 -0.05 +0.020 0.343 +0.15 + 0.131 mmlu_redux_marketing_generative 0.900 0.090 0.010 0.333 -0.2 + 0.062 0.677 +0.1 +0.031 0.740 0 +0.000 0.792 -0.05 + 0.094 0.479 +0.05 + 0.125 mmlu_redux_medical_genetics_generative 0.953 0.021 0.026 0.240 -0.15 + 0.110 0.450 +0.05 + 0.080 0.540 +0.05 +0.050 0.720 -0.15 + 0.090 0.460 +0.15 + 0.080 mmlu_redux_miscellaneous_generative 0.934 0.035 0.030 0.267 -0.15 + 0.133 0.667 +0.15 +0.011 0.756 0 +0.000 0.844 0 +0.000 0.411 +0.15 + 0.133 mmlu_redux_moral_disputes_generative 0.859 0.131 0.010 0.219 -0.1 + 0.083 0.427 0 +0.000 0.552 +0.05 +0.010 0.719 0 +0.000 0.271 -0.2 + 0.104 mmlu_redux_moral_scenarios_generative 0.250 0.750 0.000 0.330 0 +0.000 0.206 -0.15 + 0.175 0.237 +0.05 + 0.103 0.299 -0.15 + 0.144 0.216 +0.15 + 0.052 mmlu_redux_nutrition_generative 0.915 0.080 0.005 0.320 -0.1 + 0.052 0.423 +0.05 +0.041 0.588 +0.1 +0.010 0.722 -0.05 +0.021 0.340 +0.15 + 0.082 mmlu_redux_philosophy_generative 0.839 0.146 0.015 0.258 -0.1 +0.011 0.393 +0.15 + 0.067 0.629 +0.05 +0.011 0.607 -0.05 +0.045 0.292 +0.05 + 0.056 mmlu_redux_prehistory_generative 0.945 0.045 0.010 0.290 0 +0.000 0.440 -0.15 + 0.060 0.580 -0.1 +0.040 0.810 0 +0.000 0.390 +0.05 + 0.100 mmlu_redux_professional_accounting_generative 0.755 0.119 0.125 0.283 0 +0.000 0.293 -0.05 + 0.065 0.413 0 +0.000 0.457 -0.15 + 0.098 0.370 +0.05 +0.011 mmlu_redux_professional_law_generative 0.454 0.208 0.339 0.232 -0.15 + 0.098 0.317 -0.05 +0.012 0.427 -0.05 +0.049 0.439 0 +0.000 0.220 -0.05 + 0.073 mmlu_redux_professional_medicine_generative 0.618 0.134 0.247 0.152 -0.05 + 0.131 0.394 +0.1 + 0.152 0.707 0 +0.000 0.606 +0.05 + 0.121 0.232 +0.15 + 0.061 mmlu_redux_professional_psychology_generative 0.892 0.074",
+      "source": "https://arxiv.org/html/2610.30676v1",
+      "offset": 14345
+    },
+    {
+      "chunk_id": "chunk-0068",
+      "section": "Appendix C Full Subtask-Level Best-Alpha Table",
+      "text": "ofessional_medicine_generative 0.618 0.134 0.247 0.152 -0.05 + 0.131 0.394 +0.1 + 0.152 0.707 0 +0.000 0.606 +0.05 + 0.121 0.232 +0.15 + 0.061 mmlu_redux_professional_psychology_generative 0.892 0.074 0.035 0.292 0 +0.000 0.292 -0.1 + 0.156 0.542 +0.05 + 0.062 0.635 -0.15 + 0.052 0.385 +0.2 +0.031 mmlu_redux_public_relations_generative 0.944 0.051 0.005 0.187 -0.1 + 0.110 0.440 +0.15 + 0.077 0.462 -0.05 + 0.110 0.615 +0.05 + 0.110 0.418 +0.2 + 0.077 mmlu_redux_security_studies_generative 0.786 0.188 0.026 0.245 -0.1 + 0.096 0.500 0 +0.000 0.468 +0.05 + 0.085 0.681 0 +0.000 0.298 +0.15 + 0.106 mmlu_redux_sociology_generative 0.930 0.066 0.004 0.357 0 +0.000 0.449 +0.15 + 0.061 0.673 0 +0.000 0.765 -0.1 +0.031 0.388 +0.1 + 0.153 mmlu_redux_us_foreign_policy_generative 0.927 0.064 0.009 0.313 -0.1 + 0.061 0.556 0 +0.000 0.616 +0.05 + 0.081 0.828 0 +0.000 0.455 +0.2 + 0.091 mmlu_redux_virology_generative 0.955 0.035 0.010 0.233 -0.1 + 0.140 0.465 +0.05 +0.047 0.674 +0.05 +0.047 0.814 0 +0.000 0.326 +0.1 + 0.093 mmlu_redux_world_religions_generative 0.970 0.030 0.000 0.283 -0.2 + 0.081 0.657 +0.05 +0.020 0.677 +0.05 + 0.071 0.778 +0.05 +0.030 0.495 +0.1 +0.040",
+      "source": "https://arxiv.org/html/2610.30676v1",
+      "offset": 15940
+    },
+    {
+      "chunk_id": "chunk-0069",
+      "section": "Appendix D Layer-wise Non-uniformity of Alpha SVD Perturbations",
+      "text": "This appendix summarizes the spectral evidence that the same global α \\alpha perturbation does not produce a uniform update strength across model depth. The reason is that each layer starts from a different singular-value distribution. For each MLP up_proj and down_proj matrix, the perturbation is applied as s i ′ = G ​ ( s i G ) 1 + α , G = exp ⁡ ( 1 n ​ ∑ i log ⁡ s i ) , s_{i}^{\\prime}=G\\left(\\frac{s_{i}}{G}\\right)^{1+\\alpha},\\qquad G=\\exp\\!\\left(\\frac{1}{n}\\sum_{i}\\log s_{i}\\right), where here s i ≡ σ i s_{i}\\equiv\\sigma_{i} and n = r n=r relative to Sec. 3 ; this is the same geometric-mean-preserving transform as Eqs. (3)–(6), rewritten to emphasize the normalization. Positive α \\alpha increases spectral inequality by pushing large singular values farther above the geometric mean and small singular values farther below it, whereas negative α \\alpha smooths the spectrum. The sign of the perturbation is therefore global, but its realized magnitude is layer-specific. (a) Layer-wise Gini coefficients. (b) Relative change of the top singular value. Figure 8: Two complementary views of layer-wise non-uniformity under the α \\alpha SVD perturbation. Layers with more unequal spectra receive larger realized perturbations even when the global control parameter is held fixed. (a) Absolute top singular values across layers. (b) Head/tail singular values for selected Llama 3.1 8B layers. Figure 9: Additional layer-wise diagnostics. The absolute-value plot exposes where already dominant directions can receive further amplification, while the Llama 3.1 8B visualization shows that the perturbation acts on layer-specific head and tail shapes rather than on a uniform spectrum.",
+      "source": "https://arxiv.org/html/2610.30676v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0070",
+      "section": "Layer-wise evidence.",
+      "text": "The Gini plot shows that spectral inequality differs substantially by layer, model, and projection. Dense Llama models exhibit strong depth dependence, especially in up_proj ; Qwen3 8B has unusually concentrated early layers; and Qwen3 30B-A3B MoE adds expert-level variation, where the maximum expert can deviate substantially from the layer mean. The relative top-singular-value plot identifies where the same global perturbation causes the largest multiplicative amplification or suppression, with the strongest effects occurring in layers whose top singular value is already far above the geometric mean. Model / proj. Layer Base Gini Top-SV multiplier Qwen3 8B / down_proj 1 0.3209 1.7984 Qwen3 8B / down_proj 2 0.3513 1.7278 Llama 3.2 3B Instruct / up_proj 27 0.2506 1.6784 Llama 3.1 8B Instruct / up_proj 31 0.2143 1.6535 Qwen3 8B / up_proj 2 0.3910 1.6443 Table 9: Examples of large top-singular-value amplification at α = + 0.2 \\alpha=+0.2 . These cases illustrate that the same global perturbation can produce markedly different realized updates across layers.",
+      "source": "https://arxiv.org/html/2610.30676v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0071",
+      "section": "Interpretation.",
+      "text": "The data support three points. First, the α \\alpha transform has a consistent sign effect: positive α \\alpha increases Gini and top singular values, while negative α \\alpha decreases them. Second, the magnitude of this effect is highly non-uniform across layers: layers with more unequal singular-value distributions are more affected by the same α \\alpha than flatter layers, and the strongest affected layers differ across model families and projections. Third, MoE models add another axis of non-uniformity because the expert mean describes the typical routed expert while the expert maximum reveals that some individual experts are much more spectrally concentrated than the layer average.",
+      "source": "https://arxiv.org/html/2610.30676v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0072",
+      "section": "Implication for experiments.",
+      "text": "Using one global α \\alpha remains useful as a controlled intervention, but it should be interpreted as a spectrum-dependent perturbation rather than a uniform update. This explains why α \\alpha sweeps can produce selective task improvements or degradations rather than smooth global quality changes. The layer-wise diagnostics motivate safer future variants such as layer-normalized α \\alpha , projection-specific α \\alpha for up_proj and down_proj , MoE expert clipping, and reporting realized spectral statistics alongside the nominal α \\alpha value.",
+      "source": "https://arxiv.org/html/2610.30676v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0073",
+      "section": "Appendix E Auxiliary-Task Alpha Sweeps Outside the Capability-Labeled Benchmark Suite",
+      "text": "Table 10 records the official full non-judge auxiliary sweeps on the nine-point α \\alpha grid from − 0.2 -0.2 to + 0.2 +0.2 . It complements the condensed best- α \\alpha summaries in Tables 1 and 3 by showing where gains are narrow, broad, or sharply non-monotone across the full grid. Judge-scored auxiliary probes are summarized in the main text but are kept separate from this official full non-judge sweep table. Table 10: Official full non-judge auxiliary-task α \\alpha sweeps. Each row reports all evaluated perturbation strengths from − 0.2 -0.2 to + 0.2 +0.2 ; the row-wise best score is bolded. α ∗ \\alpha^{*} is the best α \\alpha on the displayed grid, with ties assigned to α = 0 \\alpha=0 when the baseline is tied, and Δ frac \\Delta_{\\mathrm{frac}} is the gain over α = 0 \\alpha=0 as a fraction of the task’s score range. BFCL uses retry-enabled success.",
+      "source": "https://arxiv.org/html/2610.30676v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0074",
+      "section": "Appendix E Auxiliary-Task Alpha Sweeps Outside the Capability-Labeled Benchmark Suite",
+      "text": "Task Model − 0.2 -0.2 − 0.15 -0.15 − 0.1 -0.1 − 0.05 -0.05 0 0 + 0.05 +0.05 + 0.1 +0.1 + 0.15 +0.15 + 0.2 +0.2 α ∗ \\alpha^{*} Δ frac \\Delta_{\\mathrm{frac}} Standard no-CoT GSM8K Llama-3.2-1B 0.213 0.213 0.223 \\mathbf{0.223} 0.209 0.209 0.172 0.172 0.144 0.144 0.114 0.114 0.080 0.080 0.061 0.061 0.033 0.033 − 0.15 -0.15 + 0.079 +0.079 Llama-3.2-3B 0.121 0.121 0.154 \\mathbf{0.154} 0.107 0.107 0.112 0.112 0.121 0.121 0.123 0.123 0.122 0.122 0.121 0.121 0.125 0.125 − 0.15 -0.15 + 0.033 +0.033 Llama-3.1-8B 0.248 0.248 0.551 \\mathbf{0.551} 0.506 0.506 0.416 0.416 0.324 0.324 0.305 0.305 0.375 0.375 0.250 0.250 0.159 0.159 − 0.15 -0.15 + 0.227 +0.227 Qwen3-8B 0.798 0.798 0.843 0.843 0.851 \\mathbf{0.851} 0.845 0.845 0.845 0.845 0.832 0.832 0.809 0.809 0.763 0.763 0.683 0.683 − 0.10 -0.10 + 0.006 +0.006 Qwen3-30B-A3B 0.858 0.858 0.839 0.839 0.861 0.861 0.867 0.867 0.864 0.864 0.879 0.879 0.898 \\mathbf{0.898} 0.886 0.886 0.888 0.888 + 0.10 +0.10 + 0.033 +0.033 MATH Llama-3.2-1B 0.138 0.138 0.152 \\mathbf{0.152} 0.150 0.150 0.140 0.140 0.138 0.138 0.152 \\mathbf{0.152} 0.136 0.136 0.100 0.100 0.086 0.086 − 0.15 -0.15 + 0.014 +0.014 Llama-3.2-3B 0.140 0.140 0.170 0.170 0.204 \\mathbf{0.204} 0.194 0.194 0.178 0.178 0.198 0.198 0.194 0.194 0.186 0.186 0.154 0.154 − 0.10 -0.10 + 0.026 +0.026 Llama-3.1-8B 0.158 0.158 0.222 0.222 0.220 0.220 0.218 0.218 0.212 0.212 0.208 0.208 0.228 \\mathbf{0.228} 0.216 0.216 0.154 0.154 + 0.10 +0.10 + 0.016 +0.016 Qwen3-8B 0.394 \\mathbf{0.394} 0.394 \\mathbf{0.394} 0.374 0.374 0.376 0.376 0.350 0.350 0.336 0.336 0.318 0.318 0.300 0.300 0.292 0.292 − 0.20 -0.20 + 0.044 +0.044 Qwen3-30B-A3B 0.440 0.440 0.420 0.420 0.426 0.426 0.424 0.424 0.426 0.426 0.432 0.432 0.428 0.428 0.448 \\mathbf{0.448} 0.414 0.414 + 0.15 +0.15 + 0.022 +0.022 ARC-C Llama-3.2-1B 0.385",
+      "source": "https://arxiv.org/html/2610.30676v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0075",
+      "section": "Appendix E Auxiliary-Task Alpha Sweeps Outside the Capability-Labeled Benchmark Suite",
+      "text": "0 + 0.044 +0.044 Qwen3-30B-A3B 0.440 0.440 0.420 0.420 0.426 0.426 0.424 0.424 0.426 0.426 0.432 0.432 0.428 0.428 0.448 \\mathbf{0.448} 0.414 0.414 + 0.15 +0.15 + 0.022 +0.022 ARC-C Llama-3.2-1B 0.385 0.385 0.443 0.443 0.474 0.474 0.494 0.494 0.497 0.497 0.498 \\mathbf{0.498} 0.491 0.491 0.445 0.445 0.352 0.352 + 0.05 +0.05 + 0.001 +0.001 Llama-3.2-3B 0.387 0.387 0.664 0.664 0.712 0.712 0.724 0.724 0.728 0.728 0.732 \\mathbf{0.732} 0.724 0.724 0.693 0.693 0.651 0.651 + 0.05 +0.05 + 0.004 +0.004 Llama-3.1-8B 0.706 0.706 0.789 0.789 0.811 0.811 0.820 \\mathbf{0.820} 0.815 0.815 0.813 0.813 0.801 0.801 0.779 0.779 0.731 0.731 − 0.05 -0.05 + 0.005 +0.005 Qwen3-8B 0.907 0.907 0.910 0.910 0.913 0.913 0.916 0.916 0.922 \\mathbf{0.922} 0.914 0.914 0.907 0.907 0.897 0.897 0.873 0.873 0 0 + 0.000 +0.000 Qwen3-30B-A3B 0.924 0.924 0.925 0.925 0.925 0.925 0.926 0.926 0.927 \\mathbf{0.927} 0.925 0.925 0.922 0.922 0.920 0.920 0.924 0.924 0 0 + 0.000 +0.000 BFCL Llama-3.2-1B 0.637 0.637 0.738 0.738 0.743 \\mathbf{0.743} 0.718 0.718 0.598 0.598 0.440 0.440 0.340 0.340 0.275 0.275 0.225 0.225 − 0.10 -0.10 + 0.145 +0.145 Llama-3.2-3B 0.172 \\mathbf{0.172} 0.142 0.142 0.113 0.113 0.035 0.035 0.048 0.048 0.128 0.128 0.092 0.092 0.140 0.140 0.138 0.138 − 0.20 -0.20 + 0.125 +0.125 Llama-3.1-8B 0.355 0.355 0.383 0.383 0.417 0.417 0.500 0.500 0.593 \\mathbf{0.593} 0.512 0.512 0.295 0.295 0.177 0.177 0.177 0.177 0 0 + 0.000 +0.000 Qwen3-8B 0.772 0.772 0.805 \\mathbf{0.805} 0.800 0.800 0.755 0.755 0.777 0.777 0.728 0.728 0.675 0.675 0.575 0.575 0.640 0.640 − 0.15 -0.15 + 0.028 +0.028 Qwen3-30B-A3B 0.905 0.905 0.905 0.905 0.912 \\mathbf{0.912} 0.912 \\mathbf{0.912} 0.885 0.885 0.853 0.853 0.782 0.782 0.738 0.738 0.703 0.703 − 0.10 -0.10 + 0.027 +0.027 Standard CoT GSM8K-CoT Llama-3.2-1B 0.284 0.284 0.315",
+      "source": "https://arxiv.org/html/2610.30676v1",
+      "offset": 1599
+    },
+    {
+      "chunk_id": "chunk-0076",
+      "section": "Appendix E Auxiliary-Task Alpha Sweeps Outside the Capability-Labeled Benchmark Suite",
+      "text": ".905 0.905 0.905 0.912 \\mathbf{0.912} 0.912 \\mathbf{0.912} 0.885 0.885 0.853 0.853 0.782 0.782 0.738 0.738 0.703 0.703 − 0.10 -0.10 + 0.027 +0.027 Standard CoT GSM8K-CoT Llama-3.2-1B 0.284 0.284 0.315 0.315 0.349 0.349 0.357 0.357 0.376 \\mathbf{0.376} 0.359 0.359 0.361 0.361 0.303 0.303 0.230 0.230 0 0 + 0.000 +0.000 Llama-3.2-3B 0.458 0.458 0.635 0.635 0.691 0.691 0.747 \\mathbf{0.747} 0.745 0.745 0.736 0.736 0.718 0.718 0.682 0.682 0.616 0.616 − 0.05 -0.05 + 0.002 +0.002 Llama-3.1-8B 0.588 0.588 0.752 0.752 0.820 0.820 0.837 \\mathbf{0.837} 0.807 0.807 0.788 0.788 0.792 0.792 0.757 0.757 0.654 0.654 − 0.05 -0.05 + 0.030 +0.030 Qwen3-8B 0.331 0.331 0.363 \\mathbf{0.363} 0.318 0.318 0.322 0.322 0.306 0.306 0.296 0.296 0.279 0.279 0.271 0.271 0.224 0.224 − 0.15 -0.15 + 0.057 +0.057 Qwen3-30B-A3B 0.500 0.500 0.514 \\mathbf{0.514} 0.508 0.508 0.511 0.511 0.469 0.469 0.455 0.455 0.444 0.444 0.397 0.397 0.373 0.373 − 0.15 -0.15 + 0.045 +0.045 MATH-CoT Llama-3.2-1B 0.206 0.206 0.256 0.256 0.246 0.246 0.254 0.254 0.280 0.280 0.260 0.260 0.284 \\mathbf{0.284} 0.236 0.236 0.180 0.180 + 0.10 +0.10 + 0.004 +0.004 Llama-3.2-3B 0.220 0.220 0.370 0.370 0.410 0.410 0.420 0.420 0.464 \\mathbf{0.464} 0.454 0.454 0.398 0.398 0.420 0.420 0.290 0.290 0 0 + 0.000 +0.000 Llama-3.1-8B 0.174 0.174 0.354 0.354 0.412 0.412 0.468 0.468 0.504 \\mathbf{0.504} 0.458 0.458 0.434 0.434 0.384 0.384 0.262 0.262 0 0 + 0.000 +0.000 Qwen3-8B 0.194 0.194 0.166 0.166 0.164 0.164 0.202 \\mathbf{0.202} 0.172 0.172 0.172 0.172 0.154 0.154 0.136 0.136 0.152 0.152 − 0.05 -0.05 + 0.030 +0.030 Qwen3-30B-A3B 0.208 \\mathbf{0.208} 0.186 0.186 0.198 0.198 0.152 0.152 0.178 0.178 0.184 0.184 0.168 0.168 0.164 0.164 0.172 0.172 − 0.20 -0.20 + 0.030 +0.030 ARC-C-CoT Llama-3.2-1B 0.084 0.084 0.083 0.083 0.149 0.149 0.201 0.201",
+      "source": "https://arxiv.org/html/2610.30676v1",
+      "offset": 3195
+    },
+    {
+      "chunk_id": "chunk-0077",
+      "section": "Appendix E Auxiliary-Task Alpha Sweeps Outside the Capability-Labeled Benchmark Suite",
+      "text": ".208} 0.186 0.186 0.198 0.198 0.152 0.152 0.178 0.178 0.184 0.184 0.168 0.168 0.164 0.164 0.172 0.172 − 0.20 -0.20 + 0.030 +0.030 ARC-C-CoT Llama-3.2-1B 0.084 0.084 0.083 0.083 0.149 0.149 0.201 0.201 0.208 0.208 0.226 \\mathbf{0.226} 0.216 0.216 0.217 0.217 0.159 0.159 + 0.05 +0.05 + 0.018 +0.018 Llama-3.2-3B 0.307 0.307 0.510 0.510 0.608 0.608 0.654 0.654 0.663 0.663 0.671 0.671 0.673 \\mathbf{0.673} 0.665 0.665 0.556 0.556 + 0.10 +0.10 + 0.010 +0.010 Llama-3.1-8B 0.718 0.718 0.817 0.817 0.834 0.834 0.840 \\mathbf{0.840} 0.839 0.839 0.831 0.831 0.816 0.816 0.794 0.794 0.730 0.730 − 0.05 -0.05 + 0.002 +0.002 Qwen3-8B 0.506 0.506 0.551 0.551 0.555 0.555 0.558 0.558 0.583 0.583 0.606 0.606 0.614 \\mathbf{0.614} 0.596 0.596 0.543 0.543 + 0.10 +0.10 + 0.032 +0.032 Qwen3-30B-A3B 0.778 0.778 0.794 0.794 0.783 0.783 0.799 0.799 0.819 0.819 0.822 0.822 0.828 \\mathbf{0.828} 0.823 0.823 0.816 0.816 + 0.10 +0.10 + 0.009 +0.009",
+      "source": "https://arxiv.org/html/2610.30676v1",
+      "offset": 4791
+    },
+    {
+      "chunk_id": "chunk-0078",
+      "section": "References",
+      "text": "Ahmad et al. (2025) A. Ahmad, A. Joshi, and A. Modi Beyond components: singular vector-based interpretability of transformer circuits . External Links: 2511.20273 , Link Cited by: §2 . Cancedda (2024) N. Cancedda Spectral filters, dark signals, and attention sinks . External Links: 2402.09221 , Link Cited by: §2 . Conjecture (2022) Conjecture The singular value decompositions of transformer weight matrices are highly interpretable . Note: Technical blog postAccessed 2026-05-07 External Links: Link Cited by: §2 . Dai et al. (2022) D. Dai, L. Dong, Y. Hao, Z. Sui, B. Chang, and F. Wei Knowledge neurons in pretrained transformers . External Links: 2104.08696 , Link Cited by: §2 . Geva et al. (2021) M. Geva, R. Schuster, J. Berant, and O. Levy Transformer feed-forward layers are key-value memories . External Links: 2012.14913 , Link Cited by: §2 . Grattafiori et al. (2024) A. Grattafiori, A. Dubey, A. Jauhri, A. Pandey, A. Kadian, A. Al-Dahle, A. Letman, A. Mathur, A. Schelten, A. Vaughan, et al. The llama 3 herd of models . External Links: 2407.21783 , Link Cited by: 1st item . Lee et al. (2024) S. Lee, S. Lim, S. Han, G. Oh, H. Chae, J. Chung, M. Kim, B. Kwak, Y. Lee, D. Lee, et al. Do LLMs have distinct and consistent personality? TRAIT: personality testset designed for LLMs with psychometrics . External Links: 2406.14703 , Link Cited by: 3rd item . Meng et al. (2025) F. Meng, Z. Wang, and M. Zhang PiSSA: principal singular values and singular vectors adaptation of large language models . External Links: 2404.02948 , Link Cited by: §2 . Meng et al. (2023a) K. Meng, D. Bau, A. Andonian, and Y. Belinkov Locating and editing factual associations in GPT . External Links: 2202.05262 , Link Cited by: §2 .",
+      "source": "https://arxiv.org/html/2610.30676v1",
+      "offset": 0
+    },
+    {
+      "chunk_id": "chunk-0079",
+      "section": "References",
+      "text": "Meng et al. (2023b) K. Meng, A. S. Sharma, A. Andonian, Y. Belinkov, and D. Bau Mass-editing memory in a transformer . External Links: 2210.07229 , Link Cited by: §2 . Sharma et al. (2023) P. Sharma, J. T. Ash, and D. Misra The truth is in there: improving reasoning in language models with layer-selective rank reduction . External Links: 2312.13558 , Link Cited by: §2 . Staats et al. (2025) M. Staats, M. Thamm, and B. Rosenow Small singular values matter: a random matrix analysis of transformer models . External Links: 2410.17770 , Link Cited by: §2 . Wang et al. (2025a) F. Wang, J. Jiang, C. Park, S. Kim, and J. Tang KaSA: knowledge-aware singular-value adaptation of large language models . External Links: 2412.06071 , Link Cited by: §2 . Wang et al. (2025b) H. Wang, Y. Li, S. Wang, G. Chen, and Y. Chen MiLoRA: harnessing minor singular components for parameter-efficient LLM finetuning . External Links: 2406.09044 , Link Cited by: §2 . Yang et al. (2025) A. Yang, A. Li, B. Yang, B. Zhang, B. Hui, B. Zheng, B. Yu, C. Gao, et al. Qwen3 technical report . External Links: 2505.09388 , Link Cited by: 1st item .",
+      "source": "https://arxiv.org/html/2610.30676v1",
+      "offset": 0
+    }
+  ],
+  "links": [
+    {
+      "href": "mailto:",
+      "text": "12532589@mail.sustech.edu.cn",
+      "section": "Spectral Smoothing and Spiking Perturbations Reconfigure Capability Profiles and Selective Task Performance in Large Language Models",
+      "context": "Qince Luan Affiliation: Southern University of Science and Technology (SUSTech) Email: 12532589@mail.sustech.edu.cn",
+      "url": "mailto:"
+    },
+    {
+      "href": "mailto:",
+      "text": "neuromoments@gmail.com",
+      "section": "Spectral Smoothing and Spiking Perturbations Reconfigure Capability Profiles and Selective Task Performance in Large Language Models",
+      "context": "Qince Luan Affiliation: Southern University of Science and Technology (SUSTech) Email: 12532589@mail.sustech.edu.cn Jianhui Xu Affiliation: Independent Scholar Affiliation: Work completed during a research assistant position at SUSTech Email: neuromoments@gmail.com",
+      "url": "mailto:"
+    },
+    {
+      "href": "mailto:",
+      "text": "xuyang@sustech.edu.cn",
+      "section": "Spectral Smoothing and Spiking Perturbations Reconfigure Capability Profiles and Selective Task Performance in Large Language Models",
+      "context": "Qince Luan Affiliation: Southern University of Science and Technology (SUSTech) Email: 12532589@mail.sustech.edu.cn Jianhui Xu Affiliation: Independent Scholar Affiliation: Work completed during a research assistant position at SUSTech Email: neuromoments@gmail.com Yang Xu † † thanks: Corresponding author. Affiliation: Southern University of Science and Technology (SUSTech) Email: xuyang@sustech.edu.cn",
+      "url": "mailto:"
+    },
+    {
+      "href": "#S1.F1",
+      "text": "1",
+      "section": "1 Introduction",
+      "context": "We therefore study a constrained intervention on feed-forward projections in which singular values are reweighted around their geometric mean while the corresponding singular vectors are left unchanged. This makes spectral inequality itself the manipulated variable and lets us ask whether broad capability patterns can be reorganized without changing tokenization, prompts, or optimization. Figure 1",
+      "url": "https://arxiv.org/html/2610.30676v1#S1.F1"
+    },
+    {
+      "href": "#bib.bib13",
+      "text": "Grattafiori et al., 2024",
+      "section": "1 Introduction",
+      "context": "• We introduce a lightweight singular-value smoothing/spiking intervention for transformer MLP projections and evaluate it across five open Llama and Qwen instruction models ( Grattafiori et al., 2024",
+      "url": "https://arxiv.org/html/2610.30676v1#bib.bib13"
+    },
+    {
+      "href": "#bib.bib14",
+      "text": "Yang et al., 2025",
+      "section": "1 Introduction",
+      "context": "• We introduce a lightweight singular-value smoothing/spiking intervention for transformer MLP projections and evaluate it across five open Llama and Qwen instruction models ( Grattafiori et al., 2024 ; Yang et al., 2025",
+      "url": "https://arxiv.org/html/2610.30676v1#bib.bib14"
+    },
+    {
+      "href": "#bib.bib15",
+      "text": "Lee et al., 2024",
+      "section": "1 Introduction",
+      "context": "• We provide evidence that spectral perturbations induce non-uniform tradeoffs across capability-labeled benchmark modules, auxiliary tasks, judge-scored truthfulness/hallucination/safety evaluations, and TRAIT personality probes ( Lee et al., 2024",
+      "url": "https://arxiv.org/html/2610.30676v1#bib.bib15"
+    },
+    {
+      "href": "#bib.bib1",
+      "text": "Conjecture (2022)",
+      "section": "Singular directions as interpretable transformer subspaces.",
+      "context": "A growing line of interpretability work studies transformer weight matrices through their singular vectors. Conjecture (2022)",
+      "url": "https://arxiv.org/html/2610.30676v1#bib.bib1"
+    },
+    {
+      "href": "#bib.bib2",
+      "text": "Ahmad et al. (2025)",
+      "section": "Singular directions as interpretable transformer subspaces.",
+      "context": "More recent work argues that transformer components should not be treated as indivisible computational units. Ahmad et al. (2025)",
+      "url": "https://arxiv.org/html/2610.30676v1#bib.bib2"
+    },
+    {
+      "href": "#bib.bib4",
+      "text": "Staats et al. (2025)",
+      "section": "High- and low-spectrum components.",
+      "context": "Several studies complicate the common assumption that only large singular values matter. Staats et al. (2025)",
+      "url": "https://arxiv.org/html/2610.30676v1#bib.bib4"
+    },
+    {
+      "href": "#bib.bib3",
+      "text": "Cancedda (2024)",
+      "section": "High- and low-spectrum components.",
+      "context": "Similarly, Cancedda (2024)",
+      "url": "https://arxiv.org/html/2610.30676v1#bib.bib3"
+    },
+    {
+      "href": "#bib.bib5",
+      "text": "Sharma et al., 2023",
+      "section": "High- and low-spectrum components.",
+      "context": "At the other end of the spectrum, low-rank filtering methods suggest that preserving dominant spectral components can sometimes improve benchmark behavior. LASER ( Sharma et al., 2023",
+      "url": "https://arxiv.org/html/2610.30676v1#bib.bib5"
+    },
+    {
+      "href": "#bib.bib6",
+      "text": "Meng et al., 2025",
+      "section": "Singular-value adaptation and parameter-efficient tuning.",
+      "context": "Parameter-efficient tuning methods also provide evidence that different spectral bands support different roles. PiSSA ( Meng et al., 2025",
+      "url": "https://arxiv.org/html/2610.30676v1#bib.bib6"
+    },
+    {
+      "href": "#bib.bib7",
+      "text": "Wang et al., 2025b",
+      "section": "Singular-value adaptation and parameter-efficient tuning.",
+      "context": "Parameter-efficient tuning methods also provide evidence that different spectral bands support different roles. PiSSA ( Meng et al., 2025 ) initializes adapters using principal singular values and vectors, arguing that principal components capture essential directions of pretrained weights and can provide an effective adaptation subspace. In contrast, MiLoRA ( Wang et al., 2025b",
+      "url": "https://arxiv.org/html/2610.30676v1#bib.bib7"
+    },
+    {
+      "href": "#bib.bib8",
+      "text": "Wang et al., 2025a",
+      "section": "Singular-value adaptation and parameter-efficient tuning.",
+      "context": " tuning methods also provide evidence that different spectral bands support different roles. PiSSA ( Meng et al., 2025 ) initializes adapters using principal singular values and vectors, arguing that principal components capture essential directions of pretrained weights and can provide an effective adaptation subspace. In contrast, MiLoRA ( Wang et al., 2025b ) adapts minor singular components while freezing principal components, motivating the minor subspace as a way to update task-specific or long-tail behavior while reducing interference with pretrained knowledge. KaSA ( Wang et al., 2025a",
+      "url": "https://arxiv.org/html/2610.30676v1#bib.bib8"
+    },
+    {
+      "href": "#bib.bib9",
+      "text": "Geva et al. (2021)",
+      "section": "Parametric knowledge in MLPs.",
+      "context": "A separate literature localizes factual knowledge in transformer feed-forward modules. Geva et al. (2021)",
+      "url": "https://arxiv.org/html/2610.30676v1#bib.bib9"
+    },
+    {
+      "href": "#bib.bib10",
+      "text": "Meng et al., 2023a",
+      "section": "Parametric knowledge in MLPs.",
+      "context": "A separate literature localizes factual knowledge in transformer feed-forward modules. Geva et al. (2021) propose that feed-forward layers operate as key-value memories, where keys detect textual patterns and values contribute output-token distributions. ROME ( Meng et al., 2023a",
+      "url": "https://arxiv.org/html/2610.30676v1#bib.bib10"
+    },
+    {
+      "href": "#bib.bib11",
+      "text": "Meng et al., 2023b",
+      "section": "Parametric knowledge in MLPs.",
+      "context": "A separate literature localizes factual knowledge in transformer feed-forward modules. Geva et al. (2021) propose that feed-forward layers operate as key-value memories, where keys detect textual patterns and values contribute output-token distributions. ROME ( Meng et al., 2023a ) uses causal tracing and rank-one model editing to identify and modify factual associations in mid-layer MLPs, while MEMIT ( Meng et al., 2023b",
+      "url": "https://arxiv.org/html/2610.30676v1#bib.bib11"
+    },
+    {
+      "href": "#bib.bib12",
+      "text": "Dai et al., 2022",
+      "section": "Parametric knowledge in MLPs.",
+      "context": "A separate literature localizes factual knowledge in transformer feed-forward modules. Geva et al. (2021) propose that feed-forward layers operate as key-value memories, where keys detect textual patterns and values contribute output-token distributions. ROME ( Meng et al., 2023a ) uses causal tracing and rank-one model editing to identify and modify factual associations in mid-layer MLPs, while MEMIT ( Meng et al., 2023b ) scales such edits to many memories. Knowledge-neuron work similarly studies neurons associated with factual recall ( Dai et al., 2022",
+      "url": "https://arxiv.org/html/2610.30676v1#bib.bib12"
+    },
+    {
+      "href": "#S5",
+      "text": "5",
+      "section": "Evaluation roadmap.",
+      "context": "The main capability-labeled benchmark suite uses 118 subtasks from MMLU-Pro , MMLU-Redux , AGIEval , and BBH ; Section 5",
+      "url": "https://arxiv.org/html/2610.30676v1#S5"
+    },
+    {
+      "href": "#S4",
+      "text": "4",
+      "section": "Evaluation roadmap.",
+      "context": "The main capability-labeled benchmark suite uses 118 subtasks from MMLU-Pro , MMLU-Redux , AGIEval , and BBH ; Section 5 gives the benchmark composition, capability-labeling protocol, and response-fit model next to the corresponding results. To test whether the same perturbation transfers beyond that suite, Section 4",
+      "url": "https://arxiv.org/html/2610.30676v1#S4"
+    },
+    {
+      "href": "#S6",
+      "text": "6",
+      "section": "Evaluation roadmap.",
+      "context": "The main capability-labeled benchmark suite uses 118 subtasks from MMLU-Pro , MMLU-Redux , AGIEval , and BBH ; Section 5 gives the benchmark composition, capability-labeling protocol, and response-fit model next to the corresponding results. To test whether the same perturbation transfers beyond that suite, Section 4 evaluates full standard no-CoT tasks, judge-scored truthfulness/hallucination/safety probes, and full standard CoT variants, with parser diagnostics reported for boxed-answer tasks and first-pass/retry diagnostics for BFCL. Section 6",
+      "url": "https://arxiv.org/html/2610.30676v1#S6"
+    },
+    {
+      "href": "#S4.T1",
+      "text": "1",
+      "section": "4 Auxiliary Tasks Reveal Selective Gains",
+      "context": "The same intervention produces equally non-uniform behavior outside the capability-labeled benchmark suite. Table 1",
+      "url": "https://arxiv.org/html/2610.30676v1#S4.T1"
+    },
+    {
+      "href": "#S4.T2",
+      "text": "2",
+      "section": "4 Auxiliary Tasks Reveal Selective Gains",
+      "context": "The same intervention produces equally non-uniform behavior outside the capability-labeled benchmark suite. Table 1 summarizes the best observed settings on the official full non-judge auxiliary evaluations, while Table 2",
+      "url": "https://arxiv.org/html/2610.30676v1#S4.T2"
+    },
+    {
+      "href": "#S4.T2",
+      "text": "2",
+      "section": "Judge-scored protocol.",
+      "context": "The judge-scored probes are shown separately in Table 2",
+      "url": "https://arxiv.org/html/2610.30676v1#S4.T2"
+    },
+    {
+      "href": "#S4.T3",
+      "text": "3",
+      "section": "Judge-scored protocol.",
+      "context": "To separate genuine task-level gains from parser-only artifacts, Table 3",
+      "url": "https://arxiv.org/html/2610.30676v1#S4.T3"
+    },
+    {
+      "href": "#A5",
+      "text": "E",
+      "section": "Judge-scored protocol.",
+      "context": "d retry-enabled success under negative α \\alpha . Third, CoT gains are more concentrated in the Qwen models and often occur together with reduced length-finish rates, indicating that truncation and answer-extraction dynamics change under perturbation; whether the underlying reasoning trajectories improve requires output-level analysis beyond the aggregate score. Judge-based gains, such as Qwen3 30B-A3B on HaluEval and Llama 3.2 3B on TruthfulQA, remain hypothesis-generating because they depend on external scoring and smaller judge-probe samples. The full non-judge α \\alpha sweeps in Appendix E",
+      "url": "https://arxiv.org/html/2610.30676v1#A5"
+    },
+    {
+      "href": "#S5.T4",
+      "text": "4",
+      "section": "5 Capability-Level Responses Across the Benchmark Suite",
+      "context": "We next turn to the capability-labeled benchmark suite. Before fitting latent capability responses, Table 4",
+      "url": "https://arxiv.org/html/2610.30676v1#S5.T4"
+    },
+    {
+      "href": "#A1",
+      "text": "A",
+      "section": "Capability labels.",
+      "context": "luation items using a fixed shuffle seed of 20260503. Each batch contains the question text, answer options when present, the gold answer, and any available explanation. A DeepSeek-V4-Pro judge, queried at temperature 0 0 with a 3000-token response cap, returns one nonnegative weight vector summing to 1 over seven dimensions: factual knowledge, language understanding, inductive reasoning, deductive reasoning, mathematical computation, structural analysis, and ethical & safety judgment. The valid batch-level vectors are averaged to obtain one seven-way capability mixture per subtask; Appendix A",
+      "url": "https://arxiv.org/html/2610.30676v1#A1"
+    },
+    {
+      "href": "#A2",
+      "text": "B",
+      "section": "Capability-fit diagnostics.",
+      "context": "The three-dimensional fit is used as a low-dimensional response summary, so we assess it by coverage, residual scale, and agreement with raw module means rather than by visual smoothness alone. All five models have complete coverage over the 118 subtasks used in the union fit. For each fitted scope, we inspect observed-versus-predicted subtask deltas, residual RMSE/MAE, negative log likelihood, and whether the fitted signs agree with the unweighted raw module means. In the module-wise fits reported in Appendix B",
+      "url": "https://arxiv.org/html/2610.30676v1#A2"
+    },
+    {
+      "href": "#A2.F6",
+      "text": "6",
+      "section": "Capability-fit diagnostics.",
+      "context": "Table 4: Raw module means across the nine-point α \\alpha sweep. Unlike Fig. 6",
+      "url": "https://arxiv.org/html/2610.30676v1#A2.F6"
+    },
+    {
+      "href": "#S5.T5",
+      "text": "5",
+      "section": "Capability-fit diagnostics.",
+      "context": "Table 5",
+      "url": "https://arxiv.org/html/2610.30676v1#S5.T5"
+    },
+    {
+      "href": "#A3",
+      "text": "C",
+      "section": "Capability-fit diagnostics.",
+      "context": "Table 5 then opens the module averages and shows selected subtask-level cases. The table keeps the three judge-derived capability weights visible, so gains can be read jointly with task demand: some large shifts occur on deductive BBH subtasks, whereas many Qwen3 30B-A3B gains are concentrated in factual MMLU-Redux subjects. This selected view is intentionally diagnostic rather than exhaustive; Appendix C",
+      "url": "https://arxiv.org/html/2610.30676v1#A3"
+    },
+    {
+      "href": "#A3",
+      "text": "C",
+      "section": "Capability-fit diagnostics.",
+      "context": "Table 5: Selected high-gain capability-labeled subtasks from the 118-subtask suite. Rows are the 20 subtasks with the largest positive gain under any of the three representative models shown here: Llama 3.1 8B, Qwen3 8B, and Qwen3 30B-A3B. The judge columns report the normalized three-capability demand weights used in the capability fit. For each model, Base is the α = 0 \\alpha=0 score, α ∗ \\alpha^{*} is the best perturbation on the nine-point grid, and Δ frac \\Delta_{\\mathrm{frac}} is the gain over baseline in task-score units. The complete 118-subtask table is reported in Appendix C",
+      "url": "https://arxiv.org/html/2610.30676v1#A3"
+    },
+    {
+      "href": "#S5.F2",
+      "text": "2",
+      "section": "Capability-fit diagnostics.",
+      "context": "We then ask whether the perturbation acts like generic noise or like a structured reweighting of latent capabilities. Figure 2",
+      "url": "https://arxiv.org/html/2610.30676v1#S5.F2"
+    },
+    {
+      "href": "#A2",
+      "text": "B",
+      "section": "Capability-fit diagnostics.",
+      "context": "The fitted capability picture matches the raw module-level evidence rather than replacing it. Three regularities are especially important. First, the high-positive interval drives all three capability responses downward, with the clearest contractions on language and deductive axes. Second, negative α \\alpha is more heterogeneous and sometimes produces factual or language recovery rather than monotone degradation. Third, union-level averages conceal module-specific stress: Appendix B",
+      "url": "https://arxiv.org/html/2610.30676v1#A2"
+    },
+    {
+      "href": "#A2.T7",
+      "text": "7",
+      "section": "Capability-fit diagnostics.",
+      "context": "The fitted capability picture matches the raw module-level evidence rather than replacing it. Three regularities are especially important. First, the high-positive interval drives all three capability responses downward, with the clearest contractions on language and deductive axes. Second, negative α \\alpha is more heterogeneous and sometimes produces factual or language recovery rather than monotone degradation. Third, union-level averages conceal module-specific stress: Appendix B and Table 7",
+      "url": "https://arxiv.org/html/2610.30676v1#A2.T7"
+    },
+    {
+      "href": "#S5.T4",
+      "text": "4",
+      "section": "Capability-fit diagnostics.",
+      "context": "picture matches the raw module-level evidence rather than replacing it. Three regularities are especially important. First, the high-positive interval drives all three capability responses downward, with the clearest contractions on language and deductive axes. Second, negative α \\alpha is more heterogeneous and sometimes produces factual or language recovery rather than monotone degradation. Third, union-level averages conceal module-specific stress: Appendix B and Table 7 show that the Llama family is most sensitive in MMLU-Pro , whereas Qwen models are at least as sensitive to BBH . Table 4",
+      "url": "https://arxiv.org/html/2610.30676v1#S5.T4"
+    },
+    {
+      "href": "#S6.F3",
+      "text": "3",
+      "section": "6 Trait Responses Track Capability Reweighting",
+      "context": "The personality-style probes show that α \\alpha perturbations do not only move benchmark accuracy. Figure 3",
+      "url": "https://arxiv.org/html/2610.30676v1#S6.F3"
+    },
+    {
+      "href": "#S6.F4",
+      "text": "4",
+      "section": "TRAIT scoring protocol.",
+      "context": "Figure 4",
+      "url": "https://arxiv.org/html/2610.30676v1#S6.F4"
+    },
+    {
+      "href": "#A4",
+      "text": "D",
+      "section": "7 Interpretation, Limitations, and Outlook",
+      "context": "Across capability fits, auxiliary tasks, and trait probes, the common effect of spectral smoothing and spiking is reconfiguration rather than uniform collapse. Positive α \\alpha often acts as a high-variance stressor that selectively harms language and deductive behavior, while moderate negative α \\alpha can occasionally recover factual or task-specific performance. The layer-wise evidence in Appendix D",
+      "url": "https://arxiv.org/html/2610.30676v1#A4"
+    },
+    {
+      "href": "#S5",
+      "text": "5",
+      "section": "Appendix B Module-wise Three-Dimensional Capability Response Analysis",
+      "context": "This appendix summarizes independent capability fits across four benchmark modules and their union. The retained capability basis contains three dimensions: Factual Knowledge , Language Understanding , and Deductive Reasoning , with subtask weights taken from the constrained three-way judge pass described in Section 5",
+      "url": "https://arxiv.org/html/2610.30676v1#S5"
+    },
+    {
+      "href": "#S5.T4",
+      "text": "4",
+      "section": "Appendix B Module-wise Three-Dimensional Capability Response Analysis",
+      "context": "The corresponding raw module means are reported in the main paper in Table 4",
+      "url": "https://arxiv.org/html/2610.30676v1#S5.T4"
+    },
+    {
+      "href": "#A2.T6",
+      "text": "6",
+      "section": "Appendix B Module-wise Three-Dimensional Capability Response Analysis",
+      "context": "Figure 6: Independent three-dimensional capability fits across benchmark modules and their union. Each point shows the fitted capability-level score delta relative to α = 0 \\alpha=0 for a fixed model, module, perturbation strength, and retained capability axis. Error bars are fitted one-standard-deviation residual scales, not formal 95% confidence intervals; Table 6",
+      "url": "https://arxiv.org/html/2610.30676v1#A2.T6"
+    },
+    {
+      "href": "#A3.T8",
+      "text": "8",
+      "section": "Appendix C Full Subtask-Level Best-Alpha Table",
+      "context": "Table 8",
+      "url": "https://arxiv.org/html/2610.30676v1#A3.T8"
+    },
+    {
+      "href": "#S5.T5",
+      "text": "5",
+      "section": "Appendix C Full Subtask-Level Best-Alpha Table",
+      "context": "Table 8 reports the complete 118-subtask version of the selected subtask summary in Table 5",
+      "url": "https://arxiv.org/html/2610.30676v1#S5.T5"
+    },
+    {
+      "href": "#S3",
+      "text": "3",
+      "section": "Appendix D Layer-wise Non-uniformity of Alpha SVD Perturbations",
+      "context": "where here s i ≡ σ i s_{i}\\equiv\\sigma_{i} and n = r n=r relative to Sec. 3",
+      "url": "https://arxiv.org/html/2610.30676v1#S3"
+    },
+    {
+      "href": "#A5.T10",
+      "text": "10",
+      "section": "Appendix E Auxiliary-Task Alpha Sweeps Outside the Capability-Labeled Benchmark Suite",
+      "context": "Table 10",
+      "url": "https://arxiv.org/html/2610.30676v1#A5.T10"
+    },
+    {
+      "href": "#S4.T1",
+      "text": "1",
+      "section": "Appendix E Auxiliary-Task Alpha Sweeps Outside the Capability-Labeled Benchmark Suite",
+      "context": "Table 10 records the official full non-judge auxiliary sweeps on the nine-point α \\alpha grid from − 0.2 -0.2 to + 0.2 +0.2 . It complements the condensed best- α \\alpha summaries in Tables 1",
+      "url": "https://arxiv.org/html/2610.30676v1#S4.T1"
+    },
+    {
+      "href": "#S4.T3",
+      "text": "3",
+      "section": "Appendix E Auxiliary-Task Alpha Sweeps Outside the Capability-Labeled Benchmark Suite",
+      "context": "Table 10 records the official full non-judge auxiliary sweeps on the nine-point α \\alpha grid from − 0.2 -0.2 to + 0.2 +0.2 . It complements the condensed best- α \\alpha summaries in Tables 1 and 3",
+      "url": "https://arxiv.org/html/2610.30676v1#S4.T3"
+    },
+    {
+      "href": "https://arxiv.org/abs/2511.20273",
+      "text": "Link",
+      "section": "References",
+      "context": "Ahmad et al. (2025) A. Ahmad, A. Joshi, and A. Modi Beyond components: singular vector-based interpretability of transformer circuits . External Links: 2511.20273 , Link",
+      "url": "https://arxiv.org/abs/2511.20273"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px1.p2.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Ahmad et al. (2025) A. Ahmad, A. Joshi, and A. Modi Beyond components: singular vector-based interpretability of transformer circuits . External Links: 2511.20273 , Link Cited by: §2",
+      "url": "https://arxiv.org/html/2610.30676v1#S2.SS0.SSS0.Px1.p2.1"
+    },
+    {
+      "href": "https://arxiv.org/abs/2402.09221",
+      "text": "Link",
+      "section": "References",
+      "context": "Cancedda (2024) N. Cancedda Spectral filters, dark signals, and attention sinks . External Links: 2402.09221 , Link",
+      "url": "https://arxiv.org/abs/2402.09221"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px2.p2.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Cancedda (2024) N. Cancedda Spectral filters, dark signals, and attention sinks . External Links: 2402.09221 , Link Cited by: §2",
+      "url": "https://arxiv.org/html/2610.30676v1#S2.SS0.SSS0.Px2.p2.1"
+    },
+    {
+      "href": "https://www.conjecture.dev/research/the-singular-value-decompositions-of-transformer-weight-matrices-are-highly-interpretable",
+      "text": "Link",
+      "section": "References",
+      "context": "Conjecture (2022) Conjecture The singular value decompositions of transformer weight matrices are highly interpretable . Note: Technical blog postAccessed 2026-05-07 External Links: Link",
+      "url": "https://www.conjecture.dev/research/the-singular-value-decompositions-of-transformer-weight-matrices-are-highly-interpretable"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px1.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Conjecture (2022) Conjecture The singular value decompositions of transformer weight matrices are highly interpretable . Note: Technical blog postAccessed 2026-05-07 External Links: Link Cited by: §2",
+      "url": "https://arxiv.org/html/2610.30676v1#S2.SS0.SSS0.Px1.p1.1"
+    },
+    {
+      "href": "https://arxiv.org/abs/2104.08696",
+      "text": "Link",
+      "section": "References",
+      "context": "Dai et al. (2022) D. Dai, L. Dong, Y. Hao, Z. Sui, B. Chang, and F. Wei Knowledge neurons in pretrained transformers . External Links: 2104.08696 , Link",
+      "url": "https://arxiv.org/abs/2104.08696"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px4.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Dai et al. (2022) D. Dai, L. Dong, Y. Hao, Z. Sui, B. Chang, and F. Wei Knowledge neurons in pretrained transformers . External Links: 2104.08696 , Link Cited by: §2",
+      "url": "https://arxiv.org/html/2610.30676v1#S2.SS0.SSS0.Px4.p1.1"
+    },
+    {
+      "href": "https://arxiv.org/abs/2012.14913",
+      "text": "Link",
+      "section": "References",
+      "context": "Geva et al. (2021) M. Geva, R. Schuster, J. Berant, and O. Levy Transformer feed-forward layers are key-value memories . External Links: 2012.14913 , Link",
+      "url": "https://arxiv.org/abs/2012.14913"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px4.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Geva et al. (2021) M. Geva, R. Schuster, J. Berant, and O. Levy Transformer feed-forward layers are key-value memories . External Links: 2012.14913 , Link Cited by: §2",
+      "url": "https://arxiv.org/html/2610.30676v1#S2.SS0.SSS0.Px4.p1.1"
+    },
+    {
+      "href": "https://arxiv.org/abs/2407.21783",
+      "text": "Link",
+      "section": "References",
+      "context": "Grattafiori et al. (2024) A. Grattafiori, A. Dubey, A. Jauhri, A. Pandey, A. Kadian, A. Al-Dahle, A. Letman, A. Mathur, A. Schelten, A. Vaughan, et al. The llama 3 herd of models . External Links: 2407.21783 , Link",
+      "url": "https://arxiv.org/abs/2407.21783"
+    },
+    {
+      "href": "#S1.I1.i1.p1.1",
+      "text": "1st item",
+      "section": "References",
+      "context": "Grattafiori et al. (2024) A. Grattafiori, A. Dubey, A. Jauhri, A. Pandey, A. Kadian, A. Al-Dahle, A. Letman, A. Mathur, A. Schelten, A. Vaughan, et al. The llama 3 herd of models . External Links: 2407.21783 , Link Cited by: 1st item",
+      "url": "https://arxiv.org/html/2610.30676v1#S1.I1.i1.p1.1"
+    },
+    {
+      "href": "https://arxiv.org/abs/2406.14703",
+      "text": "Link",
+      "section": "References",
+      "context": "Lee et al. (2024) S. Lee, S. Lim, S. Han, G. Oh, H. Chae, J. Chung, M. Kim, B. Kwak, Y. Lee, D. Lee, et al. Do LLMs have distinct and consistent personality? TRAIT: personality testset designed for LLMs with psychometrics . External Links: 2406.14703 , Link",
+      "url": "https://arxiv.org/abs/2406.14703"
+    },
+    {
+      "href": "#S1.I1.i3.p1.1",
+      "text": "3rd item",
+      "section": "References",
+      "context": "Lee et al. (2024) S. Lee, S. Lim, S. Han, G. Oh, H. Chae, J. Chung, M. Kim, B. Kwak, Y. Lee, D. Lee, et al. Do LLMs have distinct and consistent personality? TRAIT: personality testset designed for LLMs with psychometrics . External Links: 2406.14703 , Link Cited by: 3rd item",
+      "url": "https://arxiv.org/html/2610.30676v1#S1.I1.i3.p1.1"
+    },
+    {
+      "href": "https://arxiv.org/abs/2404.02948",
+      "text": "Link",
+      "section": "References",
+      "context": "Meng et al. (2025) F. Meng, Z. Wang, and M. Zhang PiSSA: principal singular values and singular vectors adaptation of large language models . External Links: 2404.02948 , Link",
+      "url": "https://arxiv.org/abs/2404.02948"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px3.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Meng et al. (2025) F. Meng, Z. Wang, and M. Zhang PiSSA: principal singular values and singular vectors adaptation of large language models . External Links: 2404.02948 , Link Cited by: §2",
+      "url": "https://arxiv.org/html/2610.30676v1#S2.SS0.SSS0.Px3.p1.1"
+    },
+    {
+      "href": "https://arxiv.org/abs/2202.05262",
+      "text": "Link",
+      "section": "References",
+      "context": "Meng et al. (2023a) K. Meng, D. Bau, A. Andonian, and Y. Belinkov Locating and editing factual associations in GPT . External Links: 2202.05262 , Link",
+      "url": "https://arxiv.org/abs/2202.05262"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px4.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Meng et al. (2023a) K. Meng, D. Bau, A. Andonian, and Y. Belinkov Locating and editing factual associations in GPT . External Links: 2202.05262 , Link Cited by: §2",
+      "url": "https://arxiv.org/html/2610.30676v1#S2.SS0.SSS0.Px4.p1.1"
+    },
+    {
+      "href": "https://arxiv.org/abs/2210.07229",
+      "text": "Link",
+      "section": "References",
+      "context": "Meng et al. (2023b) K. Meng, A. S. Sharma, A. Andonian, Y. Belinkov, and D. Bau Mass-editing memory in a transformer . External Links: 2210.07229 , Link",
+      "url": "https://arxiv.org/abs/2210.07229"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px4.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Meng et al. (2023b) K. Meng, A. S. Sharma, A. Andonian, Y. Belinkov, and D. Bau Mass-editing memory in a transformer . External Links: 2210.07229 , Link Cited by: §2",
+      "url": "https://arxiv.org/html/2610.30676v1#S2.SS0.SSS0.Px4.p1.1"
+    },
+    {
+      "href": "https://arxiv.org/abs/2312.13558",
+      "text": "Link",
+      "section": "References",
+      "context": "Sharma et al. (2023) P. Sharma, J. T. Ash, and D. Misra The truth is in there: improving reasoning in language models with layer-selective rank reduction . External Links: 2312.13558 , Link",
+      "url": "https://arxiv.org/abs/2312.13558"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px2.p3.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Sharma et al. (2023) P. Sharma, J. T. Ash, and D. Misra The truth is in there: improving reasoning in language models with layer-selective rank reduction . External Links: 2312.13558 , Link Cited by: §2",
+      "url": "https://arxiv.org/html/2610.30676v1#S2.SS0.SSS0.Px2.p3.1"
+    },
+    {
+      "href": "https://arxiv.org/abs/2410.17770",
+      "text": "Link",
+      "section": "References",
+      "context": "Staats et al. (2025) M. Staats, M. Thamm, and B. Rosenow Small singular values matter: a random matrix analysis of transformer models . External Links: 2410.17770 , Link",
+      "url": "https://arxiv.org/abs/2410.17770"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px2.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Staats et al. (2025) M. Staats, M. Thamm, and B. Rosenow Small singular values matter: a random matrix analysis of transformer models . External Links: 2410.17770 , Link Cited by: §2",
+      "url": "https://arxiv.org/html/2610.30676v1#S2.SS0.SSS0.Px2.p1.1"
+    },
+    {
+      "href": "https://arxiv.org/abs/2412.06071",
+      "text": "Link",
+      "section": "References",
+      "context": "Wang et al. (2025a) F. Wang, J. Jiang, C. Park, S. Kim, and J. Tang KaSA: knowledge-aware singular-value adaptation of large language models . External Links: 2412.06071 , Link",
+      "url": "https://arxiv.org/abs/2412.06071"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px3.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Wang et al. (2025a) F. Wang, J. Jiang, C. Park, S. Kim, and J. Tang KaSA: knowledge-aware singular-value adaptation of large language models . External Links: 2412.06071 , Link Cited by: §2",
+      "url": "https://arxiv.org/html/2610.30676v1#S2.SS0.SSS0.Px3.p1.1"
+    },
+    {
+      "href": "https://arxiv.org/abs/2406.09044",
+      "text": "Link",
+      "section": "References",
+      "context": "Wang et al. (2025b) H. Wang, Y. Li, S. Wang, G. Chen, and Y. Chen MiLoRA: harnessing minor singular components for parameter-efficient LLM finetuning . External Links: 2406.09044 , Link",
+      "url": "https://arxiv.org/abs/2406.09044"
+    },
+    {
+      "href": "#S2.SS0.SSS0.Px3.p1.1",
+      "text": "§2",
+      "section": "References",
+      "context": "Wang et al. (2025b) H. Wang, Y. Li, S. Wang, G. Chen, and Y. Chen MiLoRA: harnessing minor singular components for parameter-efficient LLM finetuning . External Links: 2406.09044 , Link Cited by: §2",
+      "url": "https://arxiv.org/html/2610.30676v1#S2.SS0.SSS0.Px3.p1.1"
+    },
+    {
+      "href": "https://arxiv.org/abs/2505.09388",
+      "text": "Link",
+      "section": "References",
+      "context": "Yang et al. (2025) A. Yang, A. Li, B. Yang, B. Zhang, B. Hui, B. Zheng, B. Yu, C. Gao, et al. Qwen3 technical report . External Links: 2505.09388 , Link",
+      "url": "https://arxiv.org/abs/2505.09388"
+    },
+    {
+      "href": "#S1.I1.i1.p1.1",
+      "text": "1st item",
+      "section": "References",
+      "context": "Yang et al. (2025) A. Yang, A. Li, B. Yang, B. Zhang, B. Hui, B. Zheng, B. Yu, C. Gao, et al. Qwen3 technical report . External Links: 2505.09388 , Link Cited by: 1st item",
+      "url": "https://arxiv.org/html/2610.30676v1#S1.I1.i1.p1.1"
+    }
+  ],
+  "note": "Extracted HTML text; equations and table formatting may be imperfect. No PDF extraction was attempted."
+}

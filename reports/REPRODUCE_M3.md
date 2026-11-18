@@ -13,6 +13,14 @@ codex login
 
 The CLI must already be installed. No OpenAI API key is required: the harness uses Codex login. `.env.example` documents optional variables. The program does not automatically load `.env` files. X is disabled in these evaluations, so browser setup is unnecessary. E5 runs locally on CPU and downloads its pinned weights on first use.
 
+## Recompute scores after the CORE label revision
+
+```bash
+python -m eval.recalculate_core_label
+```
+
+This applies the user-requested CORE rating change from 0 to 1 to both evaluations. Revised weekly results are saved under `analysis/core-label-revision/`, and repeated-run results in `analysis-core-label-revision.json`. Original frozen labels and results remain unchanged. Current report tables use this revision.
+
 ## Recompute the saved results without model calls
 
 ```bash
