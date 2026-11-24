@@ -15,6 +15,7 @@ import sys
 from pathlib import Path
 
 from research_digest.llm.codex_llm import CodexError
+from research_digest.llm.openai_api import create_client
 from research_digest.profiles.user_profile import ProfileStore, build_profile
 
 
@@ -27,6 +28,8 @@ def main() -> int:
     )
     parser.add_argument("--user-id", required=True)
     parser.add_argument("--model", default=None)
+    parser.add_argument("--llm-backend", choices=("codex", "openai"), default="codex")
+    parser.add_argument("--api-key-file", type=Path)
     parser.add_argument(
         "--db",
         type=Path,
@@ -63,11 +66,12 @@ def main() -> int:
             return 0
 
         description_text = args.profile_file.read_text(encoding="utf-8")
-        print("Building your profile with Codex...", file=sys.stderr, flush=True)
+        print("Building your profile with the LLM...", file=sys.stderr, flush=True)
         profile = build_profile(
             args.user_id,
             description_text,
             model=args.model,
+            client=create_client(args.llm_backend, args.api_key_file),
         )
         saved = ProfileStore(args.db).save(profile)
         print(json.dumps(profile.to_dict(), ensure_ascii=False, indent=2), flush=True)

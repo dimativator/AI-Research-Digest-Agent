@@ -10,7 +10,7 @@ Metadata is cached; use --refresh-metadata to requery delayed/updated API record
 Previously recommended papers remain eligible; --new excludes them.
 Inspect uses arXiv HTML only and reports unavailable content explicitly.
 X attention uses your active Arc profile (python setup_x.py). This command never fetches profile URLs.
-A saved user profile and an authenticated Codex CLI are required.
+A saved user profile and either Codex login or an OpenAI API key are required.
 Categories default to the saved profile; missing categories are inferred and saved.
 Set any maximum limit or --digest-size to -1 for unlimited. Batch, page,
 shortlist, and expansion sizes must remain positive.
@@ -27,6 +27,7 @@ from typing import Any
 from research_digest.retrieval.arxiv_source import RetrievalError
 from research_digest.cli.digest_output import format_digest
 from research_digest.llm.codex_llm import CodexError
+from research_digest.llm.openai_api import create_client
 from research_digest.agent.digest_agent import DigestAgent, DigestConfig
 from research_digest.agent.config import UNLIMITED_LIMIT_FIELDS
 from research_digest.storage.paper_store import PaperStore
@@ -53,6 +54,8 @@ def _parse_arguments() -> argparse.Namespace:
         "--date-to", help="Inclusive first-submission date, YYYY-MM-DD (UTC)"
     )
     parser.add_argument("--model", default=None)
+    parser.add_argument("--llm-backend", choices=("codex", "openai"), default="codex")
+    parser.add_argument("--api-key-file", type=Path)
     parser.add_argument(
         "--variant",
         choices=("react", "react-explore", "selection-critic", "debate"),
@@ -134,14 +137,22 @@ def _parse_arguments() -> argparse.Namespace:
         parser.error("New runs require --user-id, --date-from, and --date-to")
 
     if args.resume or args.trace:
-        allowed = {"--resume", "--trace", "--db", "--output", "--verbose", "--format"}
+        allowed = {
+            "--resume",
+            "--trace",
+            "--db",
+            "--output",
+            "--verbose",
+            "--format",
+            "--api-key-file",
+        }
 
         if any(
             arg.startswith("--") and arg.split("=", 1)[0] not in allowed
             for arg in sys.argv[1:]
         ):
             parser.error(
-                "Resume/trace uses the saved configuration; only --db, --output, --verbose, and --format may also be supplied"
+                "Resume/trace uses the saved configuration; only --db, --output, --verbose, --format, and --api-key-file may also be supplied"
             )
 
     return args
@@ -163,17 +174,21 @@ def _build_config(
     return config
 
 
-def _load_profile(args: argparse.Namespace) -> UserProfile:
+def _load_profile(args: argparse.Namespace, client=None) -> UserProfile:
     store = ProfileStore(args.db)
     profile = store.load(args.user_id).profile
 
     if not profile.arxiv_categories and not args.category:
         print(
-            "Inferring your arXiv categories with Codex...", file=sys.stderr, flush=True
+            "Inferring your arXiv categories with the LLM...",
+            file=sys.stderr,
+            flush=True,
         )
         profile = replace(
             profile,
-            arxiv_categories=infer_arxiv_categories(profile, model=args.model),
+            arxiv_categories=infer_arxiv_categories(
+                profile, model=args.model, client=client
+            ),
         )
         store.save(profile)
 
@@ -197,12 +212,23 @@ def main() -> int:
 
         if args.resume:
             store = PaperStore(args.db)
-            agent = DigestAgent(store, on_event=_print_event if args.verbose else None)
+            saved_config = store.load_run(args.resume)[1]["config"]
+            client = create_client(
+                saved_config.get("llm_backend", "codex"), args.api_key_file
+            )
+            agent = DigestAgent(
+                store, client=client, on_event=_print_event if args.verbose else None
+            )
         else:
-            profile = _load_profile(args)
+            if args.llm_backend == "openai" and not args.model:
+                raise ValueError("OpenAI backend requires --model")
+            client = create_client(args.llm_backend, args.api_key_file)
+            profile = _load_profile(args, client)
             config = _build_config(args, profile)
             store = PaperStore(args.db)
-            agent = DigestAgent(store, on_event=_print_event if args.verbose else None)
+            agent = DigestAgent(
+                store, client=client, on_event=_print_event if args.verbose else None
+            )
             run_id = agent.start(profile, config)
 
         print(

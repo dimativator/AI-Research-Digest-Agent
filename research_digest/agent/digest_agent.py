@@ -200,6 +200,7 @@ class DigestAgent:
                 "purpose": name,
                 "call": self.state["llm_calls"],
                 "model": self.config.model,
+                "llm_backend": self.config.llm_backend,
                 "context": {
                     "instructions_chars": len(instructions),
                     "payload_chars": len(content),
@@ -236,6 +237,7 @@ class DigestAgent:
                 "call": self.state["llm_calls"],
                 "purpose": name,
                 "model": self.config.model,
+                "llm_backend": self.config.llm_backend,
                 "instructions": instructions,
                 "input": content,
                 "schema": schema,
@@ -276,6 +278,8 @@ class DigestAgent:
         # An unspecified CLI default can change between runs. Reuse that cache
         # only within this run; an explicit model enables cross-run reuse.
         model_key = self.config.model or ("cli-default:" + self.run_id)
+        if self.config.llm_backend != "codex":
+            model_key = self.config.llm_backend + ":" + model_key
         payload = [
             PIPELINE_VERSION,
             self.profile.fingerprint,

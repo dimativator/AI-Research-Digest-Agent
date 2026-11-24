@@ -50,6 +50,7 @@ class DigestConfig:
     new_only: bool = False
     x_enabled: bool = True
     variant: str = "react"
+    llm_backend: str = "codex"
 
     def __post_init__(self) -> None:
         if self.variant == "selection-critic":
@@ -63,6 +64,10 @@ class DigestConfig:
 
     def validate(self) -> None:
         categories(self.categories)
+        if self.llm_backend not in {"codex", "openai"}:
+            raise ValueError("Unknown LLM backend")
+        if self.llm_backend == "openai" and not self.model:
+            raise ValueError("OpenAI backend requires an explicit --model")
         if self.variant not in {"react", "react-explore", "selection-critic", "debate"}:
             raise ValueError("Unknown agent variant")
 

@@ -2,9 +2,43 @@
 
 A Python research digest agent with a handwritten ReAct harness. It retrieves arXiv papers for a date range, ranks them against a researcher profile, screens abstracts, and lets an LLM gather more evidence before choosing the digest.
 
-The thinking step uses Codex CLI through a small OpenAI-style Python adapter. Python owns retrieval, tools, validation, budgets, and SQLite state. No OpenAI Python SDK or API key is required for the thinking step. Codex authentication and service access are still required.
+The thinking step defaults to Codex CLI through a small OpenAI-style Python adapter. An optional OpenAI API backend reads a key from a file. Python owns retrieval, tools, validation, budgets, and SQLite state. Neither backend requires the OpenAI Python SDK.
 
 Milestone 2 evaluation, results, and annotated failure traces: [reports/M2.md](reports/M2.md).
+
+## OpenAI API backend
+
+Put your API key alone in `.secrets/openai-key.txt` (create `.secrets/` first).
+This directory is ignored by Git. Restrict file access with
+`chmod 600 .secrets/openai-key.txt`.
+
+```bash
+python run_digest.py --user-id dmitrii \
+  --date-from 2026-11-09 --date-to 2026-11-15 \
+  --variant react-explore --no-X \
+  --llm-backend openai --api-key-file .secrets/openai-key.txt \
+  --model YOUR_API_MODEL
+```
+
+Use an API model available to your account that supports Chat Completions and
+JSON Schema structured output. Codex model names are not necessarily API model
+names. The backend uses the [Chat Completions API](https://platform.openai.com/docs/api-reference/chat/create)
+with no native tools. The harness executes application actions returned as JSON.
+API charges are separate from your Codex subscription.
+
+The same three flags work with `create_profile.py`. Omitting them keeps the
+Codex backend. API runs require an explicit model and key-file path.
+
+The backend and model are saved in run configuration. The key and its file path
+are not saved in traces or SQLite. Supply the key file again when resuming:
+
+```bash
+python run_digest.py --resume RUN_ID --api-key-file .secrets/openai-key.txt
+```
+
+Usage and latency flow through the existing metrics. Screening caches are
+separate for each backend. HTTP 429 and server errors receive up to two retries,
+with numeric Retry-After delays capped at 75 seconds. Other errors fail visibly.
 
 ## Quick start
 

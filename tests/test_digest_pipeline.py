@@ -1214,7 +1214,7 @@ class ProfileCategoryCLITests(unittest.TestCase):
                 settings = run_digest._build_config(args, loaded)
                 self.assertEqual(settings.categories, ("cs.CL", "cs.LG"))
                 self.assertEqual(run_digest._load_profile(args), loaded)
-                infer.assert_called_once_with(original, model=None)
+                infer.assert_called_once_with(original, model=None, client=None)
 
             self.assertEqual(store.load("test-user").revision, 2)
             self.assertEqual(store.load("test-user", revision=1).profile, original)
